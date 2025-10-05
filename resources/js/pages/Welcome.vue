@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-6 sm:p-10 font-serif">
+  <div class="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-6 sm:p-10 font-serif [overscroll-behavior-y:none]">
     
     <div class="max-w-3xl w-full">
       
