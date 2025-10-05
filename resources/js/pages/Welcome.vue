@@ -13,7 +13,7 @@
           Chapter Of You
         </h1>
         <p class="text-lg text-gray-500 mt-2 italic">
-          Massage & Essential Wellness
+          Your Chapter, Your Self-Care
         </p>
       </header>
 
@@ -26,11 +26,11 @@
           </p>
 
           <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-6 leading-snug">
-            We are curating your path to inner peace.
+            Stay tuned, we're turning the page.
           </h2>
           
           <p class="text-gray-600 text-lg mb-10">
-            Launching soon to offer bespoke massage therapies and a curated selection of natural essential oils. Bookings will be effortless.
+            Launching soon to offer bespoke tailored beauty treatments alongside our hand-crafted aromatherapy diffusers.
           </p>
         </div>
 
