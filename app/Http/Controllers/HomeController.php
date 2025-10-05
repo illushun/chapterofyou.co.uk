@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia; // Essential for the Inertia/Vue integration
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
