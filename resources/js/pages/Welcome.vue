@@ -72,7 +72,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="en_GB">
 import { ref } from 'vue';
 
 const email = ref('');
