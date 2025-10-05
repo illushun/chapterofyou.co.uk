@@ -72,18 +72,46 @@
   </div>
 </template>
 
-<script setup lang="en_GB">
+<script setup lang="ts">
 import { ref } from 'vue';
 
 const email = ref('');
 const message = ref('');
-const messageType = ref(''); // 'success' or 'error'
+// 'success' | 'error' is a union type for better safety
+const messageType = ref<'success' | 'error' | ''>(''); 
 const isSubmitting = ref(false);
 
-// Function to get the CSRF token from the meta tag
-const getCsrfToken = () => {
-    return document.head.querySelector('meta[name="csrf-token"]').content;
+/**
+ * Function to get the CSRF token from the meta tag.
+ * Throws an error if the token is not found.
+ * @returns The CSRF token string.
+ */
+const getCsrfToken = (): string => {
+    // Explicitly define the type as HTMLMetaElement | null
+    const metaTag: HTMLMetaElement | null = document.head.querySelector('meta[name="csrf-token"]');
+    
+    // Type narrowing: ensure metaTag is not null before accessing its content
+    if (metaTag && metaTag.content) {
+        return metaTag.content;
+    }
+    
+    // Throw an error if the token is critical but missing
+    throw new Error("CSRF token meta tag not found or content is empty.");
 };
+
+// Interface for the expected structure of a validation error response from Laravel
+interface LaravelValidationErrorResponse {
+    message: string;
+    errors: {
+        email?: string[]; // The 'email' key might exist and contain an array of strings
+        // Other fields could be added here if needed
+    };
+}
+
+// Interface for a generic success or error response
+interface GenericResponse {
+    message: string;
+}
 
 const submitWaitlist = async () => {
     // Clear previous messages
@@ -92,12 +120,14 @@ const submitWaitlist = async () => {
     isSubmitting.value = true;
 
     try {
+        const csrfToken = getCsrfToken(); // Get the token
+
         const response = await fetch('/waitlist', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 // CRITICAL: Attach the CSRF token to the request headers
-                'X-CSRF-TOKEN': getCsrfToken(),
+                'X-CSRF-TOKEN': csrfToken,
                 // Tell Laravel this is an AJAX request
                 'X-Requested-With': 'XMLHttpRequest', 
             },
@@ -106,16 +136,23 @@ const submitWaitlist = async () => {
             })
         });
 
-        const data = await response.json();
+        // The response data can be either the validation error type or the generic response type
+        const data: GenericResponse | LaravelValidationErrorResponse = await response.json();
 
         if (response.ok) {
             // Handle success (status 200 or 201)
-            message.value = data.message || 'Thank you! You have been added to the waitlist.';
+            // Type assertion to treat it as GenericResponse for easier access, though it's technically already in data
+            const successData = data as GenericResponse; 
+            message.value = successData.message || 'Thank you! You have been added to the waitlist.';
             messageType.value = 'success';
             email.value = ''; // Clear the input field
         } else if (response.status === 422) {
             // Handle Laravel validation errors (422 Unprocessable Entity)
-            const validationErrors = data.errors.email;
+            // Type assertion to ensure correct structure
+            const errorData = data as LaravelValidationErrorResponse; 
+            const validationErrors = errorData.errors?.email;
+            
+            // Use the first validation error if it exists, otherwise a generic one
             message.value = validationErrors ? validationErrors[0] : 'Please enter a valid email address.';
             messageType.value = 'error';
         } else {
@@ -125,8 +162,16 @@ const submitWaitlist = async () => {
         }
         
     } catch (error) {
+        // Explicitly define 'error' as 'unknown' and use type checks/assertions
         console.error("Fetch error:", error);
-        message.value = 'Could not connect to the server.';
+        
+        // Provide a meaningful message if the CSRF token was missing
+        if (error instanceof Error && error.message.includes("CSRF token")) {
+             message.value = error.message;
+        } else {
+             message.value = 'Could not connect to the server.';
+        }
+        
         messageType.value = 'error';
     } finally {
         isSubmitting.value = false;
