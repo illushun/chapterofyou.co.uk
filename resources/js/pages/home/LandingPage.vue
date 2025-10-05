@@ -22,8 +22,6 @@ const props = defineProps<LandingPageProps>();
 
 <template>
     <Head title="Chapter of You | Bespoke E-commerce & Services" />
-    
-    <AppLayout>
 
         <section class="relative bg-white pt-16 pb-24 lg:pt-24 lg:pb-40">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -106,5 +104,4 @@ const props = defineProps<LandingPageProps>();
             </div>
         </section>
 
-    </AppLayout>
 </template>
