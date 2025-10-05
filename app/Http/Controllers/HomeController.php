@@ -16,6 +16,13 @@ class HomeController extends Controller
      */
     public function index(Request $request): \Inertia\Response
     {
+        if (!$request->ip()) {
+            // RENDER WAITLIST PAGE (Welcome.vue)
+            return Inertia::render('Welcome', [
+                'siteName' => 'Chapter of You',
+            ]);
+        }
+
         // 1. Get the current user's IP
         // We use $request->ip() which is Laravel's reliable way to get the client IP
         $clientIp = $request->ip();
