@@ -14,7 +14,7 @@ class HomeController extends Controller
      * Display the application's landing page.
      * @return \Inertia\Response
      */
-    public function index(): \Inertia\Response
+    public function index(Request $request): \Inertia\Response
     {
         // 1. Get the current user's IP
         // We use $request->ip() which is Laravel's reliable way to get the client IP
