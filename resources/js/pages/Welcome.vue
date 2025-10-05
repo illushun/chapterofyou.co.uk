@@ -74,12 +74,16 @@
 
 <script setup>
 import { ref } from 'vue';
-import axios from 'axios';
 
 const email = ref('');
 const message = ref('');
 const messageType = ref(''); // 'success' or 'error'
 const isSubmitting = ref(false);
+
+// Function to get the CSRF token from the meta tag
+const getCsrfToken = () => {
+    return document.head.querySelector('meta[name="csrf-token"]').content;
+};
 
 const submitWaitlist = async () => {
     // Clear previous messages
@@ -88,25 +92,41 @@ const submitWaitlist = async () => {
     isSubmitting.value = true;
 
     try {
-        const response = await axios.post('/api/waitlist', {
-            email: email.value
+        const response = await fetch('/waitlist', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // CRITICAL: Attach the CSRF token to the request headers
+                'X-CSRF-TOKEN': getCsrfToken(),
+                // Tell Laravel this is an AJAX request
+                'X-Requested-With': 'XMLHttpRequest', 
+            },
+            body: JSON.stringify({
+                email: email.value
+            })
         });
-        
-        // Success response from Controller
-        message.value = response.data.message;
-        messageType.value = 'success';
-        email.value = ''; // Clear the input field
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Handle success (status 200 or 201)
+            message.value = data.message || 'Thank you! You have been added to the waitlist.';
+            messageType.value = 'success';
+            email.value = ''; // Clear the input field
+        } else if (response.status === 422) {
+            // Handle Laravel validation errors (422 Unprocessable Entity)
+            const validationErrors = data.errors.email;
+            message.value = validationErrors ? validationErrors[0] : 'Please enter a valid email address.';
+            messageType.value = 'error';
+        } else {
+            // Handle other HTTP errors (e.g., 500, 404)
+            message.value = 'An unexpected server error occurred. Please try again.';
+            messageType.value = 'error';
+        }
         
     } catch (error) {
-        // Handle validation errors (e.g., email is already subscribed)
-        if (error.response && error.response.status === 422) {
-            // Get the first error message from the Laravel validation response
-            message.value = error.response.data.errors.email[0] || 'Please enter a valid email address.';
-        } else if (error.response) {
-            message.value = 'An unexpected error occurred. Please try again.';
-        } else {
-             message.value = 'Could not connect to the server.';
-        }
+        console.error("Fetch error:", error);
+        message.value = 'Could not connect to the server.';
         messageType.value = 'error';
     } finally {
         isSubmitting.value = false;
