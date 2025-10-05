@@ -35,23 +35,29 @@
         </div>
 
         <div class="flex justify-center">
-          <form class="w-full max-w-xl">
-            <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 items-center">
-              <input 
-                type="email" 
-                placeholder="Receive an email when our chapter opens"
-                class="flex-1 w-full px-5 py-3 border border-gray-300 rounded-full shadow-md text-gray-700 placeholder:text-gray-400 transition duration-300 focus:ring-[#9A7AA0] focus:border-[#9A7AA0]"
-                required
-              >
-              <button 
-                type="submit"
-                class="w-full sm:w-auto px-8 py-3 text-white font-semibold rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:opacity-90"
-                style="background-color: #9A7AA0;"
-              >
-                Join the Waitlist
-              </button>
-            </div>
-          </form>
+            <form class="w-full max-w-xl" @submit.prevent="submitWaitlist">
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 items-center">
+                    <input 
+                    type="email" 
+                    placeholder="Receive an email when our chapter opens"
+                    v-model="email" :disabled="isSubmitting"
+                    class="flex-1 w-full px-5 py-3 border border-gray-300 rounded-full shadow-md text-gray-700 placeholder:text-gray-400 transition duration-300 focus:ring-[#9A7AA0] focus:border-[#9A7AA0]"
+                    required
+                    >
+                    <button 
+                    type="submit"
+                    :disabled="isSubmitting"
+                    class="w-full sm:w-auto px-8 py-3 text-white font-semibold rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:opacity-90"
+                    style="background-color: #9A7AA0;"
+                    >
+                    {{ isSubmitting ? 'Subscribing...' : 'Join the Waitlist' }} </button>
+                </div>
+
+                <p v-if="message" :class="{ 'text-green-600': messageType === 'success', 'text-red-600': messageType === 'error' }" class="mt-4 text-sm font-medium">
+                    {{ message }}
+                </p>
+
+            </form>
         </div>
       </main>
 
@@ -67,7 +73,45 @@
 </template>
 
 <script setup>
-// Minimal script
+import { ref } from 'vue';
+import axios from 'axios';
+
+const email = ref('');
+const message = ref('');
+const messageType = ref(''); // 'success' or 'error'
+const isSubmitting = ref(false);
+
+const submitWaitlist = async () => {
+    // Clear previous messages
+    message.value = '';
+    messageType.value = '';
+    isSubmitting.value = true;
+
+    try {
+        const response = await axios.post('/api/waitlist', {
+            email: email.value
+        });
+        
+        // Success response from Controller
+        message.value = response.data.message;
+        messageType.value = 'success';
+        email.value = ''; // Clear the input field
+        
+    } catch (error) {
+        // Handle validation errors (e.g., email is already subscribed)
+        if (error.response && error.response.status === 422) {
+            // Get the first error message from the Laravel validation response
+            message.value = error.response.data.errors.email[0] || 'Please enter a valid email address.';
+        } else if (error.response) {
+            message.value = 'An unexpected error occurred. Please try again.';
+        } else {
+             message.value = 'Could not connect to the server.';
+        }
+        messageType.value = 'error';
+    } finally {
+        isSubmitting.value = false;
+    }
+};
 </script>
 
 <style scoped>
