@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Product;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
+use App\Models\Product;
+
 class ProductController extends Controller
 {
     public function index(Request $request): \Inertia\Response
     {
-        dd(auth()->id());
-        $product = "test";
-        Log::info('Fetching product ' . $product);
+        //dd(auth()->id());
+        Log::info('Fetching all products,....');
+
+        $products = Product::where("status", "enabled")->get();
+        dd($products);
     }
 
     public function showProduct(Request $request): \Inertia\Response
