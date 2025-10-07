@@ -26,7 +26,7 @@ class HomeController extends Controller
         // 2. IP Check Logic
         if ($clientIp === self::ALLOWED_IP) {
             // RENDER MAIN LANDING PAGE (Home/LandingPage.vue)
-            return Inertia::render('Home/LandingPage', [
+            return Inertia::render('home/LandingPage', [
                 'promoText' => 'Free shipping on all orders over £50!',
                 'featuredCategories' => [
                     ['name' => 'Candles', 'href' => '/category/candles', 'image' => '/images/cat-candles.jpg'],
