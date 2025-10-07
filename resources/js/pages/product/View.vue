@@ -17,6 +17,7 @@ const props = defineProps<ProductProps>();
     <div v-if="props.products" class="mb-6">
         <div v-for="product in props.products">
             {{  product['mpn'] }} {{ product['cost'] }}
+            <a href="chapterofyou.co.uk/product/{{ product['id'] }}">view</a>
         </div>
     </div>
 
