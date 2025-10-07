@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreign('product_id')->references('id')->on('product')->onDelete('cascade');
-            $table->string(255, "image")->nullable(true)->default(null);
+            $table->string("image")->nullable(true)->default(null);
             $table->enum("status", ["enabled", "disabled"])->default("enabled");
 
             $table->timestamps();

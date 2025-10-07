@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('category', function (Blueprint $table) {
             $table->id();
 
-            $table->string(255, "name");
-            $table->string(1024, "image")->nullable(true)->default(null);
+            $table->string("name");
+            $table->string("image")->nullable(true)->default(null);
             $table->enum("status", ["enabled", "disabled"])->default("enabled");
 
             $table->timestamps();
