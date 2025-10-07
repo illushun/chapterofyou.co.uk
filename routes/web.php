@@ -9,7 +9,7 @@ use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::post('/products', [ProductController::class, 'index'])->name('product.view');
+Route::post('/products', [ProductController::class, 'index'])->name('products');
 Route::post('/product/{id}', [ProductController::class, 'showProduct'])->name('product.view');
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
