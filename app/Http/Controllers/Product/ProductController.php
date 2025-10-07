@@ -15,8 +15,10 @@ class ProductController extends Controller
         //dd(auth()->id());
         Log::info('Fetching all products,....');
 
-        $products = Product::where("status", "enabled")->get();
-        dd($products);
+        $products = Product::where("status", "enabled")->get()->toArray();
+        return Inertia::render('product/View', [
+            'products' => $products,
+        ]);
     }
 
     public function showProduct(Request $request): \Inertia\Response
