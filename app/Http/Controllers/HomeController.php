@@ -16,15 +16,6 @@ class HomeController extends Controller
      */
     public function index(Request $request): \Inertia\Response
     {
-        // RENDER WAITLIST PAGE (Welcome.vue)
-        return Inertia::render('Welcome', [
-            'siteName' => 'Chapter of You',
-        ]);
-
-        /* 05/10/25 - TODO, Handle incoming IPs and only allow authenticated
-            to view the in-progress landing page. Otherwise, take the user
-            to the waiting list landing page. */
-
         // 1. Get the current user's IP
         // We use $request->ip() which is Laravel's reliable way to get the client IP
         $clientIp = $request->ip(); // errors here. Request params are empty.
@@ -43,7 +34,7 @@ class HomeController extends Controller
                 ]
             ]);
         }
-        
+
         // RENDER WAITLIST PAGE (Welcome.vue)
         return Inertia::render('Welcome', [
             'siteName' => 'Chapter of You',
