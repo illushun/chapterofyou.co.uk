@@ -15,9 +15,9 @@ const props = defineProps<ProductProps>();
 
 <template>
     <div v-if="props.products" class="mb-6">
-        <span class="inline-flex items-center rounded-full bg-indigo-100 px-4 py-1 text-sm font-semibold text-indigo-600 tracking-wider">
-            Diffusers
-        </span>
+        <div v-for="product in props.products">
+            {{  product['mpn'] }} {{ product['cost'] }}
+        </div>
     </div>
 
 </template>
