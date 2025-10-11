@@ -14,6 +14,8 @@ class Product extends Model
 
     protected $fillable = [
         'mpn',
+        'name',
+        'description',
         'status',
         'cost',
         'stock_qty',
