@@ -15,6 +15,8 @@ interface Category {
 
 interface Product {
     id: number;
+    name: string;
+    description: string;
     mpn: string;
     cost: number;
     stock_qty: number;
@@ -116,7 +118,7 @@ const paginate = (url: string) => {
                          <input
                             type="text"
                             v-model="form.search"
-                            placeholder="Quick search by MPN..."
+                            placeholder="Quick search by name or MPN..."
                             class="w-full rounded-lg border border-gray-300 bg-white py-2.5 px-4 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-600 focus:ring-blue-600 shadow-sm transition"
                         />
                     </div>
@@ -206,8 +208,7 @@ const paginate = (url: string) => {
                                     v-model="form.sort"
                                     class="h-9 rounded-lg border-gray-300 bg-white text-sm text-gray-900 focus:border-blue-600 focus:ring-blue-600 shadow-inner"
                                 >
-                                    <option value="mpn,asc">Title (A-Z)</option>
-                                    <option value="mpn,desc">Title (Z-A)</option>
+                                    <option value="name,asc">Name (A-Z)</option> <option value="name,desc">Name (Z-A)</option>
                                     <option value="cost,desc">Price (High)</option>
                                     <option value="cost,asc">Price (Low)</option>
                                 </select>
@@ -245,11 +246,15 @@ const paginate = (url: string) => {
                                                 {{ product.stock_qty > 0 ? 'In Stock' : 'Out of Stock' }}
                                             </p>
 
-                                            <h3 class="text-sm font-semibold text-gray-700 transition truncate group-hover:text-blue-700">
-                                                {{ product.mpn }}
+                                            <h3 class="text-base font-bold text-gray-900 transition truncate group-hover:text-blue-700">
+                                                {{ product.name }}
                                             </h3>
 
-                                            <p class="mt-2 text-xl font-extrabold text-gray-900">
+                                            <p class="text-xs text-gray-500 mt-1">
+                                                MPN: {{ product.mpn }}
+                                            </p>
+
+                                            <p class="mt-3 text-xl font-extrabold text-gray-900">
                                                 £{{ product.cost }}
                                             </p>
                                         </div>
@@ -355,7 +360,7 @@ const paginate = (url: string) => {
 </template>
 
 <style scoped>
-/* Mobile Filter Slide-Over Transition Styles (Unchanged for smooth UX) */
+/* Mobile Filter Slide-Over Transition Styles */
 .slide-fade-enter-active { transition: opacity 0.5s ease; }
 .slide-fade-leave-active { transition: opacity 0.5s ease; }
 .slide-fade-enter-from, .slide-fade-leave-to { opacity: 0; }

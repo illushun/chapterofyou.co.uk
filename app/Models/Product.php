@@ -46,9 +46,12 @@ class Product extends Model
         // Only show top-level products on the main collection page
         $query->whereNull('parent_product_id');
 
-        // MPN Search
+        // MPN and Name Search
         $query->when($filters['search'] ?? false, function ($query, $search) {
-            $query->where(fn($q) => $q->where('mpn', 'like', '%' . $search . '%'));
+            $query->where(function ($q) use ($search) {
+                $q->where('mpn', 'like', '%' . $search . '%')
+                ->orWhere('name', 'like', '%' . $search . '%');
+            });
         });
 
         // Category Filter
