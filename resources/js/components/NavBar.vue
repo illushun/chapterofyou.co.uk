@@ -47,7 +47,7 @@
                         <div class="hidden sm:block">
                             <a
                                 v-if="$page.props.auth.user"
-                                :href="route('dashboard')"
+                                href="/"
                                 class="inline-flex items-center px-4 py-2 border border-sky-400 text-sm font-medium rounded-full text-white bg-sky-500 hover:bg-sky-600 transition duration-150 shadow-md"
                             >
                                 <svg class="size-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -77,7 +77,7 @@
                 <div class="px-2 pt-2 pb-3 space-y-1">
                     <a
                         v-if="$page.props.auth.user"
-                        :href="route('dashboard')"
+                        href="/"
                         class="block px-3 py-2 rounded-md text-base font-medium text-sky-600 bg-sky-50 hover:bg-sky-100 transition"
                     >
                         Account: {{ firstName }}
