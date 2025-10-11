@@ -104,7 +104,6 @@ const paginate = (url: string) => {
 
 <template>
     <Head title="Product Collection" />
-    <AppLayout>
         <section class="bg-gray-50 min-h-screen">
             <div class="mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-8">
 
@@ -353,7 +352,6 @@ const paginate = (url: string) => {
                 </div>
             </div>
         </Transition>
-    </AppLayout>
 </template>
 
 <style scoped>
