@@ -24,6 +24,8 @@ class Product extends Model
 
     protected $hidden = [];
 
+    protected $appends = ['total_unique_views'];
+
     public function categories()
     {
         return $this->belongsToMany(
@@ -32,6 +34,17 @@ class Product extends Model
             'product_id',
             'category_id'
         );
+    }
+
+    public function uniqueViews()
+    {
+        return $this->hasMany(ProductView::class);
+    }
+
+    public function getTotalUniqueViewsAttribute()
+    {
+        // calculates the total count of unique views for the product
+        return $this->uniqueViews()->count();
     }
 
     /**

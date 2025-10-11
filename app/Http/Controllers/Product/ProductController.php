@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 use App\Models\Product;
+use App\Models\Product\View as ProductView;
 use App\Models\Category;
 
 class ProductController extends Controller
@@ -17,8 +18,13 @@ class ProductController extends Controller
         $perPage = 12;
         Log::info('Fetching all products,....');
 
+        $filters = $request->only([
+            'search', 'categories', 'min_price', 'max_price', 'sort', 'in_stock'
+        ]);
+
         $products = Product::with('categories')
-            ->filter($request->all())
+            ->withCount('uniqueViews')
+            ->filter($filters)
             ->when($request->get('sort'), function ($query, $sort) {
                 [$column, $direction] = explode(',', $sort);
                 $query->orderBy($column, $direction);
@@ -34,12 +40,22 @@ class ProductController extends Controller
         return Inertia::render('product/View', [
             'products' => $products,
             'categories' => $categories,
-            'filters' => $request->only(['search', 'categories', 'min_price', 'max_price', 'sort', 'in_stock']),
+            'filters' => $filters,
         ]);
     }
 
     public function showProduct(Request $request): \Inertia\Response
     {
+        $ipAddress = request()->ip();
+
+        ProductView::updateOrCreate(
+            [
+                'product_id' => $product->id,
+                'ip_address' => $ipAddress
+            ],
+            ['views' => 1]
+        );
+
         dd($request);
     }
 }

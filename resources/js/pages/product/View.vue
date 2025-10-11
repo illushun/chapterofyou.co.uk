@@ -2,7 +2,7 @@
 import AppLayout from '@/layouts/AppLayout.vue';
 import PrimaryButton from '@/components/PrimaryButton.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { ref, watch, reactive } from 'vue';
+import { ref, watch, reactive, nextTick } from 'vue';
 import { debounce } from 'lodash';
 import { usePage } from '@inertiajs/vue3';
 
@@ -61,6 +61,10 @@ const form = reactive({
 // UI State
 const filterOpen = ref(false);
 const isLoading = ref(false);
+const isMinPriceEditing = ref(false);
+const isMaxPriceEditing = ref(false);
+const minPriceInput = ref(null);
+const maxPriceInput = ref(null);
 
 // Watch for changes in the form object and automatically submit the filter
 watch(form, debounce(() => {
@@ -102,17 +106,45 @@ const paginate = (url: string) => {
     isLoading.value = true;
     router.get(url, {}, { preserveScroll: true, onFinish: () => { isLoading.value = false; } });
 }
+
+const startEditMinPrice = () => {
+    isMinPriceEditing.value = true;
+    nextTick(() => {
+        if (minPriceInput.value) {
+            minPriceInput.value.focus();
+        }
+    });
+};
+
+const stopEditMinPrice = () => {
+    form.min_price = Math.max(0, Math.min(form.max_price, Number(form.min_price)));
+    isMinPriceEditing.value = false;
+};
+
+const startEditMaxPrice = () => {
+    isMaxPriceEditing.value = true;
+    nextTick(() => {
+        if (maxPriceInput.value) {
+            maxPriceInput.value.focus();
+        }
+    });
+};
+
+const stopEditMaxPrice = () => {
+    form.max_price = Math.min(500, Math.max(form.min_price, Number(form.max_price)));
+    isMaxPriceEditing.value = false;
+};
 </script>
 
 <template>
-    <Head title="Browse Our Products | Chapter of You" />
+    <Head title="Browse Our Aesthetic Product Collection | E-commerce Site" />
         <section class="bg-gray-50 min-h-screen">
             <div class="mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-8">
 
                 <header class="mb-8 lg:mb-10 text-gray-900">
-                    <h2 class="text-4xl font-extrabold tracking-tight">Our Full Product Range</h2>
+                    <h2 class="text-4xl font-extrabold tracking-tight">Product Catalogue</h2>
                     <p class="mt-2 text-gray-600 max-w-lg">
-                        Find exactly what you need.
+                        Find exactly what you need with powerful filtering tools.
                     </p>
                     <div class="mt-4 max-w-lg">
                          <input
@@ -163,8 +195,34 @@ const paginate = (url: string) => {
                                 <h4 class="text-base font-semibold text-gray-800 mb-3">Price Range</h4>
                                 <div class="px-1">
                                     <div class="flex justify-between text-sm text-gray-600 mb-2 font-bold">
-                                        <span>£{{ form.min_price }}</span>
-                                        <span>£{{ form.max_price }}</span>
+                                        <span class="cursor-pointer hover:text-sky-600" @click="startEditMinPrice">
+                                            <span v-if="!isMinPriceEditing">Min: £{{ form.min_price }}</span>
+                                            <input
+                                                v-else
+                                                ref="minPriceInput"
+                                                type="number"
+                                                v-model.number="form.min_price"
+                                                @blur="stopEditMinPrice"
+                                                @keyup.enter="stopEditMinPrice"
+                                                class="w-20 p-0 text-sm border-gray-300 rounded-md focus:border-sky-500 focus:ring-sky-500"
+                                                min="0"
+                                                max="500"
+                                            />
+                                        </span>
+                                        <span class="cursor-pointer hover:text-sky-600" @click="startEditMaxPrice">
+                                            <span v-if="!isMaxPriceEditing">Max: £{{ form.max_price }}</span>
+                                            <input
+                                                v-else
+                                                ref="maxPriceInput"
+                                                type="number"
+                                                v-model.number="form.max_price"
+                                                @blur="stopEditMaxPrice"
+                                                @keyup.enter="stopEditMaxPrice"
+                                                class="w-20 p-0 text-sm border-gray-300 rounded-md focus:border-sky-500 focus:ring-sky-500 text-right"
+                                                min="0"
+                                                max="500"
+                                            />
+                                        </span>
                                     </div>
                                     <input
                                         type="range"
@@ -174,6 +232,7 @@ const paginate = (url: string) => {
                                         max="500"
                                         step="10"
                                         class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-sky-600 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full"
+                                        @mousedown="isMinPriceEditing = false"
                                     />
                                     <input
                                         type="range"
@@ -183,6 +242,7 @@ const paginate = (url: string) => {
                                         max="500"
                                         step="10"
                                         class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-sky-600 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full mt-2"
+                                        @mousedown="isMaxPriceEditing = false"
                                     />
                                 </div>
                             </div>
@@ -231,6 +291,10 @@ const paginate = (url: string) => {
                             <ul v-if="products.data.length" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                 <li v-for="product in props.products.data" :key="product.id" class="block overflow-hidden bg-white rounded-2xl shadow-xl group hover:shadow-2xl hover:-translate-y-1 transition duration-300 border border-gray-100">
                                     <a :href="'/product/' + product.id" class="block" :aria-label="'View details for ' + product.name">
+                                        <span v-if="product.total_unique_views > 100" class="absolute top-2 right-2 z-10 inline-flex items-center rounded-full bg-red-100 px-3 py-0.5 text-sm font-medium text-red-800 ring-1 ring-inset ring-red-600/10 shadow-sm">
+                                            🔥 POPULAR
+                                        </span>
+
                                         <div class="relative h-48 overflow-hidden bg-white flex items-center justify-center p-4">
                                             <img
                                                 src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
