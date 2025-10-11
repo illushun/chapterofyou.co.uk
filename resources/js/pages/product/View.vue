@@ -105,21 +105,22 @@ const paginate = (url: string) => {
 </script>
 
 <template>
-    <Head title="Product Collection" />
+    <Head title="Browse Our Products | Chapter of You" />
         <section class="bg-gray-50 min-h-screen">
             <div class="mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-8">
 
                 <header class="mb-8 lg:mb-10 text-gray-900">
-                    <h2 class="text-4xl font-extrabold tracking-tight">Product Catalogue</h2>
+                    <h2 class="text-4xl font-extrabold tracking-tight">Our Full Product Range</h2>
                     <p class="mt-2 text-gray-600 max-w-lg">
-                        Find exactly what you need with powerful filtering tools.
+                        Find exactly what you need.
                     </p>
                     <div class="mt-4 max-w-lg">
                          <input
                             type="text"
                             v-model="form.search"
-                            placeholder="Quick search by name or MPN..."
-                            class="w-full rounded-lg border border-gray-300 bg-white py-2.5 px-4 text-sm text-gray-900 placeholder-gray-500 focus:border-blue-600 focus:ring-blue-600 shadow-sm transition"
+                            placeholder="Search by product name or MPN..."
+                            aria-label="Search products by name or MPN"
+                            class="w-full rounded-lg border border-gray-300 bg-white py-2.5 px-4 text-sm text-gray-900 placeholder-gray-500 focus:border-sky-500 focus:ring-sky-500 shadow-sm transition"
                         />
                     </div>
                 </header>
@@ -132,8 +133,8 @@ const paginate = (url: string) => {
 
                             <div class="mb-6">
                                 <h4 class="text-base font-semibold text-gray-800 mb-2">Availability</h4>
-                                <label for="FilterInStock" class="inline-flex items-center gap-2 cursor-pointer transition hover:text-blue-600">
-                                    <input type="checkbox" id="FilterInStock" v-model="form.in_stock" class="size-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                <label for="FilterInStock" class="inline-flex items-center gap-2 cursor-pointer transition hover:text-sky-600">
+                                    <input type="checkbox" id="FilterInStock" v-model="form.in_stock" class="size-5 rounded border-gray-300 text-sky-600 focus:ring-sky-500" />
                                     <span class="text-sm font-medium text-gray-700"> In Stock Only </span>
                                 </label>
                             </div>
@@ -143,13 +144,13 @@ const paginate = (url: string) => {
                                 <div class="max-h-56 overflow-y-auto pr-2">
                                     <ul class="space-y-3">
                                         <li v-for="category in categories" :key="category.id">
-                                            <label :for="'FilterCategory-' + category.id" class="inline-flex items-center gap-3 cursor-pointer transition hover:text-blue-600">
+                                            <label :for="'FilterCategory-' + category.id" class="inline-flex items-center gap-3 cursor-pointer transition hover:text-sky-600">
                                                 <input
                                                     type="checkbox"
                                                     :id="'FilterCategory-' + category.id"
                                                     :value="category.id"
                                                     v-model="form.categories"
-                                                    class="size-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                                    class="size-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                                                 />
                                                 <span class="text-sm text-gray-700 font-medium"> {{ category.name }} </span>
                                             </label>
@@ -172,7 +173,7 @@ const paginate = (url: string) => {
                                         min="0"
                                         max="500"
                                         step="10"
-                                        class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full"
+                                        class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-sky-600 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full"
                                     />
                                     <input
                                         type="range"
@@ -181,7 +182,7 @@ const paginate = (url: string) => {
                                         min="0"
                                         max="500"
                                         step="10"
-                                        class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full mt-2"
+                                        class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-sky-600 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full mt-2"
                                     />
                                 </div>
                             </div>
@@ -206,15 +207,17 @@ const paginate = (url: string) => {
                                 <select
                                     id="SortBy"
                                     v-model="form.sort"
-                                    class="h-9 rounded-lg border-gray-300 bg-white text-sm text-gray-900 focus:border-blue-600 focus:ring-blue-600 shadow-inner"
+                                    class="h-9 rounded-lg border-gray-300 bg-white text-sm text-gray-900 focus:border-sky-600 focus:ring-sky-600 shadow-inner"
                                 >
-                                    <option value="name,asc">Name (A-Z)</option> <option value="name,desc">Name (Z-A)</option>
+                                    <option value="name,asc">Name (A-Z)</option>
+                                    <option value="name,desc">Name (Z-A)</option>
                                     <option value="cost,desc">Price (High)</option>
                                     <option value="cost,asc">Price (Low)</option>
                                 </select>
                                 <button
                                     @click="filterOpen = true"
                                     class="lg:hidden text-white bg-blue-600 hover:bg-blue-700 rounded-lg p-2 transition shadow-md"
+                                    aria-label="Toggle mobile filter panel"
                                 >
                                     <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414A1 1 0 0012 14.586V21a1 1 0 01-2 0v-6.414a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
                                 </button>
@@ -226,12 +229,12 @@ const paginate = (url: string) => {
                             class="transition duration-500 min-h-96"
                         >
                             <ul v-if="products.data.length" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                <li v-for="product in props.products.data" :key="product.id" class="block overflow-hidden bg-white rounded-xl shadow-lg group hover:shadow-xl hover:-translate-y-0.5 transition duration-300 border border-gray-100">
-                                    <a :href="'/product/' + product.id" class="block">
-                                        <div class="relative h-56 overflow-hidden bg-gray-50 flex items-center justify-center p-4">
+                                <li v-for="product in props.products.data" :key="product.id" class="block overflow-hidden bg-white rounded-2xl shadow-xl group hover:shadow-2xl hover:-translate-y-1 transition duration-300 border border-gray-100">
+                                    <a :href="'/product/' + product.id" class="block" :aria-label="'View details for ' + product.name">
+                                        <div class="relative h-48 overflow-hidden bg-white flex items-center justify-center p-4">
                                             <img
                                                 src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
-                                                alt="Product Image"
+                                                :alt="'Image of ' + product.name"
                                                 class="w-full h-full object-contain transition duration-500 group-hover:scale-105"
                                             />
                                         </div>
@@ -239,22 +242,24 @@ const paginate = (url: string) => {
                                         <div class="p-4 border-t border-gray-100">
                                             <p
                                                 :class="[
-                                                    'text-xs font-bold uppercase tracking-wider mb-2',
+                                                    'text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1',
                                                     product.stock_qty > 0 ? 'text-green-600' : 'text-red-600'
                                                 ]"
                                             >
+                                                <svg v-if="product.stock_qty > 0" class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                                <svg v-else class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                                 {{ product.stock_qty > 0 ? 'In Stock' : 'Out of Stock' }}
                                             </p>
 
-                                            <h3 class="text-base font-bold text-gray-900 transition truncate group-hover:text-blue-700">
+                                            <h4 class="text-lg font-extrabold text-gray-900 transition truncate group-hover:text-sky-700">
                                                 {{ product.name }}
-                                            </h3>
+                                            </h4>
 
                                             <p class="text-xs text-gray-500 mt-1">
                                                 MPN: {{ product.mpn }}
                                             </p>
 
-                                            <p class="mt-3 text-xl font-extrabold text-gray-900">
+                                            <p class="mt-3 text-2xl font-black text-sky-600">
                                                 £{{ product.cost }}
                                             </p>
                                         </div>
@@ -278,11 +283,12 @@ const paginate = (url: string) => {
                                     <button
                                         v-if="link.url"
                                         @click.prevent="paginate(link.url)"
-                                        :class="{'block px-4 py-2 rounded-lg border text-center leading-5 transition': true, 'bg-blue-600 text-white border-blue-700 font-bold shadow-md': link.active, 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50': !link.active, 'cursor-not-allowed opacity-50': link.label.includes('Previous') && products.current_page === 1 || link.label.includes('Next') && products.current_page === products.last_page}"
+                                        :class="{'block px-4 py-2 rounded-lg border text-center leading-5 transition': true, 'bg-sky-600 text-white border-sky-700 font-bold shadow-md': link.active, 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100': !link.active, 'cursor-not-allowed opacity-50': link.label.includes('Previous') && products.current_page === 1 || link.label.includes('Next') && products.current_page === products.last_page}"
                                         v-html="link.label.replace('Previous', '←').replace('Next', '→')"
+                                        :aria-label="link.label.includes('Previous') ? 'Previous Page' : link.label.includes('Next') ? 'Next Page' : 'Go to page ' + link.label"
                                     >
                                     </button>
-                                    <span v-else class="block px-4 py-2 rounded-lg border bg-gray-100 text-gray-500 text-center leading-5 cursor-not-allowed" v-html="link.label.replace('Previous', '←').replace('Next', '→')"></span>
+                                    <span v-else class="block px-4 py-2 rounded-lg border bg-gray-100 text-gray-500 text-center leading-5 cursor-not-allowed" v-html="link.label.replace('Previous', '←').replace('Next', '→')" aria-disabled="true"></span>
                                 </li>
                             </ol>
                         </div>
@@ -296,7 +302,7 @@ const paginate = (url: string) => {
                 <div class="fixed inset-y-0 right-0 w-80 bg-white p-6 shadow-2xl overflow-y-auto">
                     <div class="flex justify-between items-center mb-6 border-b pb-3">
                         <h3 class="text-xl font-bold text-gray-900">Filters</h3>
-                        <button @click="filterOpen = false" class="text-gray-500 hover:text-gray-900 transition">
+                        <button @click="filterOpen = false" class="text-gray-500 hover:text-gray-900 transition" aria-label="Close mobile filter panel">
                             <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                         </button>
                     </div>
