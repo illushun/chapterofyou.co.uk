@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
 
             $table->string("mpn");
+            $table->string("name");
+            $table->text("description");
             $table->enum("status", ["enabled", "disabled"])->default("enabled");
             $table->decimal("cost", 10, 2)->default(0.00);
             $table->integer("stock_qty")->default(0);
