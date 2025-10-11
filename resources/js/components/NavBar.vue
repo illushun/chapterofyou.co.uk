@@ -1,3 +1,8 @@
+<script setup lang="ts">
+import { dashboard, login, register } from '@/routes';
+import { Head, Link } from '@inertiajs/vue3';
+</script>
+
 <template>
     <header
         class="mb-6 w-full max-w-[335px] text-sm not-has-[nav]:hidden lg:max-w-4xl"
