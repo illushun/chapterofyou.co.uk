@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import AppLayout from '@/layouts/AppLayout.vue';
-import PrimaryButton from '@/components/PrimaryButton.vue';
+import NavBar from '@/components/NavBar.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, watch, reactive, nextTick } from 'vue';
 import { debounce } from 'lodash';
@@ -137,6 +136,8 @@ const stopEditMaxPrice = () => {
 </script>
 
 <template>
+    <NavBar />
+
     <Head title="Browse Our Aesthetic Product Collection | E-commerce Site" />
         <section class="bg-gray-50 min-h-screen">
             <div class="mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-8">
