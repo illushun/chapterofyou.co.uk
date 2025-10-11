@@ -71,7 +71,7 @@ watch(form, debounce(() => {
 
     // Make an Inertia GET request to the current URL with the new query parameters
     router.get(
-        route('product.view'),
+        '/products',
         dataToSend,
         {
             preserveState: true,
