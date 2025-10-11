@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string("mpn");
             $table->enum("status", ["enabled", "disabled"])->default("enabled");
             $table->decimal("cost", 10, 2)->default(0.00);
+            $table->integer("stock_qty")->default(0);
+            $table->unsignedBigInteger('parent_product_id');
+
+            $table->foreign('product_id')->references('id')->on('product')->onDelete('cascade');
 
             $table->timestamps();
         });
