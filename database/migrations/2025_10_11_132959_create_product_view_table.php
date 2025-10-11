@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        chema::create('product_views', function (Blueprint $table) {
+        Schema::create('product_views', function (Blueprint $table) {
             $table->id();
             $table->foreignId('product_id')->constrained('product')->cascadeOnDelete();
             $table->ipAddress('ip_address');
