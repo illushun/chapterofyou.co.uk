@@ -5,20 +5,36 @@ namespace App\Http\Controllers\Product;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Inertia\Inertia; // Essential for the Inertia/Vue integration
+use Inertia\Inertia;
 
 use App\Models\Product;
+use App\Models\Category;
 
 class ProductController extends Controller
 {
     public function index(Request $request): \Inertia\Response
     {
-        //dd(auth()->id());
+        $perPage = 12;
         Log::info('Fetching all products,....');
 
-        $products = Product::where("status", "enabled")->get()->toArray();
+        $products = Product::with('categories')
+            ->filter($request->all())
+            ->when($request->get('sort'), function ($query, $sort) {
+                [$column, $direction] = explode(',', $sort);
+                $query->orderBy($column, $direction);
+            })
+            ->paginate($perPage)
+            ->withQueryString()
+            ->toArray();
+
+        $categories = Category::select('id', 'name')
+            ->where('status', 'enabled')
+            ->get();
+
         return Inertia::render('product/View', [
             'products' => $products,
+            'categories' => $categories,
+            'filters' => $request->only(['search', 'categories', 'min_price', 'max_price', 'sort', 'in_stock']),
         ]);
     }
 
