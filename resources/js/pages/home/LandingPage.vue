@@ -21,7 +21,7 @@ interface PromotionImage {
 interface LandingPageProps {
     promoText: string;
     featuredCategories: FeaturedCategory[];
-    promotionImages: PromotionImage[]; // 🎯 NEW prop for promotion images
+    promotionImages: PromotionImage[];
 }
 
 const props = defineProps<LandingPageProps>();
