@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref as vueRef, watch, provide, computed } from 'vue';
+import { ref as vueRef, watch, provide, computed, inject, h, defineComponent, PropType, onMounted } from 'vue';
 import { useScroll } from '@vueuse/core';
 import { IconMenu2, IconX } from '@tabler/icons-vue';
 import { Transition } from 'vue'; // For AnimatePresence replacement
@@ -22,8 +22,17 @@ const navbarProps = defineProps<NavbarProps>();
 
 const navbarRef = vueRef<HTMLDivElement | null>(null);
 const { y: scrollY } = useScroll({ target: navbarRef });
-
 const visible = vueRef(false);
+
+onMounted(() => {
+    if (navbarRef.value) {
+        const { y } = useScroll({ target: navbarRef });
+
+        watch(y, (latest) => {
+             scrollY.value = latest.value;
+        }, { immediate: true });
+    }
+});
 
 watch(scrollY, (latest) => {
     if (latest > 100) {
