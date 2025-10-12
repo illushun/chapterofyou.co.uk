@@ -5,6 +5,7 @@ import InfiniteMovingCards from '@/components/InfiniteMovingCards.vue';
 import HeroSectionOne from '@/components/HeroSectionOne.vue';
 import GlowingCard from '@/components/GlowingCard.vue';
 import { Head } from '@inertiajs/vue3';
+import GlowingCard from '@/components/GlowingCard.vue';
 
 interface FeaturedCategory {
     name: string;
@@ -72,7 +73,7 @@ const testimonials = [
 
     <HeroSectionOne />
 
-    <GlowingEffect
+    <GlowingCard
         :blur="8"
         :spread="25"
         :proximity="50"
@@ -88,9 +89,9 @@ const testimonials = [
             </h1>
 
             </div>
-    </GlowingEffect>
+    </GlowingCard>
 
-    <GlowingEffect
+    <GlowingCard
         :blur="8"
         :spread="25"
         :proximity="50"
@@ -106,9 +107,9 @@ const testimonials = [
             </h1>
 
             </div>
-    </GlowingEffect>
+    </GlowingCard>
 
-    <GlowingEffect
+    <GlowingCard
         :blur="8"
         :spread="25"
         :proximity="50"
@@ -124,7 +125,7 @@ const testimonials = [
             </h1>
 
             </div>
-    </GlowingEffect>
+    </GlowingCard>
 
     <section class="relative bg-pink-50 pt-16 pb-24 lg:pt-24 lg:pb-40 overflow-hidden">
         <div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
