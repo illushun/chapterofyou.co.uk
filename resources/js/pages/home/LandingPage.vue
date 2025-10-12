@@ -81,7 +81,7 @@ const testimonials = [
         class="mx-auto w-[400px] h-[200px]"
     >
         <div
-            class="relative p-6 rounded-xl bg-black dark:bg-neutral-800 text-white shadow-xl w-full h-full flex items-center justify-center"
+            class="relative p-6 rounded-xl bg-white text-black shadow-xl w-full h-full flex items-center justify-center"
         >
             <h1 class="text-2xl font-bold z-10">
                 Diffuser 1
@@ -99,7 +99,7 @@ const testimonials = [
         class="mx-auto w-[400px] h-[200px]"
     >
         <div
-            class="relative p-6 rounded-xl bg-black dark:bg-neutral-800 text-white shadow-xl w-full h-full flex items-center justify-center"
+            class="relative p-6 rounded-xl bg-white text-black shadow-xl w-full h-full flex items-center justify-center"
         >
             <h1 class="text-2xl font-bold z-10">
                 Diffuser 2
@@ -117,7 +117,7 @@ const testimonials = [
         class="mx-auto w-[400px] h-[200px]"
     >
         <div
-            class="relative p-6 rounded-xl bg-black dark:bg-neutral-800 text-white shadow-xl w-full h-full flex items-center justify-center"
+            class="relative p-6 rounded-xl bg-white text-black shadow-xl w-full h-full flex items-center justify-center"
         >
             <h1 class="text-2xl font-bold z-10">
                 Diffuser 3
