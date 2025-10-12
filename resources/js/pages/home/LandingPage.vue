@@ -3,6 +3,7 @@ import NavBar from '@/components/NavBar.vue';
 import PrimaryButton from '@/components/PrimaryButton.vue';
 import InfiniteMovingCards from '@/components/InfiniteMovingCards.vue';
 import HeroSectionOne from '@/components/HeroSectionOne.vue';
+import GlowingCard from '@/components/GlowingCard.vue';
 import { Head } from '@inertiajs/vue3';
 
 interface FeaturedCategory {
@@ -70,6 +71,60 @@ const testimonials = [
     </style>
 
     <HeroSectionOne />
+
+    <GlowingEffect
+        :blur="8"
+        :spread="25"
+        :proximity="50"
+        :disabled="false"
+        :glow="true"
+        class="mx-auto w-[400px] h-[200px]"
+    >
+        <div
+            class="relative p-6 rounded-xl bg-black dark:bg-neutral-800 text-white shadow-xl w-full h-full flex items-center justify-center"
+        >
+            <h1 class="text-2xl font-bold z-10">
+                Diffuser 1
+            </h1>
+
+            </div>
+    </GlowingEffect>
+
+    <GlowingEffect
+        :blur="8"
+        :spread="25"
+        :proximity="50"
+        :disabled="false"
+        :glow="true"
+        class="mx-auto w-[400px] h-[200px]"
+    >
+        <div
+            class="relative p-6 rounded-xl bg-black dark:bg-neutral-800 text-white shadow-xl w-full h-full flex items-center justify-center"
+        >
+            <h1 class="text-2xl font-bold z-10">
+                Diffuser 2
+            </h1>
+
+            </div>
+    </GlowingEffect>
+
+    <GlowingEffect
+        :blur="8"
+        :spread="25"
+        :proximity="50"
+        :disabled="false"
+        :glow="true"
+        class="mx-auto w-[400px] h-[200px]"
+    >
+        <div
+            class="relative p-6 rounded-xl bg-black dark:bg-neutral-800 text-white shadow-xl w-full h-full flex items-center justify-center"
+        >
+            <h1 class="text-2xl font-bold z-10">
+                Diffuser 3
+            </h1>
+
+            </div>
+    </GlowingEffect>
 
     <section class="relative bg-pink-50 pt-16 pb-24 lg:pt-24 lg:pb-40 overflow-hidden">
         <div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
