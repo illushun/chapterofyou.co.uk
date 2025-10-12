@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import NavBar from '@/Components/NavBar.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
+import NavBar from '@/components/NavBar.vue';
+import PrimaryButton from '@/components/PrimaryButton.vue';
 import { Head } from '@inertiajs/vue3';
 
 interface FeaturedCategory {
