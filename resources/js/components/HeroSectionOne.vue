@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const headline = "Launch your website in hours, not days";
+const headline = "Explore your next chapter";
 const headlineWords = headline.split(" ");
 </script>
 
@@ -45,9 +45,7 @@ const headlineWords = headline.split(" ");
                 :transition="{ duration: 300 }"
                 class="relative z-10 mx-auto max-w-xl py-4 text-center text-lg font-normal text-neutral-600 dark:text-neutral-400"
             >
-                With AI, you can launch your website in hours, not days. Try our best
-                in class, state of the art, cutting edge AI tools to get your website
-                up.
+                Launching soon to offer bespoke tailored beauty treatments alongside our hand-crafted aromatherapy diffusers.
             </p>
 
             <div
@@ -62,7 +60,7 @@ const headlineWords = headline.split(" ");
                     Explore Now
                 </button>
                 <button class="w-60 transform rounded-lg border border-gray-300 bg-white px-6 py-2 font-medium text-black transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-100 dark:border-gray-700 dark:bg-black dark:text-white dark:hover:bg-gray-900">
-                    Contact Support
+                    Contact
                 </button>
             </div>
 
@@ -76,7 +74,7 @@ const headlineWords = headline.split(" ");
             >
                 <div class="w-full overflow-hidden rounded-xl border border-gray-300 dark:border-gray-700">
                     <img
-                        src="https://assets.aceternity.com/pro/aceternity-landing.webp"
+                        src="https://eu.neomwellbeing.com/cdn/shop/articles/benefits-of-diffusers.jpg?v=1715589869&width=1920"
                         alt="Landing page preview"
                         class="aspect-[16/9] h-auto w-full object-cover"
                         height="1000"
