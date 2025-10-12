@@ -54,7 +54,7 @@ const NavBody = defineComponent({
         className: String,
     },
     setup(props, { slots }) {
-        const isVisible = inject<Ref<boolean>>(NAV_STATE_KEY, ref(false));
+        const isVisible = inject<Ref<boolean>>(NAV_STATE_KEY, vueRef(false));
 
         const motionConfig = computed(() => ({
             initial: {
