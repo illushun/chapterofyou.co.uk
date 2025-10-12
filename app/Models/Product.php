@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
+use App\Models\Product\Category;
+use App\Models\Product\Image;
+use App\Models\Product\Seo;
 use App\Models\Product\View as ProductView;
 
 class Product extends Model
@@ -36,6 +39,11 @@ class Product extends Model
             'product_id',
             'category_id'
         );
+    }
+
+    public function images()
+    {
+        return $this->hasMany(Image::class);
     }
 
     public function uniqueViews()

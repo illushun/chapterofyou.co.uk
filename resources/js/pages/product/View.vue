@@ -298,7 +298,7 @@ const stopEditMaxPrice = () => {
 
                                         <div class="relative h-48 overflow-hidden bg-white flex items-center justify-center p-4">
                                             <img
-                                                src="https://images.unsplash.com/photo-1523381210434-271e8be1f52b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1770&q=80"
+                                                :src="product.images ? product.images[0].image : ''"
                                                 :alt="'Image of ' + product.name"
                                                 class="w-full h-full object-contain transition duration-500 group-hover:scale-105"
                                             />
