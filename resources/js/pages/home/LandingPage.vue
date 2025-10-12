@@ -5,7 +5,6 @@ import InfiniteMovingCards from '@/components/InfiniteMovingCards.vue';
 import HeroSectionOne from '@/components/HeroSectionOne.vue';
 import GlowingCard from '@/components/GlowingCard.vue';
 import { Head } from '@inertiajs/vue3';
-import GlowingCard from '@/components/GlowingCard.vue';
 
 interface FeaturedCategory {
     name: string;
