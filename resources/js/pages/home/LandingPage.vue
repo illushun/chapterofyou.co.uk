@@ -2,6 +2,7 @@
 import NavBar from '@/components/NavBar.vue';
 import PrimaryButton from '@/components/PrimaryButton.vue';
 import InfiniteMovingCards from '@/components/InfiniteMovingCards.vue';
+import HeroSectionOne from '@/components/HeroSectionOne.vue';
 import { Head } from '@inertiajs/vue3';
 
 interface FeaturedCategory {
@@ -67,6 +68,8 @@ const testimonials = [
         animation: subtleFloat 3s ease-in-out infinite;
     }
     </style>
+
+    <HeroSectionOne />
 
     <section class="relative bg-pink-50 pt-16 pb-24 lg:pt-24 lg:pb-40 overflow-hidden">
         <div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
