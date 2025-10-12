@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, provide, computed } from 'vue';
+import { ref as vueRef, watch, provide, computed } from 'vue';
 import { useScroll } from '@vueuse/core';
 import { IconMenu2, IconX } from '@tabler/icons-vue';
 import { Transition } from 'vue'; // For AnimatePresence replacement
@@ -20,10 +20,10 @@ interface NavbarProps {
 
 const navbarProps = defineProps<NavbarProps>();
 
-const ref = ref<HTMLDivElement | null>(null);
-const { y: scrollY } = useScroll({ target: ref }); // Get scroll position relative to the ref target
+const navbarRef = vueRef<HTMLDivElement | null>(null);
+const { y: scrollY } = useScroll({ target: navbarRef });
 
-const visible = ref(false); // State for when to show the 'floating' effect
+const visible = vueRef(false);
 
 watch(scrollY, (latest) => {
     if (latest > 100) {
@@ -261,7 +261,7 @@ const NavbarButton = defineComponent({
 
 <template>
     <div
-        ref="ref"
+        ref="navbarRef"
         :class="cn('sticky inset-x-0 top-20 z-40 w-full', navbarProps.className)"
         v-motion
         :initial="{}"
