@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import NavBar from '@/components/NavBar.vue';
 import PrimaryButton from '@/components/PrimaryButton.vue';
+import InfiniteMovingCards from '@/components/InfiniteMovingCards.vue';
 import { Head } from '@inertiajs/vue3';
 
 interface FeaturedCategory {
@@ -23,6 +24,24 @@ interface LandingPageProps {
 }
 
 const props = defineProps<LandingPageProps>();
+
+const testimonials = [
+    {
+        quote: "The service was exceptional, and the product quality exceeded my expectations. Highly recommend!",
+        name: "Alex V.",
+        title: "Happy Customer"
+    },
+    {
+        quote: "I love the cute, aesthetic style! Everything brightens up my desk. Will be buying again soon.",
+        name: "Sarah K.",
+        title: "Style Enthusiast"
+    },
+    {
+        quote: "Fast shipping and perfect packaging. A fantastic experience from start to finish.",
+        name: "Jamie L.",
+        title: "Verified Buyer"
+    },
+];
 </script>
 
 <template>
@@ -96,6 +115,14 @@ const props = defineProps<LandingPageProps>();
             </div>
         </div>
     </section>
+
+    <InfiniteMovingCards
+                :items="testimonials"
+                direction="right"
+                speed="normal"
+                :pause-on-hover="true"
+                class="mt-6"
+            />
 
     <div class="relative bg-white h-20 -mt-20 z-10 wave-bg-top"></div>
     <section v-if="props.promotionImages && props.promotionImages.length > 0" class="bg-white py-12 sm:py-20 overflow-hidden">
