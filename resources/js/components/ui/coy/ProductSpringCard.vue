@@ -106,8 +106,8 @@ const handleTouchEnd = (event: Event) => {
     ref="cardRef"
     @mouseenter="motionCard.apply('hovered')"
     @mouseleave="motionCard.apply('initial')"
-    :class="mergedBaseClass"
-    @touchstart.stop="handleTouchStart" :class="[mergedBaseClass, { 'group-hovered': isTapped }]"
+    @touchstart.stop="handleTouchStart"
+    :class="[mergedBaseClass, { 'group-hovered': isTapped }]"
   >
     <div
       ref="innerRef"
