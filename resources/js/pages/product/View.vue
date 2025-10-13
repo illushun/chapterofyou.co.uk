@@ -315,7 +315,7 @@ const handleFavourite = (product: ProductCardData) => {
                                     <ProductSpringCard
                                         :product="product"
                                         @add-to-cart="handleAddToCart(product)"
-                                        @favourite="handleFavourite(product)"       />
+                                        @favourite="handleFavourite(product)"
                                     />
                                 </li>
                             </ul>
