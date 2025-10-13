@@ -116,7 +116,8 @@ const handleTouchEnd = (event: Event) => {
     @mouseenter="motionCard.apply('hovered')"
     @mouseleave="motionCard.apply('initial')"
     @touchstart.stop="handleTouchStart"
-    :class="[mergedBaseClass, { 'group-hovered': isTapped }, {'background-color': '#763a36'}]"
+    :class="[mergedBaseClass, { 'group-hovered': isTapped }]"
+    style="background-color: #763a36;"
   >
     <div
       ref="innerRef"
