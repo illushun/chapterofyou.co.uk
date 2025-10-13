@@ -5,7 +5,7 @@ import { ref, watch, reactive, nextTick } from 'vue';
 import { debounce } from 'lodash';
 import { usePage } from '@inertiajs/vue3';
 
-// --- TypeScript Interface Definitions for Type Safety ---
+import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 
 interface Category {
     id: number;
@@ -132,6 +132,16 @@ const startEditMaxPrice = () => {
 const stopEditMaxPrice = () => {
     form.max_price = Math.min(500, Math.max(form.min_price, Number(form.max_price)));
     isMaxPriceEditing.value = false;
+};
+
+const handleAddToCart = (productId: number) => {
+    console.log(`Adding product ${productId} to cart...`);
+    // router.post('/cart', { product_id: productId });
+};
+
+const handleFavourite = (productId: number) => {
+    console.log(`Toggling favourite for product ${productId}...`);
+    // router.post(`/products/${productId}/favourite`);
 };
 </script>
 
@@ -289,46 +299,13 @@ const stopEditMaxPrice = () => {
                             :class="{'opacity-40 pointer-events-none': isLoading, 'opacity-100': !isLoading}"
                             class="transition duration-500 min-h-96"
                         >
-                            <ul v-if="products.data.length" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                <li v-for="product in props.products.data" :key="product.id" class="block overflow-hidden bg-white rounded-2xl shadow-xl group hover:shadow-2xl hover:-translate-y-1 transition duration-300 border border-gray-100">
-                                    <a :href="'/product/' + product.id" class="block" :aria-label="'View details for ' + product.name">
-                                        <span v-if="product.total_unique_views > 100" class="absolute top-2 right-2 z-10 inline-flex items-center rounded-full bg-red-100 px-3 py-0.5 text-sm font-medium text-red-800 ring-1 ring-inset ring-red-600/10 shadow-sm">
-                                            🔥 POPULAR
-                                        </span>
-
-                                        <div class="relative h-48 overflow-hidden bg-white flex items-center justify-center p-4">
-                                            <img
-                                                :src="product.images ? product.images[0].image : ''"
-                                                :alt="'Image of ' + product.name"
-                                                class="w-full h-full object-contain transition duration-500 group-hover:scale-105"
-                                            />
-                                        </div>
-
-                                        <div class="p-4 border-t border-gray-100">
-                                            <p
-                                                :class="[
-                                                    'text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1',
-                                                    product.stock_qty > 0 ? 'text-green-600' : 'text-red-600'
-                                                ]"
-                                            >
-                                                <svg v-if="product.stock_qty > 0" class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                                <svg v-else class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                                {{ product.stock_qty > 0 ? 'In Stock' : 'Out of Stock' }}
-                                            </p>
-
-                                            <h4 class="text-lg font-extrabold text-gray-900 transition truncate group-hover:text-sky-700">
-                                                {{ product.name }}
-                                            </h4>
-
-                                            <p class="text-xs text-gray-500 mt-1">
-                                                MPN: {{ product.mpn }}
-                                            </p>
-
-                                            <p class="mt-3 text-2xl font-black text-sky-600">
-                                                £{{ product.cost }}
-                                            </p>
-                                        </div>
-                                    </a>
+                            <ul v-if="products.data.length" class="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                <li v-for="product in props.products.data" :key="product.id">
+                                    <ProductSpringCard
+                                        :product="product"
+                                        @add-to-cart="handleAddToCart"
+                                        @favourite="handleFavourite"
+                                    />
                                 </li>
                             </ul>
 

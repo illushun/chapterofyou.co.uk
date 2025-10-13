@@ -106,37 +106,6 @@ const mergedContentClass = computed(() => twMerge(contentClass, props.className)
             LET'S GO
           </button>
         </div>
-
-        <svg
-          v-motion
-          :initial="{ rotate: 0 }"
-          :animate="{ rotate: 360 }"
-          :transition="{
-            duration: 25000, // 25s
-            repeat: Infinity,
-            type: 'tween', // 'tween' for continuous rotation
-            ease: 'linear',
-          }"
-          style="top: 0; right: 0; transform: translate(50%, -50%) scale(0.75);"
-          width="200"
-          height="200"
-          class="pointer-events-none absolute z-10 rounded-full"
-        >
-          <path
-            id="circlePath"
-            d="M100,100 m-100,0 a100,100 0 1,0 200,0 a100,100 0 1,0 -200,0"
-            fill="none"
-          />
-          <text>
-            <textPath
-              href="#circlePath"
-              fill="black"
-              class="fill-black text-2xl font-black uppercase opacity-0 transition-opacity duration-300 ease-in-out group-hover:opacity-100"
-            >
-              LEARN MORE • LEARN MORE • LEARN MORE • LEARN MORE •
-            </textPath>
-          </text>
-        </svg>
       </div>
     </div>
   </div>
