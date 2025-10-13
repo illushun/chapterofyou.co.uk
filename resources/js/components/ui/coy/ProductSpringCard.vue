@@ -158,9 +158,10 @@ const handleTouchEnd = (event: Event) => {
             </p>
 
             <button
-                class="z-20 p-2 border-2 border-black bg-black text-white rounded-lg transition-colors duration-300 ease-in-out hover:bg-sky-600 hover:text-white shadow-md"
+                class="z-20 p-2 border-2 border-black text-white rounded-lg transition-colors duration-300 ease-in-out hover:bg-sky-600 hover:text-white shadow-md"
                 aria-label="Add product to cart"
                 @click.stop="$emit('addToCart', product.id)"
+                style="background-color: #d5a6a3;"
             >
                 <div v-html="IconCart"></div>
             </button>
