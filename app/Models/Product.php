@@ -37,7 +37,7 @@ class Product extends Model
             Category::class,
             'product_category',
             'product_id',
-            'category_id,
+            'category_id',
             'id',
             'id'
         );
