@@ -168,13 +168,13 @@ const handleFavourite = (product: ProductCardData) => {
                 <p class="mt-2 text-gray-600 max-w-lg">
                     Find exactly what you need with powerful filtering tools.
                 </p>
-                <div class="mt-4 max-w-lg">
+                <div class="mt-4 max-w-lg rounded-lg">
                     <input
                         type="text"
                         v-model="form.search"
                         placeholder="Search by product name or MPN..."
                         aria-label="Search products by name or MPN"
-                        class="relative -m-0.5 w-full border-2 border-black bg-white py-2.5 px-4 text-sm text-gray-900 placeholder-gray-500 focus:border-sky-500 focus:ring-sky-500 shadow-sm transition"
+                        class="relative rounded-lg -m-0.5 w-full border-2 border-black bg-white py-2.5 px-4 text-sm text-gray-900 placeholder-gray-500 focus:border-sky-500 focus:ring-sky-500 shadow-sm transition"
                     />
                 </div>
             </header>
@@ -182,8 +182,8 @@ const handleFavourite = (product: ProductCardData) => {
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
 
                 <aside class="hidden lg:block">
-                    <div class="sticky top-4 border-2 border-black bg-purple-200">
-                        <div class="relative -m-0.5 p-6 bg-white border-2 border-black">
+                    <div class="sticky top-4 rounded-lg border-2 border-black bg-purple-200">
+                        <div class="relative rounded-lg -m-0.5 p-6 bg-white border-2 border-black">
                             <h3 class="text-xl font-bold text-gray-900 mb-6 border-b-2 border-black pb-3">Refine Results</h3>
 
                             <div class="mb-6">
@@ -284,17 +284,17 @@ const handleFavourite = (product: ProductCardData) => {
                 </aside>
 
                 <div class="lg:col-span-1">
-                    <div class="relative -m-0.5 flex items-center justify-between mb-6 p-3 bg-white border-2 border-black">
+                    <div class="relative rounded-lg -m-0.5 flex items-center justify-between mb-6 p-3 bg-white border-2 border-black">
                         <p class="text-sm text-gray-700 font-medium">
                             Showing **{{ products.data.length }} of {{ products.total }}** results
                         </p>
                         <div class="flex items-center gap-3">
                             <label for="SortBy" class="text-sm font-medium text-gray-700 whitespace-nowrap hidden sm:block">Sort by:</label>
-                            <div class="border-2 border-black bg-gray-100">
+                            <div class="border-2 rounded-lg border-black bg-gray-100">
                                 <select
                                     id="SortBy"
                                     v-model="form.sort"
-                                    class="relative -m-0.5 h-9 border-2 border-black bg-white text-sm text-gray-900 focus:border-sky-600 focus:ring-sky-600 shadow-inner"
+                                    class="relative rounded-lg -m-0.5 h-9 border-2 border-black bg-white text-sm text-gray-900 focus:border-sky-600 focus:ring-sky-600 shadow-inner"
                                 >
                                     <option value="name,asc">Name (A-Z)</option>
                                     <option value="name,desc">Name (Z-A)</option>
@@ -304,7 +304,7 @@ const handleFavourite = (product: ProductCardData) => {
                             </div>
                             <button
                                 @click="filterOpen = true"
-                                class="lg:hidden text-white bg-blue-600 hover:bg-blue-700 border-2 border-black p-2 transition shadow-md"
+                                class="lg:hidden rounded-lg text-white bg-blue-600 hover:bg-blue-700 border-2 border-black p-2 transition shadow-md"
                                 aria-label="Toggle mobile filter panel"
                             >
                                 <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414A1 1 0 0012 14.586V21a1 1 0 01-2 0v-6.414a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
@@ -370,7 +370,7 @@ const handleFavourite = (product: ProductCardData) => {
                 </div>
 
                 <div class="space-y-6">
-                    <input type="text" v-model="form.search" placeholder="Quick search..." class="relative -m-0.5 w-full border-2 border-black bg-white py-2.5 shadow-sm sm:text-sm focus:border-blue-500 focus:ring-blue-500" />
+                    <input type="text" v-model="form.search" placeholder="Quick search..." class="relative rounded-lg -m-0.5 w-full border-2 border-black bg-white py-2.5 shadow-sm sm:text-sm focus:border-blue-500 focus:ring-blue-500" />
 
                     <div class="border-b-2 border-black pb-4">
                         <h4 class="text-base font-semibold text-gray-900 mb-2">Availability</h4>
@@ -410,13 +410,13 @@ const handleFavourite = (product: ProductCardData) => {
                     <div class="mt-8 space-y-3">
                         <button
                             @click="filterOpen = false"
-                            class="relative -m-0.5 w-full inline-block bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-700 border-2 border-black"
+                            class="relative rounded-lg -m-0.5 w-full inline-block bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-700 border-2 border-black"
                         >
                             Apply Filters
                         </button>
                         <button
                             @click="clearFilters"
-                            class="relative -m-0.5 w-full inline-block border-2 border-black bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                            class="relative rounded-lg -m-0.5 w-full inline-block border-2 border-black bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
                         >
                             Reset Filters
                         </button>
