@@ -154,7 +154,7 @@ const handleTouchEnd = (event: Event) => {
         </a>
 
         <div class="mt-4 flex justify-between items-end">
-            <p class="text-3xl font-black" style="color: #517636;">
+            <p class="text-3xl font-black" style="color: #763a36;">
                 {{ formattedCost }}
             </p>
 
