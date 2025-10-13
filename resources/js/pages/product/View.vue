@@ -326,7 +326,7 @@ const handleFavourite = (product: ProductCardData) => {
                         </ul>
 
                         <div v-else class="text-center py-20 border-2 border-black bg-red-100">
-                            <p class="text-xl font-medium text-gray-500">
+                            <p class="text-xl font-medium text-black">
                                 No products found matching your refined search.
                             </p>
                             <button @click="clearFilters" class="mt-6 text-blue-600 hover:text-blue-700 font-semibold underline transition">
