@@ -51,7 +51,7 @@ const motionInner = useMotion(innerRef, {
   transition: springTransition,
 });
 
-const baseCardClass = "group w-full rounded-lg border-2 border-black bg-white";
+const baseCardClass = "group w-full rounded-lg border-2 border-black";
 const innerCardClass = "relative rounded-lg -m-0.5 border-2 border-black bg-white flex flex-col justify-between overflow-hidden";
 const accentColor = 'bg-sky-200';
 
@@ -116,7 +116,7 @@ const handleTouchEnd = (event: Event) => {
     @mouseenter="motionCard.apply('hovered')"
     @mouseleave="motionCard.apply('initial')"
     @touchstart.stop="handleTouchStart"
-    :class="[mergedBaseClass, { 'group-hovered': isTapped }]"
+    :class="[mergedBaseClass, { 'group-hovered': isTapped }, {'background-color': '#763a36'}]"
   >
     <div
       ref="innerRef"
