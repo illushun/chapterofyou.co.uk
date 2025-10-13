@@ -4,6 +4,7 @@ import PrimaryButton from '@/components/PrimaryButton.vue';
 import InfiniteMovingCards from '@/components/InfiniteMovingCards.vue';
 import HeroSectionOne from '@/components/HeroSectionOne.vue';
 import GlowingCard from '@/components/GlowingCard.vue';
+import SpringCards from '@/components/ui/coy/SpringCards.vue';
 import { Head } from '@inertiajs/vue3';
 
 interface FeaturedCategory {
@@ -71,6 +72,8 @@ const testimonials = [
     </style>
 
     <HeroSectionOne />
+
+    <SpringCards />
 
     <GlowingCard
         :blur="8"
