@@ -369,9 +369,7 @@ const handleFavourite = (product: ProductCardData) => {
                 </div>
 
                 <div class="space-y-6">
-                    <div class="relative w-full border-2 border-black bg-pink-200">
-                        <input type="text" v-model="form.search" placeholder="Quick search..." class="relative -m-0.5 w-full rounded-lg border-2 border-black bg-white py-2.5 shadow-sm sm:text-sm focus:border-blue-500 focus:ring-blue-500" />
-                    </div>
+                    <input type="text" v-model="form.search" placeholder="Quick search..." class="relative -m-0.5 w-full border-2 border-black bg-white py-2.5 shadow-sm sm:text-sm focus:border-blue-500 focus:ring-blue-500" />
 
                     <div class="border-b-2 border-black pb-4">
                         <h4 class="text-base font-semibold text-gray-900 mb-2">Availability</h4>
@@ -409,22 +407,18 @@ const handleFavourite = (product: ProductCardData) => {
 
 
                     <div class="mt-8 space-y-3">
-                        <div class="border-2 border-black bg-blue-700">
-                            <button
-                                @click="filterOpen = false"
-                                class="relative -m-0.5 w-full inline-block rounded-lg bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-700 shadow-md border-2 border-black"
-                            >
-                                Apply Filters
-                            </button>
-                        </div>
-                        <div class="border-2 border-black bg-gray-100">
-                            <button
-                                @click="clearFilters"
-                                class="relative -m-0.5 w-full inline-block rounded-lg border-2 border-black bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                            >
-                                Reset Filters
-                            </button>
-                        </div>
+                        <button
+                            @click="filterOpen = false"
+                            class="relative -m-0.5 w-full inline-block bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-700 border-2 border-black"
+                        >
+                            Apply Filters
+                        </button>
+                        <button
+                            @click="clearFilters"
+                            class="relative -m-0.5 w-full inline-block border-2 border-black bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                        >
+                            Reset Filters
+                        </button>
                     </div>
                 </div>
             </div>
