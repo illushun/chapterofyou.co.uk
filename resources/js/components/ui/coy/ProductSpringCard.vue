@@ -149,7 +149,7 @@ const handleTouchEnd = (event: Event) => {
             </p>
 
             <button
-                class="absolute -bottom-0.5 right-0.5 z-20 translate-y-full border-2 border-black bg-black text-white px-4 py-2 text-sm font-semibold opacity-0 transition-all duration-300 ease-in-out group-hover:translate-y-0 group-hover:opacity-100 group-hover:bg-sky-600 group-hover:text-white"
+                class="absolute -bottom-0.5 right-0.5 z-20 translate-y-0 border-2 border-black bg-black text-white px-4 py-2 text-sm font-semibold opacity-100 transition-all duration-300 ease-in-out group-hover:bg-sky-600 group-hover:text-white"
                 @click="$emit('addToCart', product.id)"
             >
                 ADD TO CART
