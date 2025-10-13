@@ -3,14 +3,9 @@ import { twMerge } from 'tailwind-merge';
 import { computed, ref } from 'vue';
 import { useMotion } from '@vueuse/motion';
 
-// --- Icon SVGs (No external package needed) ---
-// Star icon for Favourites
 const IconStar = `<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.152A1.5 1.5 0 0113.951 2.152l1.621 3.436a1.5 1.5 0 001.194.887l3.778.548a1.5 1.5 0 01.832 2.578l-2.73 2.66a1.5 1.5 0 00-.435 1.334l.643 3.766a1.5 1.5 0 01-2.175 1.583l-3.38-1.777a1.5 1.5 0 00-1.396 0l-3.38 1.777a1.5 1.5 0 01-2.175-1.583l.643-3.766a1.5 1.5 0 00-.435-1.334l-2.73-2.66a1.5 1.5 0 01.832-2.578l3.778-.548a1.5 1.5 0 001.194-.887l1.621-3.436z" /></svg>`;
-// Arrow Right icon for the Title
 const IconArrowRight = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
 
-
-// --- TypeScript Interface Definition ---
 interface ProductCardData {
   id: number;
   name: string;
@@ -23,13 +18,14 @@ interface ProductCardData {
 
 interface ProductCardProps {
   product: ProductCardData;
-  className?: string; // For container customization
+  className?: string;
 }
 
 const props = defineProps<ProductCardProps>();
 
 const isPopular = computed(() => (props.product.total_unique_views || 0) > 100);
 const imageUrl = computed(() => props.product.images?.[0]?.image || 'https://via.placeholder.com/300?text=No+Image');
+const isTapped = ref(false);
 
 const springTransition = {
   type: 'spring',
@@ -69,6 +65,40 @@ const formattedCost = computed(() => {
   }
   return `£${numericCost.toFixed(2)}`;
 });
+
+const handleTouchStart = () => {
+    if (!isTapped.value) {
+        // First tap: toggle the state and trigger the spring animation
+        isTapped.value = true;
+        motionCard.apply('hovered');
+        motionInner.apply('hovered');
+
+        // Add a document listener to reset state if user taps elsewhere
+        document.addEventListener('touchstart', handleTouchEnd, { once: true, capture: true });
+    }
+    // If the card is already tapped (hovered), the next tap should act as a click/navigation,
+    // which the anchor tag will handle, but we ensure the state resets immediately after.
+};
+
+const handleTouchEnd = (event: Event) => {
+    // Check if the tap target is *inside* the card. If so, let the anchor/button click fire.
+    // If the tap is *outside* the card, reset the 'hovered' state.
+    const target = event.target as HTMLElement;
+    if (cardRef.value && !cardRef.value.contains(target)) {
+        isTapped.value = false;
+        motionCard.apply('initial');
+        motionInner.apply('initial');
+    } else if (isTapped.value) {
+        // If the tap was inside and the card was active, reset state after a short delay
+        // to let the button/link action fire cleanly.
+        setTimeout(() => {
+            isTapped.value = false;
+            motionCard.apply('initial');
+            motionInner.apply('initial');
+        }, 300);
+    }
+    document.removeEventListener('touchstart', handleTouchEnd, { capture: true });
+};
 </script>
 
 <template>
@@ -77,6 +107,7 @@ const formattedCost = computed(() => {
     @mouseenter="motionCard.apply('hovered')"
     @mouseleave="motionCard.apply('initial')"
     :class="mergedBaseClass"
+    @touchstart.stop="handleTouchStart" :class="[mergedBaseClass, { 'group-hovered': isTapped }]"
   >
     <div
       ref="innerRef"
@@ -106,10 +137,9 @@ const formattedCost = computed(() => {
 
       <div class="p-4 border-t-2 border-black bg-white">
         <a :href="'/product/' + product.id" class="block">
-          <p class="text-xs font-medium uppercase tracking-wider text-gray-500">MPN: {{ product.mpn }}</p>
+          <p class="text-xs font-medium uppercase tracking-wider text-gray-500">{{ product.mpn }}</p>
           <p class="flex items-center text-xl font-bold text-gray-900 transition truncate group-hover:text-sky-600 mt-1">
             <span class="mr-2">{{ product.name }}</span>
-            <span class="inline-block transition-all duration-300 ease-in-out group-hover:translate-x-1" v-html="IconArrowRight"></span>
           </p>
         </a>
 
@@ -151,3 +181,27 @@ const formattedCost = computed(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.group-hovered .group-hover\:translate-x-1 {
+    transform: translateX(0.25rem);
+}
+.group-hovered .group-hover\:scale-105 {
+    transform: scale(1.05);
+}
+.group-hovered .group-hover\:translate-y-0 {
+    transform: translateY(0);
+}
+.group-hovered .group-hover\:opacity-100 {
+    opacity: 1;
+}
+.group-hovered .group-hover\:bg-sky-600 {
+    background-color: #0ea5e9;
+}
+.group-hovered .group-hover\:text-white {
+    color: #ffffff;
+}
+.group-hovered .group-hover\:text-sky-600 {
+    color: #0ea5e9; /* Tailwind's sky-600 */
+}
+</style>
