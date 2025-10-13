@@ -326,7 +326,7 @@ const handleFavourite = (product: ProductCardData) => {
                             </li>
                         </ul>
 
-                        <div v-else class="text-center py-20 border-2 border-black bg-red-100">
+                        <div v-else class="text-center py-20 border-2 border-black rounded-lg bg-red-100">
                             <p class="text-xl font-medium text-black">
                                 No products found matching your refined search.
                             </p>

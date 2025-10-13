@@ -148,7 +148,7 @@ const handleTouchEnd = (event: Event) => {
       <div class="p-4 border-t-2 border-black bg-white">
         <a :href="'/product/' + product.id" class="block">
           <p class="text-xs font-medium uppercase tracking-wider text-gray-500">{{ product.mpn }}</p>
-          <p class="flex items-center text-xl font-bold text-gray-900 transition truncate group-hover:text-sky-600 mt-1">
+          <p class="flex items-center text-xl font-bold text-gray-900 transition truncate mt-1">
             <span class="mr-2">{{ truncatedName }}</span>
           </p>
         </a>
