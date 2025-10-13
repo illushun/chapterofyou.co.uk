@@ -4,7 +4,7 @@ import { computed, ref } from 'vue';
 import { useMotion } from '@vueuse/motion';
 
 const IconStar = `<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.152A1.5 1.5 0 0113.951 2.152l1.621 3.436a1.5 1.5 0 001.194.887l3.778.548a1.5 1.5 0 01.832 2.578l-2.73 2.66a1.5 1.5 0 00-.435 1.334l.643 3.766a1.5 1.5 0 01-2.175 1.583l-3.38-1.777a1.5 1.5 0 00-1.396 0l-3.38 1.777a1.5 1.5 0 01-2.175-1.583l.643-3.766a1.5 1.5 0 00-.435-1.334l-2.73-2.66a1.5 1.5 0 01.832-2.578l3.778-.548a1.5 1.5 0 001.194-.887l1.621-3.436z" /></svg>`;
-const IconArrowRight = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>`;
+const IconCart = `<svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`;
 
 interface ProductCardData {
   id: number;
@@ -57,6 +57,15 @@ const accentColor = 'bg-sky-200';
 
 const mergedBaseClass = computed(() => twMerge(baseCardClass, props.className));
 const mergedInnerClass = computed(() => twMerge(innerCardClass, accentColor));
+
+const truncatedName = computed(() => {
+    const maxLen = 25;
+    const name = props.product.name;
+    if (name.length > maxLen) {
+        return name.substring(0, maxLen).trim() + '...';
+    }
+    return name;
+});
 
 const formattedCost = computed(() => {
   const numericCost = Number(props.product.cost);
@@ -139,7 +148,7 @@ const handleTouchEnd = (event: Event) => {
         <a :href="'/product/' + product.id" class="block">
           <p class="text-xs font-medium uppercase tracking-wider text-gray-500">{{ product.mpn }}</p>
           <p class="flex items-center text-xl font-bold text-gray-900 transition truncate group-hover:text-sky-600 mt-1">
-            <span class="mr-2">{{ product.name }}</span>
+            <span class="mr-2">{{ truncatedName }}</span>
           </p>
         </a>
 
@@ -149,10 +158,11 @@ const handleTouchEnd = (event: Event) => {
             </p>
 
             <button
-                class="absolute -bottom-0.5 right-0.5 z-20 translate-y-0 border-2 border-black bg-black text-white px-4 py-2 text-sm font-semibold opacity-100 transition-all duration-300 ease-in-out group-hover:bg-sky-600 group-hover:text-white"
-                @click="$emit('addToCart', product.id)"
+                class="z-20 p-2 border-2 border-black bg-black text-white rounded-lg transition-colors duration-300 ease-in-out hover:bg-sky-600 hover:text-white shadow-md"
+                aria-label="Add product to cart"
+                @click.stop="$emit('addToCart', product.id)"
             >
-                ADD TO CART
+                <div v-html="IconCart"></div>
             </button>
         </div>
       </div>
