@@ -160,7 +160,8 @@ const handleFavourite = (product: ProductCardData) => {
     <NavBar />
 
     <Head title="Browse Products | Chapter of You" />
-    <section class="bg-sky-50 min-h-screen border-b-2 border-black"> <div class="mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 lg:px-8">
+    <section class="min-h-screen border-b-2 border-black" style="background-color: #f1efef;">
+        <div class="mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 lg:px-8">
 
             <header class="mb-8 lg:mb-10 text-gray-900">
                 <h2 class="text-4xl font-extrabold tracking-tight">Products</h2>
