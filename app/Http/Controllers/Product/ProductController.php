@@ -22,8 +22,9 @@ class ProductController extends Controller
             'search', 'categories', 'min_price', 'max_price', 'sort', 'in_stock'
         ]);
 
-        $products = Product::with('categories')
-            ->with('images')
+        $products = Product
+            //::with('categories')
+            ::with('images')
             ->withCount('uniqueViews')
             ->filter($filters)
             ->when($request->get('sort'), function ($query, $sort) {

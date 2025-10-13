@@ -28,11 +28,9 @@ interface ProductCardProps {
 
 const props = defineProps<ProductCardProps>();
 
-// --- Derived/Computed Properties ---
 const isPopular = computed(() => (props.product.total_unique_views || 0) > 100);
 const imageUrl = computed(() => props.product.images?.[0]?.image || 'https://via.placeholder.com/300?text=No+Image');
 
-// --- Animation Setup using @vueuse/motion ---
 const springTransition = {
   type: 'spring',
   stiffness: 200,
@@ -40,14 +38,12 @@ const springTransition = {
   mass: 1,
 };
 
-// Target elements for motion
 const cardRef = ref<HTMLElement | null>(null);
 const innerRef = ref<HTMLElement | null>(null);
 
-// Apply motion to the elements (retaining the 3D spring effect)
 const motionCard = useMotion(cardRef, {
   initial: { x: 0, y: 0 },
-  hovered: { x: -6, y: -6 }, // Adjusted spring distance for product card look
+  hovered: { x: -6, y: -6 },
 }, {
   transition: springTransition,
 });
@@ -59,14 +55,20 @@ const motionInner = useMotion(innerRef, {
   transition: springTransition,
 });
 
-// --- Class Merging ---
 const baseCardClass = "group w-full border-2 border-black bg-white";
 const innerCardClass = "relative -m-0.5 border-2 border-black bg-white flex flex-col justify-between overflow-hidden";
-const accentColor = 'bg-sky-200'; // Define a primary accent color for the block effect
+const accentColor = 'bg-sky-200';
 
-// Computed property to merge classes (like twMerge)
 const mergedBaseClass = computed(() => twMerge(baseCardClass, props.className));
 const mergedInnerClass = computed(() => twMerge(innerCardClass, accentColor));
+
+const formattedCost = computed(() => {
+  const numericCost = Number(props.product.cost);
+  if (isNaN(numericCost)) {
+    return 'N/A';
+  }
+  return `£${numericCost.toFixed(2)}`;
+});
 </script>
 
 <template>
@@ -113,7 +115,7 @@ const mergedInnerClass = computed(() => twMerge(innerCardClass, accentColor));
 
         <div class="mt-4 flex justify-between items-end">
             <p class="text-3xl font-black text-sky-600">
-                £{{ product.cost.toFixed(2) }}
+                {{ formattedCost }}
             </p>
 
             <button
