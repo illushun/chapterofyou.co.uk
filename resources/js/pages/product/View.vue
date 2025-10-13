@@ -188,7 +188,7 @@ const handleFavourite = (product: ProductCardData) => {
                             <div class="mb-6">
                                 <h4 class="text-base font-semibold text-gray-800 mb-2">Availability</h4>
                                 <label for="FilterInStock" class="inline-flex items-center gap-2 cursor-pointer transition hover:text-sky-600">
-                                    <input type="checkbox" id="FilterInStock" v-model="form.in_stock" class="size-5 rounded border-2 border-black text-sky-600 focus:ring-sky-500" />
+                                    <input type="checkbox" id="FilterInStock" v-model="form.in_stock" class="size-5 border-2 border-black text-sky-600 focus:ring-sky-500" />
                                     <span class="text-sm font-medium text-gray-700"> In Stock Only </span>
                                 </label>
                             </div>
@@ -204,7 +204,7 @@ const handleFavourite = (product: ProductCardData) => {
                                                     :id="'FilterCategory-' + category.id"
                                                     :value="category.id"
                                                     v-model="form.categories"
-                                                    class="size-4 rounded border-2 border-black text-sky-600 focus:ring-sky-500"
+                                                    class="size-4 border-2 border-black text-sky-600 focus:ring-sky-500"
                                                 />
                                                 <span class="text-sm text-gray-700 font-medium"> {{ category.name }} </span>
                                             </label>
@@ -226,7 +226,7 @@ const handleFavourite = (product: ProductCardData) => {
                                                     v-model.number="form.min_price"
                                                     @blur="stopEditMinPrice"
                                                     @keyup.enter="stopEditMinPrice"
-                                                    class="relative -m-0.5 w-20 p-0 text-sm border-2 border-black rounded-md focus:border-sky-500 focus:ring-sky-500"
+                                                    class="relative -m-0.5 w-20 p-0 text-sm border-2 border-black focus:border-sky-500 focus:ring-sky-500"
                                                     min="0"
                                                     max="500"
                                                 />
@@ -241,7 +241,7 @@ const handleFavourite = (product: ProductCardData) => {
                                                     v-model.number="form.max_price"
                                                     @blur="stopEditMaxPrice"
                                                     @keyup.enter="stopEditMaxPrice"
-                                                    class="relative -m-0.5 w-20 p-0 text-sm border-2 border-black rounded-md focus:border-sky-500 focus:ring-sky-500 text-right"
+                                                    class="relative -m-0.5 w-20 p-0 text-sm border-2 border-black focus:border-sky-500 focus:ring-sky-500 text-right"
                                                     min="0"
                                                     max="500"
                                                 />
@@ -255,7 +255,7 @@ const handleFavourite = (product: ProductCardData) => {
                                         min="0"
                                         max="500"
                                         step="10"
-                                        class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-sky-600 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full"
+                                        class="w-full h-1 bg-gray-300 appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-sky-600 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full"
                                         @mousedown="isMinPriceEditing = false"
                                     />
                                     <input
@@ -265,7 +265,7 @@ const handleFavourite = (product: ProductCardData) => {
                                         min="0"
                                         max="500"
                                         step="10"
-                                        class="w-full h-1 bg-gray-300 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-sky-600 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full mt-2"
+                                        class="w-full h-1 bg-gray-300 appearance-none cursor-pointer [&::-webkit-slider-thumb]:bg-sky-600 [&::-webkit-slider-thumb]:size-4 [&::-webkit-slider-thumb]:rounded-full mt-2"
                                         @mousedown="isMaxPriceEditing = false"
                                     />
                                 </div>
@@ -289,11 +289,11 @@ const handleFavourite = (product: ProductCardData) => {
                         </p>
                         <div class="flex items-center gap-3">
                             <label for="SortBy" class="text-sm font-medium text-gray-700 whitespace-nowrap hidden sm:block">Sort by:</label>
-                            <div class="border-2 border-black bg-gray-100 rounded-lg">
+                            <div class="border-2 border-black bg-gray-100">
                                 <select
                                     id="SortBy"
                                     v-model="form.sort"
-                                    class="relative -m-0.5 h-9 rounded-lg border-2 border-black bg-white text-sm text-gray-900 focus:border-sky-600 focus:ring-sky-600 shadow-inner"
+                                    class="relative -m-0.5 h-9 border-2 border-black bg-white text-sm text-gray-900 focus:border-sky-600 focus:ring-sky-600 shadow-inner"
                                 >
                                     <option value="name,asc">Name (A-Z)</option>
                                     <option value="name,desc">Name (Z-A)</option>
@@ -303,7 +303,7 @@ const handleFavourite = (product: ProductCardData) => {
                             </div>
                             <button
                                 @click="filterOpen = true"
-                                class="lg:hidden text-white bg-blue-600 hover:bg-blue-700 border-2 border-black rounded-lg p-2 transition shadow-md"
+                                class="lg:hidden text-white bg-blue-600 hover:bg-blue-700 border-2 border-black p-2 transition shadow-md"
                                 aria-label="Toggle mobile filter panel"
                             >
                                 <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414A1 1 0 0012 14.586V21a1 1 0 01-2 0v-6.414a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
@@ -374,7 +374,7 @@ const handleFavourite = (product: ProductCardData) => {
                     <div class="border-b-2 border-black pb-4">
                         <h4 class="text-base font-semibold text-gray-900 mb-2">Availability</h4>
                         <label for="MobileFilterInStock" class="inline-flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" id="MobileFilterInStock" v-model="form.in_stock" class="size-5 rounded border-2 border-black text-blue-600 focus:ring-blue-500" />
+                            <input type="checkbox" id="MobileFilterInStock" v-model="form.in_stock" class="size-5 border-2 border-black text-blue-600 focus:ring-blue-500" />
                             <span class="text-sm font-medium text-gray-700"> In Stock Only </span>
                         </label>
                     </div>
@@ -385,7 +385,7 @@ const handleFavourite = (product: ProductCardData) => {
                             <ul class="space-y-2">
                                 <li v-for="category in categories" :key="category.id">
                                     <label :for="'MobileFilterCategory-' + category.id" class="inline-flex items-center gap-2 cursor-pointer">
-                                        <input type="checkbox" :id="'MobileFilterCategory-' + category.id" :value="category.id" v-model="form.categories" class="size-5 rounded border-2 border-black text-blue-600 focus:ring-blue-500" />
+                                        <input type="checkbox" :id="'MobileFilterCategory-' + category.id" :value="category.id" v-model="form.categories" class="size-5 border-2 border-black text-blue-600 focus:ring-blue-500" />
                                         <span class="text-sm font-medium text-gray-700"> {{ category.name }} </span>
                                     </label>
                                 </li>
