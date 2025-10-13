@@ -182,7 +182,7 @@ const handleFavourite = (product: ProductCardData) => {
 
                 <aside class="hidden lg:block">
                     <div class="sticky top-4 border-2 border-black bg-purple-200">
-                        <div class="relative -m-0.5 p-6 bg-white border-2 border-black shadow-lg">
+                        <div class="relative -m-0.5 p-6 bg-white border-2 border-black">
                             <h3 class="text-xl font-bold text-gray-900 mb-6 border-b-2 border-black pb-3">Refine Results</h3>
 
                             <div class="mb-6">
@@ -283,7 +283,7 @@ const handleFavourite = (product: ProductCardData) => {
                 </aside>
 
                 <div class="lg:col-span-1">
-                    <div class="relative -m-0.5 flex items-center justify-between mb-6 p-3 bg-white border-2 border-black shadow-md">
+                    <div class="relative -m-0.5 flex items-center justify-between mb-6 p-3 bg-white border-2 border-black">
                         <p class="text-sm text-gray-700 font-medium">
                             Showing **{{ products.data.length }} of {{ products.total }}** results
                         </p>
