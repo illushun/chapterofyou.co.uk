@@ -371,7 +371,7 @@ const handleFavourite = (product: ProductCardData) => {
                 </div>
 
                 <div class="space-y-6">
-                    <input type="text" v-model="form.search" placeholder="Quick search..." class="relative rounded-lg -m-0.5 w-full border-2 border-black bg-white py-2.5 shadow-sm sm:text-sm focus:border-blue-500 focus:ring-blue-500" />
+                    <input type="text" v-model="form.search" placeholder="Quick search..." class="relative mb-6 rounded-lg -m-0.5 w-full border-2 border-black bg-white py-2.5 shadow-sm sm:text-sm focus:border-blue-500 focus:ring-blue-500" />
 
                     <div class="border-b-2 border-black pb-4">
                         <h4 class="text-base font-semibold text-gray-900 mb-2">Availability</h4>
@@ -411,7 +411,7 @@ const handleFavourite = (product: ProductCardData) => {
                     <div class="mt-8 space-y-3">
                         <button
                             @click="filterOpen = false"
-                            class="relative rounded-lg -m-0.5 w-full inline-block px-5 py-3 text-sm font-medium text-white transition border-2 border-black"
+                            class="relative mb-6 rounded-lg -m-0.5 w-full inline-block px-5 py-3 text-sm font-medium text-white transition border-2 border-black"
                             style="background-color: #d5a6a3;"
                         >
                             Apply Filters
