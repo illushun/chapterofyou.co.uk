@@ -182,7 +182,7 @@ const handleFavourite = (product: ProductCardData) => {
 
                 <aside class="hidden lg:block">
                     <div class="sticky top-4 border-2 border-black bg-purple-200">
-                        <div class="relative -m-0.5 p-6 bg-white border-2 border-black rounded-lg shadow-lg">
+                        <div class="relative -m-0.5 p-6 bg-white border-2 border-black shadow-lg">
                             <h3 class="text-xl font-bold text-gray-900 mb-6 border-b-2 border-black pb-3">Refine Results</h3>
 
                             <div class="mb-6">
