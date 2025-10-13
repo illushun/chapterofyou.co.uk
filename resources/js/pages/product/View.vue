@@ -304,8 +304,9 @@ const handleFavourite = (product: ProductCardData) => {
                             </div>
                             <button
                                 @click="filterOpen = true"
-                                class="lg:hidden rounded-lg text-white bg-blue-600 hover:bg-blue-700 border-2 border-black p-2 transition shadow-md"
+                                class="lg:hidden rounded-lg text-white border-2 border-black p-2 transition shadow-md"
                                 aria-label="Toggle mobile filter panel"
+                                style="background-color: #d5a6a3;"
                             >
                                 <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414A1 1 0 0012 14.586V21a1 1 0 01-2 0v-6.414a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
                             </button>
@@ -410,7 +411,8 @@ const handleFavourite = (product: ProductCardData) => {
                     <div class="mt-8 space-y-3">
                         <button
                             @click="filterOpen = false"
-                            class="relative rounded-lg -m-0.5 w-full inline-block bg-blue-600 px-5 py-3 text-sm font-medium text-white transition hover:bg-blue-700 border-2 border-black"
+                            class="relative rounded-lg -m-0.5 w-full inline-block px-5 py-3 text-sm font-medium text-white transition border-2 border-black"
+                            style="background-color: #d5a6a3;"
                         >
                             Apply Filters
                         </button>
