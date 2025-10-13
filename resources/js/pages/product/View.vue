@@ -159,11 +159,11 @@ const handleFavourite = (product: ProductCardData) => {
 <template>
     <NavBar />
 
-    <Head title="Browse Our Aesthetic Product Collection | E-commerce Site" />
+    <Head title="Browse Products | Chapter of You" />
     <section class="bg-sky-50 min-h-screen border-b-2 border-black"> <div class="mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 lg:px-8">
 
             <header class="mb-8 lg:mb-10 text-gray-900">
-                <h2 class="text-4xl font-extrabold tracking-tight">Product Catalogue</h2>
+                <h2 class="text-4xl font-extrabold tracking-tight">Products</h2>
                 <p class="mt-2 text-gray-600 max-w-lg">
                     Find exactly what you need with powerful filtering tools.
                 </p>
