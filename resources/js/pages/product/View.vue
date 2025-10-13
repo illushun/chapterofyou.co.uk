@@ -6,6 +6,7 @@ import { debounce } from 'lodash';
 import { usePage } from '@inertiajs/vue3';
 
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
+import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 
 interface Category {
     id: number;
@@ -134,14 +135,24 @@ const stopEditMaxPrice = () => {
     isMaxPriceEditing.value = false;
 };
 
-const handleAddToCart = (productId: number) => {
-    console.log(`Adding product ${productId} to cart...`);
-    // router.post('/cart', { product_id: productId });
+const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
+
+const handleAddToCart = (product: ProductCardData) => {
+    console.log(`Adding product ${product.id} to cart...`);
+    // router.post('/cart', { product_id: product.id });
+
+    if (successToastRef.value) {
+        successToastRef.value.show(`${product.name} added to cart!`, 'cart');
+    }
 };
 
-const handleFavourite = (productId: number) => {
-    console.log(`Toggling favourite for product ${productId}...`);
-    // router.post(`/products/${productId}/favourite`);
+const handleFavourite = (product: ProductCardData) => {
+    console.log(`Toggling favourite for product ${product.id}...`);
+    // router.post(`/products/${product.id}/favourite`);
+
+    if (successToastRef.value) {
+        successToastRef.value.show(`${product.name} added to your wishlist!`, 'favourite');
+    }
 };
 </script>
 
@@ -303,8 +314,8 @@ const handleFavourite = (productId: number) => {
                                 <li v-for="product in props.products.data" :key="product.id">
                                     <ProductSpringCard
                                         :product="product"
-                                        @add-to-cart="handleAddToCart"
-                                        @favourite="handleFavourite"
+                                        @add-to-cart="handleAddToCart(product)"
+                                        @favourite="handleFavourite(product)"       />
                                     />
                                 </li>
                             </ul>
@@ -405,6 +416,8 @@ const handleFavourite = (productId: number) => {
                 </div>
             </div>
         </Transition>
+
+        <SuccessToast ref="successToastRef" />
 </template>
 
 <style scoped>
