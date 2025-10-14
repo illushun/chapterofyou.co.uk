@@ -292,28 +292,28 @@
                         class="relative text-copy-light px-3 py-2 text-sm font-bold transition duration-150 group hover:text-copy"
                         aria-current="page"
                     >
-                        <span class="absolute inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
+                        <span class="absolute rounded-lg inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
                         <span class="relative z-10">Home</span>
                     </a>
                     <a
                         href="/products"
                         class="relative text-copy-light px-3 py-2 text-sm font-bold transition duration-150 group hover:text-copy"
                     >
-                        <span class="absolute inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
+                        <span class="absolute rounded-lg inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
                         <span class="relative z-10">Products</span>
                     </a>
                     <a
                         href="/about"
                         class="relative text-copy-light px-3 py-2 text-sm font-bold transition duration-150 group hover:text-copy"
                     >
-                        <span class="absolute inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
+                        <span class="absolute rounded-lg inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
                         <span class="relative z-10">About Us</span>
                     </a>
                     <a
                         href="/contact"
                         class="relative text-copy-light px-3 py-2 text-sm font-bold transition duration-150 group hover:text-copy"
                     >
-                        <span class="absolute inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
+                        <span class="absolute rounded-lg inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
                         <span class="relative z-10">Contact</span>
                     </a>
                 </div>
@@ -341,7 +341,7 @@
 
                         <a
                             v-else
-                            :href="login()"
+                            href="/login"
                             class="relative inline-flex items-center text-sm font-bold shadow-sm transition duration-150 group"
                         >
                             <div class="border-2 border-copy bg-copy-light rounded-lg">
@@ -373,7 +373,7 @@
                 </a>
                 <a
                     v-else
-                    :href="register()"
+                    href="/register"
                     class="block px-3 py-2 rounded-md text-base font-bold text-copy border-2 border-copy-light bg-foreground hover:bg-secondary-light transition"
                 >
                     Log In / Register
