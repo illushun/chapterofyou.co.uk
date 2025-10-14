@@ -47,7 +47,7 @@ class ProductController extends Controller
             ->where('status', 'enabled')
             ->get();
 
-        return Inertia::render('product/List', [
+        return Inertia::render('product/View', [
             'products' => $products,
             'categories' => $categories,
             'filters' => $filters,
