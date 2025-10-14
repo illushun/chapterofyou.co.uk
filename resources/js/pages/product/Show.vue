@@ -67,10 +67,7 @@ const currentVariation = computed(() => {
     };
 });
 
-// --- Computed Properties ---
 const isOutOfStock = computed(() => currentVariation.value.stock_qty <= 0);
-const formattedCost = computed(() => `£${currentVariation.value.cost.toFixed(2)}`);
-
 const isPopular = computed(() => props.product.total_unique_views > 100);
 
 // --- Actions ---
@@ -101,6 +98,14 @@ const pageTitle = computed(() => {
         return props.product.seo.meta_title;
     }
     return `${props.product.name} | Chapter of You`;
+});
+
+const formattedCost = computed(() => {
+  const numericCost = Number(props.product.cost);
+  if (isNaN(numericCost)) {
+    return 'N/A';
+  }
+  return `£${numericCost.toFixed(2)}`;
 });
 </script>
 
