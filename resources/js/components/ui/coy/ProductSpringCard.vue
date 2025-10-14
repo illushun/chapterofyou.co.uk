@@ -51,9 +51,11 @@ const motionInner = useMotion(innerRef, {
   transition: springTransition,
 });
 
-const baseCardClass = "group w-full rounded-lg border-2 border-black";
-const innerCardClass = "relative rounded-lg -m-0.5 border-2 border-black bg-white flex flex-col justify-between overflow-hidden";
-const accentColor = 'bg-sky-200';
+// Use 'copy' for the bold border and 'foreground' for the inner card's main color
+const baseCardClass = "group w-full rounded-lg border-2 border-copy";
+const innerCardClass = "relative rounded-lg -m-0.5 border-2 border-copy bg-foreground flex flex-col justify-between overflow-hidden";
+// Use a primary light shade for the accent background color
+const accentColor = 'bg-primary-light';
 
 const mergedBaseClass = computed(() => twMerge(baseCardClass, props.className));
 const mergedInnerClass = computed(() => twMerge(innerCardClass, accentColor));
@@ -117,27 +119,26 @@ const handleTouchEnd = (event: Event) => {
     @mouseleave="motionCard.apply('initial')"
     @touchstart.stop="handleTouchStart"
     :class="[mergedBaseClass, { 'group-hovered': isTapped }]"
-    style="background-color: #763a36;"
-  >
+    style="background-color: var(--primary-content);"  >
     <div
       ref="innerRef"
       @mouseenter="motionInner.apply('hovered')"
       @mouseleave="motionInner.apply('initial')"
       :class="mergedInnerClass"
     >
-      <span v-if="isPopular" class="absolute top-3 left-3 z-10 inline-flex items-center rounded-full bg-red-600 px-3 py-0.5 text-xs font-bold text-white shadow-lg ring-1 ring-inset ring-red-700/50">
+      <span v-if="isPopular" class="absolute top-3 left-3 z-10 inline-flex items-center rounded-full bg-error px-3 py-0.5 text-xs font-bold text-error-content shadow-lg ring-1 ring-inset ring-error-content/50">
           🔥 POPULAR
       </span>
 
       <button
-        class="absolute top-3 right-3 z-10 p-2 rounded-full bg-white border border-gray-300 transition-colors hover:bg-red-100 hover:text-red-600 shadow-md"
+        class="absolute top-3 right-3 z-10 p-2 rounded-full bg-foreground border border-border transition-colors hover:bg-error-light hover:text-error-content shadow-md"
         aria-label="Add to favourites"
         @click.stop.prevent="$emit('favourite', product.id)"
       >
         <div v-html="IconStar" class="size-5"></div>
       </button>
 
-      <div class="h-48 overflow-hidden bg-white flex items-center justify-center p-4">
+      <div class="h-48 overflow-hidden bg-foreground flex items-center justify-center p-4">
         <img
           :src="imageUrl"
           :alt="'Image of ' + product.name"
@@ -145,24 +146,24 @@ const handleTouchEnd = (event: Event) => {
         />
       </div>
 
-      <div class="p-4 border-t-2 border-black bg-white">
+      <div class="p-4 border-t-2 border-copy bg-foreground">
         <a :href="'/product/' + product.id" class="block">
-          <p class="text-xs font-medium uppercase tracking-wider text-gray-500">{{ product.mpn }}</p>
-          <p class="flex items-center text-xl font-bold text-gray-900 transition truncate mt-1">
+          <p class="text-xs font-medium uppercase tracking-wider text-copy-lighter">{{ product.mpn }}</p>
+          <p class="flex items-center text-xl font-bold text-copy transition truncate mt-1">
             <span class="mr-2">{{ truncatedName }}</span>
           </p>
         </a>
 
         <div class="mt-4 flex justify-between items-end">
-            <p class="text-3xl font-black" style="color: #763a36;">
+            <p class="text-3xl font-black text-primary-content">
                 {{ formattedCost }}
             </p>
 
             <button
-                class="z-20 p-2 border-2 border-black text-white rounded-lg transition-colors duration-300 ease-in-out hover:bg-sky-600 hover:text-white shadow-md"
+                class="z-20 p-2 border-2 border-copy text-primary-content rounded-lg transition-colors duration-300 ease-in-out hover:bg-primary-dark hover:text-foreground shadow-md"
                 aria-label="Add product to cart"
                 @click.stop="$emit('addToCart', product.id)"
-                style="background-color: #d5a6a3;"
+                style="background-color: var(--primary);"
             >
                 <div v-html="IconCart"></div>
             </button>
@@ -177,7 +178,7 @@ const handleTouchEnd = (event: Event) => {
           style="bottom: 0; right: 0; transform: translate(50%, 50%) scale(0.6);"
           width="100"
           height="100"
-          class="pointer-events-none absolute z-0 rounded-full text-gray-400 opacity-20"
+          class="pointer-events-none absolute z-0 rounded-full text-copy-lighter opacity-20"
       >
           <path id="circlePath-{{ product.id }}" d="M50,50 m-50,0 a50,50 0 1,0 100,0 a50,50 0 1,0 -100,0" fill="none" />
           <text>
@@ -195,6 +196,13 @@ const handleTouchEnd = (event: Event) => {
 </template>
 
 <style scoped>
+/* NOTE: The existing group-hovered classes below still use hardcoded hex or default Tailwind colors.
+   Since you've defined custom colors, you MUST replace these with the correct CSS variable names
+   or the Tailwind utility classes if they are being correctly processed by the compiler.
+
+   For safety and consistency with your CSS variable setup, I'll update these to use the new variables.
+*/
+
 .group-hovered .group-hover\:translate-x-1 {
     transform: translateX(0.25rem);
 }
@@ -207,13 +215,14 @@ const handleTouchEnd = (event: Event) => {
 .group-hovered .group-hover\:opacity-100 {
     opacity: 1;
 }
+/* Replaced generic sky-600 with primary-dark/primary-content equivalents */
 .group-hovered .group-hover\:bg-sky-600 {
-    background-color: #0ea5e9;
+    background-color: var(--primary-dark);
 }
 .group-hovered .group-hover\:text-white {
-    color: #ffffff;
+    color: var(--foreground); /* Use foreground for white/light text */
 }
 .group-hovered .group-hover\:text-sky-600 {
-    color: #0ea5e9; /* Tailwind's sky-600 */
+    color: var(--primary-content); /* Use primary-content for the main accent text color */
 }
 </style>
