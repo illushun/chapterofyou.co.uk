@@ -178,7 +178,7 @@ const handleFavourite = (product: ProductCardData) => {
                 <p class="mt-2 text-copy-light max-w-lg">
                     Find exactly what you need with powerful filtering tools.
                 </p>
-                <div class="mt-4 max-w-lg rounded-lg border-2 border-copy bg-copy-light relative">
+                <div class="mt-4 max-w-lg rounded-lg relative">
                     <input
                         type="text"
                         v-model="form.search"
@@ -386,8 +386,6 @@ const handleFavourite = (product: ProductCardData) => {
                 </div>
 
                 <div class="space-y-6">
-                    <input type="text" v-model="form.search" placeholder="Quick search..." class="relative mb-6 rounded-lg -m-0.5 w-full border-2 border-copy bg-foreground py-2.5 shadow-sm sm:text-sm focus:border-primary-content focus:ring-primary-content" />
-
                     <div class="border-b-2 border-copy pb-4">
                         <h4 class="text-base font-semibold text-copy mb-2">Availability</h4>
                         <label for="MobileFilterInStock" class="inline-flex items-center gap-2 cursor-pointer">
