@@ -32,7 +32,7 @@ class ProductController extends Controller
 
         $products = Product
             ::with('categories')
-            ::with('images')
+            ->with('images')
             ->withCount('uniqueViews')
             ->filter($filters)
             ->when($request->get('sort'), function ($query, $sort) {
