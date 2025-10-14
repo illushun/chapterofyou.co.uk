@@ -178,14 +178,19 @@ const handleFavourite = (product: ProductCardData) => {
                 <p class="mt-2 text-copy-light max-w-lg">
                     Find exactly what you need with powerful filtering tools.
                 </p>
-                <div class="mt-4 max-w-lg rounded-lg border-2 border-copy bg-copy-light">
+                <div class="mt-4 max-w-lg rounded-lg border-2 border-copy bg-copy-light relative">
                     <input
                         type="text"
                         v-model="form.search"
                         placeholder="Search by product name or MPN..."
                         aria-label="Search products by name or MPN"
-                        class="relative rounded-lg -m-0.5 w-full border-2 border-copy bg-foreground py-2.5 px-4 text-sm text-copy placeholder-copy-light focus:border-primary-content focus:ring-primary-content shadow-sm transition"
+                        class="relative rounded-lg -m-0.5 w-full border-2 border-copy bg-foreground py-2.5 pl-4 pr-12 text-sm text-copy placeholder-copy-light focus:border-primary-content focus:ring-primary-content shadow-sm transition"
                     />
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg class="size-5 text-copy-lighter" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
                 </div>
             </header>
 
@@ -314,7 +319,7 @@ const handleFavourite = (product: ProductCardData) => {
                             </div>
                             <button
                                 @click="filterOpen = true"
-                                class="lg:hidden rounded-lg text-primary-content border-2 border-copy p-2 transition shadow-md"
+                                class="lg:hidden rounded-lg text-primary-content border-2 border-copy p-2 transition shadow-md hover:bg-primary-dark"
                                 aria-label="Toggle mobile filter panel"
                                 style="background-color: var(--primary);"
                             >
@@ -421,7 +426,7 @@ const handleFavourite = (product: ProductCardData) => {
                     <div class="mt-8 space-y-3">
                         <button
                             @click="filterOpen = false"
-                            class="relative mb-6 rounded-lg -m-0.5 w-full inline-block px-5 py-3 text-sm font-medium text-primary-content transition border-2 border-copy"
+                            class="relative mb-6 rounded-lg -m-0.5 w-full inline-block px-5 py-3 text-sm font-medium text-primary-content transition border-2 border-copy hover:bg-primary-dark"
                             style="background-color: var(--primary);"
                         >
                             Apply Filters
