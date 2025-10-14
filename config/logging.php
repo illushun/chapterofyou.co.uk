@@ -73,6 +73,34 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'product_view' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/products/view.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'load_website' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/load_website.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'log_in' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/account/log_in.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'register' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/account/register.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
         'slack' => [
             'driver' => 'slack',
             'url' => env('LOG_SLACK_WEBHOOK_URL'),

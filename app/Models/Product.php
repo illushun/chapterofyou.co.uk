@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
-use App\Models\Product\Category;
+use App\Models\Category;
+use App\Models\Product\Category as ProductCategory;
 use App\Models\Product\Image;
 use App\Models\Product\Seo;
 use App\Models\Product\View as ProductView;
@@ -46,6 +47,21 @@ class Product extends Model
     public function images()
     {
         return $this->hasMany(Image::class);
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Product::class, 'parent_product_id');
+    }
+
+    public function parent()
+    {
+        return $this->belongsTo(Product::class, 'parent_product_id');
+    }
+
+    public function seo()
+    {
+        return $this->hasOne(Seo::class);
     }
 
     public function uniqueViews()

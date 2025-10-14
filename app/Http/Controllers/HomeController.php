@@ -16,16 +16,12 @@ class HomeController extends Controller
      */
     public function index(Request $request): \Inertia\Response
     {
-        // 1. Get the current user's IP
-        // We use $request->ip() which is Laravel's reliable way to get the client IP
-        $clientIp = $request->ip(); // errors here. Request params are empty.
+        $clientIp = $request->ip();
+        logger()->channel('load_website')->info("[{$clientIp}] Recorded access attempt:");
 
-        // Log the access attempt for monitoring (optional but good for debugging)
-        Log::info('Access attempt on /', ['ip' => $clientIp, 'target' => self::ALLOWED_IP]);
-
-        // 2. IP Check Logic
         if ($clientIp === self::ALLOWED_IP) {
-            // RENDER MAIN LANDING PAGE (Home/LandingPage.vue)
+            logger()->channel('load_website')->info("[{$clientIp}] Accepted. Redirecting to actual webpage.");
+
             return Inertia::render('home/LandingPage', [
                 'promoText' => 'Free shipping on all orders over £50!',
                 'featuredCategories' => [
@@ -33,9 +29,10 @@ class HomeController extends Controller
                     ['name' => 'Services', 'href' => '/services', 'image' => '/images/cat-services.jpg'],
                 ]
             ]);
+        } else {
+            logger()->channel('load_website')->info("[{$clientIp}] Denied. Redirecting to waiting list.");
         }
 
-        // RENDER WAITLIST PAGE (Welcome.vue)
         return Inertia::render('Welcome', [
             'siteName' => 'Chapter of You',
         ]);
