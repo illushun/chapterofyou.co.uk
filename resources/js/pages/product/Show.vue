@@ -101,7 +101,7 @@ const pageTitle = computed(() => {
 });
 
 const formattedCost = computed(() => {
-  const numericCost = Number(props.product.cost);
+  const numericCost = Number(currentVariation.cost);
   if (isNaN(numericCost)) {
     return 'N/A';
   }
@@ -168,7 +168,7 @@ const formattedCost = computed(() => {
                     </nav>
 
                     <h1 class="text-4xl font-extrabold text-copy mb-2">{{ props.product.name }}</h1>
-                    <p class="text-copy-lighter mb-6">MPN: {{ currentVariation.mpn }}</p>
+                    <p class="text-copy-lighter mb-6">{{ currentVariation.mpn }}</p>
 
                     <div class="mb-6">
                         <span
