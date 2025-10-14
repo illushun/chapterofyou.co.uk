@@ -101,7 +101,7 @@ const pageTitle = computed(() => {
 });
 
 const formattedCost = computed(() => {
-  const numericCost = Number(currentVariation.cost);
+  const numericCost = Number(currentVariation.value.cost);
   if (isNaN(numericCost)) {
     return 'N/A';
   }
