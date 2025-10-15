@@ -331,7 +331,7 @@ const formattedCost = computed(() => {
                             </div>
 
                             <button
-                                @click="handleAddToCart"
+                                @click="handleAddToCart()"
                                 :disabled="isOutOfStock || quantity > currentVariation.stock_qty || quantity < 1"
                                 :class="[
                                     'relative rounded-lg -m-0.5 flex-1 inline-flex items-center justify-center gap-2 border-2 border-copy px-8 py-3 text-lg font-bold text-primary-content transition hover:bg-primary-dark shadow-lg',
@@ -345,7 +345,7 @@ const formattedCost = computed(() => {
                         </div>
 
                         <button
-                            @click="handleFavourite"
+                            @click="handleFavourite()"
                             class="rounded-lg border-2 border-copy p-3 text-copy-light transition hover:bg-error-light hover:text-error-content shadow-lg w-fit lg:flex-shrink-0 flex items-center justify-center"
                             aria-label="Add to favourites"
                         >
