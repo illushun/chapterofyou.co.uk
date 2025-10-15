@@ -46,5 +46,6 @@
     </head>
     <body class="font-sans antialiased" style="background-color: var(--background);">
         @inertia
+        @routes
     </body>
 </html>
