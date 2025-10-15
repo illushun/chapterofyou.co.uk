@@ -9,6 +9,8 @@ import ModalImageViewer from '@/components/ui/coy/ModalImageViewer.vue';
 
 const IconStar = `<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.152A1.5 1.5 0 0113.951 2.152l1.621 3.436a1.5 1.5 0 001.194.887l3.778.548a1.5 1.5 0 01.832 2.578l-2.73 2.66a1.5 1.5 0 00-.435 1.334l.643 3.766a1.5 1.5 0 01-2.175 1.583l-3.38-1.777a1.5 1.5 0 00-1.396 0l-3.38 1.777a1.5 1.5 0 01-2.175-1.583l.643-3.766a1.5 1.5 0 00-.435-1.334l-2.73-2.66a1.5 1.5 0 01.832-2.578l3.778-.548a1.5 1.5 0 001.194-.887l1.621-3.436z" /></svg>`;
 const IconCart = `<svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`;
+const IconMinus = `<svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>`;
+const IconPlus = `<svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m-8-8h16" /></svg>`;
 
 interface ProductImage {
     image: string;
@@ -47,6 +49,18 @@ const props = defineProps<ProductProps>();
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 const isModalOpen = ref(false);
 
+const quantity = ref(1);
+const increaseQuantity = () => {
+    if (currentVariation.value.stock_qty > quantity.value) {
+        quantity.value++;
+    }
+};
+const decreaseQuantity = () => {
+    if (quantity.value > 1) {
+        quantity.value--;
+    }
+};
+
 // for Image Gallery
 const selectedImageIndex = ref(0);
 const mainImageUrl = computed(() => props.product.images[selectedImageIndex.value]?.image || 'https://via.placeholder.com/600?text=No+Image');
@@ -82,11 +96,12 @@ const isPopular = computed(() => props.product.total_unique_views > 100);
 
 const handleAddToCart = () => {
     const itemToAdd = currentVariation.value;
-    console.log(`Adding product ${itemToAdd.id} to cart...`);
-    // router.post('/cart', { product_id: itemToAdd.id });
+    console.log(`Adding ${quantity.value} of product ${itemToAdd.id} to cart...`);
+    // router.post('/cart', { product_id: itemToAdd.id, quantity: quantity.value });
 
     if (successToastRef.value) {
-        successToastRef.value.show(`${props.product.name} (${itemToAdd.mpn}) added to cart!`, 'cart');
+        const mpn = itemToAdd.mpn || props.product.mpn || '';
+        successToastRef.value.show(`${quantity.value} x ${props.product.name} (${mpn}) added to cart!`, 'cart');
     }
 };
 
@@ -223,6 +238,36 @@ const formattedCost = computed(() => {
 
 
                     <div class="flex gap-4 mb-8">
+                        <div class="flex items-center rounded-lg border-2 border-copy bg-foreground shadow-lg">
+                            <button
+                                @click="decreaseQuantity"
+                                :disabled="quantity <= 1"
+                                class="rounded-l-md border-r-2 border-copy p-3 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
+                                aria-label="Decrease quantity"
+                            >
+                                <div v-html="IconMinus"></div>
+                            </button>
+
+                            <input
+                                type="number"
+                                v-model.number="quantity"
+                                min="1"
+                                :max="currentVariation.stock_qty"
+                                @change="quantity = Math.max(1, Math.min(currentVariation.stock_qty, Number(quantity) || 1))"
+                                class="w-12 h-full text-center text-sm font-bold bg-foreground text-copy border-none focus:ring-0 p-0 m-0"
+                                aria-label="Product quantity"
+                            />
+
+                            <button
+                                @click="increaseQuantity"
+                                :disabled="quantity >= currentVariation.stock_qty"
+                                class="rounded-r-md border-l-2 border-copy p-3 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
+                                aria-label="Increase quantity"
+                            >
+                                <div v-html="IconPlus"></div>
+                            </button>
+                        </div>
+
                         <button
                             @click="handleAddToCart"
                             :disabled="isOutOfStock"
