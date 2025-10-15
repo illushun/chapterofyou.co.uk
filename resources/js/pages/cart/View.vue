@@ -83,7 +83,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
 <template>
     <Head title="Shopping Cart" />
 
-    <div class="min-h-screen bg-background text-copy p-4 md:p-8 lg:p-12 font-[Inter]">
+    <div class="min-h-screen bg-background text-copy p-4 md:p-8 lg:p-12">
         <div class="max-w-6xl mx-auto">
 
             <div class="mb-8">
@@ -170,7 +170,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                 </div>
 
                 <div class="lg:col-span-1">
-                    <div class="sticky top-8 rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                    <div class="sticky top-8 rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                          <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                             <h2 class="text-2xl font-black text-copy mb-4 border-b-2 border-copy-light pb-3">Order Summary</h2>
 
