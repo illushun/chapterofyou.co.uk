@@ -189,7 +189,7 @@ const handleFavourite = (product: ProductCardData) => {
     <NavBar />
 
     <Head title="Browse Products | Chapter of You" />
-    <section class="py-10 md:py-20">
+    <section class="py-20">
         <div class="mx-auto max-w-screen-2xl p-4 md:p-8 lg:p-12">
 
             <header class="mb-8 lg:mb-10 text-copy">

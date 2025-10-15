@@ -98,7 +98,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
 
     <Head title="Shopping Cart" />
 
-    <section class="py-10 md:py-20">
+    <section class="py-20">
 
         <div class="min-h-screen bg-background text-copy p-4 md:p-8 lg:p-12">
             <div class="max-w-6xl mx-auto">
