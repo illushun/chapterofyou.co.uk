@@ -231,7 +231,7 @@ const formatAddress = (address: Address): string[] => {
 
     <Head title="Account Settings" />
 
-    <div class="min-h-screen bg-background text-copy p-4 md:p-8 lg:p-12">
+    <div class="min-h-screen bg-background text-copy p-4 pt-20 md:p-8 lg:p-12">
         <div class="max-w-4xl mx-auto">
             <!-- Header -->
             <div class="mb-8 border-b-2 border-copy-light pb-4">

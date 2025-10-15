@@ -75,7 +75,7 @@ const testimonials = [
     <SpringCards />
 
     <section class="relative bg-pink-50 pt-16 pb-24 lg:pt-24 lg:pb-40 overflow-hidden">
-        <div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-screen-xl px-4 pt-20 sm:px-6 lg:px-8">
             <div class="lg:grid lg:grid-cols-12 lg:gap-12 items-center">
 
                 <div class="lg:col-span-6 flex flex-col justify-center text-center lg:text-left">
