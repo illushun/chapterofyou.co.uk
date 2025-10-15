@@ -12,7 +12,7 @@ use Inertia\Inertia;
 
 use App\Models\Address;
 use App\Models\User;
-use App\Models\Address\Lookup;
+use App\Models\Address\Lookup as AddressLookup;
 
 class AccountController extends Controller
 {
