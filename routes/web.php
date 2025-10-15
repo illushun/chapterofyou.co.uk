@@ -21,6 +21,17 @@ Route::prefix('cart')->group(function () {
     Route::delete('/remove/{productId}', [CartController::class, 'remove'])->name('cart.remove');
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/account', [AccountController::class, 'index'])->name('account.index');
+
+    Route::put('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
+    Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
+
+    Route::post('/account/addresses', [AccountController::class, 'storeAddress'])->name('address.store');
+    Route::put('/account/addresses/{address}', [AccountController::class, 'updateAddress'])->name('address.update');
+    Route::delete('/account/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('address.destroy');
+});
+
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
 
 require __DIR__.'/settings.php';
