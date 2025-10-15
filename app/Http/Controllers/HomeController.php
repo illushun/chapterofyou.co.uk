@@ -41,7 +41,7 @@ class HomeController extends Controller
     public function about(Request $request): \Inertia\Response
     {
         $clientIp = $request->ip();
-        if ($clientIp === self::ALLOWED_IP) {
+        if ($clientIp !== self::ALLOWED_IP) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
