@@ -192,7 +192,7 @@ const formattedCost = computed(() => {
                                 isOutOfStock ? 'bg-error text-error-content' : 'bg-success text-success-content'
                             ]"
                         >
-                            {{ isOutOfStock ? 'Out of Stock' : `In Stock (${currentVariation.stock_qty})` }}
+                            {{ isOutOfStock ? 'Out of Stock' : `In Stock` }}
                         </span>
                     </div>
 
