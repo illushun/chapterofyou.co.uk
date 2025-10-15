@@ -211,7 +211,7 @@ const formattedCost = computed(() => {
                                 :class="[
                                     'px-4 py-2 rounded-lg border-2 border-copy text-sm font-semibold transition-all shadow-md',
                                     variation.id === selectedVariationId
-                                        ? 'bg-primary text-primary-content'
+                                        ? 'bg-secondary text-secondary-content'
                                         : 'bg-foreground text-copy-light hover:bg-secondary-light',
                                     variation.stock_qty <= 0 && 'opacity-50 cursor-not-allowed line-through'
                                 ]"
