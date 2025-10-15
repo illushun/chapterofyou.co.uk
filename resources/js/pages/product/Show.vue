@@ -5,6 +5,7 @@ import { ref, computed } from 'vue';
 
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
+import ModalImageViewer from '@/components/ui/coy/ModalImageViewer.vue';
 
 const IconStar = `<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.152A1.5 1.5 0 0113.951 2.152l1.621 3.436a1.5 1.5 0 001.194.887l3.778.548a1.5 1.5 0 01.832 2.578l-2.73 2.66a1.5 1.5 0 00-.435 1.334l.643 3.766a1.5 1.5 0 01-2.175 1.583l-3.38-1.777a1.5 1.5 0 00-1.396 0l-3.38 1.777a1.5 1.5 0 01-2.175-1.583l.643-3.766a1.5 1.5 0 00-.435-1.334l-2.73-2.66a1.5 1.5 0 01.832-2.578l3.778-.548a1.5 1.5 0 001.194-.887l1.621-3.436z" /></svg>`;
 const IconCart = `<svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`;
@@ -43,14 +44,19 @@ interface ProductProps {
 }
 
 const props = defineProps<ProductProps>();
-
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
+const isModalOpen = ref(false);
 
-// --- State for Image Gallery ---
+// for Image Gallery
 const selectedImageIndex = ref(0);
 const mainImageUrl = computed(() => props.product.images[selectedImageIndex.value]?.image || 'https://via.placeholder.com/600?text=No+Image');
 
-// --- State for Variations ---
+const openImageModal = () => {
+    if ((props.product.images || []).length > 0) {
+        isModalOpen.value = true;
+    }
+};
+
 // If the product has variations, we need to track which one is selected
 const selectedVariationId = ref<number | null>(null);
 const currentVariation = computed(() => {
@@ -70,7 +76,9 @@ const currentVariation = computed(() => {
 const isOutOfStock = computed(() => currentVariation.value.stock_qty <= 0);
 const isPopular = computed(() => props.product.total_unique_views > 100);
 
-// --- Actions ---
+
+// Actions
+
 
 const handleAddToCart = () => {
     const itemToAdd = currentVariation.value;
@@ -119,11 +127,13 @@ const formattedCost = computed(() => {
             <div class="grid grid-cols-1 lg:grid-cols-2 lg:gap-16">
 
                 <div class="lg:sticky lg:top-8 self-start">
-                    <div
-                        class="relative rounded-lg border-2 border-copy bg-primary-light"
+                    <button
+                        @click="openImageModal"
+                        class="relative rounded-lg border-2 border-copy bg-primary-light w-full transition hover:opacity-80 focus:ring-4 focus:ring-primary-content"
                         style="background-color: var(--secondary);"
+                        aria-label="View product image large"
                     >
-                        <div class="relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-hidden h-[400px] sm:h-[500px] flex items-center justify-center p-6">
+                        <div class="relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-hidden h-[400px] sm:h-[500px] flex items-center justify-center p-6 cursor-pointer">
                             <span v-if="isPopular" class="absolute top-3 left-3 z-10 inline-flex items-center rounded-full bg-error px-3 py-0.5 text-xs font-bold text-error-content shadow-lg ring-1 ring-inset ring-error-content/50">
                                 🔥 POPULAR
                             </span>
@@ -132,8 +142,13 @@ const formattedCost = computed(() => {
                                 :alt="'Main image of ' + props.product.name"
                                 class="w-full h-full object-contain transition duration-500"
                             />
+                            <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-10 opacity-0 hover:opacity-100 transition duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="size-12 text-primary-content" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                                </svg>
+                            </div>
                         </div>
-                    </div>
+                    </button>
 
                     <div v-if="props.product.images.length > 1" class="mt-6">
                         <div class="grid grid-cols-4 gap-4">
@@ -257,4 +272,11 @@ const formattedCost = computed(() => {
     </section>
 
     <SuccessToast ref="successToastRef" />
+
+    <ModalImageViewer
+        :images="props.product.images || []"
+        :initial-index="selectedImageIndex"
+        :open="isModalOpen"
+        @update:open="isModalOpen = $event"
+    />
 </template>
