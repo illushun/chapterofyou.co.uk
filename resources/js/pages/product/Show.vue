@@ -247,7 +247,10 @@ const formattedCost = computed(() => {
 
                     <div class="border-t-2 border-copy pt-6">
                         <h2 class="text-2xl font-bold text-copy mb-3">Details</h2>
-                        <div class="text-copy-light leading-relaxed whitespace-pre-wrap">{{ props.product.description }}</div>
+                        <div
+                            class="text-copy-light leading-relaxed"
+                            v-html="props.product.description"
+                        ></div>
                     </div>
                 </div>
 
