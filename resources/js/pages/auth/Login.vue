@@ -39,9 +39,6 @@ defineProps<{
                     flex flex-col gap-6
                 "
             >
-                <h1 class="text-3xl font-extrabold text-copy mb-[-0.5rem]">Log in to your account</h1>
-                <p class="text-copy-lighter text-sm">Enter your email and password below to log in</p>
-
                 <div
                     v-if="status"
                     class="mb-4 text-center text-sm font-medium text-green-600"
