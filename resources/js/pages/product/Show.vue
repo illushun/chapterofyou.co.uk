@@ -108,7 +108,7 @@ const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
 
     if (quickAddProduct) {
         // Quick add from a related product card
-        itemToAdd = { id: quickAddProduct.id };
+        itemToAdd = { id: quickAddProduct.id, stock_qty: quickAddProduct.stock_qty };
         qty = quantity.value;
         productName = quickAddProduct.name;
         productMpn = quickAddProduct.mpn;
@@ -120,8 +120,8 @@ const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
         productMpn = itemToAdd.mpn || props.product.mpn || '';
     }
 
-    if (qty < 1 || itemToAdd.stock_qty < qty) {
-        console.warn('Cannot add invalid quantity to cart.');
+    if (!itemToAdd || !itemToAdd.id || qty < 1 || itemToAdd.stock_qty < qty) {
+        console.error('Invalid product ID or quantity provided for cart addition.', itemToAdd, qty);
         return;
     }
 
