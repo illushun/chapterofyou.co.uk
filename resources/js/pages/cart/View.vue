@@ -67,7 +67,7 @@ const removeProduct = (productId: number) => {
 /**
  * Formats a number as currency (GBP).
  */
-const formattedCurrency = computed((amount: number) => {
+const formatCurrency = computed((amount: number) => {
   const numericCost = Number(amount);
   if (isNaN(numericCost)) {
     return 'N/A';
