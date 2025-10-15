@@ -94,15 +94,58 @@ const isPopular = computed(() => props.product.total_unique_views > 100);
 // Actions
 
 
-const handleAddToCart = () => {
-    const itemToAdd = currentVariation.value;
-    console.log(`Adding ${quantity.value} of product ${itemToAdd.id} to cart...`);
-    // router.post('/cart', { product_id: itemToAdd.id, quantity: quantity.value });
+/**
+ * Handles adding an item to the cart, supporting both the main product
+ * and quick-add from a related product card.
+ *
+ * @param quickAddProduct The product object if adding from a related card (defaults to main product logic if null).
+ */
+const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
+    let itemToAdd;
+    let qty;
+    let productName;
+    let productMpn;
 
-    if (successToastRef.value) {
-        const mpn = itemToAdd.mpn || props.product.mpn || '';
-        successToastRef.value.show(`${quantity.value} x ${props.product.name} (${mpn}) added to cart!`, 'cart');
+    if (quickAddProduct) {
+        // Quick add from a related product card
+        itemToAdd = { id: quickAddProduct.id };
+        qty = quantity.value;
+        productName = quickAddProduct.name;
+        productMpn = quickAddProduct.mpn;
+    } else {
+        // Main product page add to cart (using selected variation and quantity ref)
+        itemToAdd = currentVariation.value;
+        qty = quantity.value;
+        productName = props.product.name;
+        productMpn = itemToAdd.mpn || props.product.mpn || '';
     }
+
+    if (qty < 1 || itemToAdd.stock_qty < qty) {
+        console.warn('Cannot add invalid quantity to cart.');
+        return;
+    }
+
+    // Use Inertia.js router to make a POST request to the server
+    router.post(
+        '/cart',
+        { product_id: itemToAdd.id, quantity: qty },
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                if (successToastRef.value) {
+                    successToastRef.value.show(`${qty} x ${productName} (${productMpn}) added to cart!`, 'cart');
+                }
+
+                // Reset quantity on the main page to 1 for the next purchase
+                if (!quickAddProduct) {
+                    quantity.value = 1;
+                }
+            },
+            onError: (errors) => {
+                console.error('Error adding to cart:', errors);
+            }
+        }
+    );
 };
 
 const handleFavourite = () => {
