@@ -237,57 +237,62 @@ const formattedCost = computed(() => {
                     </div>
 
 
-                    <div class="flex gap-4 mb-8">
-                        <div class="flex items-center rounded-lg border-2 border-copy bg-foreground shadow-lg">
-                            <button
-                                @click="decreaseQuantity"
-                                :disabled="quantity <= 1"
-                                class="rounded-l-md border-r-2 border-copy p-3 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
-                                aria-label="Decrease quantity"
-                            >
-                                <div v-html="IconMinus"></div>
-                            </button>
+                    <div class="flex flex-col gap-4 mb-8 lg:flex-row">
 
-                            <input
-                                type="number"
-                                v-model.number="quantity"
-                                min="1"
-                                :max="currentVariation.stock_qty"
-                                @change="quantity = Math.max(1, Math.min(currentVariation.stock_qty, Number(quantity) || 1))"
-                                class="w-12 h-full text-center text-sm font-bold bg-foreground text-copy border-none focus:ring-0 p-0 m-0"
-                                aria-label="Product quantity"
-                            />
+                        <div class="flex flex-grow gap-4">
+
+                            <div class="flex items-center rounded-lg border-2 border-copy bg-foreground shadow-lg flex-shrink-0 w-1/3 max-w-[150px] lg:w-auto">
+                                <button
+                                    @click="decreaseQuantity"
+                                    :disabled="quantity <= 1"
+                                    class="rounded-l-md border-r-2 border-copy p-3 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
+                                    aria-label="Decrease quantity"
+                                >
+                                    <div v-html="IconMinus"></div>
+                                </button>
+
+                                <input
+                                    type="number"
+                                    v-model.number="quantity"
+                                    min="1"
+                                    :max="currentVariation.stock_qty"
+                                    @change="quantity = Math.max(1, Math.min(currentVariation.stock_qty, Number(quantity) || 1))"
+                                    class="w-12 h-full text-center text-sm font-bold bg-foreground text-copy border-none focus:ring-0 p-0 m-0"
+                                    aria-label="Product quantity"
+                                />
+
+                                <button
+                                    @click="increaseQuantity"
+                                    :disabled="quantity >= currentVariation.stock_qty"
+                                    class="rounded-r-md border-l-2 border-copy p-3 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
+                                    aria-label="Increase quantity"
+                                >
+                                    <div v-html="IconPlus"></div>
+                                </button>
+                            </div>
 
                             <button
-                                @click="increaseQuantity"
-                                :disabled="quantity >= currentVariation.stock_qty"
-                                class="rounded-r-md border-l-2 border-copy p-3 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
-                                aria-label="Increase quantity"
+                                @click="handleAddToCart"
+                                :disabled="isOutOfStock || quantity > currentVariation.stock_qty || quantity < 1"
+                                :class="[
+                                    'relative rounded-lg -m-0.5 flex-1 inline-flex items-center justify-center gap-2 border-2 border-copy px-8 py-3 text-lg font-bold text-primary-content transition hover:bg-primary-dark shadow-lg',
+                                    isOutOfStock ? 'bg-border text-copy-lighter cursor-not-allowed' : 'bg-primary'
+                                ]"
+                                style="background-color: var(--primary);"
                             >
-                                <div v-html="IconPlus"></div>
+                                <div v-html="IconCart"></div>
+                                {{ isOutOfStock ? 'Notify Me' : 'Add to Cart' }}
                             </button>
                         </div>
 
                         <button
-                            @click="handleAddToCart"
-                            :disabled="isOutOfStock"
-                            :class="[
-                                'relative rounded-lg -m-0.5 flex-1 inline-flex items-center justify-center gap-2 border-2 border-copy px-8 py-3 text-lg font-bold text-primary-content transition hover:bg-primary-dark shadow-lg',
-                                isOutOfStock ? 'bg-border text-copy-lighter cursor-not-allowed' : 'bg-primary'
-                            ]"
-                            style="background-color: var(--primary);"
-                        >
-                            <div v-html="IconCart"></div>
-                            {{ isOutOfStock ? 'Notify Me' : 'Add to Cart' }}
-                        </button>
-
-                        <button
                             @click="handleFavourite"
-                            class="rounded-lg border-2 border-copy p-3 text-copy-light transition hover:bg-error-light hover:text-error-content shadow-lg"
+                            class="rounded-lg border-2 border-copy p-3 text-copy-light transition hover:bg-error-light hover:text-error-content shadow-lg lg:flex-shrink-0"
                             aria-label="Add to favourites"
                         >
                             <div v-html="IconStar" class="size-6"></div>
                         </button>
+
                     </div>
 
                     <div class="border-t-2 border-copy pt-6">
