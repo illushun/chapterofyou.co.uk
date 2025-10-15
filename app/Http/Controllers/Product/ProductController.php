@@ -34,6 +34,7 @@ class ProductController extends Controller
         $products = Product
             ::with('categories')
             ->with('images')
+            ->with('seo:product_id,slug')
             ->withCount('uniqueViews')
             ->filter($filters)
             ->when($request->get('sort'), function ($query, $sort) {

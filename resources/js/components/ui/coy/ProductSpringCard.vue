@@ -14,6 +14,7 @@ interface ProductCardData {
   stock_qty: number;
   images?: { image: string }[];
   total_unique_views?: number;
+  seo?: { slug: string };
 }
 
 interface ProductCardProps {
@@ -110,6 +111,15 @@ const handleTouchEnd = (event: Event) => {
     }
     document.removeEventListener('touchstart', handleTouchEnd, { capture: true });
 };
+
+const productLink = computed(() => {
+    // Check if an SEO slug exists and use it
+    if (props.product.seo && props.product.seo.slug) {
+        return `/product/${props.product.seo.slug}`;
+    }
+    // Fallback to using the product ID
+    return `/product/${props.product.id}`;
+});
 </script>
 
 <template>
@@ -147,7 +157,7 @@ const handleTouchEnd = (event: Event) => {
       </div>
 
       <div class="p-4 border-t-2 border-copy bg-foreground">
-        <a :href="'/product/' + product.id" class="block">
+        <a :href="productLink" class="block">
           <p class="text-xs font-medium uppercase tracking-wider text-copy-lighter">{{ product.mpn }}</p>
           <p class="flex items-center text-xl font-bold text-copy transition truncate mt-1">
             <span class="mr-2">{{ truncatedName }}</span>
