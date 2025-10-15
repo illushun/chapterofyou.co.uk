@@ -49,7 +49,7 @@ const testimonials = [
 <template>
     <NavBar />
 
-    <Head title="Aesthetic Store | Cute & Bespoke E-commerce" />
+    <Head title="Chapter of You" />
 
     <style scoped>
     /* Playful wave background for the sections */

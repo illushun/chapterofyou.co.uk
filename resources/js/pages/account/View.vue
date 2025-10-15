@@ -233,7 +233,7 @@ const formatAddress = (address: Address): string[] => {
 
     <section class="py-10 md:py-20">
 
-        <div class="mx-auto max-w-screen-xl px-4 pt-20 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-screen-xl p-4 md:p-8 lg:p-12">
             <div class="max-w-4xl mx-auto">
                 <!-- Header -->
                 <div class="mb-8 border-b-2 border-copy-light pb-4">

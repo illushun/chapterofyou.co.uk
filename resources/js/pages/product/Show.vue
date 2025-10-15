@@ -197,7 +197,7 @@ const formattedCost = computed(() => {
     <Head :title="pageTitle" />
 
     <section class="py-10 md:py-20">
-        <div class="mx-auto max-w-screen-xl px-4 pt-20 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-screen-xl p-4 md:p-8 lg:p-12">
             <div class="grid grid-cols-1 lg:grid-cols-2 lg:gap-16">
 
                 <div class="lg:sticky lg:top-8 self-start">
