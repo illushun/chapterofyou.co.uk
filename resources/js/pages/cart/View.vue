@@ -113,7 +113,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                         <div v-for="item in props.cartItems" :key="item.id"
                              class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl"
                         >
-                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 flex flex-col sm:flex-row items-center gap-4">
+                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 flex flex-col sm:flex-row items-start gap-4">
 
                                 <!-- Product Image -->
                                 <div class="w-24 h-24 flex-shrink-0 border border-border rounded-lg overflow-hidden flex items-center justify-center">
@@ -121,14 +121,24 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                 </div>
 
                                 <!-- Product Details and Actions -->
-                                <div class="flex-grow flex flex-col sm:flex-row justify-between items-start sm:items-center w-full">
+                                <div class="flex-grow w-full">
 
-                                    <div class="flex-grow mb-2 sm:mb-0">
-                                        <h2 class="text-xl font-bold text-copy">{{ item.name }}</h2>
-                                        <p class="text-sm text-copy-lighter mt-1">Unit Price: {{ formatCurrency(item.cost) }}</p>
-                                    </div>
+                                    <div class="flex justify-between items-start mb-2">
+                                        <div class="flex-grow pr-4">
+                                            <h2 class="text-xl font-bold text-copy">{{ item.name }}</h2>
+                                            <p class="text-sm text-copy-lighter mt-1">Unit Price: {{ formatCurrency(item.cost) }}</p>
+                                        </div>
 
-                                    <div class="flex items-center gap-4 flex-shrink-0">
+                                        <button
+                                            @click="removeProduct(item.product_id)"
+                                            class="p-2 rounded-lg text-error hover:bg-error-light transition border-2 border-copy shadow-md flex-shrink-0 w-fit"
+                                            aria-label="Remove item"
+                                        >
+                                            <div v-html="IconTrash"></div>
+                                        </button>
+                                     </div>
+
+                                    <div class="flex justify-between items-center pt-3 mt-3 border-t border-copy-light/50">
 
                                         <!-- Quantity Selector -->
                                         <div class="flex items-center rounded-lg border-2 border-copy bg-background flex-shrink-0">
@@ -153,19 +163,12 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                             </button>
                                         </div>
 
-                                        <!-- Subtotal and Remove Button -->
-                                        <p class="text-2xl font-black text-primary-content hidden md:block w-[100px] text-right">{{ calculateItemSubtotal(item) }}</p>
-
-                                        <button
-                                            @click="removeProduct(item.product_id)"
-                                            class="p-2 rounded-lg text-error hover:bg-error-light transition border-2 border-copy shadow-md flex-shrink-0 w-fit"
-                                            aria-label="Remove item"
-                                        >
-                                            <div v-html="IconTrash"></div>
-                                        </button>
+                                        <div class="text-right">
+                                            <p class="text-sm font-semibold text-copy-lighter hidden sm:block">Item Subtotal:</p>
+                                            <p class="text-2xl font-black text-primary">{{ calculateItemSubtotal(item) }}</p>
+                                        </div>
                                     </div>
                                 </div>
-                                <p class="text-2xl font-black text-primary-content block md:hidden mt-2">Subtotal: {{ calculateItemSubtotal(item) }}</p>
                             </div>
                         </div>
 
