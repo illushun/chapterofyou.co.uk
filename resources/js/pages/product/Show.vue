@@ -122,7 +122,7 @@ const formattedCost = computed(() => {
 
     <Head :title="pageTitle" />
 
-    <section class="py-10 md:py-20 border-b-2 border-copy" style="background-color: var(--background);">
+    <section class="py-10 md:py-20">
         <div class="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 lg:grid-cols-2 lg:gap-16">
 
