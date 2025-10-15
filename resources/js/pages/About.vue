@@ -7,7 +7,7 @@ const IconLeaf = `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-pr
 
 // --- 1. Content defined as a Structured Array for easy iteration and animation ---
 const sections = [
-    { type: 'h2', content: 'My Story: Chapter of You', classes: 'text-4xl md:text-5xl font-black text-copy tracking-tight border-b-2 pb-4 border-copy-light mb-6' },
+    { type: 'h2', content: 'About us', classes: 'text-4xl md:text-5xl font-black text-copy tracking-tight border-b-2 pb-4 border-copy-light mb-6' },
     { type: 'p', content: 'Welcome to <strong>Chapter of You</strong>, where <strong>my</strong> philosophy is simple and personal: <strong>"Your chapter, your self-care."</strong>', classes: 'text-lg md:text-xl leading-relaxed' },
     { type: 'p', content: '<strong>I</strong> believe that cultivating true wellness starts with dedicating moments to yourself. <strong>I am</strong> founded on the commitment to provide tools and experiences that encourage you to pause, appreciate the present, and intentionally prioritize your personal peace.', classes: 'text-lg leading-relaxed' },
     { type: 'divider', content: IconLeaf, classes: 'flex items-center justify-center py-4' },
