@@ -83,14 +83,13 @@ watch(() => props.open, (newOpen) => {
             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-90 transition-opacity"
         >
             <div
-                class="relative w-full max-w-4xl h-full max-h-[90vh] rounded-xl border-4 border-copy shadow-2xl"
-                style="background-color: var(--copy-light);"
+                class="relative w-full max-w-4xl h-full max-h-[90vh] rounded-xl"
             >
                 <div class="relative -m-0.5 w-full h-full rounded-lg border-2 border-copy bg-foreground p-4 md:p-8 flex flex-col items-center justify-center">
 
                     <button
                         @click="closeModal"
-                        class="absolute top-4 right-4 z-10 p-2 rounded-full border-2 border-copy bg-error text-error-content transition hover:bg-error-dark"
+                        class="absolute top-4 right-4 z-10 p-2 rounded-lg border-2 border-copy bg-error text-error-content transition hover:bg-error-dark"
                         aria-label="Close image viewer"
                     >
                         <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
