@@ -91,7 +91,7 @@ class AccountController extends Controller
         if ($cachedLookup) {
             // Return cached data
             return response()->json([
-                'addresses' => json_decode($cachedResult->results_json, true)
+                'addresses' => json_decode($cachedResult->data, true)
             ]);
         }
 
@@ -131,7 +131,7 @@ class AccountController extends Controller
             // Store the result for future use
             AddressLookup::create([
                 'query' => $query,
-                'results_json' => json_encode($addressList),
+                'data' => json_encode($addressList),
             ]);
             return response()->json(['addresses' => $addressList]);
         }
