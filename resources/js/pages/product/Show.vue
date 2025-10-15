@@ -71,18 +71,28 @@ const openImageModal = () => {
     }
 };
 
+const getInitialVariationId = (): number | null => {
+    if (props.product.children && props.product.children.length > 0) {
+        // Find the first variation that is in stock to set as default
+        return props.product.children.find(v => v.stock_qty > 0)?.id ?? null;
+    }
+    return null;
+};
+
 // If the product has variations, we need to track which one is selected
-const selectedVariationId = ref<number | null>(null);
+const selectedVariationId = ref<number | null>(getInitialVariationId());
 const currentVariation = computed(() => {
     // If a variation is selected, use it
     if (selectedVariationId.value) {
-        return props.product.children.find(v => v.id === selectedVariationId.value);
+        const variation = props.product.children.find(v => v.id === selectedVariationId.value);
+        if (variation) return variation;
     }
-    // If no variations or none selected, use the main product data
+
+    // If no variations selected (or no children exist), use the main product data.
     return {
         id: props.product.id,
         cost: props.product.cost,
-        stock_qty: props.product.stock_qty,
+        stock_qty: props.product.stock_qty || 0,
         mpn: props.product.mpn,
     };
 });
@@ -107,23 +117,30 @@ const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
     let productMpn;
 
     if (quickAddProduct) {
-        // Quick add from a related product card
+        // Quick add from a related product card (quantity fixed at 1)
         itemToAdd = { id: quickAddProduct.id, stock_qty: quickAddProduct.stock_qty };
-        qty = quantity.value;
+        qty = 1;
         productName = quickAddProduct.name;
         productMpn = quickAddProduct.mpn;
     } else {
-        // Main product page add to cart (using selected variation and quantity ref)
         itemToAdd = currentVariation.value;
         qty = quantity.value;
         productName = props.product.name;
         productMpn = itemToAdd.mpn || props.product.mpn || '';
+
+        // If it's a variable product and nothing is explicitly selected (defaulting to the parent)
+        // AND the parent doesn't have an ID, we stop.
+        if (props.product.children.length > 0 && !selectedVariationId.value) {
+            console.error('Cannot add variable product to cart without selecting an option.');
+            return;
+        }
     }
 
     if (!itemToAdd || !itemToAdd.id || qty < 1 || itemToAdd.stock_qty < qty) {
-        console.error('Invalid product ID or quantity provided for cart addition.', itemToAdd, qty);
+        console.error('Invalid product ID or quantity provided for cart addition. Check product data integrity.', itemToAdd, qty);
         return;
     }
+    // ------------------------------------
 
     router.post(
         '/cart/add',
