@@ -3,7 +3,7 @@ import { Head } from '@inertiajs/vue3';
 import { ref, onMounted, nextTick } from 'vue'; // Import necessary functions
 
 // Icon for the section divider or emphasis (using text-primary)
-const IconLeaf = `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.032 2.032m-3.936-2.032L12 5.064M18 17l-2.032-2.032m3.936 2.032L12 18.936M12 21v-4m-2-2h4m5-16l2.032 2.032m-3.936-2.032L12 5.064M18 17l-2.032-2.032m3.936 2.032L12 18.936"/></svg>`;
+const IconLeaf = `<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-primary" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2m0 16v2m-6-8H4m16 0h-2m-2-7L5.5 5.5m11.3 11.3L18.5 18.5m-11.3.1L5.5 18.5M18.5 5.5l-2.1 2.1"/></svg>`;
 
 // --- 1. Content defined as a Structured Array for easy iteration and animation ---
 const sections = [
