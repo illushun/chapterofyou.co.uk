@@ -147,13 +147,32 @@ interface ProductCardData {
     total_unique_views?: number;
 }
 
+/**
+ * Sends an Inertia POST request to add the product to the cart.
+ * Displays a success toast upon successful server response.
+ */
 const handleAddToCart = (product: ProductCardData) => {
-    console.log(`Adding product ${product.id} to cart...`);
-    // router.post('/cart', { product_id: product.id });
-
-    if (successToastRef.value) {
-        successToastRef.value.show(`${product.name} added to cart!`, 'cart');
-    }
+    router.post(
+        '/cart/add', // The POST route defined for adding items
+        { product_id: product.id, quantity: 1 },
+        {
+            preserveScroll: true,
+            // Show loading spinner on product card during request
+            onStart: () => { isLoading.value = true; },
+            onFinish: () => { isLoading.value = false; },
+            onSuccess: () => {
+                // Show toast notification after successful server response
+                if (successToastRef.value) {
+                    successToastRef.value.show(`${product.name} added to cart!`, 'cart');
+                }
+            },
+            onError: (errors) => {
+                // You can expand this to show error messages (e.g., "Out of Stock")
+                console.error("Failed to add to cart:", errors);
+                // alert() is forbidden, so you'd show a modal or error toast here.
+            }
+        }
+    );
 };
 
 const handleFavourite = (product: ProductCardData) => {
