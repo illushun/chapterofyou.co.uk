@@ -366,7 +366,7 @@
             <div class="px-2 pt-2 pb-3 space-y-1">
                 <a
                     v-if="$page.props.auth.user"
-                    href="/"
+                    href="/account"
                     class="block px-3 py-2 rounded-md text-base font-bold text-primary-content border-2 border-copy bg-primary-light hover:bg-secondary-light transition"
                 >
                     Account: {{ firstName }}
