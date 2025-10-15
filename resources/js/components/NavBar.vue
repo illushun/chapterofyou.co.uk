@@ -319,8 +319,8 @@
                 </div>
 
                 <div class="flex items-center gap-3">
-                    <button type="button" class="relative p-1 border-2 border-copy bg-primary rounded-lg transition duration-300 hover:scale-[1.05]" aria-label="Shopping Cart">
-                        <div class="p-1 border-2 border-copy bg-foreground rounded-lg transition duration-300 hover:bg-primary-light">
+                    <button type="button" class="relative p-1 border-2 border-copy bg-foreground rounded-lg transition duration-300 hover:bg-primary-light hover:scale-[1.05]" aria-label="Shopping Cart">
+                        <div class="p-1 rounded-lg">
                             <svg class="size-6 text-copy" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
                     </button>
