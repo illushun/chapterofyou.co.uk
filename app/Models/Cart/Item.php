@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Product;
 use App\Models\Cart as CartObj;
 
-class CartItem extends Model
+class Item extends Model
 {
     use HasFactory;
 
