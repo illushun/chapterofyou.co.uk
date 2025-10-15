@@ -140,8 +140,12 @@ const productLink = computed(() => {
           🔥 POPULAR
       </span>
 
+      <a :href="productLink" class="absolute inset-0 z-[1] block">
+          <span class="sr-only">View product: {{ product.name }}</span>
+      </a>
+
       <button
-        class="absolute top-3 right-3 z-10 p-2 rounded-full bg-foreground border border-border transition-colors hover:bg-error-light hover:text-error-content shadow-md"
+        class="absolute top-3 right-3 z-20 p-2 rounded-full bg-foreground border border-border transition-colors hover:bg-error-light hover:text-error-content shadow-md"
         aria-label="Add to favourites"
         @click.stop.prevent="$emit('favourite', product.id)"
       >
@@ -157,12 +161,12 @@ const productLink = computed(() => {
       </div>
 
       <div class="p-4 border-t-2 border-copy bg-foreground">
-        <a :href="productLink" class="block">
+        <div class="block">
           <p class="text-xs font-medium uppercase tracking-wider text-copy-lighter">{{ product.mpn }}</p>
           <p class="flex items-center text-xl font-bold text-copy transition truncate mt-1">
             <span class="mr-2">{{ truncatedName }}</span>
           </p>
-        </a>
+        </div>
 
         <div class="mt-4 flex justify-between items-end">
             <p class="text-3xl font-black text-primary-content">
@@ -180,28 +184,7 @@ const productLink = computed(() => {
         </div>
       </div>
 
-      <svg
-          v-motion
-          :initial="{ rotate: 0 }"
-          :animate="{ rotate: 360 }"
-          :transition="{ duration: 25000, repeat: Infinity, type: 'tween', ease: 'linear' }"
-          style="bottom: 0; right: 0; transform: translate(50%, 50%) scale(0.6);"
-          width="100"
-          height="100"
-          class="pointer-events-none absolute z-0 rounded-full text-copy-lighter opacity-20"
-      >
-          <path id="circlePath-{{ product.id }}" d="M50,50 m-50,0 a50,50 0 1,0 100,0 a50,50 0 1,0 -100,0" fill="none" />
-          <text>
-              <textPath
-                  :href="'#circlePath-' + product.id"
-                  fill="currentColor"
-                  class="text-xs font-black uppercase"
-              >
-                  BUY NOW • IN STOCK • BUY NOW • IN STOCK •
-              </textPath>
-          </text>
-      </svg>
-    </div>
+      </div>
   </div>
 </template>
 
