@@ -18,7 +18,7 @@ import NavBar from '@/components/NavBar.vue';
             <div class="max-w-4xl mx-auto">
 
                 <div class="mb-8 border-b-2 border-copy-light pb-4">
-                    <h1 class="text-4xl sm:text-5xl font-black text-copy mb-2">My Account</h1>
+                    <h1 class="text-4xl sm:text-5xl font-black text-copy mb-2">About us</h1>
                     <p class="text-lg text-copy-lighter">Manage your personal details, security, and shipping addresses.</p>
                 </div>
 
