@@ -328,7 +328,7 @@
                     <div class="hidden sm:block">
                         <a
                             v-if="$page.props.auth.user"
-                            href="/"
+                            href="/account"
                             class="relative inline-flex items-center text-sm font-bold transition duration-150 group"
                         >
                             <div class="border-2 border-copy bg-primary-content rounded-lg">
