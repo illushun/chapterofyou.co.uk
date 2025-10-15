@@ -64,7 +64,7 @@ defineProps<{
                                 :tabindex="1"
                                 autocomplete="email"
                                 placeholder="email@example.com"
-                                class="border-2 border-copy rounded-lg p-3 shadow-md focus:border-primary focus:ring-primary text-copy"
+                                class="border-2 border-copy rounded-lg p-3 focus:border-primary focus:ring-primary text-copy"
                             />
                             <InputError :message="errors.email" />
                         </div>
@@ -89,7 +89,7 @@ defineProps<{
                                 :tabindex="2"
                                 autocomplete="current-password"
                                 placeholder="Password"
-                                class="border-2 border-copy rounded-lg p-3 shadow-md focus:border-primary focus:ring-primary text-copy"
+                                class="border-2 border-copy rounded-lg p-3 focus:border-primary focus:ring-primary text-copy"
                             />
                             <InputError :message="errors.password" />
                         </div>
