@@ -125,9 +125,8 @@ const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
         return;
     }
 
-    // Use Inertia.js router to make a POST request to the server
     router.post(
-        '/cart',
+        '/cart/add',
         { product_id: itemToAdd.id, quantity: qty },
         {
             preserveScroll: true,
