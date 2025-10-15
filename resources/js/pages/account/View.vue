@@ -2,6 +2,8 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
+import NavBar from '@/components/NavBar.vue';
+
 const IconEdit = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
 const IconCheck = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
 const IconLock = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
@@ -225,6 +227,8 @@ const formatAddress = (address: Address): string[] => {
 </script>
 
 <template>
+    <NavBar />
+
     <Head title="Account Settings" />
 
     <div class="min-h-screen bg-background text-copy p-4 md:p-8 lg:p-12">
