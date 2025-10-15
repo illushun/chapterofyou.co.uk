@@ -190,7 +190,7 @@ const handleFavourite = (product: ProductCardData) => {
 
     <Head title="Browse Products | Chapter of You" />
     <section class="min-h-screen border-b-2 border-copy" style="background-color: var(--background);">
-        <div class="mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-screen-2xl px-4 pt-20 sm:px-6 lg:px-8">
 
             <header class="mb-8 lg:mb-10 text-copy">
                 <h2 class="text-4xl font-extrabold tracking-tight">Products</h2>
