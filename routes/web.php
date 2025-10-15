@@ -32,6 +32,7 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/account/addresses/{address}', [AccountController::class, 'updateAddress'])->name('address.update');
     Route::delete('/account/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('address.destroy');
 });
+Route::get('/account/addresses/lookup', [AccountController::class, 'lookupAddress'])->name('address.lookup');
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
 
