@@ -66,9 +66,16 @@ const removeProduct = (productId: number) => {
 
 /**
  * Formats a number as currency (GBP).
+ * FIX: Coerces input to a Number to ensure .toFixed() is always called on a number.
  */
-const formatCurrency = (amount: number): string => {
-    return `£${amount.toFixed(2)}`;
+const formatCurrency = (amount: number | string): string => {
+    // Ensure the amount is treated as a number
+    const numAmount = Number(amount);
+    if (isNaN(numAmount)) {
+        // Fallback for non-numeric values
+        return '£0.00';
+    }
+    return `£${numAmount.toFixed(2)}`;
 };
 
 /**
@@ -76,7 +83,11 @@ const formatCurrency = (amount: number): string => {
  * (Used for visual consistency before server response updates full total)
  */
 const calculateItemSubtotal = (item: CartItem): string => {
-    return formatCurrency(roundToTwo(item.cost * item.quantity));
+    // Ensure cost and quantity are numbers before calculation, just in case
+    const cost = Number(item.cost);
+    const quantity = Number(item.quantity);
+
+    return formatCurrency(roundToTwo(cost * quantity));
 };
 </script>
 
