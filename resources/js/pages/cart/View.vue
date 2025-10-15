@@ -99,7 +99,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
 
             <div class="mb-8">
                 <h1 class="text-5xl font-black text-copy mb-2">Your Shopping Cart</h1>
-                <a href="/" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
+                <a href="/products" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
                     <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
                     Continue Shopping
                 </a>
@@ -174,7 +174,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                     <!-- Empty Cart State -->
                     <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-foreground/50">
                         <p class="text-2xl font-semibold text-copy mb-4">Your cart is currently empty.</p>
-                        <a href="/" class="text-primary hover:text-primary-dark transition font-bold underline">
+                        <a href="/products" class="text-primary hover:text-primary-dark transition font-bold underline">
                             Browse Products and Start Shopping
                         </a>
                     </div>
