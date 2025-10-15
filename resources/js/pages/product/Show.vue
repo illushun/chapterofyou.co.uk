@@ -241,7 +241,7 @@ const formattedCost = computed(() => {
 
                         <div class="flex flex-grow gap-4">
 
-                            <div class="flex items-center rounded-lg border-2 border-copy bg-foreground shadow-lg flex-shrink-0 w-1/3 max-w-[150px] lg:w-auto">
+                            <div class="flex items-center rounded-lg border-2 border-copy bg-foreground flex-shrink-0 w-1/3 max-w-[150px] lg:w-auto">
                                 <button
                                     @click="decreaseQuantity"
                                     :disabled="quantity <= 1"
@@ -287,7 +287,7 @@ const formattedCost = computed(() => {
 
                         <button
                             @click="handleFavourite"
-                            class="rounded-lg border-2 border-copy p-3 text-copy-light transition hover:bg-error-light hover:text-error-content shadow-lg lg:flex-shrink-0"
+                            class="rounded-lg border-2 border-copy p-3 text-copy-light transition hover:bg-error-light hover:text-error-content w-fit lg:flex-shrink-0"
                             aria-label="Add to favourites"
                         >
                             <div v-html="IconStar" class="size-6"></div>
