@@ -290,7 +290,7 @@ const formattedCost = computed(() => {
                             class="rounded-lg border-2 border-copy p-3 text-copy-light transition hover:bg-error-light hover:text-error-content shadow-lg w-fit lg:flex-shrink-0 flex items-center justify-center"
                             aria-label="Add to favourites"
                         >
-                            <div v-html="IconStar" class="size-6"></div>
+                            <div v-html="IconStar" class="size-6 flex items-center justify-center"></div>
                         </button>
 
                     </div>
