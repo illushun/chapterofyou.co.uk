@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 use App\Models\Product;
-use App\Models\Cart;
+use App\Models\Cart as CartObj;
 
 class CartItem extends Model
 {
@@ -26,7 +26,7 @@ class CartItem extends Model
      */
     public function cart(): BelongsTo
     {
-        return $this->belongsTo(Cart::class);
+        return $this->belongsTo(CartObj::class);
     }
 
     /**
