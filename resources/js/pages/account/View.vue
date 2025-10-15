@@ -231,187 +231,191 @@ const formatAddress = (address: Address): string[] => {
 
     <Head title="Account Settings" />
 
-    <div class="min-h-screen bg-background text-copy p-4 pt-20 md:p-8 lg:p-12">
-        <div class="max-w-4xl mx-auto">
-            <!-- Header -->
-            <div class="mb-8 border-b-2 border-copy-light pb-4">
-                <h1 class="text-4xl sm:text-5xl font-black text-copy mb-2">My Account</h1>
-                <p class="text-lg text-copy-lighter">Manage your personal details, security, and shipping addresses.</p>
-            </div>
+    <section class="py-10 md:py-20">
 
-            <div class="space-y-10">
+        <div class="mx-auto max-w-screen-xl px-4 pt-20 sm:px-6 lg:px-8">
+            <div class="max-w-4xl mx-auto">
+                <!-- Header -->
+                <div class="mb-8 border-b-2 border-copy-light pb-4">
+                    <h1 class="text-4xl sm:text-5xl font-black text-copy mb-2">My Account</h1>
+                    <p class="text-lg text-copy-lighter">Manage your personal details, security, and shipping addresses.</p>
+                </div>
 
-                <!-- General Details -->
-                <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-2xl font-bold text-copy flex items-center gap-2">
-                            <div v-html="IconUser" class="size-6 text-primary"></div>
-                            General Details
-                        </h2>
-                        <button
-                            @click="isEditingDetails = !isEditingDetails"
-                            class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition"
-                            :class="isEditingDetails ? 'text-error hover:bg-error-light' : 'text-primary hover:bg-primary-light'"
-                            aria-label="Toggle editing general details"
-                        >
-                            <div v-html="isEditingDetails ? IconX : IconEdit"></div>
-                            {{ isEditingDetails ? 'Cancel' : 'Edit' }}
-                        </button>
-                    </div>
+                <div class="space-y-10">
 
-                    <form @submit.prevent="saveDetails" class="grid sm:grid-cols-2 gap-4">
-                        <div>
-                            <label for="name" class="block text-sm font-medium text-copy-lighter mb-1">Name</label>
-                            <input
-                                id="name"
-                                type="text"
-                                v-model="detailForm.name"
-                                :disabled="!isEditingDetails || detailForm.processing"
-                                class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy transition disabled:bg-copy-light/20 disabled:border-copy-light"
-                            >
-                            <p v-if="detailForm.errors.name" class="text-xs text-error mt-1">{{ detailForm.errors.name }}</p>
-                        </div>
-                        <div>
-                            <label for="email" class="block text-sm font-medium text-copy-lighter mb-1">Email Address</label>
-                            <input
-                                id="email"
-                                type="email"
-                                v-model="detailForm.email"
-                                :disabled="!isEditingDetails || detailForm.processing"
-                                class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy transition disabled:bg-copy-light/20 disabled:border-copy-light"
-                            >
-                            <p v-if="detailForm.errors.email" class="text-xs text-error mt-1">{{ detailForm.errors.email }}</p>
-                        </div>
-                        <div v-if="isEditingDetails" class="sm:col-span-2 flex justify-end pt-2">
+                    <!-- General Details -->
+                    <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-2xl font-bold text-copy flex items-center gap-2">
+                                <div v-html="IconUser" class="size-6 text-primary"></div>
+                                General Details
+                            </h2>
                             <button
-                                type="submit"
-                                :disabled="detailForm.processing"
-                                class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50"
+                                @click="isEditingDetails = !isEditingDetails"
+                                class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition"
+                                :class="isEditingDetails ? 'text-error hover:bg-error-light' : 'text-primary hover:bg-primary-light'"
+                                aria-label="Toggle editing general details"
                             >
-                                <div v-html="IconCheck"></div>
-                                {{ detailForm.processing ? 'Saving...' : 'Save Changes' }}
+                                <div v-html="isEditingDetails ? IconX : IconEdit"></div>
+                                {{ isEditingDetails ? 'Cancel' : 'Edit' }}
                             </button>
                         </div>
-                    </form>
-                </div>
 
-                <!-- Password Update -->
-                <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
-                    <h2 class="text-2xl font-bold text-copy flex items-center gap-2 mb-4">
-                        <div v-html="IconLock" class="size-6 text-primary"></div>
-                        Update Password
-                    </h2>
+                        <form @submit.prevent="saveDetails" class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-copy-lighter mb-1">Name</label>
+                                <input
+                                    id="name"
+                                    type="text"
+                                    v-model="detailForm.name"
+                                    :disabled="!isEditingDetails || detailForm.processing"
+                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy transition disabled:bg-copy-light/20 disabled:border-copy-light"
+                                >
+                                <p v-if="detailForm.errors.name" class="text-xs text-error mt-1">{{ detailForm.errors.name }}</p>
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-copy-lighter mb-1">Email Address</label>
+                                <input
+                                    id="email"
+                                    type="email"
+                                    v-model="detailForm.email"
+                                    :disabled="!isEditingDetails || detailForm.processing"
+                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy transition disabled:bg-copy-light/20 disabled:border-copy-light"
+                                >
+                                <p v-if="detailForm.errors.email" class="text-xs text-error mt-1">{{ detailForm.errors.email }}</p>
+                            </div>
+                            <div v-if="isEditingDetails" class="sm:col-span-2 flex justify-end pt-2">
+                                <button
+                                    type="submit"
+                                    :disabled="detailForm.processing"
+                                    class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50"
+                                >
+                                    <div v-html="IconCheck"></div>
+                                    {{ detailForm.processing ? 'Saving...' : 'Save Changes' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
 
-                    <form @submit.prevent="updatePassword" class="grid sm:grid-cols-3 gap-4">
-                        <div>
-                            <label for="current_password" class="block text-sm font-medium text-copy-lighter mb-1">Current Password</label>
-                            <input
-                                id="current_password"
-                                type="password"
-                                v-model="passwordForm.current_password"
-                                autocomplete="current-password"
-                                class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy"
-                            >
-                            <p v-if="passwordForm.errors.current_password" class="text-xs text-error mt-1">{{ passwordForm.errors.current_password }}</p>
-                        </div>
-                        <div>
-                            <label for="password" class="block text-sm font-medium text-copy-lighter mb-1">New Password</label>
-                            <input
-                                id="password"
-                                type="password"
-                                v-model="passwordForm.password"
-                                autocomplete="new-password"
-                                class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy"
-                            >
-                            <p v-if="passwordForm.errors.password" class="text-xs text-error mt-1">{{ passwordForm.errors.password }}</p>
-                        </div>
-                        <div>
-                            <label for="password_confirmation" class="block text-sm font-medium text-copy-lighter mb-1">Confirm New Password</label>
-                            <input
-                                id="password_confirmation"
-                                type="password"
-                                v-model="passwordForm.password_confirmation"
-                                autocomplete="new-password"
-                                class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy"
-                            >
-                            <p v-if="passwordForm.errors.password_confirmation" class="text-xs text-error mt-1">{{ passwordForm.errors.password_confirmation }}</p>
-                        </div>
-                        <div class="sm:col-span-3 flex justify-end pt-2">
+                    <!-- Password Update -->
+                    <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
+                        <h2 class="text-2xl font-bold text-copy flex items-center gap-2 mb-4">
+                            <div v-html="IconLock" class="size-6 text-primary"></div>
+                            Update Password
+                        </h2>
+
+                        <form @submit.prevent="updatePassword" class="grid sm:grid-cols-3 gap-4">
+                            <div>
+                                <label for="current_password" class="block text-sm font-medium text-copy-lighter mb-1">Current Password</label>
+                                <input
+                                    id="current_password"
+                                    type="password"
+                                    v-model="passwordForm.current_password"
+                                    autocomplete="current-password"
+                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy"
+                                >
+                                <p v-if="passwordForm.errors.current_password" class="text-xs text-error mt-1">{{ passwordForm.errors.current_password }}</p>
+                            </div>
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-copy-lighter mb-1">New Password</label>
+                                <input
+                                    id="password"
+                                    type="password"
+                                    v-model="passwordForm.password"
+                                    autocomplete="new-password"
+                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy"
+                                >
+                                <p v-if="passwordForm.errors.password" class="text-xs text-error mt-1">{{ passwordForm.errors.password }}</p>
+                            </div>
+                            <div>
+                                <label for="password_confirmation" class="block text-sm font-medium text-copy-lighter mb-1">Confirm New Password</label>
+                                <input
+                                    id="password_confirmation"
+                                    type="password"
+                                    v-model="passwordForm.password_confirmation"
+                                    autocomplete="new-password"
+                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy"
+                                >
+                                <p v-if="passwordForm.errors.password_confirmation" class="text-xs text-error mt-1">{{ passwordForm.errors.password_confirmation }}</p>
+                            </div>
+                            <div class="sm:col-span-3 flex justify-end pt-2">
+                                <button
+                                    type="submit"
+                                    :disabled="passwordForm.processing"
+                                    class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50"
+                                >
+                                    <div v-html="IconLock"></div>
+                                    {{ passwordForm.processing ? 'Updating...' : 'Update Password' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Addresses -->
+                    <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-copy flex items-center gap-2">
+                                <div v-html="IconMapPin" class="size-6 text-primary"></div>
+                                My Addresses
+                            </h2>
                             <button
-                                type="submit"
-                                :disabled="passwordForm.processing"
-                                class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50"
+                                @click="openAddressModal()"
+                                class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-primary hover:bg-primary-light transition border-2 border-copy"
+                                aria-label="Add new address"
                             >
-                                <div v-html="IconLock"></div>
-                                {{ passwordForm.processing ? 'Updating...' : 'Update Password' }}
+                                <div v-html="IconPlusCircle"></div>
+                                Add New
                             </button>
                         </div>
-                    </form>
-                </div>
 
-                <!-- Addresses -->
-                <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-copy flex items-center gap-2">
-                            <div v-html="IconMapPin" class="size-6 text-primary"></div>
-                            My Addresses
-                        </h2>
-                        <button
-                            @click="openAddressModal()"
-                            class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-primary hover:bg-primary-light transition border-2 border-copy"
-                            aria-label="Add new address"
-                        >
-                            <div v-html="IconPlusCircle"></div>
-                            Add New
-                        </button>
-                    </div>
+                        <div v-if="addresses.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div
+                                v-for="address in addresses"
+                                :key="address.id"
+                                class="relative p-4 border-2 rounded-lg transition"
+                                :class="address.is_default ? 'border-primary bg-primary-light/10 shadow-md' : 'border-copy-light hover:border-copy'"
+                            >
+                                <div class="text-sm font-bold uppercase mb-1 flex justify-between items-center">
+                                    <span :class="address.is_default ? 'text-primary' : 'text-copy-lighter'">{{ address.type }} Address</span>
+                                    <span v-if="address.is_default" class="text-xs text-primary bg-primary-light/50 px-2 py-0.5 rounded-full font-extrabold">DEFAULT</span>
+                                </div>
 
-                    <div v-if="addresses.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div
-                            v-for="address in addresses"
-                            :key="address.id"
-                            class="relative p-4 border-2 rounded-lg transition"
-                            :class="address.is_default ? 'border-primary bg-primary-light/10 shadow-md' : 'border-copy-light hover:border-copy'"
-                        >
-                            <div class="text-sm font-bold uppercase mb-1 flex justify-between items-center">
-                                <span :class="address.is_default ? 'text-primary' : 'text-copy-lighter'">{{ address.type }} Address</span>
-                                <span v-if="address.is_default" class="text-xs text-primary bg-primary-light/50 px-2 py-0.5 rounded-full font-extrabold">DEFAULT</span>
+                                <!-- Address Lines -->
+                                <p v-for="line in formatAddress(address)" :key="line" class="text-copy text-base">
+                                    {{ line }}
+                                </p>
+
+                                <div class="flex gap-2 mt-3 pt-3 border-t border-copy-light">
+                                    <button
+                                        @click="openAddressModal(address)"
+                                        class="flex items-center gap-1 text-sm text-primary hover:text-primary-dark font-semibold transition"
+                                    >
+                                        <div v-html="IconEdit" class="size-4"></div>
+                                        Edit
+                                    </button>
+                                    <span class="text-copy-lighter">|</span>
+                                    <button
+                                        @click="router.delete(route('address.destroy', address.id))"
+                                        class="flex items-center gap-1 text-sm text-error hover:text-error-dark font-semibold transition"
+                                        :disabled="address.is_default"
+                                    >
+                                        <div v-html="IconTrash" class="size-4"></div>
+                                        Remove
+                                    </button>
+                                </div>
                             </div>
+                        </div>
 
-                            <!-- Address Lines -->
-                            <p v-for="line in formatAddress(address)" :key="line" class="text-copy text-base">
-                                {{ line }}
-                            </p>
-
-                            <div class="flex gap-2 mt-3 pt-3 border-t border-copy-light">
-                                <button
-                                    @click="openAddressModal(address)"
-                                    class="flex items-center gap-1 text-sm text-primary hover:text-primary-dark font-semibold transition"
-                                >
-                                    <div v-html="IconEdit" class="size-4"></div>
-                                    Edit
-                                </button>
-                                <span class="text-copy-lighter">|</span>
-                                <button
-                                    @click="router.delete(route('address.destroy', address.id))"
-                                    class="flex items-center gap-1 text-sm text-error hover:text-error-dark font-semibold transition"
-                                    :disabled="address.is_default"
-                                >
-                                    <div v-html="IconTrash" class="size-4"></div>
-                                    Remove
-                                </button>
-                            </div>
+                        <div v-else class="text-center p-8 border-4 border-dashed border-copy-light rounded-xl bg-background/50">
+                            <p class="text-lg text-copy-lighter">You have not added any saved addresses yet.</p>
                         </div>
                     </div>
 
-                    <div v-else class="text-center p-8 border-4 border-dashed border-copy-light rounded-xl bg-background/50">
-                        <p class="text-lg text-copy-lighter">You have not added any saved addresses yet.</p>
-                    </div>
                 </div>
-
             </div>
         </div>
-    </div>
+
+    </section>
 
     <!-- Address Add/Edit Modal -->
     <div v-if="isAddressModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 transition-opacity duration-300 p-4" @click.self="resetAddressModal">

@@ -98,139 +98,144 @@ const calculateItemSubtotal = (item: CartItem): string => {
 
     <Head title="Shopping Cart" />
 
-    <div class="min-h-screen bg-background text-copy p-4 md:p-8 lg:p-12">
-        <div class="max-w-6xl mx-auto">
+    <section class="py-10 md:py-20">
 
-            <div class="mb-8">
-                <h1 class="text-5xl font-black text-copy mb-2">Your Shopping Cart</h1>
-                <a href="/products" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
-                    <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
-                    Continue Shopping
-                </a>
-            </div>
+        <div class="min-h-screen bg-background text-copy p-4 md:p-8 lg:p-12">
+            <div class="max-w-6xl mx-auto">
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="mb-8">
+                    <h1 class="text-5xl font-black text-copy mb-2">Your Shopping Cart</h1>
+                    <a href="/products" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
+                        <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
+                        Continue Shopping
+                    </a>
+                </div>
 
-                <div class="lg:col-span-2">
-                    <div v-if="hasItems" class="flex flex-col gap-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                        <div v-for="item in props.cartItems" :key="item.id"
-                             class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl"
-                        >
-                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 flex flex-col sm:flex-row items-start gap-4">
+                    <div class="lg:col-span-2">
+                        <div v-if="hasItems" class="flex flex-col gap-6">
 
-                                <!-- Product Image -->
-                                <div class="w-24 h-24 flex-shrink-0 border border-border rounded-lg overflow-hidden flex items-center justify-center">
-                                    <img :src="item.image_url" :alt="item.name" class="w-full h-full object-contain p-2" />
-                                </div>
+                            <div v-for="item in props.cartItems" :key="item.id"
+                                class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl"
+                            >
+                                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 flex flex-col sm:flex-row items-start gap-4">
 
-                                <!-- Product Details and Actions -->
-                                <div class="flex-grow w-full">
+                                    <!-- Product Image -->
+                                    <div class="w-24 h-24 flex-shrink-0 border border-border rounded-lg overflow-hidden flex items-center justify-center">
+                                        <img :src="item.image_url" :alt="item.name" class="w-full h-full object-contain p-2" />
+                                    </div>
 
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div class="flex-grow pr-4">
-                                            <h2 class="text-xl font-bold text-copy">{{ item.name }}</h2>
-                                            <p class="text-sm text-copy-lighter mt-1">Unit Price: {{ formatCurrency(item.cost) }}</p>
-                                        </div>
+                                    <!-- Product Details and Actions -->
+                                    <div class="flex-grow w-full">
 
-                                        <button
-                                            @click="removeProduct(item.product_id)"
-                                            class="p-2 rounded-lg text-error hover:bg-error-light transition border-2 border-copy shadow-md flex-shrink-0 w-fit"
-                                            aria-label="Remove item"
-                                        >
-                                            <div v-html="IconTrash"></div>
-                                        </button>
-                                     </div>
-
-                                    <div class="flex justify-between items-center pt-3 mt-3 border-t border-copy-light/50">
-
-                                        <!-- Quantity Selector -->
-                                        <div class="flex items-center rounded-lg border-2 border-copy bg-background flex-shrink-0">
-                                            <button
-                                                @click="updateQuantity(item.product_id, item.quantity - 1)"
-                                                :disabled="item.quantity <= 1"
-                                                class="p-2 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
-                                                aria-label="Decrease quantity"
-                                            >
-                                                <div v-html="IconMinus"></div>
-                                            </button>
-
-                                            <span class="w-10 text-center text-lg font-bold text-copy">{{ item.quantity }}</span>
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div class="flex-grow pr-4">
+                                                <h2 class="text-xl font-bold text-copy">{{ item.name }}</h2>
+                                                <p class="text-sm text-copy-lighter mt-1">Unit Price: {{ formatCurrency(item.cost) }}</p>
+                                            </div>
 
                                             <button
-                                                @click="updateQuantity(item.product_id, item.quantity + 1)"
-                                                :disabled="item.quantity >= item.stock_qty"
-                                                class="p-2 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
-                                                aria-label="Increase quantity"
+                                                @click="removeProduct(item.product_id)"
+                                                class="p-2 rounded-lg text-error hover:bg-error-light transition border-2 border-copy shadow-md flex-shrink-0 w-fit"
+                                                aria-label="Remove item"
                                             >
-                                                <div v-html="IconPlus"></div>
+                                                <div v-html="IconTrash"></div>
                                             </button>
                                         </div>
 
-                                        <div class="text-right">
-                                            <p class="text-sm font-semibold text-copy-lighter hidden sm:block">Item Subtotal:</p>
-                                            <p class="text-2xl font-black text-primary">{{ calculateItemSubtotal(item) }}</p>
+                                        <div class="flex justify-between items-center pt-3 mt-3 border-t border-copy-light/50">
+
+                                            <!-- Quantity Selector -->
+                                            <div class="flex items-center rounded-lg border-2 border-copy bg-background flex-shrink-0">
+                                                <button
+                                                    @click="updateQuantity(item.product_id, item.quantity - 1)"
+                                                    :disabled="item.quantity <= 1"
+                                                    class="p-2 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    aria-label="Decrease quantity"
+                                                >
+                                                    <div v-html="IconMinus"></div>
+                                                </button>
+
+                                                <span class="w-10 text-center text-lg font-bold text-copy">{{ item.quantity }}</span>
+
+                                                <button
+                                                    @click="updateQuantity(item.product_id, item.quantity + 1)"
+                                                    :disabled="item.quantity >= item.stock_qty"
+                                                    class="p-2 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    aria-label="Increase quantity"
+                                                >
+                                                    <div v-html="IconPlus"></div>
+                                                </button>
+                                            </div>
+
+                                            <div class="text-right">
+                                                <p class="text-sm font-semibold text-copy-lighter hidden sm:block">Item Subtotal:</p>
+                                                <p class="text-2xl font-black text-primary">{{ calculateItemSubtotal(item) }}</p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
                         </div>
 
+                        <!-- Empty Cart State -->
+                        <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-foreground/50">
+                            <p class="text-2xl font-semibold text-copy mb-4">Your cart is currently empty.</p>
+                            <a href="/products" class="text-primary hover:text-primary-dark transition font-bold underline">
+                                Browse Products and Start Shopping
+                            </a>
+                        </div>
                     </div>
 
-                    <!-- Empty Cart State -->
-                    <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-foreground/50">
-                        <p class="text-2xl font-semibold text-copy mb-4">Your cart is currently empty.</p>
-                        <a href="/products" class="text-primary hover:text-primary-dark transition font-bold underline">
-                            Browse Products and Start Shopping
-                        </a>
-                    </div>
-                </div>
+                    <div class="lg:col-span-1">
+                        <div class="sticky top-8 rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
+                                <h2 class="text-2xl font-black text-copy mb-4 border-b-2 border-copy-light pb-3">Order Summary</h2>
 
-                <div class="lg:col-span-1">
-                    <div class="sticky top-8 rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                         <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                            <h2 class="text-2xl font-black text-copy mb-4 border-b-2 border-copy-light pb-3">Order Summary</h2>
+                                <!-- Breakdown -->
+                                <div class="space-y-3 text-copy text-lg">
+                                    <div class="flex justify-between">
+                                        <span>Subtotal ({{ props.cartItems.length }} items)</span>
+                                        <span class="font-bold">{{ formatCurrency(props.cartTotal) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>VAT ({{ taxRate * 100 }}%)</span>
+                                        <span class="font-bold">{{ formatCurrency(vat) }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Shipping</span>
+                                        <span :class="['font-bold', shippingCost === 0 ? 'text-green-600' : 'text-copy']">
+                                            {{ shippingCost === 0 ? 'FREE' : formatCurrency(shippingCost) }}
+                                        </span>
+                                    </div>
+                                </div>
 
-                            <!-- Breakdown -->
-                            <div class="space-y-3 text-copy text-lg">
-                                <div class="flex justify-between">
-                                    <span>Subtotal ({{ props.cartItems.length }} items)</span>
-                                    <span class="font-bold">{{ formatCurrency(props.cartTotal) }}</span>
+                                <!-- Total -->
+                                <div class="mt-6 pt-4 border-t-2 border-copy-light flex justify-between items-center">
+                                    <span class="text-2xl font-extrabold text-copy">Order Total</span>
+                                    <span class="text-4xl font-black text-primary">{{ formatCurrency(finalTotal) }}</span>
                                 </div>
-                                <div class="flex justify-between">
-                                    <span>VAT ({{ taxRate * 100 }}%)</span>
-                                    <span class="font-bold">{{ formatCurrency(vat) }}</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span>Shipping</span>
-                                    <span :class="['font-bold', shippingCost === 0 ? 'text-green-600' : 'text-copy']">
-                                        {{ shippingCost === 0 ? 'FREE' : formatCurrency(shippingCost) }}
-                                    </span>
-                                </div>
+
+                                <button
+                                    :disabled="!hasItems"
+                                    class="mt-6 w-full py-4 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 hover:bg-primary-dark rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    style="background-color: var(--primary); color: var(--primary-content);"
+                                >
+                                    Proceed to Checkout
+                                </button>
+
+                                <p v-if="shippingCost > 0" class="text-center text-sm text-copy-lighter mt-3">
+                                    Add {{ formatCurrency(100 - props.cartTotal) }} more for FREE shipping!
+                                </p>
                             </div>
-
-                            <!-- Total -->
-                            <div class="mt-6 pt-4 border-t-2 border-copy-light flex justify-between items-center">
-                                <span class="text-2xl font-extrabold text-copy">Order Total</span>
-                                <span class="text-4xl font-black text-primary">{{ formatCurrency(finalTotal) }}</span>
-                            </div>
-
-                            <button
-                                :disabled="!hasItems"
-                                class="mt-6 w-full py-4 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 hover:bg-primary-dark rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                style="background-color: var(--primary); color: var(--primary-content);"
-                            >
-                                Proceed to Checkout
-                            </button>
-
-                            <p v-if="shippingCost > 0" class="text-center text-sm text-copy-lighter mt-3">
-                                Add {{ formatCurrency(100 - props.cartTotal) }} more for FREE shipping!
-                            </p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
+    </section>
+
 </template>
