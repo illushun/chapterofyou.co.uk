@@ -20,7 +20,6 @@ const getRoute = (name: string, params: any = {}, absolute: boolean = true) => {
  */
 const loadStripeScript = (): Promise<void> => {
     return new Promise((resolve) => {
-        // 1. Check if Stripe is already defined (loaded)
         if (typeof Stripe !== 'undefined') {
             return resolve();
         }
@@ -29,10 +28,8 @@ const loadStripeScript = (): Promise<void> => {
         let script = document.getElementById(scriptId) as HTMLScriptElement;
 
         if (script) {
-            // 2. If tag exists, wait for it to finish loading
             script.onload = () => resolve();
         } else {
-            // 3. Create and append the script tag
             script = document.createElement('script');
             script.src = 'https://js.stripe.com/v3/';
             script.id = scriptId;
@@ -76,9 +73,12 @@ const props = defineProps<{
 
 const isProcessing = ref(false);
 const paymentError = ref<string | null>(null);
-const isStripeLoading = ref(true);
+// New state for controlling when the container is rendered
+const hasClientSecret = ref(false);
+// State for the initial loading spinner (fetching secret and waiting for Stripe to load)
+const isLoadingInitialData = ref(true);
 
-// Template Ref for direct DOM access (Crucial Fix)
+// Template Ref for direct DOM access (Crucial)
 const paymentContainer = ref<HTMLElement | null>(null);
 
 // Stripe objects
@@ -151,17 +151,22 @@ const fetchPaymentIntent = async () => {
  * Initializes Stripe SDK and mounts the Payment Element.
  */
 const initializeStripe = async () => {
-    isStripeLoading.value = true;
 
     // 1. Get the client secret from the backend
     await fetchPaymentIntent();
 
     if (!clientSecret.value || paymentError.value) {
-        isStripeLoading.value = false;
+        isLoadingInitialData.value = false;
         return;
     }
 
-    // 2. Initialize Stripe and Elements
+    // 2. Client secret is ready. Set flag to true to render the container via v-if.
+    hasClientSecret.value = true;
+
+    // 3. Wait for the next DOM update cycle (guarantees v-if has run)
+    await nextTick();
+
+    // 4. Initialize Stripe and Elements
     stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
     elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
 
@@ -174,35 +179,34 @@ const initializeStripe = async () => {
         },
     };
 
-    // 3. Create the Payment Element
+    // 5. Create the Payment Element
     paymentElement.value = elements.value.create('payment', {
         layout: 'tabs',
         appearance: appearance,
     });
 
-    // 4. CRITICAL FIX: Robust Mounting using Template Ref and Polling
-    await nextTick();
-
+    // 6. CRITICAL FIX: Robust Mounting using Template Ref and Polling
     const maxRetries = 10;
     const retryDelayMs = 50;
     let attempts = 0;
     let mountedSuccessfully = false;
 
-    // Use polling on the Template Ref's value
+    // Use polling on the Template Ref's value which should now exist
     while (attempts < maxRetries && !mountedSuccessfully) {
-        // Use the Vue Template Ref here!
         const container = paymentContainer.value;
 
         if (container) {
             try {
+                // Call mount() only when the container ref is confirmed to exist
                 paymentElement.value.mount(container);
                 mountedSuccessfully = true;
             } catch (e) {
+                // Catch internal Stripe mount errors and retry
                 console.error(`Stripe mount failed internally on attempt ${attempts + 1}:`, e);
                 await delay(retryDelayMs);
             }
         } else {
-            // Container Ref hasn't been populated by Vue yet, wait and try again
+            // Should not happen often now, but we wait just in case of slow DOM updates
             await delay(retryDelayMs);
         }
         attempts++;
@@ -212,7 +216,8 @@ const initializeStripe = async () => {
          paymentError.value = "Payment system failed to load. The required element was not found in time.";
     }
 
-    isStripeLoading.value = false;
+    // 7. Hide the initial loading spinner
+    isLoadingInitialData.value = false;
 };
 
 /**
@@ -313,7 +318,7 @@ onMounted(async () => {
         // 2. Then, initialize Stripe elements
         await initializeStripe();
     } else {
-        isStripeLoading.value = false;
+        isLoadingInitialData.value = false;
     }
 });
 </script>
@@ -460,28 +465,33 @@ onMounted(async () => {
                         <div class="p-6 border-2 border-copy/20 bg-foreground rounded-xl shadow-xl space-y-6">
                             <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">2. Payment</h2>
 
-                            <!-- Payment Element Container (Now includes the Vue Template Ref) -->
-                            <div ref="paymentContainer" id="payment-element-container" class="p-3 relative min-h-24">
-
-                                <!-- Loading Overlay (shows while isStripeLoading is true) -->
-                                <div
-                                    v-if="isStripeLoading"
-                                    class="absolute inset-0 bg-background/80 flex items-center justify-center rounded-lg z-10"
-                                >
-                                    <div class="text-center p-8">
-                                        <!-- Simple Spinner/Loader -->
-                                        <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        <p class="text-lg font-semibold text-copy-lighter">
-                                            Loading secure payment gateway...
-                                        </p>
-                                    </div>
+                            <!-- Initial Loading State (Fetching Client Secret/Loading Stripe) -->
+                            <div
+                                v-if="isLoadingInitialData"
+                                class="p-3 relative min-h-24 bg-background/80 flex items-center justify-center rounded-lg z-10"
+                            >
+                                <div class="text-center p-8">
+                                    <!-- Simple Spinner/Loader -->
+                                    <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <p class="text-lg font-semibold text-copy-lighter">
+                                        Connecting to payment gateway...
+                                    </p>
                                 </div>
-
-                                <!-- The actual Stripe iframe will mount here. -->
                             </div>
+
+                            <!-- Payment Element Container (Only renders when we have the client secret) -->
+                            <div
+                                v-if="hasClientSecret"
+                                ref="paymentContainer"
+                                id="payment-element-container"
+                                class="p-3 min-h-24"
+                            >
+                                <!-- Stripe iframe will be mounted here -->
+                            </div>
+
 
                             <!-- Error Message Display -->
                             <div v-if="paymentError" class="mt-4 p-3 bg-red-100 border border-error rounded-lg text-error text-sm font-semibold">
@@ -491,16 +501,16 @@ onMounted(async () => {
                             <!-- Submit Button (disabled if loading, no client secret, or has error) -->
                             <button
                                 @click.prevent="handleCardPayment"
-                                :disabled="isProcessing || addressForm.processing || isStripeLoading || !clientSecret || !!paymentError"
+                                :disabled="isProcessing || addressForm.processing || isLoadingInitialData || !hasClientSecret || !!paymentError"
                                 class="mt-6 w-full py-4 border-2 border-copy/20 text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg"
                                 :style="{
                                     'background-color': 'var(--primary)',
                                     'color': 'var(--primary-content)'
                                 }"
                                 :class="{
-                                    'hover:bg-primary-dark': !isProcessing && clientSecret && !paymentError && !isStripeLoading,
+                                    'hover:bg-primary-dark': !isProcessing && hasClientSecret && !paymentError && !isLoadingInitialData,
                                     'opacity-50 cursor-wait': isProcessing,
-                                    'cursor-not-allowed opacity-40': !clientSecret || !!paymentError || isStripeLoading
+                                    'cursor-not-allowed opacity-40': !hasClientSecret || !!paymentError || isLoadingInitialData
                                 }"
                             >
                                 <span v-if="isProcessing">Processing Payment...</span>
