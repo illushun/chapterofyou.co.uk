@@ -213,7 +213,7 @@ class CheckoutController extends Controller
         // Prepare and save Order Items
         $orderItems = $cart->items->map(function ($item) use ($order) {
             $productCost = $item->product->cost ?? 0.00;
-            return new Item([
+            return new OrderItem([
                 'order_id' => $order->id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
