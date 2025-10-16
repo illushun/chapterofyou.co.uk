@@ -2,6 +2,13 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { onMounted, ref, computed } from 'vue';
 
+// --- Global Declarations ---
+// Stripe is loaded via a script tag.
+declare const Stripe: any;
+// The route() helper is globally injected by the Ziggy package.
+declare const route: any;
+
+// Load Stripe.js (must be available globally)
 const loadStripeScript = () => {
     if (document.getElementById('stripe-script')) {
         return;
@@ -12,9 +19,12 @@ const loadStripeScript = () => {
     document.head.appendChild(script);
 };
 
+// --- TYPES ---
+
 interface CartItem {
     id: number;
     product_id: number;
+    // Assuming product data is loaded via a 'product' relationship on the cart item
     product: {
         name: string;
         cost: number;
@@ -30,17 +40,14 @@ interface Summary {
     total: number;
 }
 
-// Global Stripe references
-declare const Stripe: any;
-// Assuming your publishable key is available in your Vite/Mix environment
-//declare const import.meta.env: { VITE_STRIPE_KEY: string };
-
 // --- PROPS ---
 
 const props = defineProps<{
     cartItems: CartItem[];
     summary: Summary;
 }>();
+
+// --- STATE ---
 
 const isProcessing = ref(false);
 const paymentError = ref<string | null>(null);
@@ -52,6 +59,7 @@ const paymentElement = ref<any>(null);
 const clientSecret = ref('');
 const paymentIntentId = ref('');
 
+// Form for shipping and billing details (matching the controller's validation)
 const addressForm = useForm({
     email: '',
     fullName: '',
@@ -64,6 +72,8 @@ const addressForm = useForm({
     country: 'United Kingdom',
     saveInfo: false,
 });
+
+// --- COMPUTED & METHODS ---
 
 const hasItems = computed(() => props.cartItems.length > 0);
 
@@ -83,11 +93,12 @@ const formatCurrency = (amount: number | string): string => {
  */
 const fetchPaymentIntent = async () => {
     try {
-        const response = await fetch(router.route('checkout.payment_intent'), {
+        // FIX: Use global route() helper
+        const response = await fetch(route('checkout.payment_intent'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
+                'X-Requested-With': 'XMLHttpRequest', // Important for Laravel
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
             },
         });
@@ -103,12 +114,12 @@ const fetchPaymentIntent = async () => {
 
     } catch (error: any) {
         console.error("Error fetching payment intent:", error.message);
-        paymentError.value = "Could not initialise payment: " + error.message;
+        paymentError.value = "Could not initialize payment: " + error.message;
     }
 };
 
 /**
- * Initialises Stripe SDK and mounts the Payment Element.
+ * Initializes Stripe SDK and mounts the Payment Element.
  */
 const initializeStripe = async () => {
     // Wait for Stripe.js to load
@@ -119,6 +130,7 @@ const initializeStripe = async () => {
         });
     }
 
+    // First, get the client secret from our backend
     await fetchPaymentIntent();
 
     if (!clientSecret.value || paymentError.value) {
@@ -126,7 +138,6 @@ const initializeStripe = async () => {
     }
 
     // Initialize Stripe and Elements using the Publishable Key
-    // NOTE: Replace 'import.meta.env.VITE_STRIPE_KEY' with your actual key if not using Vite environment variables.
     stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
     elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
 
@@ -145,6 +156,8 @@ const initializeStripe = async () => {
         layout: 'tabs',
         appearance: appearance,
     });
+
+    // Mount to the DOM
     paymentElement.value.mount('#payment-element-container');
 };
 
@@ -152,6 +165,7 @@ const initializeStripe = async () => {
  * Handles form submission and confirms payment using the Stripe Payment Element.
  */
 const handleCardPayment = async () => {
+    // Perform front-end validation
     if (addressForm.hasErrors || !addressForm.email || !addressForm.addressLine1 || !addressForm.postcode || !addressForm.fullName) {
         paymentError.value = "Please complete all required shipping and contact details.";
         addressForm.validate();
@@ -167,12 +181,15 @@ const handleCardPayment = async () => {
         return;
     }
 
-    const paymentMethodType = 'card';
+    const paymentMethodType = 'card'; // Placeholder, server determines the actual type
 
+    // Confirm payment on the client side
     const { error: stripeError, paymentIntent } = await stripe.value.confirmPayment({
         elements: elements.value,
         confirmParams: {
-            return_url: window.location.origin + router.route('checkout.index'),
+            // FIX: Use global route() helper
+            return_url: window.location.origin + route('checkout.index'),
+            // Pass billing details for compliance and fraud detection
             payment_method_data: {
                 billing_details: {
                     name: addressForm.fullName,
@@ -194,17 +211,21 @@ const handleCardPayment = async () => {
 
 
     if (stripeError) {
+        // Display client-side Stripe errors (e.g., card declined)
         paymentError.value = stripeError.message || "An error occurred with your payment details.";
         isProcessing.value = false;
         return;
     }
 
     if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Payment successful on client side, finalize the order on the server
         finalizeOrder(paymentIntent.id, paymentMethodType);
     } else if (paymentIntent && paymentIntent.status === 'requires_action') {
+        // This should be handled by Stripe's redirect, but we display a message just in case.
         paymentError.value = "Payment requires external authentication. Please complete the redirect process.";
         isProcessing.value = false;
     } else {
+        // Pending or other status
         paymentError.value = "Payment pending or requires further review. Status: " + paymentIntent?.status;
         isProcessing.value = false;
     }
@@ -214,7 +235,8 @@ const handleCardPayment = async () => {
  * Sends the final order confirmation to the server.
  */
 const finalizeOrder = (piId: string, type: string) => {
-    router.post(router.route('checkout.process_payment'),
+    // FIX: Use global route() helper for URL
+    router.post(route('checkout.process_payment'),
         {
             ...addressForm.data(), // Includes shipping/billing details
             paymentIntentId: piId,
@@ -225,8 +247,9 @@ const finalizeOrder = (piId: string, type: string) => {
                 // The controller handles the final redirect to order confirmation
             },
             onError: (errors) => {
+                // Handle server-side errors
                 const errorKey = Object.keys(errors)[0];
-                paymentError.value = errors[errorKey] || "Order finalisation failed on the server. Please contact support.";
+                paymentError.value = errors[errorKey] || "Order finalization failed on the server. Please contact support.";
                 console.error("Inertia Errors:", errors);
             },
             onFinish: () => {
@@ -236,9 +259,11 @@ const finalizeOrder = (piId: string, type: string) => {
     );
 }
 
+// --- LIFECYCLE HOOK ---
+
 onMounted(() => {
     if (hasItems.value) {
-        loadStripeScript();
+        loadStripeScript(); // Ensure Stripe.js is loaded
         initializeStripe();
     }
 });
@@ -255,7 +280,8 @@ onMounted(() => {
 
                 <div class="mb-8">
                     <h1 class="text-5xl font-black text-copy mb-2">Secure Checkout</h1>
-                    <a :href="router.route('cart.view')" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
+                    <!-- FIX: Use global route() helper -->
+                    <a :href="route('cart.view')" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
                         <!-- Icon: Back Arrow -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 mr-2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                         Return to Cart
@@ -264,7 +290,8 @@ onMounted(() => {
 
                 <div v-if="!hasItems" class="text-center p-12 border-4 border-dashed border-copy-lighter rounded-2xl bg-foreground/50">
                     <p class="text-2xl font-semibold text-copy mb-4">You have no items in your cart to checkout.</p>
-                    <a href="/products" class="text-primary hover:text-primary-dark transition font-bold underline">
+                    <!-- ASSUMPTION: 'products.index' is the route name for your product browsing page -->
+                    <a :href="route('products.index')" class="text-primary hover:text-primary-dark transition font-bold underline">
                         Browse Products and Start Shopping
                     </a>
                 </div>
