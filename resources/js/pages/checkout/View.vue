@@ -51,6 +51,7 @@ const props = defineProps<{
 
 const isProcessing = ref(false);
 const paymentError = ref<string | null>(null);
+const isStripeLoading = ref(true); // New state to manage loading UI
 
 // Stripe objects
 const stripe = ref<any>(null);
@@ -93,7 +94,6 @@ const formatCurrency = (amount: number | string): string => {
  */
 const fetchPaymentIntent = async () => {
     try {
-        // FIX: Use global route() helper
         const response = await fetch(route('checkout.payment_intent'), {
             method: 'POST',
             headers: {
@@ -115,6 +115,8 @@ const fetchPaymentIntent = async () => {
     } catch (error: any) {
         console.error("Error fetching payment intent:", error.message);
         paymentError.value = "Could not initialize payment: " + error.message;
+    } finally {
+        isStripeLoading.value = false;
     }
 };
 
@@ -122,6 +124,8 @@ const fetchPaymentIntent = async () => {
  * Initializes Stripe SDK and mounts the Payment Element.
  */
 const initializeStripe = async () => {
+    isStripeLoading.value = true;
+
     // Wait for Stripe.js to load
     if (typeof Stripe === 'undefined') {
          await new Promise(resolve => {
@@ -134,6 +138,8 @@ const initializeStripe = async () => {
     await fetchPaymentIntent();
 
     if (!clientSecret.value || paymentError.value) {
+        // If there's an error or no secret, we stop and let the UI show the error/loading state
+        isStripeLoading.value = false;
         return;
     }
 
@@ -157,8 +163,9 @@ const initializeStripe = async () => {
         appearance: appearance,
     });
 
-    // Mount to the DOM
+    // Mount to the DOM (The element is now guaranteed to exist due to the template changes)
     paymentElement.value.mount('#payment-element-container');
+    isStripeLoading.value = false;
 };
 
 /**
@@ -187,8 +194,8 @@ const handleCardPayment = async () => {
     const { error: stripeError, paymentIntent } = await stripe.value.confirmPayment({
         elements: elements.value,
         confirmParams: {
-            // FIX: Use global route() helper
-            return_url: window.location.origin + route('checkout.index'),
+            // Refined route call for robustness against bundling issues
+            return_url: window.location.origin + route('checkout.index', {}, false),
             // Pass billing details for compliance and fraud detection
             payment_method_data: {
                 billing_details: {
@@ -235,7 +242,6 @@ const handleCardPayment = async () => {
  * Sends the final order confirmation to the server.
  */
 const finalizeOrder = (piId: string, type: string) => {
-    // FIX: Use global route() helper for URL
     router.post(route('checkout.process_payment'),
         {
             ...addressForm.data(), // Includes shipping/billing details
@@ -280,7 +286,6 @@ onMounted(() => {
 
                 <div class="mb-8">
                     <h1 class="text-5xl font-black text-copy mb-2">Secure Checkout</h1>
-                    <!-- FIX: Use global route() helper -->
                     <a :href="route('cart.view')" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
                         <!-- Icon: Back Arrow -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 mr-2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
@@ -290,7 +295,6 @@ onMounted(() => {
 
                 <div v-if="!hasItems" class="text-center p-12 border-4 border-dashed border-copy-lighter rounded-2xl bg-foreground/50">
                     <p class="text-2xl font-semibold text-copy mb-4">You have no items in your cart to checkout.</p>
-                    <!-- ASSUMPTION: 'products.index' is the route name for your product browsing page -->
                     <a :href="route('products.index')" class="text-primary hover:text-primary-dark transition font-bold underline">
                         Browse Products and Start Shopping
                     </a>
@@ -413,37 +417,39 @@ onMounted(() => {
                         <div class="p-6 border-2 border-copy/20 bg-foreground rounded-xl shadow-xl space-y-6">
                             <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">2. Payment</h2>
 
-                            <div v-if="!clientSecret" class="text-center p-8 bg-background/50 border border-copy-lighter rounded-lg">
+                            <!-- Payment Status/Loading Display -->
+                            <div v-if="isStripeLoading && !paymentError" class="text-center p-8 bg-background/50 border border-copy-lighter rounded-lg">
                                 <p class="text-lg font-semibold text-copy-lighter">
-                                    <span v-if="paymentError">Payment initialization failed.</span>
-                                    <span v-else>Loading secure payment gateway...</span>
+                                    Loading secure payment gateway...
                                 </p>
                             </div>
 
                             <div v-else>
-
-                                <!-- Stripe Payment Element Container -->
-                                <div id="payment-element-container" class="p-3">
-                                    <!-- Stripe Payment Element will be mounted here (includes Card, Apple Pay, Google Pay) -->
+                                <!-- Stripe Payment Element Container (ALWAYS RENDERED) -->
+                                <!-- We only show this if there is no critical error, but we ensure the div exists in the DOM structure -->
+                                <div id="payment-element-container" class="p-3" :class="{'hidden': paymentError}">
+                                    <!-- Stripe Payment Element will be mounted here (includes Card, Wallet, etc.) -->
                                 </div>
 
                                 <!-- Error Message Display -->
                                 <div v-if="paymentError" class="mt-4 p-3 bg-red-100 border border-error rounded-lg text-error text-sm font-semibold">
                                     {{ paymentError }}
+                                    <span v-if="!clientSecret"> Please ensure your API key and server connection are correct.</span>
                                 </div>
 
                                 <!-- Submit Button -->
                                 <button
                                     @click.prevent="handleCardPayment"
-                                    :disabled="isProcessing || addressForm.processing"
+                                    :disabled="isProcessing || addressForm.processing || !clientSecret || !!paymentError"
                                     class="mt-6 w-full py-4 border-2 border-copy/20 text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg"
                                     :style="{
                                         'background-color': 'var(--primary)',
                                         'color': 'var(--primary-content)'
                                     }"
                                     :class="{
-                                        'hover:bg-primary-dark': !isProcessing,
+                                        'hover:bg-primary-dark': !isProcessing && clientSecret && !paymentError,
                                         'opacity-50 cursor-wait': isProcessing,
+                                        'cursor-not-allowed': !clientSecret || !!paymentError
                                     }"
                                 >
                                     <span v-if="isProcessing">Processing Payment...</span>
