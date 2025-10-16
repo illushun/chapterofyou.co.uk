@@ -15,7 +15,7 @@ use Stripe\Exception\ApiErrorException;
 
 use App\Models\Cart;
 use App\Models\Order;
-use App\Models\Order\Item as OrderItem;
+use App\Models\Order\Item;
 
 class CheckoutController extends Controller
 {
@@ -213,7 +213,7 @@ class CheckoutController extends Controller
         // Prepare and save Order Items
         $orderItems = $cart->items->map(function ($item) use ($order) {
             $productCost = $item->product->cost ?? 0.00;
-            return new OrderItem([
+            return new Item([
                 'order_id' => $order->id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
