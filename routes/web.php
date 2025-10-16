@@ -35,6 +35,17 @@ Route::middleware(['auth'])->group(function () {
 });
 Route::get('/account/addresses/lookup', [AccountController::class, 'lookupAddress'])->name('address.lookup');
 
+Route::prefix('checkout')->group(function () {
+    Route::get('/', [CheckoutController::class, 'index'])->name('checkout.index');
+
+    Route::post('/payment-intent', [CheckoutController::class, 'getPaymentIntent'])->name('checkout.payment_intent');
+    Route::post('/process-payment', [CheckoutController::class, 'processPayment'])->name('checkout.process_payment');
+});
+
+Route::get('/order/confirmation', function () {
+    return Inertia::render('order/Confirmation');
+})->name('order.confirmation');
+
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
 
 require __DIR__.'/settings.php';
