@@ -173,9 +173,10 @@ const initializeStripe = async () => {
     const appearance = {
         theme: 'stripe',
         variables: {
-            colorPrimary: '#4f46e5',
-            colorText: '#1f2937',
-            colorBackground: '#ffffff',
+            // Ensure Stripe elements match the primary color
+            colorPrimary: 'var(--primary)',
+            colorText: 'var(--copy)',
+            colorBackground: 'var(--foreground)',
         },
     };
 
@@ -327,6 +328,7 @@ onMounted(async () => {
     <Head title="Checkout" />
 
     <!-- Utility styles for Tailwind variables -->
+    <!-- Defining the same color variables as your cart page -->
     <section class="py-20" :style="{'--primary': '#4f46e5', '--primary-dark': '#4338ca', '--primary-content': '#ffffff', '--background': '#f9fafb', '--foreground': '#ffffff', '--copy': '#1f2937', '--copy-lighter': '#4b5563', '--error': '#ef4444'}">
 
         <div class="min-h-screen bg-background text-copy p-4 md:p-8 lg:p-12">
@@ -354,181 +356,191 @@ onMounted(async () => {
                     <div class="lg:col-span-2 space-y-8">
 
                         <!-- Shipping/Contact Details Form -->
-                        <form @submit.prevent="handleCardPayment" class="p-6 border-2 border-copy/20 bg-foreground rounded-xl shadow-xl space-y-6">
+                        <!-- Applying the Cart's Double Border Style (Outer) -->
+                        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                            <!-- Inner Border (Form is now wrapped) -->
+                            <form @submit.prevent="handleCardPayment" class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6 space-y-6">
 
-                            <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">1. Shipping & Contact</h2>
+                                <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">1. Shipping & Contact</h2>
 
-                            <!-- Email -->
-                            <div>
-                                <label for="email" class="block text-sm font-bold text-copy mb-1">Email Address</label>
-                                <input id="email" type="email" v-model="addressForm.email" required
-                                    :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.email}]"
-                                    placeholder="your@email.com"
-                                >
-                                <p v-if="addressForm.errors.email" class="text-sm text-error mt-1">{{ addressForm.errors.email }}</p>
-                            </div>
-
-                            <!-- Full Name -->
-                            <div>
-                                <label for="fullName" class="block text-sm font-bold text-copy mb-1">Full Name</label>
-                                <input id="fullName" type="text" v-model="addressForm.fullName" required
-                                    :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.fullName}]"
-                                    placeholder="Jane Doe"
-                                >
-                                <p v-if="addressForm.errors.fullName" class="text-sm text-error mt-1">{{ addressForm.errors.fullName }}</p>
-                            </div>
-
-                            <!-- Telephone -->
-                            <div>
-                                <label for="telephone" class="block text-sm font-bold text-copy mb-1">Telephone (Optional)</label>
-                                <input id="telephone" type="tel" v-model="addressForm.telephone"
-                                    :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.telephone}]"
-                                    placeholder="07700 900000"
-                                >
-                                <p v-if="addressForm.errors.telephone" class="text-sm text-error mt-1">{{ addressForm.errors.telephone }}</p>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Address Line 1 -->
-                                <div class="md:col-span-2">
-                                    <label for="addressLine1" class="block text-sm font-bold text-copy mb-1">Address Line 1</label>
-                                    <input id="addressLine1" type="text" v-model="addressForm.addressLine1" required
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine1}]"
-                                        placeholder="123 Example Street"
-                                    >
-                                    <p v-if="addressForm.errors.addressLine1" class="text-sm text-error mt-1">{{ addressForm.errors.addressLine1 }}</p>
-                                </div>
-
-                                <!-- Address Line 2 (Optional) -->
-                                <div class="md:col-span-2">
-                                    <label for="addressLine2" class="block text-sm font-bold text-copy mb-1">Address Line 2 (Optional)</label>
-                                    <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine2}]"
-                                        placeholder="Apartment, suite, etc."
-                                    >
-                                </div>
-                            </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- City -->
+                                <!-- Email -->
                                 <div>
-                                    <label for="city" class="block text-sm font-bold text-copy mb-1">City</label>
-                                    <input id="city" type="text" v-model="addressForm.city" required
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.city}]"
-                                        placeholder="London"
+                                    <label for="email" class="block text-sm font-bold text-copy mb-1">Email Address</label>
+                                    <input id="email" type="email" v-model="addressForm.email" required
+                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.email}]"
+                                        placeholder="your@email.com"
                                     >
-                                    <p v-if="addressForm.errors.city" class="text-sm text-error mt-1">{{ addressForm.errors.city }}</p>
+                                    <p v-if="addressForm.errors.email" class="text-sm text-error mt-1">{{ addressForm.errors.email }}</p>
                                 </div>
 
-                                <!-- County (Optional) -->
+                                <!-- Full Name -->
                                 <div>
-                                    <label for="county" class="block text-sm font-bold text-copy mb-1">County (Optional)</label>
-                                    <input id="county" type="text" v-model="addressForm.county"
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.county}]"
-                                        placeholder="Greater London"
+                                    <label for="fullName" class="block text-sm font-bold text-copy mb-1">Full Name</label>
+                                    <input id="fullName" type="text" v-model="addressForm.fullName" required
+                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.fullName}]"
+                                        placeholder="Jane Doe"
                                     >
-                                    <p v-if="addressForm.errors.county" class="text-sm text-error mt-1">{{ addressForm.errors.county }}</p>
+                                    <p v-if="addressForm.errors.fullName" class="text-sm text-error mt-1">{{ addressForm.errors.fullName }}</p>
                                 </div>
 
-                                <!-- Postcode -->
+                                <!-- Telephone -->
                                 <div>
-                                    <label for="postcode" class="block text-sm font-bold text-copy mb-1">Postcode</label>
-                                    <input id="postcode" type="text" v-model="addressForm.postcode" required
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.postcode}]"
-                                        placeholder="SW1A 0AA"
+                                    <label for="telephone" class="block text-sm font-bold text-copy mb-1">Telephone (Optional)</label>
+                                    <input id="telephone" type="tel" v-model="addressForm.telephone"
+                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.telephone}]"
+                                        placeholder="07700 900000"
                                     >
-                                    <p v-if="addressForm.errors.postcode" class="text-sm text-error mt-1">{{ addressForm.errors.postcode }}</p>
+                                    <p v-if="addressForm.errors.telephone" class="text-sm text-error mt-1">{{ addressForm.errors.telephone }}</p>
                                 </div>
 
-                                <!-- Country -->
-                                <div>
-                                    <label for="country" class="block text-sm font-bold text-copy mb-1">Country</label>
-                                    <input id="country" type="text" v-model="addressForm.country" readonly
-                                        class="w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary opacity-70"
-                                        placeholder="United Kingdom"
-                                    >
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Address Line 1 -->
+                                    <div class="md:col-span-2">
+                                        <label for="addressLine1" class="block text-sm font-bold text-copy mb-1">Address Line 1</label>
+                                        <input id="addressLine1" type="text" v-model="addressForm.addressLine1" required
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine1}]"
+                                            placeholder="123 Example Street"
+                                        >
+                                        <p v-if="addressForm.errors.addressLine1" class="text-sm text-error mt-1">{{ addressForm.errors.addressLine1 }}</p>
+                                    </div>
+
+                                    <!-- Address Line 2 (Optional) -->
+                                    <div class="md:col-span-2">
+                                        <label for="addressLine2" class="block text-sm font-bold text-copy mb-1">Address Line 2 (Optional)</label>
+                                        <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine2}]"
+                                            placeholder="Apartment, suite, etc."
+                                        >
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Save Info Checkbox -->
-                            <div class="flex items-center pt-4">
-                                <input id="saveInfo" type="checkbox" v-model="addressForm.saveInfo"
-                                    class="w-4 h-4 text-primary bg-background border-copy/30 rounded focus:ring-primary"
-                                >
-                                <label for="saveInfo" class="ml-2 text-sm text-copy">Save my information for a faster checkout</label>
-                            </div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- City -->
+                                    <div>
+                                        <label for="city" class="block text-sm font-bold text-copy mb-1">City</label>
+                                        <input id="city" type="text" v-model="addressForm.city" required
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.city}]"
+                                            placeholder="London"
+                                        >
+                                        <p v-if="addressForm.errors.city" class="text-sm text-error mt-1">{{ addressForm.errors.city }}</p>
+                                    </div>
 
-                        </form>
+                                    <!-- County (Optional) -->
+                                    <div>
+                                        <label for="county" class="block text-sm font-bold text-copy mb-1">County (Optional)</label>
+                                        <input id="county" type="text" v-model="addressForm.county"
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.county}]"
+                                            placeholder="Greater London"
+                                        >
+                                        <p v-if="addressForm.errors.county" class="text-sm text-error mt-1">{{ addressForm.errors.county }}</p>
+                                    </div>
+
+                                    <!-- Postcode -->
+                                    <div>
+                                        <label for="postcode" class="block text-sm font-bold text-copy mb-1">Postcode</label>
+                                        <input id="postcode" type="text" v-model="addressForm.postcode" required
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.postcode}]"
+                                            placeholder="SW1A 0AA"
+                                        >
+                                        <p v-if="addressForm.errors.postcode" class="text-sm text-error mt-1">{{ addressForm.errors.postcode }}</p>
+                                    </div>
+
+                                    <!-- Country -->
+                                    <div>
+                                        <label for="country" class="block text-sm font-bold text-copy mb-1">Country</label>
+                                        <input id="country" type="text" v-model="addressForm.country" readonly
+                                            class="w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary opacity-70"
+                                            placeholder="United Kingdom"
+                                        >
+                                    </div>
+                                </div>
+
+                                <!-- Save Info Checkbox -->
+                                <div class="flex items-center pt-4">
+                                    <input id="saveInfo" type="checkbox" v-model="addressForm.saveInfo"
+                                        class="w-4 h-4 text-primary bg-background border-copy/30 rounded focus:ring-primary"
+                                    >
+                                    <label for="saveInfo" class="ml-2 text-sm text-copy">Save my information for a faster checkout</label>
+                                </div>
+
+                            </form>
+                        </div>
 
 
                         <!-- Payment Section -->
-                        <div class="p-6 border-2 border-copy/20 bg-foreground rounded-xl shadow-xl space-y-6">
-                            <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">2. Payment</h2>
+                        <!-- Applying the Cart's Double Border Style (Outer) -->
+                        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                            <!-- Inner Border -->
+                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6 space-y-6">
+                                <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">2. Payment</h2>
 
-                            <!-- Initial Loading State (Fetching Client Secret/Loading Stripe) -->
-                            <div
-                                v-if="isLoadingInitialData"
-                                class="p-3 relative min-h-24 bg-background/80 flex items-center justify-center rounded-lg z-10"
-                            >
-                                <div class="text-center p-8">
-                                    <!-- Simple Spinner/Loader -->
-                                    <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <p class="text-lg font-semibold text-copy-lighter">
-                                        Connecting to payment gateway...
-                                    </p>
+                                <!-- Initial Loading State (Fetching Client Secret/Loading Stripe) -->
+                                <div
+                                    v-if="isLoadingInitialData"
+                                    class="p-3 relative min-h-24 bg-background/80 flex items-center justify-center rounded-lg z-10"
+                                >
+                                    <div class="text-center p-8">
+                                        <!-- Simple Spinner/Loader -->
+                                        <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <p class="text-lg font-semibold text-copy-lighter">
+                                            Connecting to payment gateway...
+                                        </p>
+                                    </div>
                                 </div>
+
+                                <!-- Payment Element Container (Only renders when we have the client secret) -->
+                                <div
+                                    v-if="hasClientSecret"
+                                    ref="paymentContainer"
+                                    id="payment-element-container"
+                                    class="p-3 min-h-24"
+                                >
+                                    <!-- Stripe iframe will be mounted here -->
+                                </div>
+
+
+                                <!-- Error Message Display -->
+                                <div v-if="paymentError" class="mt-4 p-3 bg-red-100 border border-error rounded-lg text-error text-sm font-semibold">
+                                    **Payment Error:** {{ paymentError }}
+                                </div>
+
+                                <!-- Submit Button (disabled if loading, no client secret, or has error) -->
+                                <button
+                                    @click.prevent="handleCardPayment"
+                                    :disabled="isProcessing || addressForm.processing || isLoadingInitialData || !hasClientSecret || !!paymentError"
+                                    class="mt-6 w-full py-4 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg"
+                                    :style="{
+                                        'background-color': 'var(--primary)',
+                                        'color': 'var(--primary-content)'
+                                    }"
+                                    :class="{
+                                        'hover:bg-primary-dark': !isProcessing && hasClientSecret && !paymentError && !isLoadingInitialData,
+                                        'opacity-50 cursor-wait': isProcessing,
+                                        'cursor-not-allowed opacity-40': !hasClientSecret || !!paymentError || isLoadingInitialData
+                                    }"
+                                >
+                                    <span v-if="isProcessing">Processing Payment...</span>
+                                    <span v-else>Pay {{ formatCurrency(summary.total) }} Now</span>
+                                </button>
+
+                                <p class="text-xs text-center text-copy-lighter pt-3">
+                                    All transactions are secured and encrypted.
+                                </p>
+
                             </div>
-
-                            <!-- Payment Element Container (Only renders when we have the client secret) -->
-                            <div
-                                v-if="hasClientSecret"
-                                ref="paymentContainer"
-                                id="payment-element-container"
-                                class="p-3 min-h-24"
-                            >
-                                <!-- Stripe iframe will be mounted here -->
-                            </div>
-
-
-                            <!-- Error Message Display -->
-                            <div v-if="paymentError" class="mt-4 p-3 bg-red-100 border border-error rounded-lg text-error text-sm font-semibold">
-                                **Payment Error:** {{ paymentError }}
-                            </div>
-
-                            <!-- Submit Button (disabled if loading, no client secret, or has error) -->
-                            <button
-                                @click.prevent="handleCardPayment"
-                                :disabled="isProcessing || addressForm.processing || isLoadingInitialData || !hasClientSecret || !!paymentError"
-                                class="mt-6 w-full py-4 border-2 border-copy/20 text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg"
-                                :style="{
-                                    'background-color': 'var(--primary)',
-                                    'color': 'var(--primary-content)'
-                                }"
-                                :class="{
-                                    'hover:bg-primary-dark': !isProcessing && hasClientSecret && !paymentError && !isLoadingInitialData,
-                                    'opacity-50 cursor-wait': isProcessing,
-                                    'cursor-not-allowed opacity-40': !hasClientSecret || !!paymentError || isLoadingInitialData
-                                }"
-                            >
-                                <span v-if="isProcessing">Processing Payment...</span>
-                                <span v-else>Pay {{ formatCurrency(summary.total) }} Now</span>
-                            </button>
-
-                            <p class="text-xs text-center text-copy-lighter pt-3">
-                                All transactions are secured and encrypted.
-                            </p>
-
                         </div>
                     </div>
 
 
                     <!-- Right Column: Order Summary & Review -->
                     <div class="lg:col-span-1">
-                        <div class="sticky top-8 rounded-xl border-2 border-copy/20 bg-primary-content/50">
-                            <div class="relative rounded-xl -m-0.5 border-2 border-copy/20 bg-foreground p-6">
+                        <!-- Applying the Cart's Double Border Style (Outer) -->
+                        <div class="sticky top-8 rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                            <!-- Inner Border -->
+                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                                 <h2 class="text-2xl font-black text-copy mb-4 border-b-2 border-copy/10 pb-3">Order Summary</h2>
 
                                 <!-- Breakdown -->
