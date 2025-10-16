@@ -6,7 +6,7 @@ import { onMounted, ref, computed, nextTick } from 'vue';
 declare const Stripe: any;
 declare const route: any;
 
-// Helper to reliably access Ziggy's route function, isolating the global window reference.
+// Helper to reliably access Ziggy's route function.
 const getRoute = (name: string, params: any = {}, absolute: boolean = true) => {
     if (typeof window.route === 'function') {
         return window.route(name, params, absolute);
@@ -78,6 +78,9 @@ const isProcessing = ref(false);
 const paymentError = ref<string | null>(null);
 const isStripeLoading = ref(true);
 
+// Template Ref for direct DOM access (Crucial Fix)
+const paymentContainer = ref<HTMLElement | null>(null);
+
 // Stripe objects
 const stripe = ref<any>(null);
 const elements = ref<any>(null);
@@ -146,7 +149,6 @@ const fetchPaymentIntent = async () => {
 
 /**
  * Initializes Stripe SDK and mounts the Payment Element.
- * Assumes Stripe object is globally available at this point.
  */
 const initializeStripe = async () => {
     isStripeLoading.value = true;
@@ -160,7 +162,6 @@ const initializeStripe = async () => {
     }
 
     // 2. Initialize Stripe and Elements
-    // NOTE: Ensure VITE_STRIPE_KEY is correctly set in your .env file
     stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
     elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
 
@@ -179,31 +180,29 @@ const initializeStripe = async () => {
         appearance: appearance,
     });
 
-    // 4. CRITICAL FIX: Robust Mounting with Polling
-    await nextTick(); // First, ensure Vue has finished its updates
+    // 4. CRITICAL FIX: Robust Mounting using Template Ref and Polling
+    await nextTick();
 
     const maxRetries = 10;
     const retryDelayMs = 50;
     let attempts = 0;
     let mountedSuccessfully = false;
 
-    // Use polling to guarantee the DOM element exists before calling mount()
+    // Use polling on the Template Ref's value
     while (attempts < maxRetries && !mountedSuccessfully) {
-        const container = document.getElementById('payment-element-container');
+        // Use the Vue Template Ref here!
+        const container = paymentContainer.value;
 
         if (container) {
             try {
-                // This is the line that throws the error if the container is invalid/null
                 paymentElement.value.mount(container);
                 mountedSuccessfully = true;
             } catch (e) {
-                // Catch any unexpected Stripe internal mount errors
                 console.error(`Stripe mount failed internally on attempt ${attempts + 1}:`, e);
-                // Continue trying if it's not a definitive error
                 await delay(retryDelayMs);
             }
         } else {
-            // Container not found, wait and try again
+            // Container Ref hasn't been populated by Vue yet, wait and try again
             await delay(retryDelayMs);
         }
         attempts++;
@@ -309,9 +308,9 @@ const finalizeOrder = (piId: string, type: string) => {
 
 onMounted(async () => {
     if (hasItems.value) {
-        // AWAIT script loading first
+        // 1. AWAIT script loading first
         await loadStripeScript();
-        // Then, initialize Stripe elements
+        // 2. Then, initialize Stripe elements
         await initializeStripe();
     } else {
         isStripeLoading.value = false;
@@ -461,8 +460,8 @@ onMounted(async () => {
                         <div class="p-6 border-2 border-copy/20 bg-foreground rounded-xl shadow-xl space-y-6">
                             <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">2. Payment</h2>
 
-                            <!-- Payment Element Container is always in the DOM -->
-                            <div id="payment-element-container" class="p-3 relative min-h-24">
+                            <!-- Payment Element Container (Now includes the Vue Template Ref) -->
+                            <div ref="paymentContainer" id="payment-element-container" class="p-3 relative min-h-24">
 
                                 <!-- Loading Overlay (shows while isStripeLoading is true) -->
                                 <div
