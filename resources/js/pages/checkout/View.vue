@@ -329,6 +329,8 @@ onMounted(async () => {
 </script>
 
 <template>
+    <NavBar />
+
     <Head title="Checkout" />
 
     <!-- Utility styles for Tailwind variables -->
@@ -339,7 +341,7 @@ onMounted(async () => {
             <div class="max-w-6xl mx-auto">
 
                 <div class="mb-8">
-                    <h1 class="text-5xl font-black text-copy mb-2">Your Shopping Cart</h1>
+                    <h1 class="text-5xl font-black text-copy mb-2">Checkout</h1>
                     <a :href="getRoute('cart.view')" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
                         <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
                         Return to Cart
