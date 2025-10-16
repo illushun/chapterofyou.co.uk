@@ -8,25 +8,42 @@ declare const route: any;
 
 // Helper to reliably access Ziggy's route function, isolating the global window reference.
 const getRoute = (name: string, params: any = {}, absolute: boolean = true) => {
-    // We use window.route explicitly to bypass scoping issues in minified builds
     if (typeof window.route === 'function') {
         return window.route(name, params, absolute);
     }
-    // Fallback or error handling if route is still unavailable
     console.error(`Ziggy route function is not available for: ${name}`);
-    return `/${name}`; // Basic fallback URL structure
+    return `/${name}`;
 }
 
-// Load Stripe.js (must be available globally)
-const loadStripeScript = () => {
-    if (document.getElementById('stripe-script')) {
-        return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://js.stripe.com/v3/';
-    script.id = 'stripe-script';
-    document.head.appendChild(script);
+/**
+ * Loads the Stripe.js script and returns a Promise that resolves when it's ready.
+ */
+const loadStripeScript = (): Promise<void> => {
+    return new Promise((resolve) => {
+        // 1. Check if Stripe is already defined (loaded)
+        if (typeof Stripe !== 'undefined') {
+            return resolve();
+        }
+
+        const scriptId = 'stripe-script';
+        let script = document.getElementById(scriptId) as HTMLScriptElement;
+
+        if (script) {
+            // 2. If tag exists, wait for it to finish loading
+            script.onload = () => resolve();
+        } else {
+            // 3. Create and append the script tag
+            script = document.createElement('script');
+            script.src = 'https://js.stripe.com/v3/';
+            script.id = scriptId;
+            script.onload = () => resolve();
+            document.head.appendChild(script);
+        }
+    });
 };
+
+// Utility to introduce a delay.
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // --- TYPES ---
 
@@ -97,23 +114,17 @@ const formatCurrency = (amount: number | string): string => {
     return `£${numAmount.toFixed(2)}`;
 };
 
-/**
- * Utility to introduce a delay.
- */
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 /**
  * Fetches a Payment Intent from the server to get the client secret.
  */
 const fetchPaymentIntent = async () => {
     try {
-        // Use the local getRoute helper
         const response = await fetch(getRoute('checkout.payment_intent'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                // Assumes you have a CSRF token meta tag in your layout
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
             },
         });
@@ -134,20 +145,13 @@ const fetchPaymentIntent = async () => {
 };
 
 /**
- * Initializes Stripe SDK and mounts the Payment Element with retry logic.
+ * Initializes Stripe SDK and mounts the Payment Element.
+ * Assumes Stripe object is globally available at this point.
  */
 const initializeStripe = async () => {
     isStripeLoading.value = true;
 
-    // 1. Wait for Stripe.js to load
-    if (typeof Stripe === 'undefined') {
-         await new Promise(resolve => {
-            const script = document.getElementById('stripe-script');
-            script?.addEventListener('load', resolve);
-        });
-    }
-
-    // 2. Get the client secret from the backend
+    // 1. Get the client secret from the backend
     await fetchPaymentIntent();
 
     if (!clientSecret.value || paymentError.value) {
@@ -155,27 +159,27 @@ const initializeStripe = async () => {
         return;
     }
 
-    // 3. Initialize Stripe and Elements
-    // NOTE: Replace VITE_STRIPE_KEY with your actual publishable key if this is an issue
+    // 2. Initialize Stripe and Elements
+    // NOTE: Ensure VITE_STRIPE_KEY is correctly set in your .env file
     stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
     elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
 
     const appearance = {
         theme: 'stripe',
         variables: {
-            colorPrimary: '#4f46e5', // Indigo-600
+            colorPrimary: '#4f46e5',
             colorText: '#1f2937',
             colorBackground: '#ffffff',
         },
     };
 
-    // 4. Create the Payment Element
+    // 3. Create the Payment Element
     paymentElement.value = elements.value.create('payment', {
         layout: 'tabs',
         appearance: appearance,
     });
 
-    // 5. CRITICAL FIX: Robust Mounting with Polling
+    // 4. CRITICAL FIX: Robust Mounting with Polling
     await nextTick(); // First, ensure Vue has finished its updates
 
     const maxRetries = 10;
@@ -183,16 +187,20 @@ const initializeStripe = async () => {
     let attempts = 0;
     let mountedSuccessfully = false;
 
+    // Use polling to guarantee the DOM element exists before calling mount()
     while (attempts < maxRetries && !mountedSuccessfully) {
         const container = document.getElementById('payment-element-container');
 
         if (container) {
             try {
+                // This is the line that throws the error if the container is invalid/null
                 paymentElement.value.mount(container);
                 mountedSuccessfully = true;
             } catch (e) {
-                // If an internal Stripe error occurs during mount, log it and retry (or stop)
-                console.warn(`Attempt ${attempts + 1} to mount Stripe failed internally.`, e);
+                // Catch any unexpected Stripe internal mount errors
+                console.error(`Stripe mount failed internally on attempt ${attempts + 1}:`, e);
+                // Continue trying if it's not a definitive error
+                await delay(retryDelayMs);
             }
         } else {
             // Container not found, wait and try again
@@ -202,7 +210,7 @@ const initializeStripe = async () => {
     }
 
     if (!mountedSuccessfully) {
-         paymentError.value = "Payment system failed to load. The container element was never accessible.";
+         paymentError.value = "Payment system failed to load. The required element was not found in time.";
     }
 
     isStripeLoading.value = false;
@@ -234,9 +242,7 @@ const handleCardPayment = async () => {
     const { error: stripeError, paymentIntent } = await stripe.value.confirmPayment({
         elements: elements.value,
         confirmParams: {
-            // Use the local getRoute helper for the return URL
             return_url: window.location.origin + getRoute('checkout.index', {}, false),
-            // Pass billing details
             payment_method_data: {
                 billing_details: {
                     name: addressForm.fullName,
@@ -266,7 +272,6 @@ const handleCardPayment = async () => {
     if (paymentIntent && paymentIntent.status === 'succeeded') {
         finalizeOrder(paymentIntent.id, paymentMethodType);
     } else if (paymentIntent && paymentIntent.status === 'requires_action') {
-        // Stripe handles the redirect here if required
         paymentError.value = "Payment requires external authentication. Please complete the redirect process.";
         isProcessing.value = false;
     } else {
@@ -281,7 +286,7 @@ const handleCardPayment = async () => {
 const finalizeOrder = (piId: string, type: string) => {
     router.post(getRoute('checkout.process_payment'),
         {
-            ...addressForm.data(), // Includes shipping/billing details
+            ...addressForm.data(),
             paymentIntentId: piId,
             paymentType: type,
         },
@@ -302,10 +307,12 @@ const finalizeOrder = (piId: string, type: string) => {
 
 // --- LIFECYCLE HOOK ---
 
-onMounted(() => {
+onMounted(async () => {
     if (hasItems.value) {
-        loadStripeScript();
-        initializeStripe();
+        // AWAIT script loading first
+        await loadStripeScript();
+        // Then, initialize Stripe elements
+        await initializeStripe();
     } else {
         isStripeLoading.value = false;
     }
@@ -454,7 +461,7 @@ onMounted(() => {
                         <div class="p-6 border-2 border-copy/20 bg-foreground rounded-xl shadow-xl space-y-6">
                             <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">2. Payment</h2>
 
-                            <!-- Payment Element Container is always in the DOM (FIX for mounting error) -->
+                            <!-- Payment Element Container is always in the DOM -->
                             <div id="payment-element-container" class="p-3 relative min-h-24">
 
                                 <!-- Loading Overlay (shows while isStripeLoading is true) -->
@@ -474,7 +481,7 @@ onMounted(() => {
                                     </div>
                                 </div>
 
-                                <!-- The actual Stripe iframe will mount here. It's hidden by the overlay when loading. -->
+                                <!-- The actual Stripe iframe will mount here. -->
                             </div>
 
                             <!-- Error Message Display -->
