@@ -2,6 +2,10 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { onMounted, ref, computed, nextTick } from 'vue';
 
+import NavBar from '@/components/NavBar.vue';
+
+const IconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`;
+
 // --- Global Declarations ---
 declare const Stripe: any;
 declare const route: any;
@@ -331,14 +335,13 @@ onMounted(async () => {
     <!-- Defining the same color variables as your cart page -->
     <section class="py-20" :style="{'--primary': '#4f46e5', '--primary-dark': '#4338ca', '--primary-content': '#ffffff', '--background': '#f9fafb', '--foreground': '#ffffff', '--copy': '#1f2937', '--copy-lighter': '#4b5563', '--error': '#ef4444'}">
 
-        <div class="min-h-screen bg-background text-copy p-4 md:p-8 lg:p-12">
+        <div class="min-h-screen text-copy p-4 md:p-8 lg:p-12">
             <div class="max-w-6xl mx-auto">
 
                 <div class="mb-8">
-                    <h1 class="text-5xl font-black text-copy mb-2">Secure Checkout</h1>
+                    <h1 class="text-5xl font-black text-copy mb-2">Your Shopping Cart</h1>
                     <a :href="getRoute('cart.view')" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
-                        <!-- Icon: Back Arrow -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 mr-2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                        <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
                         Return to Cart
                     </a>
                 </div>
@@ -563,7 +566,7 @@ onMounted(async () => {
 
                                 <!-- Total -->
                                 <div class="mt-6 pt-4 border-t-2 border-copy/10 flex justify-between items-center">
-                                    <span class="text-2xl font-extrabold text-copy">Total to Pay</span>
+                                    <span class="text-2xl font-extrabold text-copy">Order Total</span>
                                     <span class="text-4xl font-black text-primary">{{ formatCurrency(summary.total) }}</span>
                                 </div>
 
