@@ -4,7 +4,6 @@ import { onMounted, ref, computed, nextTick } from 'vue';
 
 // --- Global Declarations ---
 declare const Stripe: any;
-// The global route helper (Ziggy) is assumed to be available on window
 declare const route: any;
 
 // Helper to reliably access Ziggy's route function, isolating the global window reference.
@@ -99,6 +98,11 @@ const formatCurrency = (amount: number | string): string => {
 };
 
 /**
+ * Utility to introduce a delay.
+ */
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+/**
  * Fetches a Payment Intent from the server to get the client secret.
  */
 const fetchPaymentIntent = async () => {
@@ -109,6 +113,7 @@ const fetchPaymentIntent = async () => {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
+                // Assumes you have a CSRF token meta tag in your layout
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
             },
         });
@@ -129,7 +134,7 @@ const fetchPaymentIntent = async () => {
 };
 
 /**
- * Initializes Stripe SDK and mounts the Payment Element.
+ * Initializes Stripe SDK and mounts the Payment Element with retry logic.
  */
 const initializeStripe = async () => {
     isStripeLoading.value = true;
@@ -151,6 +156,7 @@ const initializeStripe = async () => {
     }
 
     // 3. Initialize Stripe and Elements
+    // NOTE: Replace VITE_STRIPE_KEY with your actual publishable key if this is an issue
     stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
     elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
 
@@ -169,14 +175,34 @@ const initializeStripe = async () => {
         appearance: appearance,
     });
 
-    // 5. CRITICAL FIX: Ensure DOM is updated before mounting
-    await nextTick();
+    // 5. CRITICAL FIX: Robust Mounting with Polling
+    await nextTick(); // First, ensure Vue has finished its updates
 
-    const container = document.getElementById('payment-element-container');
-    if (container) {
-        paymentElement.value.mount(container);
-    } else {
-        paymentError.value = "Internal Error: Payment element container not found in DOM.";
+    const maxRetries = 10;
+    const retryDelayMs = 50;
+    let attempts = 0;
+    let mountedSuccessfully = false;
+
+    while (attempts < maxRetries && !mountedSuccessfully) {
+        const container = document.getElementById('payment-element-container');
+
+        if (container) {
+            try {
+                paymentElement.value.mount(container);
+                mountedSuccessfully = true;
+            } catch (e) {
+                // If an internal Stripe error occurs during mount, log it and retry (or stop)
+                console.warn(`Attempt ${attempts + 1} to mount Stripe failed internally.`, e);
+            }
+        } else {
+            // Container not found, wait and try again
+            await delay(retryDelayMs);
+        }
+        attempts++;
+    }
+
+    if (!mountedSuccessfully) {
+         paymentError.value = "Payment system failed to load. The container element was never accessible.";
     }
 
     isStripeLoading.value = false;
@@ -240,6 +266,7 @@ const handleCardPayment = async () => {
     if (paymentIntent && paymentIntent.status === 'succeeded') {
         finalizeOrder(paymentIntent.id, paymentMethodType);
     } else if (paymentIntent && paymentIntent.status === 'requires_action') {
+        // Stripe handles the redirect here if required
         paymentError.value = "Payment requires external authentication. Please complete the redirect process.";
         isProcessing.value = false;
     } else {
