@@ -1,12 +1,22 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { onMounted, ref, computed } from 'vue';
+import { onMounted, ref, computed, nextTick } from 'vue';
 
 // --- Global Declarations ---
 declare const Stripe: any;
-// Explicitly declare the global Ziggy route function for TypeScript,
-// and we will reference window.route directly in the calls for robustness.
+// The global route helper (Ziggy) is assumed to be available on window
 declare const route: any;
+
+// Helper to reliably access Ziggy's route function, isolating the global window reference.
+const getRoute = (name: string, params: any = {}, absolute: boolean = true) => {
+    // We use window.route explicitly to bypass scoping issues in minified builds
+    if (typeof window.route === 'function') {
+        return window.route(name, params, absolute);
+    }
+    // Fallback or error handling if route is still unavailable
+    console.error(`Ziggy route function is not available for: ${name}`);
+    return `/${name}`; // Basic fallback URL structure
+}
 
 // Load Stripe.js (must be available globally)
 const loadStripeScript = () => {
@@ -50,7 +60,7 @@ const props = defineProps<{
 
 const isProcessing = ref(false);
 const paymentError = ref<string | null>(null);
-const isStripeLoading = ref(true); // Tracks initial payment intent fetch
+const isStripeLoading = ref(true);
 
 // Stripe objects
 const stripe = ref<any>(null);
@@ -93,8 +103,8 @@ const formatCurrency = (amount: number | string): string => {
  */
 const fetchPaymentIntent = async () => {
     try {
-        // FIX: Explicitly reference window.route to avoid scope/minification issues
-        const response = await fetch(route('checkout.payment_intent'), {
+        // Use the local getRoute helper
+        const response = await fetch(getRoute('checkout.payment_intent'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -124,7 +134,7 @@ const fetchPaymentIntent = async () => {
 const initializeStripe = async () => {
     isStripeLoading.value = true;
 
-    // Wait for Stripe.js to load
+    // 1. Wait for Stripe.js to load
     if (typeof Stripe === 'undefined') {
          await new Promise(resolve => {
             const script = document.getElementById('stripe-script');
@@ -132,7 +142,7 @@ const initializeStripe = async () => {
         });
     }
 
-    // First, get the client secret from our backend
+    // 2. Get the client secret from the backend
     await fetchPaymentIntent();
 
     if (!clientSecret.value || paymentError.value) {
@@ -140,11 +150,10 @@ const initializeStripe = async () => {
         return;
     }
 
-    // Initialize Stripe and Elements using the Publishable Key
+    // 3. Initialize Stripe and Elements
     stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
     elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
 
-    // Setup for Payment Element
     const appearance = {
         theme: 'stripe',
         variables: {
@@ -154,14 +163,22 @@ const initializeStripe = async () => {
         },
     };
 
-    // Create and Mount the Payment Element
+    // 4. Create the Payment Element
     paymentElement.value = elements.value.create('payment', {
         layout: 'tabs',
         appearance: appearance,
     });
 
-    // Mount is now safe because the container is rendered unconditionally
-    paymentElement.value.mount('#payment-element-container');
+    // 5. CRITICAL FIX: Ensure DOM is updated before mounting
+    await nextTick();
+
+    const container = document.getElementById('payment-element-container');
+    if (container) {
+        paymentElement.value.mount(container);
+    } else {
+        paymentError.value = "Internal Error: Payment element container not found in DOM.";
+    }
+
     isStripeLoading.value = false;
 };
 
@@ -191,8 +208,8 @@ const handleCardPayment = async () => {
     const { error: stripeError, paymentIntent } = await stripe.value.confirmPayment({
         elements: elements.value,
         confirmParams: {
-            // FIX: Explicitly reference window.route for absolute URL
-            return_url: window.location.origin + window.route('checkout.index', {}, false),
+            // Use the local getRoute helper for the return URL
+            return_url: window.location.origin + getRoute('checkout.index', {}, false),
             // Pass billing details
             payment_method_data: {
                 billing_details: {
@@ -235,8 +252,7 @@ const handleCardPayment = async () => {
  * Sends the final order confirmation to the server.
  */
 const finalizeOrder = (piId: string, type: string) => {
-    // FIX: Explicitly reference window.route for URL
-    router.post(window.route('checkout.process_payment'),
+    router.post(getRoute('checkout.process_payment'),
         {
             ...addressForm.data(), // Includes shipping/billing details
             paymentIntentId: piId,
@@ -280,7 +296,7 @@ onMounted(() => {
 
                 <div class="mb-8">
                     <h1 class="text-5xl font-black text-copy mb-2">Secure Checkout</h1>
-                    <a :href="window.route('cart.view')" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
+                    <a :href="getRoute('cart.view')" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
                         <!-- Icon: Back Arrow -->
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-5 mr-2"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
                         Return to Cart
@@ -289,7 +305,7 @@ onMounted(() => {
 
                 <div v-if="!hasItems" class="text-center p-12 border-4 border-dashed border-copy-lighter rounded-2xl bg-foreground/50">
                     <p class="text-2xl font-semibold text-copy mb-4">You have no items in your cart to checkout.</p>
-                    <a :href="window.route('products.index')" class="text-primary hover:text-primary-dark transition font-bold underline">
+                    <a :href="getRoute('products.index')" class="text-primary hover:text-primary-dark transition font-bold underline">
                         Browse Products and Start Shopping
                     </a>
                 </div>
@@ -412,7 +428,7 @@ onMounted(() => {
                             <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">2. Payment</h2>
 
                             <!-- Payment Element Container is always in the DOM (FIX for mounting error) -->
-                            <div id="payment-element-container" class="p-3 relative">
+                            <div id="payment-element-container" class="p-3 relative min-h-24">
 
                                 <!-- Loading Overlay (shows while isStripeLoading is true) -->
                                 <div
@@ -436,8 +452,7 @@ onMounted(() => {
 
                             <!-- Error Message Display -->
                             <div v-if="paymentError" class="mt-4 p-3 bg-red-100 border border-error rounded-lg text-error text-sm font-semibold">
-                                {{ paymentError }}
-                                <span v-if="!clientSecret"> Please ensure your API key and server connection are correct.</span>
+                                **Payment Error:** {{ paymentError }}
                             </div>
 
                             <!-- Submit Button (disabled if loading, no client secret, or has error) -->
