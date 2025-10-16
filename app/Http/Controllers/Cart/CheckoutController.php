@@ -157,7 +157,7 @@ class CheckoutController extends Controller
                 $order = $this->createOrderAndClearCart($cart, $summary, $request->all(), $paymentIntent);
 
                 // Redirect to confirmation page with the new Order ID
-                return redirect()->route('order.confirmation', ['id' => $order->id])
+                return redirect()->route('order.confirmation', ['id' => $order->id, 'request' => $request])
                                  ->with('success', "Order #{$order->id} successfully placed.");
 
             } catch (\Exception $e) {
@@ -213,7 +213,7 @@ class CheckoutController extends Controller
         // Prepare and save Order Items
         $orderItems = $cart->items->map(function ($item) use ($order) {
             $productCost = $item->product->cost ?? 0.00;
-            return new OrderItem([
+            return new Item([
                 'order_id' => $order->id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
