@@ -94,7 +94,7 @@ const formatCurrency = (amount: number | string): string => {
 const fetchPaymentIntent = async () => {
     try {
         // FIX: Explicitly reference window.route to avoid scope/minification issues
-        const response = await fetch(window.route('checkout.payment_intent'), {
+        const response = await fetch(route('checkout.payment_intent'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
