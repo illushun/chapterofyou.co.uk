@@ -5,6 +5,7 @@ import { onMounted, ref, computed, nextTick } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 
 const IconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`;
+const IconArrowRight = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>`;
 
 // --- Global Declarations ---
 declare const Stripe: any;
@@ -77,10 +78,9 @@ const props = defineProps<{
 
 const isProcessing = ref(false);
 const paymentError = ref<string | null>(null);
-// New state for controlling when the container is rendered
 const hasClientSecret = ref(false);
-// State for the initial loading spinner (fetching secret and waiting for Stripe to load)
-const isLoadingInitialData = ref(true);
+const isLoadingInitialData = ref(true); // Tracks loading client secret and Stripe script
+const currentStep = ref(1); // 1: Shipping & Contact, 2: Payment
 
 // Template Ref for direct DOM access (Crucial)
 const paymentContainer = ref<HTMLElement | null>(null);
@@ -109,6 +109,19 @@ const addressForm = useForm({
 // --- COMPUTED & METHODS ---
 
 const hasItems = computed(() => props.cartItems.length > 0);
+
+/**
+ * Checks if the required fields for shipping/contact are filled.
+ */
+const isShippingFormValid = computed(() => {
+    return (
+        !!addressForm.email &&
+        !!addressForm.fullName &&
+        !!addressForm.addressLine1 &&
+        !!addressForm.city &&
+        !!addressForm.postcode
+    );
+});
 
 /**
  * Formats a number as currency (GBP).
@@ -153,8 +166,14 @@ const fetchPaymentIntent = async () => {
 
 /**
  * Initializes Stripe SDK and mounts the Payment Element.
+ * This is now wrapped in a function that can be called when Step 1 is complete.
  */
 const initializeStripe = async () => {
+    // Only proceed if not already initialized
+    if (stripe.value) {
+        isLoadingInitialData.value = false;
+        return;
+    }
 
     // 1. Get the client secret from the backend
     await fetchPaymentIntent();
@@ -165,6 +184,7 @@ const initializeStripe = async () => {
     }
 
     // 2. Client secret is ready. Set flag to true to render the container via v-if.
+    // This allows the element to exist in the DOM, even if hidden by currentStep < 2
     hasClientSecret.value = true;
 
     // 3. Wait for the next DOM update cycle (guarantees v-if has run)
@@ -196,7 +216,7 @@ const initializeStripe = async () => {
     let attempts = 0;
     let mountedSuccessfully = false;
 
-    // Use polling on the Template Ref's value which should now exist
+    // Mount into the container once it's available (thanks to hasClientSecret=true)
     while (attempts < maxRetries && !mountedSuccessfully) {
         const container = paymentContainer.value;
 
@@ -211,7 +231,6 @@ const initializeStripe = async () => {
                 await delay(retryDelayMs);
             }
         } else {
-            // Should not happen often now, but we wait just in case of slow DOM updates
             await delay(retryDelayMs);
         }
         attempts++;
@@ -226,13 +245,42 @@ const initializeStripe = async () => {
 };
 
 /**
+ * Handles the step transition from Shipping to Payment.
+ */
+const advanceToPayment = async () => {
+    // 1. Clear previous errors
+    paymentError.value = null;
+
+    // 2. Run Inertia client-side validation first
+    // This ensures any validation attributes (e.g. required) are checked
+    addressForm.validate();
+
+    // Give VUE time to update addressForm.hasErrors
+    await nextTick();
+
+    // 3. Check for required fields and client-side form errors
+    if (!isShippingFormValid.value || addressForm.hasErrors) {
+        paymentError.value = "Please complete all required fields (marked with *) to proceed to payment.";
+        return;
+    }
+
+    // 4. Advance step
+    currentStep.value = 2;
+
+    // 5. Scroll to the payment section for better UX
+    await nextTick();
+    const paymentSection = document.getElementById('payment-section');
+    if (paymentSection) {
+        paymentSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
+
+/**
  * Handles form submission and confirms payment using the Stripe Payment Element.
  */
 const handleCardPayment = async () => {
-    // Perform front-end validation
-    if (addressForm.hasErrors || !addressForm.email || !addressForm.addressLine1 || !addressForm.postcode || !addressForm.fullName) {
-        paymentError.value = "Please complete all required shipping and contact details.";
-        addressForm.validate();
+    // Should only be called when on step 2, but check just in case.
+    if (currentStep.value !== 2) {
         return;
     }
 
@@ -320,8 +368,11 @@ onMounted(async () => {
     if (hasItems.value) {
         // 1. AWAIT script loading first
         await loadStripeScript();
-        // 2. Then, initialize Stripe elements
+
+        // 2. Then, fetch secret and initialize Stripe elements (but don't mount until step 2)
+        // We do this immediately so there's no delay on step transition
         await initializeStripe();
+
     } else {
         isLoadingInitialData.value = false;
     }
@@ -334,7 +385,6 @@ onMounted(async () => {
     <Head title="Checkout" />
 
     <!-- Utility styles for Tailwind variables -->
-    <!-- Defining the same color variables as your cart page -->
     <section class="py-20" :style="{'--primary': '#4f46e5', '--primary-dark': '#4338ca', '--primary-content': '#ffffff', '--background': '#f9fafb', '--foreground': '#ffffff', '--copy': '#1f2937', '--copy-lighter': '#4b5563', '--error': '#ef4444'}">
 
         <div class="min-h-screen text-copy p-4 md:p-8 lg:p-12">
@@ -357,184 +407,228 @@ onMounted(async () => {
 
                 <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                    <!-- Left Column: Shipping Details & Payment -->
+                    <!-- Left Column: Shipping Details & Payment Steps -->
                     <div class="lg:col-span-2 space-y-8">
 
-                        <!-- Shipping/Contact Details Form -->
-                        <!-- Applying the Cart's Double Border Style (Outer) -->
-                        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
-                            <!-- Inner Border (Form is now wrapped) -->
-                            <form @submit.prevent="handleCardPayment" class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6 space-y-6">
+                        <!-- Step 1: Shipping/Contact Details Form -->
+                        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl"
+                            :class="{'opacity-70': currentStep > 1}"
+                        >
+                            <form class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6 space-y-6">
 
-                                <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">1. Shipping & Contact</h2>
+                                <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">
+                                    1. Shipping & Contact
+                                    <span v-if="currentStep > 1" class="text-sm font-normal text-green-600 ml-3">(Completed)</span>
+                                </h2>
 
-                                <!-- Email -->
-                                <div>
-                                    <label for="email" class="block text-sm font-bold text-copy mb-1">Email Address</label>
-                                    <input id="email" type="email" v-model="addressForm.email" required
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.email}]"
-                                        placeholder="your@email.com"
-                                    >
-                                    <p v-if="addressForm.errors.email" class="text-sm text-error mt-1">{{ addressForm.errors.email }}</p>
-                                </div>
-
-                                <!-- Full Name -->
-                                <div>
-                                    <label for="fullName" class="block text-sm font-bold text-copy mb-1">Full Name</label>
-                                    <input id="fullName" type="text" v-model="addressForm.fullName" required
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.fullName}]"
-                                        placeholder="Jane Doe"
-                                    >
-                                    <p v-if="addressForm.errors.fullName" class="text-sm text-error mt-1">{{ addressForm.errors.fullName }}</p>
-                                </div>
-
-                                <!-- Telephone -->
-                                <div>
-                                    <label for="telephone" class="block text-sm font-bold text-copy mb-1">Telephone (Optional)</label>
-                                    <input id="telephone" type="tel" v-model="addressForm.telephone"
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.telephone}]"
-                                        placeholder="07700 900000"
-                                    >
-                                    <p v-if="addressForm.errors.telephone" class="text-sm text-error mt-1">{{ addressForm.errors.telephone }}</p>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <!-- Address Line 1 -->
-                                    <div class="md:col-span-2">
-                                        <label for="addressLine1" class="block text-sm font-bold text-copy mb-1">Address Line 1</label>
-                                        <input id="addressLine1" type="text" v-model="addressForm.addressLine1" required
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine1}]"
-                                            placeholder="123 Example Street"
-                                        >
-                                        <p v-if="addressForm.errors.addressLine1" class="text-sm text-error mt-1">{{ addressForm.errors.addressLine1 }}</p>
-                                    </div>
-
-                                    <!-- Address Line 2 (Optional) -->
-                                    <div class="md:col-span-2">
-                                        <label for="addressLine2" class="block text-sm font-bold text-copy mb-1">Address Line 2 (Optional)</label>
-                                        <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine2}]"
-                                            placeholder="Apartment, suite, etc."
-                                        >
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <!-- City -->
+                                <div :class="{'pointer-events-none': currentStep > 1}">
+                                    <!-- Email -->
                                     <div>
-                                        <label for="city" class="block text-sm font-bold text-copy mb-1">City</label>
-                                        <input id="city" type="text" v-model="addressForm.city" required
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.city}]"
-                                            placeholder="London"
+                                        <label for="email" class="block text-sm font-bold text-copy mb-1">Email Address <span class="text-error">*</span></label>
+                                        <input id="email" type="email" v-model="addressForm.email" required
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.email}]"
+                                            placeholder="your@email.com"
                                         >
-                                        <p v-if="addressForm.errors.city" class="text-sm text-error mt-1">{{ addressForm.errors.city }}</p>
+                                        <p v-if="addressForm.errors.email" class="text-sm text-error mt-1">{{ addressForm.errors.email }}</p>
                                     </div>
 
-                                    <!-- County (Optional) -->
+                                    <!-- Full Name -->
                                     <div>
-                                        <label for="county" class="block text-sm font-bold text-copy mb-1">County (Optional)</label>
-                                        <input id="county" type="text" v-model="addressForm.county"
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.county}]"
-                                            placeholder="Greater London"
+                                        <label for="fullName" class="block text-sm font-bold text-copy mb-1">Full Name <span class="text-error">*</span></label>
+                                        <input id="fullName" type="text" v-model="addressForm.fullName" required
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.fullName}]"
+                                            placeholder="Jane Doe"
                                         >
-                                        <p v-if="addressForm.errors.county" class="text-sm text-error mt-1">{{ addressForm.errors.county }}</p>
+                                        <p v-if="addressForm.errors.fullName" class="text-sm text-error mt-1">{{ addressForm.errors.fullName }}</p>
                                     </div>
 
-                                    <!-- Postcode -->
+                                    <!-- Telephone -->
                                     <div>
-                                        <label for="postcode" class="block text-sm font-bold text-copy mb-1">Postcode</label>
-                                        <input id="postcode" type="text" v-model="addressForm.postcode" required
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.postcode}]"
-                                            placeholder="SW1A 0AA"
+                                        <label for="telephone" class="block text-sm font-bold text-copy mb-1">Telephone (Optional)</label>
+                                        <input id="telephone" type="tel" v-model="addressForm.telephone"
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.telephone}]"
+                                            placeholder="07700 900000"
                                         >
-                                        <p v-if="addressForm.errors.postcode" class="text-sm text-error mt-1">{{ addressForm.errors.postcode }}</p>
+                                        <p v-if="addressForm.errors.telephone" class="text-sm text-error mt-1">{{ addressForm.errors.telephone }}</p>
                                     </div>
 
-                                    <!-- Country -->
-                                    <div>
-                                        <label for="country" class="block text-sm font-bold text-copy mb-1">Country</label>
-                                        <input id="country" type="text" v-model="addressForm.country" readonly
-                                            class="w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary opacity-70"
-                                            placeholder="United Kingdom"
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Address Line 1 -->
+                                        <div class="md:col-span-2">
+                                            <label for="addressLine1" class="block text-sm font-bold text-copy mb-1">Address Line 1 <span class="text-error">*</span></label>
+                                            <input id="addressLine1" type="text" v-model="addressForm.addressLine1" required
+                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine1}]"
+                                                placeholder="123 Example Street"
+                                            >
+                                            <p v-if="addressForm.errors.addressLine1" class="text-sm text-error mt-1">{{ addressForm.errors.addressLine1 }}</p>
+                                        </div>
+
+                                        <!-- Address Line 2 (Optional) -->
+                                        <div class="md:col-span-2">
+                                            <label for="addressLine2" class="block text-sm font-bold text-copy mb-1">Address Line 2 (Optional)</label>
+                                            <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
+                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine2}]"
+                                                placeholder="Apartment, suite, etc."
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- City -->
+                                        <div>
+                                            <label for="city" class="block text-sm font-bold text-copy mb-1">City <span class="text-error">*</span></label>
+                                            <input id="city" type="text" v-model="addressForm.city" required
+                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.city}]"
+                                                placeholder="London"
+                                            >
+                                            <p v-if="addressForm.errors.city" class="text-sm text-error mt-1">{{ addressForm.errors.city }}</p>
+                                        </div>
+
+                                        <!-- County (Optional) -->
+                                        <div>
+                                            <label for="county" class="block text-sm font-bold text-copy mb-1">County (Optional)</label>
+                                            <input id="county" type="text" v-model="addressForm.county"
+                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.county}]"
+                                                placeholder="Greater London"
+                                            >
+                                            <p v-if="addressForm.errors.county" class="text-sm text-error mt-1">{{ addressForm.errors.county }}</p>
+                                        </div>
+
+                                        <!-- Postcode -->
+                                        <div>
+                                            <label for="postcode" class="block text-sm font-bold text-copy mb-1">Postcode <span class="text-error">*</span></label>
+                                            <input id="postcode" type="text" v-model="addressForm.postcode" required
+                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.postcode}]"
+                                                placeholder="SW1A 0AA"
+                                            >
+                                            <p v-if="addressForm.errors.postcode" class="text-sm text-error mt-1">{{ addressForm.errors.postcode }}</p>
+                                        </div>
+
+                                        <!-- Country -->
+                                        <div>
+                                            <label for="country" class="block text-sm font-bold text-copy mb-1">Country</label>
+                                            <input id="country" type="text" v-model="addressForm.country" readonly
+                                                class="w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary opacity-70"
+                                                placeholder="United Kingdom"
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <!-- Save Info Checkbox -->
+                                    <div class="flex items-center pt-4">
+                                        <input id="saveInfo" type="checkbox" v-model="addressForm.saveInfo"
+                                            class="w-4 h-4 text-primary bg-background border-copy/30 rounded focus:ring-primary"
                                         >
+                                        <label for="saveInfo" class="ml-2 text-sm text-copy">Save my information for a faster checkout</label>
                                     </div>
                                 </div>
 
-                                <!-- Save Info Checkbox -->
-                                <div class="flex items-center pt-4">
-                                    <input id="saveInfo" type="checkbox" v-model="addressForm.saveInfo"
-                                        class="w-4 h-4 text-primary bg-background border-copy/30 rounded focus:ring-primary"
-                                    >
-                                    <label for="saveInfo" class="ml-2 text-sm text-copy">Save my information for a faster checkout</label>
-                                </div>
 
-                            </form>
-                        </div>
-
-
-                        <!-- Payment Section -->
-                        <!-- Applying the Cart's Double Border Style (Outer) -->
-                        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
-                            <!-- Inner Border -->
-                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6 space-y-6">
-                                <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">2. Payment</h2>
-
-                                <!-- Initial Loading State (Fetching Client Secret/Loading Stripe) -->
-                                <div
-                                    v-if="isLoadingInitialData"
-                                    class="p-3 relative min-h-24 bg-background/80 flex items-center justify-center rounded-lg z-10"
-                                >
-                                    <div class="text-center p-8">
-                                        <!-- Simple Spinner/Loader -->
-                                        <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        <p class="text-lg font-semibold text-copy-lighter">
-                                            Connecting to payment gateway...
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Payment Element Container (Only renders when we have the client secret) -->
-                                <div
-                                    v-if="hasClientSecret"
-                                    ref="paymentContainer"
-                                    id="payment-element-container"
-                                    class="p-3 min-h-24"
-                                >
-                                    <!-- Stripe iframe will be mounted here -->
-                                </div>
-
-
-                                <!-- Error Message Display -->
-                                <div v-if="paymentError" class="mt-4 p-3 bg-red-100 border border-error rounded-lg text-error text-sm font-semibold">
-                                    **Payment Error:** {{ paymentError }}
-                                </div>
-
-                                <!-- Submit Button (disabled if loading, no client secret, or has error) -->
+                                <!-- Continue Button (Step 1) -->
                                 <button
-                                    @click.prevent="handleCardPayment"
-                                    :disabled="isProcessing || addressForm.processing || isLoadingInitialData || !hasClientSecret || !!paymentError"
-                                    class="mt-6 w-full py-4 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg"
+                                    v-if="currentStep === 1"
+                                    @click.prevent="advanceToPayment"
+                                    :disabled="addressForm.processing"
+                                    class="mt-6 w-full py-4 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg inline-flex items-center justify-center"
                                     :style="{
                                         'background-color': 'var(--primary)',
                                         'color': 'var(--primary-content)'
                                     }"
                                     :class="{
-                                        'hover:bg-primary-dark': !isProcessing && hasClientSecret && !paymentError && !isLoadingInitialData,
-                                        'opacity-50 cursor-wait': isProcessing,
-                                        'cursor-not-allowed opacity-40': !hasClientSecret || !!paymentError || isLoadingInitialData
+                                        'hover:bg-primary-dark': !addressForm.processing,
+                                        'opacity-50 cursor-wait': addressForm.processing,
                                     }"
                                 >
-                                    <span v-if="isProcessing">Processing Payment...</span>
-                                    <span v-else>Pay {{ formatCurrency(summary.total) }} Now</span>
+                                    Continue to Payment
+                                    <div v-html="IconArrowRight" class="size-5 ml-2"></div>
+                                </button>
+                                <!-- Edit/Change Link (Step 2) -->
+                                <button
+                                    v-else
+                                    @click.prevent="currentStep = 1"
+                                    class="mt-2 w-full py-2 text-primary border border-primary hover:bg-primary/10 transition-colors duration-300 rounded-lg text-sm font-semibold"
+                                >
+                                    Change Shipping Details
                                 </button>
 
-                                <p class="text-xs text-center text-copy-lighter pt-3">
-                                    All transactions are secured and encrypted.
-                                </p>
+                            </form>
+                        </div>
 
+
+                        <!-- Step 2: Payment Section -->
+                        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl"
+                            :class="{'opacity-50': currentStep < 2}"
+                        >
+                            <!-- Inner Border -->
+                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6 space-y-6">
+                                <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">
+                                    2. Payment
+                                </h2>
+
+                                <div v-if="currentStep === 2" id="payment-section">
+                                    <!-- Error Message Display -->
+                                    <div v-if="paymentError" class="mt-4 p-3 bg-red-100 border border-error rounded-lg text-error text-sm font-semibold">
+                                        **Payment Error:** {{ paymentError }}
+                                    </div>
+
+                                    <!-- Initial Loading State (Fetching Client Secret/Loading Stripe) -->
+                                    <div
+                                        v-if="isLoadingInitialData"
+                                        class="p-3 relative min-h-24 bg-background/80 flex items-center justify-center rounded-lg z-10"
+                                    >
+                                        <div class="text-center p-8">
+                                            <!-- Simple Spinner/Loader -->
+                                            <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <p class="text-lg font-semibold text-copy-lighter">
+                                                Connecting to payment gateway...
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Payment Element Container (Renders when we have the client secret, but only visible on step 2) -->
+                                    <div
+                                        v-else-if="hasClientSecret"
+                                        ref="paymentContainer"
+                                        id="payment-element-container"
+                                        class="p-3 min-h-24"
+                                    >
+                                        <!-- Stripe iframe will be mounted here -->
+                                    </div>
+
+                                    <div v-else class="p-3 text-center text-copy-lighter font-medium">
+                                        Payment could not be initialized. Please refresh the page.
+                                    </div>
+
+                                    <!-- Submit Button (disabled if loading, no client secret, or has error) -->
+                                    <button
+                                        @click.prevent="handleCardPayment"
+                                        :disabled="isProcessing || isLoadingInitialData || !hasClientSecret || !!paymentError"
+                                        class="mt-6 w-full py-4 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg"
+                                        :style="{
+                                            'background-color': 'var(--primary)',
+                                            'color': 'var(--primary-content)'
+                                        }"
+                                        :class="{
+                                            'hover:bg-primary-dark': !isProcessing && hasClientSecret && !paymentError && !isLoadingInitialData,
+                                            'opacity-50 cursor-wait': isProcessing,
+                                            'cursor-not-allowed opacity-40': !hasClientSecret || !!paymentError || isLoadingInitialData
+                                        }"
+                                    >
+                                        <span v-if="isProcessing">Processing Payment...</span>
+                                        <span v-else>Pay {{ formatCurrency(summary.total) }} Now</span>
+                                    </button>
+
+                                    <p class="text-xs text-center text-copy-lighter pt-3">
+                                        All transactions are secured and encrypted.
+                                    </p>
+                                </div>
+
+                                <div v-else class="min-h-24 p-6 flex items-center justify-center bg-background/50 rounded-lg text-copy-lighter font-medium">
+                                    Complete Step 1 to continue to payment.
+                                </div>
                             </div>
                         </div>
                     </div>
