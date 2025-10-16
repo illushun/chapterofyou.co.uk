@@ -4,6 +4,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Cart\CartController;
+use App\Http\Controllers\Cart\CheckoutController;
 use App\Http\Controllers\Account\AccountController;
 
 use Illuminate\Support\Facades\Route;
