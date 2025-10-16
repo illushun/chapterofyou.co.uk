@@ -6,29 +6,6 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    - Id
-- user_id
-- Email
-- Telephone
-- billing_line_1
-- billing_line_2
-- billing_city
-- billing_county
-- billing_postcode
-- billing_country
-- shipping_line_1
-- shipping_line_2
-- shipping_city
-- shipping_county
-- shipping_postcode
-- shipping_country
-- payment_type
-- cost_total
-- Shipping_total
-- tax_total
-- Status (‘failed’, ‘cancelled’, ‘refunded’, ‘successful’, ‘not started’)
-- created_at
-- updated_at
     /**
      * Run the migrations.
      */
