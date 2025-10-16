@@ -15,7 +15,7 @@ use Stripe\Exception\ApiErrorException;
 
 use App\Models\Cart;
 use App\Models\Order;
-use App\Models\Order\Item;
+use App\Models\OrderItem;
 
 class CheckoutController extends Controller
 {
