@@ -144,4 +144,9 @@ class CartManager
         // Clear the session ID to finalise the merge process
         session()->forget('cart_session_id');
     }
+
+    public function clearCart(Cart $cart): bool
+    {
+        return $cart->items()->delete() > 0;
+    }
 }
