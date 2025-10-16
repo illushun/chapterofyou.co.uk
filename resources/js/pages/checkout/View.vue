@@ -33,7 +33,7 @@ interface Summary {
 // Global Stripe references
 declare const Stripe: any;
 // Assuming your publishable key is available in your Vite/Mix environment
-declare const import.meta.env: { VITE_STRIPE_KEY: string };
+//declare const import.meta.env: { VITE_STRIPE_KEY: string };
 
 // --- PROPS ---
 
