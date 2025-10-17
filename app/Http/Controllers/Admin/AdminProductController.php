@@ -26,11 +26,11 @@ class AdminProductController extends Controller
         foreach ($files as $file) {
             $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
 
-            // Store file in the 'products' directory within the 'public' disk
-            $path = $file->storeAs('products', $fileName, 'public');
+            // Store file in the 'product_images' directory within the 'public' disk
+            $path = $file->storeAs('product_images', $fileName, 'public');
 
             $product->images()->create([
-                'image' => $path,
+                'image' => Storage::url($path),
                 'status' => 'enabled',
             ]);
         }
@@ -127,7 +127,7 @@ class AdminProductController extends Controller
             ->select('id', 'image', 'status')
             ->get()
             ->map(function (ProductImage $image) {
-                $image->file_path = Storage::url($image->image);
+                $image->file_path = $image->image;
                 $image->is_enabled = $image->status === 'enabled';
                 return $image;
             });
