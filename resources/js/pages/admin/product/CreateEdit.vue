@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, useForm, Link } from '@inertiajs/vue3';
-import { computed, watch, ref } from 'vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { computed, watch } from 'vue';
 import { debounce } from 'lodash';
 
 // Interfaces for data structure
@@ -15,11 +15,13 @@ interface ParentProduct {
     name: string;
 }
 
-// NEW: Interface for existing product images
 interface ProductImage {
     id: number;
-    file_path: string; // The URL to the image
-    is_enabled: boolean;
+    product_id: number;
+    image: string; // The storage path
+    status: 'enabled' | 'disabled';
+    file_path: string; // The URL for the frontend
+    is_enabled: boolean; // Computed boolean status for FE ease
 }
 
 interface Product {
@@ -44,15 +46,10 @@ const props = defineProps<{
     categories: Category[];
     parentProducts: ParentProduct[];
     selectedCategoryIds: number[]; // Array of category IDs for the product
-    // NEW: Prop for existing product images
-    productImages: ProductImage[];
+    productImages: ProductImage[]; // Array of existing images for the product
     isEditing: boolean;
     errors: Record<string, string>;
 }>();
-
-// Refs
-const imageFileInput = ref<HTMLInputElement | null>(null);
-const currentExistingImages = ref<ProductImage[]>(props.productImages);
 
 // Initialize the form state
 const form = useForm({
@@ -60,80 +57,48 @@ const form = useForm({
     name: props.product?.name || '',
     description: props.product?.description || '',
     status: props.product?.status || 'enabled',
-    cost: props.product?.cost.toString() || '0.00',
+    cost: props.product?.cost.toString() || '0.00', // Use string for input type="number" consistency
     stock_qty: props.product?.stock_qty || 0,
+    parent_product_id: props.product?.parent_product_id || null, // New field
     category_ids: props.selectedCategoryIds || ([] as number[]),
-    parent_product_id: props.product?.parent_product_id || null,
     meta_title: props.product?.seo?.meta_title || '',
     meta_description: props.product?.seo?.meta_description || '',
     slug: props.product?.seo?.slug || '',
 
-    // NEW: Image fields for submission
-    new_images: [] as File[], // Files selected for upload
+    // Image Handling State
+    new_images: [] as File[], // Files queued for upload
     images_to_delete: [] as number[], // IDs of existing images to delete
-    images_to_toggle: [] as number[], // IDs of images whose status needs flipping
+    images_to_toggle: [] as number[], // IDs of existing images whose status should be flipped
 });
 
 // Computed properties
 const title = computed(() => (props.isEditing ? `Edit Product: ${props.product?.name}` : 'Create New Product'));
 const submitLabel = computed(() => (props.isEditing ? 'Update Product' : 'Create Product'));
 
-// --- Image Management Methods ---
-
-// Handles adding selected files to the form data
-const handleFileUpload = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    const files = target.files;
-    if (files) {
-        // Must use Array.from to convert FileList to an array for concatenation
-        form.new_images = [...form.new_images, ...Array.from(files)];
-        // Reset the input value so the same files can be selected again if needed
-        if (imageFileInput.value) imageFileInput.value.value = '';
-    }
-};
-
-// Removes a newly selected image from the upload queue
-const removeNewImage = (index: number) => {
-    form.new_images.splice(index, 1);
-};
-
-// Toggles the is_enabled status for an *existing* image
-const toggleImageStatus = (image: ProductImage) => {
-    // Optimistic UI update
-    image.is_enabled = !image.is_enabled;
-
-    // Add or remove ID from the toggle list for backend processing
-    const index = form.images_to_toggle.indexOf(image.id);
-    if (index > -1) {
-        form.images_to_toggle.splice(index, 1);
-    } else {
-        form.images_to_toggle.push(image.id);
-    }
-};
-
-// Marks an *existing* image for deletion
-const deleteExistingImage = (imageId: number) => {
-    // 1. Mark for deletion in the form data
-    form.images_to_delete.push(imageId);
-
-    // 2. Remove from local display list (optimistic UI update)
-    currentExistingImages.value = currentExistingImages.value.filter(img => img.id !== imageId);
-
-    // 3. Ensure it's not also marked for toggling
-    const toggleIndex = form.images_to_toggle.indexOf(imageId);
-    if (toggleIndex > -1) {
-        form.images_to_toggle.splice(toggleIndex, 1);
-    }
-};
-
-// --- General Methods ---
+// Filter existing images based on deletion queue
+const filteredExistingImages = computed(() => {
+    return props.productImages.filter(image =>
+        !form.images_to_delete.includes(image.id)
+    ).map(image => {
+        // Apply pending status toggle for display purposes
+        if (form.images_to_toggle.includes(image.id)) {
+            return { ...image, is_enabled: !image.is_enabled };
+        }
+        return image;
+    });
+});
 
 // Debounced watch for auto-generating slug and meta title from name
 watch(() => form.name, debounce((newName) => {
-    if (!props.isEditing || !props.product?.seo?.slug) {
-        // Only auto-generate slug/title if creating or if the existing slug hasn't been modified
+    // Only proceed if not processing a submission
+    if (form.processing) return;
+
+    if (!props.isEditing || !props.product?.seo?.slug || form.name !== props.product?.name) {
+        const slugBase = newName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+        // Only auto-generate slug/title if creating or if the existing slug/title is untouched
         if (!form.slug || form.slug === props.product?.seo?.slug) {
-            form.slug = newName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            form.slug = slugBase;
         }
         if (!form.meta_title || form.meta_title === props.product?.seo?.meta_title) {
              form.meta_title = newName;
@@ -141,27 +106,50 @@ watch(() => form.name, debounce((newName) => {
     }
 }, 500));
 
-// Form submission logic
-const submit = () => {
-    // Convert string cost back to number for submission (though Laravel validation handles it)
-    const dataToSubmit = {
-        ...form.data(),
-        cost: parseFloat(form.cost),
-    };
+// --- Image Management Methods ---
 
-    if (props.isEditing && props.product) {
-        form.data()._method = 'put';
-        form.post(route('admin.products.update', props.product.id), {
-            preserveScroll: true,
+const handleFileUpload = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (target.files) {
+        // Convert FileList to array and append to new_images
+        Array.from(target.files).forEach(file => {
+            if (form.new_images.length < 5) {
+                form.new_images.push(file);
+            }
         });
-    } else {
-        // POST request for creation
-        form.post(route('admin.products.store'), {
-            preserveScroll: true,
-        });
+        // Reset file input to allow uploading the same file again if needed
+        target.value = '';
     }
 };
 
+const removeNewImage = (index: number) => {
+    form.new_images.splice(index, 1);
+};
+
+const toggleImageStatus = (imageId: number) => {
+    const index = form.images_to_toggle.indexOf(imageId);
+    if (index === -1) {
+        // Add to toggle list
+        form.images_to_toggle.push(imageId);
+    } else {
+        // Remove from toggle list
+        form.images_to_toggle.splice(index, 1);
+    }
+};
+
+const deleteExistingImage = (imageId: number) => {
+    if (!form.images_to_delete.includes(imageId)) {
+        form.images_to_delete.push(imageId);
+    }
+
+    // If an image is pending deletion, it shouldn't be pending toggle
+    const toggleIndex = form.images_to_toggle.indexOf(imageId);
+    if (toggleIndex !== -1) {
+        form.images_to_toggle.splice(toggleIndex, 1);
+    }
+};
+
+// --- Category Management Method ---
 const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
     if (isChecked) {
         if (!form.category_ids.includes(categoryId)) {
@@ -171,6 +159,51 @@ const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
         form.category_ids = form.category_ids.filter(id => id !== categoryId);
     }
 };
+
+// --- Form submission logic ---
+const submit = () => {
+    // Convert string cost back to number for submission (though Laravel validation handles it)
+    form.data().cost = parseFloat(form.cost);
+
+    if (props.isEditing && props.product) {
+        // When updating an existing product, files must be sent via POST,
+        // and we use transform to inject the _method: 'put' field for method spoofing.
+        form.transform((data) => ({
+            ...data,
+            // Explicitly set _method to 'put' for Laravel to handle multipart/form-data POST as a PUT request
+            _method: 'put',
+        }))
+        // Use form.post() when uploading files, even for PUT requests
+        .post(route('admin.products.update', props.product.id), {
+            preserveScroll: true,
+            // Reset image arrays after successful submission
+            onSuccess: () => {
+                form.new_images = [];
+                form.images_to_delete = [];
+                form.images_to_toggle = [];
+            }
+        });
+    } else {
+        // POST request for creation (no method spoofing needed)
+        form.post(route('admin.products.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                form.new_images = [];
+                form.images_to_delete = [];
+                form.images_to_toggle = [];
+            }
+        });
+    }
+};
+
+const formatImageSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
 </script>
 
 <template>
@@ -185,44 +218,48 @@ const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
         <form @submit.prevent="submit" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             <div class="lg:col-span-2 space-y-6">
-                <!-- General Information -->
                 <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">General Information</h3>
 
-                        <div class="mb-4">
-                            <label for="name" class="block text-sm font-medium text-copy mb-1">Product Name</label>
-                            <input type="text" id="name" v-model="form.name" required class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm" :class="{'border-error': form.errors.name}" />
-                            <div v-if="form.errors.name" class="text-xs text-error mt-1">{{ form.errors.name }}</div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="mb-4">
+                                <label for="name" class="block text-sm font-medium text-copy mb-1">Product Name</label>
+                                <input type="text" id="name" v-model="form.name" required class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm" :class="{'border-error': form.errors.name}" />
+                                <div v-if="form.errors.name" class="text-xs text-error mt-1">{{ form.errors.name }}</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="mpn" class="block text-sm font-medium text-copy mb-1">MPN / SKU</label>
+                                <input type="text" id="mpn" v-model="form.mpn" required class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm" :class="{'border-error': form.errors.mpn}" />
+                                <div v-if="form.errors.mpn" class="text-xs text-error mt-1">{{ form.errors.mpn }}</div>
+                            </div>
                         </div>
 
+                        <!-- Parent Product ID Field -->
                         <div class="mb-4">
-                            <label for="mpn" class="block text-sm font-medium text-copy mb-1">MPN / SKU</label>
-                            <input type="text" id="mpn" v-model="form.mpn" required class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm" :class="{'border-error': form.errors.mpn}" />
-                            <div v-if="form.errors.mpn" class="text-xs text-error mt-1">{{ form.errors.mpn }}</div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="parent_product_id" class="block text-sm font-medium text-copy mb-1">Parent Product (for Variations)</label>
+                            <label for="parent_product_id" class="block text-sm font-medium text-copy mb-1">Parent Product (for variations)</label>
                             <select
                                 id="parent_product_id"
                                 v-model="form.parent_product_id"
                                 class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
                                 :class="{'border-error': form.errors.parent_product_id}"
                             >
-                                <option :value="null">-- No Parent (Top-level Product) --</option>
+                                <option :value="null">-- No Parent (This is a main product) --</option>
                                 <option
-                                    v-for="parent in parentProducts"
-                                    :key="parent.id"
-                                    :value="parent.id"
-                                    :disabled="isEditing && product && parent.id === product.id"
+                                    v-for="p in parentProducts"
+                                    :key="p.id"
+                                    :value="p.id"
+                                    :disabled="isEditing && p.id === product?.id"
                                 >
-                                    {{ parent.name }}
-                                    <template v-if="isEditing && product && parent.id === product.id"> (Cannot be self)</template>
+                                    {{ p.name }} (ID: {{ p.id }})
                                 </option>
                             </select>
                             <div v-if="form.errors.parent_product_id" class="text-xs text-error mt-1">{{ form.errors.parent_product_id }}</div>
-                            <p class="text-xs text-copy-light mt-1">If this product is a variation (e.g., size, color), select its main parent product here. Leave as "No Parent" for top-level products.</p>
+                            <p v-if="isEditing && product?.parent_product_id === product?.id" class="text-xs text-error mt-1">This product is currently set as its own parent, which is invalid. Please select a different parent or 'No Parent'.</p>
+                            <p v-if="isEditing && product" class="text-xs text-copy-light mt-1">
+                                Note: Cannot set product "{{ product.name }}" as its own parent.
+                            </p>
                         </div>
 
                         <div class="mb-4">
@@ -233,7 +270,6 @@ const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
                     </div>
                 </div>
 
-                <!-- Pricing & Inventory -->
                 <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                          <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Pricing & Inventory</h3>
@@ -254,101 +290,100 @@ const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
                     </div>
                 </div>
 
-                <!-- Product Images -->
+                <!-- PRODUCT IMAGES SECTION -->
                 <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Product Images</h3>
+                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Product Images (Max 5 Total)</h3>
 
                         <!-- Image Upload Area -->
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-copy mb-2">Upload New Images</label>
-                            <input
-                                type="file"
-                                ref="imageFileInput"
-                                @change="handleFileUpload"
-                                multiple
-                                accept="image/*"
-                                class="file-input file-input-bordered w-full border-2 border-copy bg-foreground text-copy focus:border-primary focus:ring-primary"
-                            />
-                            <div v-if="form.errors.new_images" class="text-xs text-error mt-1">{{ form.errors.new_images }}</div>
-                        </div>
-
-                        <!-- Upload Queue Preview -->
-                        <div v-if="form.new_images.length > 0" class="mb-6">
-                            <h4 class="font-semibold text-copy mb-2">New Images to Upload ({{ form.new_images.length }})</h4>
-                            <div class="space-y-2">
-                                <div
-                                    v-for="(file, index) in form.new_images"
-                                    :key="index"
-                                    class="flex items-center justify-between p-3 border border-copy-light rounded-lg bg-secondary-light"
-                                >
-                                    <span class="text-sm truncate mr-4">{{ file.name }} ({{ (file.size / 1024).toFixed(1) }} KB)</span>
-                                    <button type="button" @click="removeNewImage(index)" class="btn btn-xs btn-error text-error-content">
-                                        Remove
-                                    </button>
-                                </div>
+                        <label for="file-upload" class="block cursor-pointer">
+                            <div
+                                class="h-24 border-2 border-dashed border-copy-light flex items-center justify-center text-copy-light p-4 rounded-lg bg-secondary-light transition hover:bg-secondary-dark"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                <span>Click to select files or drag and drop (Max 2MB per image)</span>
                             </div>
+                            <input type="file" id="file-upload" multiple accept="image/jpeg,image/png,image/webp" @change="handleFileUpload" class="hidden" />
+                        </label>
+                        <div v-if="form.errors['new_images']" class="text-xs text-error mt-1">{{ form.errors['new_images'] }}</div>
+                        <div v-if="form.errors['new_images.*']" class="text-xs text-error mt-1">{{ form.errors['new_images.*'] }}</div>
+
+
+                        <!-- New Images Queue -->
+                        <div v-if="form.new_images.length" class="mt-4 border-t border-copy-light pt-3">
+                            <h4 class="text-sm font-bold text-copy mb-2">New Images to Upload ({{ form.new_images.length }})</h4>
+                            <ul class="space-y-2">
+                                <li v-for="(file, index) in form.new_images" :key="index" class="flex items-center justify-between p-2 rounded-lg bg-secondary-dark">
+                                    <div class="truncate text-sm text-copy">
+                                        {{ file.name }}
+                                        <span class="text-copy-light ml-2">({{ formatImageSize(file.size) }})</span>
+                                    </div>
+                                    <button type="button" @click="removeNewImage(index)" class="text-error hover:text-red-700 transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.72-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" /></svg>
+                                    </button>
+                                </li>
+                            </ul>
                         </div>
 
-                        <!-- Existing Image Gallery -->
-                        <div v-if="currentExistingImages.length > 0" class="mt-6">
-                            <h4 class="font-semibold text-copy mb-3 border-t pt-3 border-copy-light">Existing Images</h4>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        <!-- Existing Images Grid -->
+                        <div v-if="filteredExistingImages.length" class="mt-6 border-t border-copy-light pt-3">
+                            <h4 class="text-sm font-bold text-copy mb-2">Existing Images ({{ filteredExistingImages.length }})</h4>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
                                 <div
-                                    v-for="image in currentExistingImages"
+                                    v-for="image in filteredExistingImages"
                                     :key="image.id"
-                                    class="relative border-2 rounded-lg overflow-hidden group transition-all duration-150"
+                                    class="relative rounded-lg overflow-hidden border-2 shadow-md transition"
                                     :class="{
-                                        'border-success': image.is_enabled,
-                                        'border-gray-400 opacity-60': !image.is_enabled,
+                                        'border-success/80': image.is_enabled,
+                                        'border-copy-light opacity-50': !image.is_enabled,
+                                        'ring-2 ring-error/50': form.images_to_delete.includes(image.id)
                                     }"
                                 >
-                                    <!-- Placeholder image if no actual path is provided -->
-                                    <img
-                                        :src="image.file_path || 'https://placehold.co/400x400/eeeeee/333333?text=Image+Missing'"
-                                        alt="Product Image"
-                                        class="aspect-square object-cover w-full h-full"
-                                    />
+                                    <!-- Image Thumbnail -->
+                                    <img :src="image.file_path" alt="Product Image" class="w-full h-24 object-cover" onerror="this.onerror=null;this.src='https://placehold.co/150x96/f0f0f0/666?text=No+Image';" />
 
-                                    <div class="absolute inset-0 bg-black bg-opacity-30 flex flex-col justify-end p-2 transition-opacity duration-150">
-                                        <div class="flex justify-between items-center text-xs">
+                                    <!-- Status Overlay -->
+                                    <span v-if="!image.is_enabled" class="absolute top-0 left-0 bg-error text-error-content text-xs px-2 py-0.5 font-bold">DISABLED</span>
 
-                                            <!-- Toggle Status Button -->
-                                            <button
-                                                type="button"
-                                                @click="toggleImageStatus(image)"
-                                                class="badge"
-                                                :class="{
-                                                    'badge-success text-success-content': image.is_enabled,
-                                                    'badge-warning text-warning-content': !image.is_enabled,
-                                                }"
-                                            >
-                                                {{ image.is_enabled ? 'Enabled' : 'Disabled' }}
-                                            </button>
+                                    <!-- Action Buttons -->
+                                    <div class="absolute bottom-0 right-0 p-1 flex gap-1 bg-black/50 rounded-tl-lg">
 
-                                            <!-- Delete Button -->
-                                            <button
-                                                type="button"
-                                                @click="deleteExistingImage(image.id)"
-                                                class="btn btn-xs btn-circle btn-error text-error-content hover:bg-red-700"
-                                                title="Delete Image"
-                                            >
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                            </button>
-                                        </div>
+                                        <!-- Toggle Button -->
+                                        <button
+                                            type="button"
+                                            @click="toggleImageStatus(image.id)"
+                                            :title="image.is_enabled ? 'Disable Image' : 'Enable Image'"
+                                            class="p-1 rounded-full text-white transition hover:scale-110"
+                                            :class="{
+                                                'bg-error': image.is_enabled,
+                                                'bg-success': !image.is_enabled
+                                            }"
+                                        >
+                                            <svg v-if="image.is_enabled" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414L5.586 7H5a1 1 0 000 2h.414l-2.293 2.293a1 1 0 001.414 1.414L7 10.414V11a1 1 0 102 0v-.586l1.293 1.293a1 1 0 001.414-1.414L10.414 9H11a1 1 0 100-2h-.586l-2.293-2.293a1 1 0 10-1.414 1.414L8.586 9H8a1 1 0 00-1 1v.586L4.707 8.707a1 1 0 00-1.414 1.414zM16 9a1 1 0 00-1 1v2a1 1 0 11-2 0v-2a1 1 0 00-2 0v2a3 3 0 003 3h2a3 3 0 003-3v-2a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
+                                            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                                        </button>
+
+                                        <!-- Delete Button -->
+                                        <button
+                                            type="button"
+                                            @click="deleteExistingImage(image.id)"
+                                            title="Mark for Deletion"
+                                            class="p-1 rounded-full bg-error text-white transition hover:scale-110"
+                                            :class="{'opacity-50': form.images_to_delete.includes(image.id)}"
+                                            :disabled="form.images_to_delete.includes(image.id)"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.72-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z" clip-rule="evenodd" /></svg>
+                                        </button>
                                     </div>
+
                                 </div>
                             </div>
-                            <p v-if="form.errors.images_to_delete" class="text-xs text-error mt-2">{{ form.errors.images_to_delete }}</p>
-                            <p v-if="form.errors.images_to_toggle" class="text-xs text-error mt-2">{{ form.errors.images_to_toggle }}</p>
-                        </div>
-                        <div v-else-if="isEditing" class="text-copy-light text-center p-4 border-2 border-dashed rounded-lg mt-4">
-                            No images uploaded for this product yet.
                         </div>
                     </div>
                 </div>
+                <!-- END PRODUCT IMAGES SECTION -->
 
-                <!-- SEO & URL -->
+
                 <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">SEO & URL</h3>
@@ -377,7 +412,6 @@ const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
                 </div>
             </div>
 
-            <!-- Sidebar -->
             <div class="lg:col-span-1 space-y-6">
 
                 <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
