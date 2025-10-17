@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
+use App\Models\Product;
 use App\Models\Label\CLP as CLPLabel;
 
 class CLPLabelController extends Controller
