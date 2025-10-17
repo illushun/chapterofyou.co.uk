@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Link, Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
+import type { Route } from 'ziggy-js';
+
+declare const route: Route;
+
+const currentRoute = computed(() => {
+    return route().current();
+});
 
 const navLinks = [
     { name: 'Dashboard', route: 'admin.dashboard', icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m15.356 2H21v-5' },
