@@ -37,6 +37,7 @@
 
     --color-secondary-dark: var(--secondary-dark);
     --color-secondary-light: var(--secondary-light);
+    --color-secondary-content: var(--secondary-conmtent);
 
     --color-copy: var(--copy);
     --color-copy-light: var(--copy-light);
