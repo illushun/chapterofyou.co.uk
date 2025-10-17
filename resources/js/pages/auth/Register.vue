@@ -116,11 +116,11 @@ import { LoaderCircle } from 'lucide-vue-next';
                         </Button>
                     </div>
 
-                    <div class="text-center text-sm text-copy-lighter">
+                    <div class="text-center text-sm text-copy">
                         Already have an account?
                         <TextLink
                             :href="login()"
-                            class="text-secondary hover:text-secondary-dark transition font-semibold"
+                            class="text-secondary-content hover:text-secondary-dark transition font-semibold"
                             :tabindex="6"
                         >
                             Log in

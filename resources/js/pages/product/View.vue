@@ -5,6 +5,8 @@ import { ref, watch, reactive, nextTick } from 'vue';
 import { debounce } from 'lodash';
 import { usePage } from '@inertiajs/vue3';
 
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 
@@ -222,10 +224,16 @@ const handleFavourite = (product: ProductCardData) => {
 
                             <div class="mb-6">
                                 <h4 class="text-base font-semibold text-copy mb-2">Availability</h4>
-                                <label for="FilterInStock" class="inline-flex items-center gap-2 cursor-pointer transition hover:text-primary-content">
-                                    <input type="checkbox" id="FilterInStock" v-model="form.in_stock" class="size-5 border-2 border-copy text-primary-content focus:ring-primary-content" />
-                                    <span class="text-sm font-medium text-copy-light"> In Stock Only </span>
-                                </label>
+
+                                <Label for="FilterInStock" class="flex items-center space-x-3 text-copy-light cursor-pointer">
+                                <Checkbox
+                                    id="FilterInStock"
+                                    name="FilterInStock"
+                                    class="border-copy data-[state=checked]:bg-[var(--primary)] data-[state=checked]:text-primary-content"
+                                    v-model="form.in_stock"
+                                />
+                                <span>In Stock Only</span>
+                            </Label>
                             </div>
 
                             <div class="mb-6 border-t-2 border-copy pt-4">
