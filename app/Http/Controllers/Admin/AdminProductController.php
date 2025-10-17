@@ -9,19 +9,39 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Product\Seo;
+use App\Models\Product\Image as ProductImage;
 
 class AdminProductController extends Controller
 {
+    /**
+     * Helper to store uploaded images and create database records.
+     */
+    private function handleImageUpload(Product $product, array $files): void
+    {
+        foreach ($files as $file) {
+            $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+
+            // Store file in the 'products' directory within the 'public' disk
+            $path = $file->storeAs('products', $fileName, 'public');
+
+            $product->images()->create([
+                'image' => $path,
+                'status' => 'enabled',
+            ]);
+        }
+    }
+
     /**
      * Display a listing of the resource. (Index)
      */
     public function index()
     {
-        $products = Product::with('images:product_id,image')
+        $products = Product::with('images:product_id,image,status')
             ->select('id', 'mpn', 'name', 'cost', 'stock_qty', 'status', 'parent_product_id')
             ->paginate(15);
 
@@ -42,6 +62,7 @@ class AdminProductController extends Controller
             'categories' => $categories,
             'parentProducts' => $parentProducts,
             'isEditing' => false,
+            'productImages' => [],
         ]);
     }
 
@@ -62,8 +83,10 @@ class AdminProductController extends Controller
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')],
-            // 'images' => ['array', 'max:5'], // For file uploads (not implemented here)
             'parent_product_id' => ['nullable', 'exists:product,id'],
+
+            'new_images' => ['nullable', 'array', 'max:5'], // Max 5 images per upload
+            'new_images.*' => ['image', 'max:2048', 'mimes:jpeg,png,webp'], // Max 2MB, common image types
         ]);
 
         return DB::transaction(function () use ($validated) {
@@ -81,6 +104,10 @@ class AdminProductController extends Controller
                 'slug' => $validated['slug'] ?? Str::slug($validated['name']),
             ]);
 
+            if ($request->hasFile('new_images')) {
+                $this->handleImageUpload($product, $request->file('new_images'));
+            }
+
             return redirect()->route('admin.products.index')
                 ->with('success', "Product '{$product->name}' created successfully!");
         });
@@ -96,11 +123,21 @@ class AdminProductController extends Controller
 
         $parentProducts = Product::where('id', '!=', $product->id)->select('id', 'name')->get();
 
+        $productImages = $product->images()
+            ->select('id', 'image', 'status')
+            ->get()
+            ->map(function (ProductImage $image) {
+                $image->file_path = Storage::url($image->image);
+                $image->is_enabled = $image->status === 'enabled';
+                return $image;
+            });
+
         return Inertia::render('admin/product/CreateEdit', [
             'product' => $product,
             'categories' => $categories,
             'parentProducts' => $parentProducts,
             'selectedCategoryIds' => $product->categories->pluck('id'),
+            'productImages' => $productImages,
             'isEditing' => true,
         ]);
     }
@@ -123,6 +160,15 @@ class AdminProductController extends Controller
             'meta_description' => ['nullable', 'string', 'max:500'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')->ignore($product->seo->id ?? null, 'id')],
             'parent_product_id' => ['nullable', 'exists:product,id', Rule::notIn([$product->id])],
+
+            'new_images' => ['nullable', 'array', 'max:5'],
+            'new_images.*' => ['image', 'max:2048', 'mimes:jpeg,png,webp'],
+
+            'images_to_delete' => ['nullable', 'array'],
+            'images_to_delete.*' => ['exists:product_image,id'],
+
+            'images_to_toggle' => ['nullable', 'array'],
+            'images_to_toggle.*' => ['exists:product_image,id'],
         ]);
 
         return DB::transaction(function () use ($validated, $product) {
@@ -141,6 +187,32 @@ class AdminProductController extends Controller
                 ]
             );
 
+            if (!empty($validated['images_to_delete'])) {
+                $imagesToDelete = ProductImage::whereIn('id', $validated['images_to_delete'])
+                                              ->where('product_id', $product->id)
+                                              ->get();
+
+                foreach ($imagesToDelete as $image) {
+                    Storage::disk('public')->delete($image->image);
+                    $image->delete();
+                }
+            }
+
+            if (!empty($validated['images_to_toggle'])) {
+                $imagesToToggle = ProductImage::whereIn('id', $validated['images_to_toggle'])
+                                              ->where('product_id', $product->id)
+                                              ->get();
+
+                foreach ($imagesToToggle as $image) {
+                    $newStatus = $image->status === 'enabled' ? 'disabled' : 'enabled';
+                    $image->update(['status' => $newStatus]);
+                }
+            }
+
+            if ($request->hasFile('new_images')) {
+                $this->handleImageUpload($product, $request->file('new_images'));
+            }
+
             return redirect()->route('admin.products.index')
                 ->with('success', "Product '{$product->name}' updated successfully!");
         });
@@ -152,6 +224,10 @@ class AdminProductController extends Controller
     public function destroy(Product $product)
     {
         $productName = $product->name;
+
+        $product->images->each(function (ProductImage $image) {
+            Storage::disk('public')->delete($image->image);
+        });
         $product->delete();
 
         return redirect()->route('admin.products.index')
