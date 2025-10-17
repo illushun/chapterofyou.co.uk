@@ -58,7 +58,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('products', AdminProductController::class)->except(['show']);
-    Route::get('/products/relationships', [AdminProductController::class, 'relationshipIndex'])->name('admin.products.relationships');
+    Route::get('/products/relationships', [AdminProductController::class, 'relationshipIndex'])->name('products.relationships');
 
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
