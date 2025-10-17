@@ -226,14 +226,14 @@ const handleFavourite = (product: ProductCardData) => {
                                 <h4 class="text-base font-semibold text-copy mb-2">Availability</h4>
 
                                 <Label for="FilterInStock" class="flex items-center space-x-3 text-copy-light cursor-pointer">
-                                <Checkbox
-                                    id="FilterInStock"
-                                    name="FilterInStock"
-                                    class="border-copy data-[state=checked]:bg-[var(--primary)] data-[state=checked]:text-primary-content"
-                                    v-model="form.in_stock"
-                                />
-                                <span>In Stock Only</span>
-                            </Label>
+                                    <Checkbox
+                                        id="FilterInStock"
+                                        name="FilterInStock"
+                                        class="border-copy data-[state=checked]:bg-[var(--primary)] data-[state=checked]:text-primary-content"
+                                        v-model="form.in_stock"
+                                    />
+                                    <span>In Stock Only</span>
+                                </Label>
                             </div>
 
                             <div class="mb-6 border-t-2 border-copy pt-4">
@@ -241,16 +241,16 @@ const handleFavourite = (product: ProductCardData) => {
                                 <div class="max-h-56 overflow-y-auto pr-2">
                                     <ul class="space-y-3">
                                         <li v-for="category in categories" :key="category.id">
-                                            <label :for="'FilterCategory-' + category.id" class="inline-flex items-center gap-3 cursor-pointer transition hover:text-primary-content">
-                                                <input
-                                                    type="checkbox"
+                                            <Label :for="'FilterCategory-' + category.id" class="flex items-center space-x-3 text-copy-light cursor-pointer">
+                                                <Checkbox
                                                     :id="'FilterCategory-' + category.id"
                                                     :value="category.id"
+                                                    name="FilterInStock"
+                                                    class="border-copy data-[state=checked]:bg-[var(--primary)] data-[state=checked]:text-primary-content"
                                                     v-model="form.categories"
-                                                    class="size-4 border-2 border-copy text-primary-content focus:ring-primary-content"
                                                 />
-                                                <span class="text-sm text-copy-light font-medium"> {{ category.name }} </span>
-                                            </label>
+                                                <span>{{ category.name }}</span>
+                                            </Label>
                                         </li>
                                     </ul>
                                 </div>
