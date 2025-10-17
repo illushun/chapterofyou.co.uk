@@ -10,6 +10,11 @@ interface Category {
     name: string;
 }
 
+interface ParentProduct {
+    id: number;
+    name: string;
+}
+
 interface Product {
     id: number;
     mpn: string;
@@ -18,6 +23,8 @@ interface Product {
     status: 'enabled' | 'disabled';
     cost: number;
     stock_qty: number;
+    // NEW: Added parent_product_id to the product interface
+    parent_product_id: number | null;
     seo: {
         meta_title: string;
         meta_description: string;
@@ -29,6 +36,8 @@ interface Product {
 const props = defineProps<{
     product?: Product; // Only present when editing
     categories: Category[];
+    // NEW: Prop for the list of potential parent products
+    parentProducts: ParentProduct[];
     selectedCategoryIds: number[]; // Array of category IDs for the product
     isEditing: boolean;
     errors: Record<string, string>;
@@ -43,6 +52,7 @@ const form = useForm({
     cost: props.product?.cost.toString() || '0.00', // Use string for input type="number" consistency
     stock_qty: props.product?.stock_qty || 0,
     category_ids: props.selectedCategoryIds || ([] as number[]),
+    parent_product_id: props.product?.parent_product_id || null,
     meta_title: props.product?.seo?.meta_title || '',
     meta_description: props.product?.seo?.meta_description || '',
     slug: props.product?.seo?.slug || '',
@@ -125,6 +135,31 @@ const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
                             <input type="text" id="mpn" v-model="form.mpn" required class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm" :class="{'border-error': form.errors.mpn}" />
                             <div v-if="form.errors.mpn" class="text-xs text-error mt-1">{{ form.errors.mpn }}</div>
                         </div>
+
+                        <!-- NEW: Parent Product Selection Field -->
+                        <div class="mb-4">
+                            <label for="parent_product_id" class="block text-sm font-medium text-copy mb-1">Parent Product (for Variations)</label>
+                            <select
+                                id="parent_product_id"
+                                v-model="form.parent_product_id"
+                                class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
+                                :class="{'border-error': form.errors.parent_product_id}"
+                            >
+                                <option :value="null">-- No Parent (Top-level Product) --</option>
+                                <option
+                                    v-for="parent in parentProducts"
+                                    :key="parent.id"
+                                    :value="parent.id"
+                                    :disabled="isEditing && product && parent.id === product.id"
+                                >
+                                    {{ parent.name }}
+                                    <template v-if="isEditing && product && parent.id === product.id"> (Cannot be self)</template>
+                                </option>
+                            </select>
+                            <div v-if="form.errors.parent_product_id" class="text-xs text-error mt-1">{{ form.errors.parent_product_id }}</div>
+                            <p class="text-xs text-copy-light mt-1">If this product is a variation (e.g., size, color), select its main parent product here. Leave as "No Parent" for top-level products.</p>
+                        </div>
+                        <!-- END NEW FIELD -->
 
                         <div class="mb-4">
                             <label for="description" class="block text-sm font-medium text-copy mb-1">Description</label>
