@@ -154,7 +154,7 @@ class AdminProductController extends Controller
 
     public function relationshipIndex()
     {
-        $products = Product::select('id', 'name', 'parent_id')
+        $products = Product::select('id', 'name', 'parent_product_id')
             ->get()
             ->map(function ($product) {
                 return [
