@@ -147,16 +147,12 @@ const submit = () => {
     const dataToSubmit = {
         ...form.data(),
         cost: parseFloat(form.cost),
-        // NOTE: Inertia automatically sets the correct header for file uploads
-        // The files in `form.new_images` are automatically included.
     };
 
     if (props.isEditing && props.product) {
-        // POST request is typically used for PUT/PATCH when files are present
-        // We use the `_method` field to signal to Laravel that this is a PUT/PATCH request
+        form.data()._method = 'put';
         form.post(route('admin.products.update', props.product.id), {
             preserveScroll: true,
-            _method: 'put', // Spoof method for file uploads
         });
     } else {
         // POST request for creation
