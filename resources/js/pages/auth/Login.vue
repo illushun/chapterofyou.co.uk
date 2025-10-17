@@ -75,7 +75,7 @@ defineProps<{
                                 <TextLink
                                     v-if="canResetPassword"
                                     :href="request()"
-                                    class="text-sm text-secondary hover:text-secondary-dark transition"
+                                    class="text-sm text-secondary-content hover:text-secondary-dark transition"
                                     :tabindex="5"
                                 >
                                     Forgot password?
@@ -122,9 +122,9 @@ defineProps<{
                         </Button>
                     </div>
 
-                    <div class="text-center text-sm text-copy-lighter">
+                    <div class="text-center text-sm text-copy">
                         Don't have an account?
-                        <TextLink :href="register()" :tabindex="5" class="text-secondary hover:text-secondary-dark transition font-semibold">Sign up</TextLink>
+                        <TextLink :href="register()" :tabindex="5" class="text-secondary-content hover:text-secondary-dark transition font-semibold">Sign up</TextLink>
                     </div>
                 </Form>
             </div>
