@@ -171,7 +171,7 @@ class AdminProductController extends Controller
             'images_to_toggle.*' => ['exists:product_image,id'],
         ]);
 
-        return DB::transaction(function () use ($validated, $product) {
+        return DB::transaction(function () use ($request, $validated, $product) {
             $product->update($validated);
 
             // Sync Categories
