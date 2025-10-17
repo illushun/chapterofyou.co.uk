@@ -5,9 +5,9 @@ import type { Route } from 'ziggy-js';
 
 declare const route: Route;
 
-const currentRoute = computed(() => {
-    return route().current();
-});
+const isRouteActive = (name: string): boolean => {
+    return route().current(name);
+};
 
 const navLinks = [
     { name: 'Dashboard', route: 'admin.dashboard', icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m15.356 2H21v-5' },
@@ -34,9 +34,9 @@ const getTitle = computed(() => {
 });
 
 // Utility to check if a route is active
-const isActive = (routeName: string) => {
+/*const isActive = (routeName: string) => {
     return route().current(routeName) || page.url.includes(routeName.split('.')[1]);
-};
+};*/
 </script>
 
 <template>
@@ -58,7 +58,7 @@ const isActive = (routeName: string) => {
                             :href="route(link.route)"
                             :class="[
                                 'relative flex items-center gap-3 rounded-lg -m-0.5 px-4 py-2 transition-colors duration-200 border-2 border-copy text-copy',
-                                isActive(link.route)
+                                isRouteActive(link.route)
                                     ? 'bg-primary font-bold text-primary-content border-copy shadow-md'
                                     : 'bg-foreground hover:bg-secondary-light',
                             ]"
@@ -119,7 +119,7 @@ const isActive = (routeName: string) => {
                                 @click="sidebarOpen = false"
                                 :class="[
                                     'relative flex items-center gap-3 rounded-lg -m-0.5 px-4 py-2 transition-colors duration-200 border-2 border-copy text-copy',
-                                    isActive(link.route)
+                                    isRouteActive(link.route)
                                         ? 'bg-primary font-bold text-primary-content border-copy shadow-md'
                                         : 'bg-foreground hover:bg-secondary-light',
                                 ]"
