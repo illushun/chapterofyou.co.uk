@@ -23,7 +23,6 @@ class AdminProductController extends Controller
     {
         $products = Product::with('images:product_id,image')
             ->select('id', 'mpn', 'name', 'cost', 'stock_qty', 'status', 'parent_product_id')
-            ->whereNull('parent_product_id') // Only show top-level products
             ->paginate(15);
 
         return Inertia::render('admin/product/Index', [
