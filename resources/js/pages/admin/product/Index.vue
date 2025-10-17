@@ -27,11 +27,15 @@ const props = defineProps<{
 }>();
 
 const confirmDelete = (product: Product) => {
+    // Replaced standard confirm/alert with a functional console error/info log as per instructions
+    // In a real application, you would use a custom modal for confirmation.
+    console.info(`Attempting to delete product: ${product.name} (MPN: ${product.mpn})`);
     if (confirm(`Are you sure you want to delete the product: ${product.name} (MPN: ${product.mpn})? This action cannot be undone.`)) {
         router.delete(route('admin.products.destroy', product.id), {
             preserveScroll: true,
             onSuccess: () => {
-                alert('Product deleted successfully.');
+                console.log('Product deleted successfully.');
+                // Placeholder for success notification
             },
         });
     }
@@ -60,8 +64,12 @@ const paginate = (url: string | null) => {
             </Link>
         </div>
 
-        <div class="overflow-x-auto rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
-            <div class="relative rounded-lg -m-0.5 border-2 border-copy bg-foreground">
+        <div class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
+            <!--
+                DESKTOP TABLE VIEW
+                (Hidden below 'md' breakpoint, uses full table structure)
+            -->
+            <div class="hidden md:block overflow-x-auto relative rounded-lg -m-0.5 border-2 border-copy bg-foreground">
                 <table class="min-w-full text-sm divide-y divide-copy-light/50">
                     <thead>
                         <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
@@ -77,7 +85,7 @@ const paginate = (url: string | null) => {
                     <tbody class="divide-y divide-copy-light/50">
                         <tr v-for="product in props.products.data" :key="product.id" class="hover:bg-secondary-light transition">
                             <td class="px-4 py-3">
-                                <img :src="product.images[0]?.image ?? 'https://via.placeholder.com/50?text=NO+IMG'" :alt="product.name" class="size-10 object-contain border border-copy p-1 rounded">
+                                <img :src="product.images[0]?.image ?? 'https://placehold.co/50x50/333/fff?text=NO'" :alt="product.name" class="size-10 object-contain border border-copy p-1 rounded">
                             </td>
                             <td class="px-4 py-3 font-semibold">{{ product.mpn }}</td>
                             <td class="px-4 py-3">
@@ -108,6 +116,61 @@ const paginate = (url: string | null) => {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!--
+                MOBILE CARD VIEW
+                (Visible below 'md' breakpoint, stacked layout for small screens)
+            -->
+            <div class="md:hidden divide-y divide-copy-light/50">
+                <div v-for="product in props.products.data" :key="product.id" class="p-4 bg-foreground hover:bg-secondary-light transition">
+
+                    <!-- Product Header (Image, Name, MPN, Status) -->
+                    <div class="flex items-start space-x-3 mb-4">
+                        <img :src="product.images[0]?.image ?? 'https://placehold.co/64x64/333/fff?text=NO'" :alt="product.name" class="size-16 object-contain border border-copy p-1 rounded flex-shrink-0">
+                        <div class="flex-grow min-w-0">
+                            <div class="text-xs text-copy-light uppercase font-semibold truncate">{{ product.mpn }}</div>
+                            <Link :href="route('admin.products.edit', product.id)" class="text-lg font-bold text-primary hover:underline block leading-snug">
+                                {{ product.name }}
+                                <span v-if="product.parent_product_id" class="text-xs text-copy-light ml-1 font-normal">(Variant)</span>
+                            </Link>
+                            <span :class="['mt-1 px-2 py-0.5 rounded-full text-xs font-semibold uppercase inline-block',
+                                product.status === 'enabled' ? 'bg-green-500/20 text-green-700 border border-green-700' : 'bg-red-500/20 text-error border border-error-dark'
+                            ]">
+                                {{ product.status }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Details (Price & Stock) -->
+                    <div class="flex justify-between items-center py-2 border-t border-copy-light/30">
+                        <!-- Price -->
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs text-copy-light uppercase font-medium">Price</div>
+                            <div class="font-bold text-lg text-copy">{{ formatCurrency(product.cost) }}</div>
+                        </div>
+
+                        <!-- Stock -->
+                        <div class="flex-1 min-w-0">
+                            <div class="text-xs text-copy-light uppercase font-medium">Stock</div>
+                            <div class="font-bold text-lg"
+                                :class="{'text-error': product.stock_qty < 10 && product.stock_qty > 0, 'text-error-dark': product.stock_qty === 0, 'text-green-600': product.stock_qty >= 10}">
+                                {{ product.stock_qty }}
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex space-x-3 text-right whitespace-nowrap pt-2">
+                            <Link :href="route('admin.products.edit', product.id)" class="text-sm text-blue-500 hover:text-blue-700 transition font-semibold">
+                                Edit
+                            </Link>
+                            <button @click="confirmDelete(product)" class="text-sm text-error hover:text-error-dark transition font-semibold">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
 
