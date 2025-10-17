@@ -47,8 +47,13 @@ const paginate = (url: string | null) => {
 
 const getStatus = (cart: Cart) => {
     if (cart.user_id) return { label: 'Registered', color: 'bg-green-500/20 text-green-700 border border-green-700' };
-    if (cart.session_id && cart.expires_at) return { label: 'Guest', color: 'bg-yellow-500/20 text-yellow-700 border border-yellow-700' };
+    if (cart.session_id) return { label: 'Guest', color: 'bg-yellow-500/20 text-yellow-700 border border-yellow-700' };
     return { label: 'Unknown', color: 'bg-gray-500/20 text-gray-700 border border-gray-700' };
+}
+
+const isExpired = (expiresAt: string | null): boolean => {
+    if (!expiresAt) return false;
+    return new Date(expiresAt) < new Date();
 }
 </script>
 
@@ -60,8 +65,13 @@ const getStatus = (cart: Cart) => {
             <h2 class="text-3xl font-black">Active Carts</h2>
         </div>
 
-        <div v-if="carts.data.length" class="overflow-x-auto rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
-            <div class="relative rounded-lg -m-0.5 border-2 border-copy bg-foreground">
+        <div v-if="carts.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
+
+            <!--
+                DESKTOP TABLE VIEW
+                (Hidden below 'md' breakpoint, uses full table structure)
+            -->
+            <div class="hidden md:block relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
                 <table class="min-w-full text-sm divide-y divide-copy-light/50">
                     <thead>
                         <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
@@ -89,7 +99,7 @@ const getStatus = (cart: Cart) => {
                             </td>
                             <td class="px-4 py-3 font-bold">{{ cart.items_count }}</td>
                             <td class="px-4 py-3 text-copy-light">{{ formatDate(cart.updated_at) }}</td>
-                            <td class="px-4 py-3 text-copy-light" :class="{'text-error': cart.expires_at && new Date(cart.expires_at) < new Date()}">
+                            <td class="px-4 py-3 text-copy-light" :class="{'text-error': isExpired(cart.expires_at)}">
                                 {{ formatDate(cart.expires_at) }}
                             </td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
@@ -100,6 +110,62 @@ const getStatus = (cart: Cart) => {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!--
+                MOBILE CARD VIEW
+                (Visible below 'md' breakpoint, stacked layout for small screens)
+            -->
+            <div class="md:hidden divide-y divide-copy-light/50">
+                <div v-for="cart in carts.data" :key="cart.id" class="p-4 bg-foreground hover:bg-secondary-light transition">
+
+                    <!-- Header: Cart Type and Item Count -->
+                    <div class="flex justify-between items-start border-b border-copy-light/30 pb-2 mb-2">
+                        <div>
+                            <span :class="['px-2 py-0.5 rounded-full text-xs font-semibold uppercase', getStatus(cart).color]">
+                                {{ getStatus(cart).label }} Cart
+                            </span>
+                            <div class="text-xs text-copy-light uppercase font-medium mt-1">Cart ID: {{ cart.id }}</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-copy-light uppercase font-medium">Items</div>
+                            <div class="text-lg font-bold text-copy">{{ cart.items_count }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Customer/Session Info -->
+                    <div class="py-2 border-b border-copy-light/30">
+                        <div class="text-xs text-copy-light uppercase font-medium">Customer/Session</div>
+                        <div v-if="cart.user" class="mt-1">
+                            <Link :href="route('admin.users.show', cart.user.id)" class="font-semibold text-copy hover:underline">{{ cart.user.name }}</Link>
+                            <div class="text-sm text-copy-light">{{ cart.user.email }}</div>
+                        </div>
+                        <div v-else class="text-copy-light text-sm break-all mt-1">
+                            {{ cart.session_id ? `Session: ${cart.session_id}` : 'No Session ID' }}
+                        </div>
+                    </div>
+
+                    <!-- Activity and Expiry -->
+                    <div class="flex justify-between items-end pt-3">
+                        <!-- Activity -->
+                        <div>
+                            <div class="text-xs text-copy-light uppercase font-medium">Last Activity</div>
+                            <div class="text-sm font-semibold text-copy">{{ formatDate(cart.updated_at) }}</div>
+                            <div class="text-xs text-copy-light uppercase font-medium mt-2">Expires</div>
+                            <div class="text-sm font-semibold text-copy" :class="{'text-error': isExpired(cart.expires_at)}">
+                                {{ formatDate(cart.expires_at) }}
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex-shrink-0">
+                            <Link :href="route('admin.carts.show', cart.id)" class="px-3 py-1 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
+                                View Contents
+                            </Link>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
         <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-secondary-light/50">
