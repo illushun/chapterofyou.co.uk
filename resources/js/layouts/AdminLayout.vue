@@ -12,6 +12,7 @@ const isRouteActive = (name: string): boolean => {
 const navLinks = [
     { name: 'Dashboard', route: 'admin.dashboard', icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m15.356 2H21v-5' },
     { name: 'Products', route: 'admin.products.index', icon: 'M5 8h.01M19 8h.01M10 8h.01M5 12h.01M19 12h.01M10 12h.01M5 16h.01M19 16h.01M10 16h.01M21 12a9 9 0 01-9 9 9 9 0 01-9-9c0-4.97 4.03-9 9-9s9 4.03 9 9z' },
+    { name: 'Relationships', route: 'admin.products.relationships', icon: 'M5 8h.01M19 8h.01M10 8h.01M5 12h.01M19 12h.01M10 12h.01M5 16h.01M19 16h.01M10 16h.01M21 12a9 9 0 01-9 9 9 9 0 01-9-9c0-4.97 4.03-9 9-9s9 4.03 9 9z' },
     { name: 'Orders', route: 'admin.orders.index', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' },
     { name: 'Users', route: 'admin.users.index', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
     { name: 'Carts', route: 'admin.carts.index', icon: 'M3 10h18M7 15h10M4 10V7a3 3 0 013-3h10a3 3 0 013 3v3' },
