@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { computed, onMounted, ref, watch } from 'vue';
-import * as d3 from 'd3'; // Requires 'd3' npm package
+import { computed, onMounted, ref } from 'vue';
+import * as d3 from 'd3';
 
-// 1. Typescript Declaration for route helper (Critical for fix from previous steps)
+// 1. Typescript Declaration for route helper
 import type { Route } from 'ziggy-js';
 declare const route: Route;
 
@@ -12,8 +12,8 @@ declare const route: Route;
 interface ProductNode {
     id: number;
     name: string;
-    parent_id: number | null;
-    is_root: boolean;
+    // Matches the property name used in the AdminProductController's relationshipIndex() map
+    parent_product_id: number | null;
 }
 
 const props = defineProps<{
@@ -24,32 +24,37 @@ const props = defineProps<{
 const graphContainer = ref<HTMLElement | null>(null);
 const isLoading = ref(true);
 
+// D3 Node calculation
 const nodes = computed(() => {
     return props.productsData.map(p => ({
         ...p,
-        // D3 requires a mutable x/y position, and we add a 'group' for color coding
+        // D3 requires mutable x/y positions
         x: 0,
         y: 0,
-        is_root: p.parent_id === null,
-        group: p.parent_id === null ? 1 : 2 // 1: Root, 2: Child
+        // Determine if this is a root product
+        is_root: p.parent_product_id === null,
+        group: p.parent_product_id === null ? 1 : 2, // 1: Root (Blue), 2: Child (Orange)
+        parent_id: p.parent_product_id // D3 Link function relies on this being the parent ID
     }));
 });
 
+// D3 Link calculation (Parent-Child relationships)
 const links = computed(() => {
+    // 1. Get the raw links (source ID, target ID)
     const linkSet = props.productsData
-        .filter(p => p.parent_id !== null)
+        .filter(p => p.parent_product_id !== null)
         .map(p => ({
-            source: p.parent_id,
+            source: p.parent_product_id,
             target: p.id,
         }));
 
-    // Convert source/target IDs to actual node objects for D3 simulation
+    // 2. Map IDs to node objects for D3 simulation
     const nodeMap = new Map(nodes.value.map(n => [n.id, n]));
 
     return linkSet.map(link => ({
-        source: nodeMap.get(link.source), // Source node object (Parent)
-        target: nodeMap.get(link.target), // Target node object (Child)
-    })).filter(link => link.source && link.target); // Filter out links with missing nodes
+        source: nodeMap.get(link.source),
+        target: nodeMap.get(link.target),
+    })).filter(link => link.source && link.target);
 });
 
 
@@ -61,11 +66,11 @@ const initializeGraph = () => {
 
     const container = graphContainer.value;
 
-    // Clear any previous SVG
+    // Clear any previous SVG instance
     d3.select(container).selectAll("svg").remove();
 
     const width = container.clientWidth;
-    const height = Math.max(container.clientHeight, 600); // Minimum height
+    const height = Math.max(container.clientHeight, 600); // Set minimum height
 
     const svg = d3.select(container)
         .append("svg")
@@ -74,10 +79,10 @@ const initializeGraph = () => {
         .style("height", "100%")
         .attr("class", "bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700");
 
-    // Central container for pan/zoom
+    // Group element for transformation (pan/zoom)
     const g = svg.append("g");
 
-    // Add zoom and pan functionality
+    // Pan and zoom behavior
     const zoom = d3.zoom()
         .scaleExtent([0.1, 4])
         .on("zoom", (event) => {
@@ -86,17 +91,17 @@ const initializeGraph = () => {
 
     svg.call(zoom as any);
 
-    // D3 Force Simulation
+    // D3 Force Simulation setup
     const simulation = d3.forceSimulation(nodes.value as d3.SimulationNodeDatum[])
         .force("link", d3.forceLink(links.value as d3.SimulationLinkDatum<d3.SimulationNodeDatum>[])
             .id((d: any) => d.id)
-            .distance(150) // Link distance
+            .distance(150) // Distance between nodes
         )
         .force("charge", d3.forceManyBody().strength(-300)) // Repel nodes
         .force("center", d3.forceCenter(width / 2, height / 2))
         .on("tick", ticked);
 
-    // Color scale for root vs child nodes
+    // Color scale
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
     // 4.1. Links (Lines)
@@ -120,7 +125,7 @@ const initializeGraph = () => {
         .attr("fill", (d: any) => color(d.group))
         .attr("class", "cursor-pointer transition-all duration-150 ease-in-out hover:stroke-4")
         .on("click", (event, d: any) => {
-            // Optional: Navigate to product edit page on click
+            // Navigate to product edit page on click
             router.get(route('admin.products.edit', d.id));
         })
         .call(d3.drag<any, any>()
@@ -170,7 +175,7 @@ const initializeGraph = () => {
 
     function dragended(event: any) {
         if (!event.active) simulation.alphaTarget(0);
-        event.subject.fx = null; // Release node so it continues to move naturally
+        event.subject.fx = null;
         event.subject.fy = null;
     }
 
@@ -185,8 +190,7 @@ onMounted(() => {
     window.addEventListener('resize', initializeGraph);
 });
 
-// 6. Cleanup
-// Note: In a real app, you would add an onBeforeUnmount cleanup function for the event listener.
+// Note: Clean up the event listener in a real app using onBeforeUnmount
 
 </script>
 
@@ -209,13 +213,13 @@ onMounted(() => {
 
             <div class="bg-warning text-warning-content p-4 rounded-xl shadow-md">
                 <p class="font-bold">Backend Changes Required:</p>
-                <p class="text-sm">To fully enable this feature, you must add the `parent_id` column to your `products` migration and update your `ProductController` to allow setting the parent product during create/edit.</p>
+                <p class="text-sm">To fully enable this feature, you must add the `parent_product_id` column to your `products` migration and update your `ProductController` to allow setting the parent product during create/edit.</p>
             </div>
 
             <!-- Mass Assignment / Control Panel Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                <!-- Mass Assignment Panel (Future Development) -->
+                <!-- Mass Assignment Panel -->
                 <div class="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 h-full">
                     <h2 class="text-xl font-bold mb-4 dark:text-gray-100">Mass Assignment Controls</h2>
                     <p class="text-gray-600 dark:text-gray-400 mb-6">

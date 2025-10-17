@@ -37,9 +37,11 @@ class AdminProductController extends Controller
     public function create()
     {
         $categories = Category::select('id', 'name')->get();
+        $parentProducts = Product::select('id', 'name')->get();
 
         return Inertia::render('admin/product/CreateEdit', [
             'categories' => $categories,
+            'parentProducts' => $parentProducts,
             'isEditing' => false,
         ]);
     }
@@ -62,6 +64,7 @@ class AdminProductController extends Controller
             'meta_description' => ['nullable', 'string', 'max:500'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')],
             // 'images' => ['array', 'max:5'], // For file uploads (not implemented here)
+            'parent_product_id' => ['nullable', 'exists:product,id'],
         ]);
 
         return DB::transaction(function () use ($validated) {
@@ -92,9 +95,12 @@ class AdminProductController extends Controller
         $product->load(['seo:product_id,meta_title,meta_description,slug', 'categories:id']);
         $categories = Category::select('id', 'name')->get();
 
+        $parentProducts = Product::where('id', '!=', $product->id)->select('id', 'name')->get();
+
         return Inertia::render('admin/product/CreateEdit', [
             'product' => $product,
             'categories' => $categories,
+            'parentProducts' => $parentProducts,
             'selectedCategoryIds' => $product->categories->pluck('id'),
             'isEditing' => true,
         ]);
@@ -117,6 +123,7 @@ class AdminProductController extends Controller
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')->ignore($product->seo->id ?? null, 'id')],
+            'parent_product_id' => ['nullable', 'exists:product,id', Rule::notIn([$product->id])],
         ]);
 
         return DB::transaction(function () use ($validated, $product) {
@@ -146,7 +153,7 @@ class AdminProductController extends Controller
     public function destroy(Product $product)
     {
         $productName = $product->name;
-        $product->delete(); // Assuming cascading deletes are handled in migrations or manually
+        $product->delete();
 
         return redirect()->route('admin.products.index')
             ->with('success', "Product '{$productName}' deleted successfully.");
@@ -160,7 +167,7 @@ class AdminProductController extends Controller
                 return [
                     'id' => $product->id,
                     'name' => $product->name,
-                    'parent_id' => $product->parent_id,
+                    'parent_id' => $product->parent_product_id,
                 ];
             });
 
