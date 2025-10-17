@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminCartController;
+use App\Http\Controllers\Admin\Label\CLPLabelController;
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -70,6 +71,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('carts', [AdminCartController::class, 'index'])->name('carts.index');
     Route::get('carts/{cart}', [AdminCartController::class, 'show'])->name('carts.show');
+
+    Route::get('/clp-labels', [CLPLabelController::class, 'index'])->name('clp-labels.index');
+    Route::post('/clp-labels', [CLPLabelController::class, 'store'])->name('clp-labels.store');
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
