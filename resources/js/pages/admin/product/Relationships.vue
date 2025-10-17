@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AdminLayout from '@/Layouts/AdminLayout.vue';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
 import * as d3 from 'd3'; // Requires 'd3' npm package
