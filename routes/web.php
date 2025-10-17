@@ -7,6 +7,12 @@ use App\Http\Controllers\Cart\CartController;
 use App\Http\Controllers\Cart\CheckoutController;
 use App\Http\Controllers\Account\AccountController;
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminOrderController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminCartController;
+
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -46,6 +52,24 @@ Route::prefix('checkout')->group(function () {
 Route::get('/order/confirmation', function () {
     return Inertia::render('order/Confirmation');
 })->name('order.confirmation');
+
+Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    Route::resource('products', AdminProductController::class)->except(['show']);
+
+    Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+    // Example: update status
+    // Route::put('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.update_status');
+
+    Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::get('users/{user}', [AdminUserController::class, 'show'])->name('users.show');
+
+    Route::get('carts', [AdminCartController::class, 'index'])->name('carts.index');
+    Route::get('carts/{cart}', [AdminCartController::class, 'show'])->name('carts.show');
+});
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
 

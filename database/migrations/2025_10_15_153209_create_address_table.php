@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
 
-            $table->enum('type', ['shipping', 'billing', 'home'])->default('shipping');
+            $table->enum('type', ['shipping', 'billing'])->default('shipping');
             $table->boolean('is_default')->default(false);
 
             $table->string('line_1');
