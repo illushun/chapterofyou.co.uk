@@ -3,6 +3,7 @@ import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
+// Interfaces for data structure
 interface User {
     id: number;
     name: string;
@@ -34,6 +35,7 @@ const formatCurrency = (amount: number | string | null | undefined): string => {
 };
 
 const formatDate = (dateString: string): string => {
+    // Standard format for cards and tables
     return new Date(dateString).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
@@ -75,8 +77,13 @@ const paginate = (url: string | null) => {
             <h2 class="text-3xl font-black">Orders (Recent)</h2>
         </div>
 
-        <div v-if="orders.data.length" class="overflow-x-auto rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
-            <div class="relative rounded-lg -m-0.5 border-2 border-copy bg-foreground">
+        <div v-if="orders.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
+
+            <!--
+                DESKTOP TABLE VIEW
+                (Hidden below 'md' breakpoint, uses full table structure)
+            -->
+            <div class="hidden md:block relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
                 <table class="min-w-full text-sm divide-y divide-copy-light/50">
                     <thead>
                         <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
@@ -113,6 +120,60 @@ const paginate = (url: string | null) => {
                         </tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!--
+                MOBILE CARD VIEW
+                (Visible below 'md' breakpoint, stacked layout for small screens)
+            -->
+            <div class="md:hidden divide-y divide-copy-light/50">
+                <div v-for="order in orders.data" :key="order.id" class="p-4 bg-foreground hover:bg-secondary-light transition">
+
+                    <!-- Order ID and Status -->
+                    <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
+                        <div>
+                            <div class="text-xs text-copy-light uppercase font-medium">Order ID</div>
+                            <Link :href="route('admin.orders.show', order.id)" class="text-xl font-bold text-primary hover:underline">
+                                #{{ order.id }}
+                            </Link>
+                        </div>
+                        <span :class="['mt-1 px-3 py-1 rounded-full text-xs font-semibold uppercase flex-shrink-0', getStatusClasses(order.status)]">
+                            {{ order.status }}
+                        </span>
+                    </div>
+
+                    <!-- Customer Info -->
+                    <div class="py-2 border-b border-copy-light/30">
+                        <div class="text-xs text-copy-light uppercase font-medium">Customer</div>
+                        <div v-if="order.user" class="mt-1">
+                            <Link :href="route('admin.users.show', order.user.id)" class="font-semibold text-copy hover:underline">{{ order.user.name }}</Link>
+                            <div class="text-sm text-copy-light">{{ order.user.email }}</div>
+                        </div>
+                        <div v-else class="text-copy-light italic mt-1 text-sm">Guest Checkout</div>
+                    </div>
+
+                    <!-- Date, Total, and Actions -->
+                    <div class="flex justify-between items-end pt-3">
+                        <!-- Date & Total -->
+                        <div class="flex flex-col space-y-1">
+                            <div>
+                                <div class="text-xs text-copy-light uppercase font-medium">Total</div>
+                                <div class="font-bold text-lg text-primary">{{ formatCurrency(order.grand_total) }}</div>
+                            </div>
+                            <div class="text-xs text-copy-light italic">
+                                Placed: {{ formatDate(order.created_at) }}
+                            </div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex-shrink-0">
+                            <Link :href="route('admin.orders.show', order.id)" class="px-4 py-2 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
+                                View
+                            </Link>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
         <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-secondary-light/50">
