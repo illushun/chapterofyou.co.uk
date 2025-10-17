@@ -151,4 +151,21 @@ class AdminProductController extends Controller
         return redirect()->route('admin.products.index')
             ->with('success', "Product '{$productName}' deleted successfully.");
     }
+
+    public function relationshipIndex()
+    {
+        $products = Product::select('id', 'name', 'parent_id')
+            ->get()
+            ->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'parent_id' => $product->parent_id,
+                ];
+            });
+
+        return Inertia::render('admin/product/Relationships', [
+            'productsData' => $products,
+        ]);
+    }
 }
