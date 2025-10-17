@@ -43,8 +43,13 @@ const paginate = (url: string | null) => {
             <h2 class="text-3xl font-black">Registered Users</h2>
         </div>
 
-        <div v-if="users.data.length" class="overflow-x-auto rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
-            <div class="relative rounded-lg -m-0.5 border-2 border-copy bg-foreground">
+        <div v-if="users.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
+
+            <!--
+                DESKTOP TABLE VIEW
+                (Hidden below 'md' breakpoint, uses full table structure)
+            -->
+            <div class="hidden md:block relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
                 <table class="min-w-full text-sm divide-y divide-copy-light/50">
                     <thead>
                         <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
@@ -79,7 +84,55 @@ const paginate = (url: string | null) => {
                     </tbody>
                 </table>
             </div>
+
+            <!--
+                MOBILE CARD VIEW
+                (Visible below 'md' breakpoint, stacked layout for small screens)
+            -->
+            <div class="md:hidden divide-y divide-copy-light/50">
+                <div v-for="user in users.data" :key="user.id" class="p-4 bg-foreground hover:bg-secondary-light transition">
+
+                    <!-- Header: Name, ID, Role -->
+                    <div class="flex justify-between items-start border-b border-copy-light/30 pb-2 mb-2">
+                        <div>
+                            <div class="text-xs text-copy-light uppercase font-medium">User ID: {{ user.id }}</div>
+                            <Link :href="route('admin.users.show', user.id)" class="text-lg font-bold text-copy hover:underline">
+                                {{ user.name }}
+                            </Link>
+                        </div>
+                        <span v-if="user.is_admin" class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary-light text-primary border border-primary-dark flex-shrink-0">
+                            Admin
+                        </span>
+                        <span v-else class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-gray-500/20 text-gray-700 border border-gray-700 flex-shrink-0">
+                            Customer
+                        </span>
+                    </div>
+
+                    <!-- Details: Email and Joined Date -->
+                    <div class="flex justify-between items-center py-2">
+                        <!-- Email -->
+                        <div>
+                            <div class="text-xs text-copy-light uppercase font-medium">Email</div>
+                            <div class="text-sm font-semibold text-copy truncate">{{ user.email }}</div>
+                        </div>
+
+                        <!-- Joined Date -->
+                        <div class="text-right">
+                            <div class="text-xs text-copy-light uppercase font-medium">Joined</div>
+                            <div class="text-sm font-semibold text-copy">{{ formatDate(user.created_at) }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="pt-3 text-right border-t border-copy-light/30 mt-3">
+                        <Link :href="route('admin.users.show', user.id)" class="px-3 py-1 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
+                            View Details
+                        </Link>
+                    </div>
+                </div>
+            </div>
         </div>
+
         <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-secondary-light/50">
             <p class="text-xl font-semibold text-copy mb-2">No users found.</p>
         </div>
