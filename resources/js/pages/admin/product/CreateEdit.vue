@@ -328,7 +328,8 @@ const formatImageSize = (bytes: number): string => {
                         <!-- Existing Images Grid -->
                         <div v-if="filteredExistingImages.length" class="mt-6 border-t border-copy-light pt-3">
                             <h4 class="text-sm font-bold text-copy mb-2">Existing Images ({{ filteredExistingImages.length }})</h4>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <!-- Mobile Fix: Switch to grid-cols-1 default for better mobile readability, scaling up to sm:grid-cols-2, etc. -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 <div
                                     v-for="image in filteredExistingImages"
                                     :key="image.id"
@@ -403,8 +404,16 @@ const formatImageSize = (bytes: number): string => {
                         <div class="mb-4">
                             <label for="slug" class="block text-sm font-medium text-copy mb-1">URL Slug</label>
                             <div class="flex items-center">
-                                <span class="bg-secondary-light border-y-2 border-l-2 border-copy p-3 rounded-l-lg text-copy-light text-sm hidden sm:block">/product/</span>
-                                <input type="text" id="slug" v-model="form.slug" required class="flex-grow rounded-r-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm" :class="{'rounded-l-lg': !isEditing, 'border-error': form.errors.slug}" />
+                                <!-- FIX: Ensure the prefix is visible on all screen sizes -->
+                                <span class="bg-secondary-light border-y-2 border-l-2 border-copy p-3 rounded-l-lg text-copy-light text-sm">/product/</span>
+                                <input
+                                    type="text"
+                                    id="slug"
+                                    v-model="form.slug"
+                                    required
+                                    class="flex-grow rounded-r-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
+                                    :class="{'rounded-l-lg': !isEditing, 'border-error': form.errors.slug}"
+                                />
                             </div>
                             <div v-if="form.errors.slug" class="text-xs text-error mt-1">{{ form.errors.slug }}</div>
                         </div>
