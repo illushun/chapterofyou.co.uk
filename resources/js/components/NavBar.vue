@@ -303,7 +303,7 @@
                         <span class="relative z-10">Products</span>
                     </a>
                     <a
-                        href="/about"
+                        href="/about-us"
                         class="relative text-copy-light px-3 py-2 text-sm font-bold transition duration-150 group hover:text-copy"
                     >
                         <span class="absolute rounded-lg inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
@@ -386,7 +386,7 @@
                     Products
                 </a>
                  <a
-                    href="/about"
+                    href="/about-us"
                     class="block px-3 py-2 rounded-md text-base font-bold text-copy border-2 border-transparent hover:border-copy hover:bg-secondary-light transition"
                 >
                     About Us
