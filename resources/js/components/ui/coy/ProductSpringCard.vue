@@ -25,7 +25,7 @@ interface ProductCardProps {
 const props = defineProps<ProductCardProps>();
 
 const isPopular = computed(() => (props.product.total_unique_views || 0) > 100);
-const imageUrl = computed(() => 'https://chapterofyou.co.uk/storage/' + props.product.images?.[0]?.image || 'https://via.placeholder.com/300?text=No+Image');
+const imageUrl = computed(() => props.product.images?.[0]?.image || 'https://via.placeholder.com/300?text=No+Image');
 const isTapped = ref(false);
 
 const springTransition = {
