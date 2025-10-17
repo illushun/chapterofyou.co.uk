@@ -56,7 +56,10 @@ const props = defineProps<{
     order: Order;
 }>();
 
-const formatCurrency = (amount: number): string => `£${amount.toFixed(2)}`;
+const formatCurrency = (amount: number | string | null | undefined): string => {
+    const numericAmount = Number(amount) || 0;
+    return `£${numericAmount.toFixed(2)}`;
+};
 
 const formatDate = (dateString: string): string =>
     new Date(dateString).toLocaleDateString('en-GB', {

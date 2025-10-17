@@ -37,8 +37,9 @@ const confirmDelete = (product: Product) => {
     }
 };
 
-const formatCurrency = (amount: number): string => {
-    return `£${amount.toFixed(2)}`;
+const formatCurrency = (amount: number | string | null | undefined): string => {
+    const numericAmount = Number(amount) || 0;
+    return `£${numericAmount.toFixed(2)}`;
 };
 
 const paginate = (url: string | null) => {
