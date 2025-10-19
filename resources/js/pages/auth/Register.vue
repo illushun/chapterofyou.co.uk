@@ -9,9 +9,13 @@ import AuthBase from '@/layouts/AuthLayout.vue';
 import { login } from '@/routes';
 import { Form, Head } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
+
+import NavBar from '@/components/NavBar.vue';
 </script>
 
 <template>
+    <NavBar />
+
     <AuthBase
         title="Create an account"
         description="Enter your details below to create your account"

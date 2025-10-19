@@ -12,6 +12,8 @@ import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
 
+import NavBar from '@/components/NavBar.vue';
+
 defineProps<{
     status?: string;
     canResetPassword: boolean;
@@ -19,6 +21,8 @@ defineProps<{
 </script>
 
 <template>
+    <NavBar />
+
     <AuthBase
         title="Log in to your account"
         description="Enter your email and password below to log in"
@@ -75,7 +79,7 @@ defineProps<{
                                 <TextLink
                                     v-if="canResetPassword"
                                     :href="request()"
-                                    class="text-sm text-secondary-content hover:text-secondary-dark transition"
+                                    class="text-sm text-secondary hover:text-secondary-dark transition"
                                     :tabindex="5"
                                 >
                                     Forgot password?
