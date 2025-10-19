@@ -16,18 +16,6 @@ defineProps<{
         <div class="w-full max-w-sm">
             <div class="flex flex-col gap-8">
                 <div class="flex flex-col items-center gap-4">
-                    <Link
-                        :href="home()"
-                        class="flex flex-col items-center gap-2 font-medium w-100"
-                    >
-                        <div
-                            class="mb-1 flex items-center justify-center rounded-md"
-                            style="width: 60%;"
-                        >
-                            <AppLogoIcon/>
-                        </div>
-                        <span class="sr-only">{{ title }}</span>
-                    </Link>
                     <div class="space-y-2 text-center">
                         <h1 class="text-3xl font-extrabold text-copy mb-[1rem]">{{ title }}</h1>
                         <p class="text-copy-lighter text-sm">{{ description }}</p>
