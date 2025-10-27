@@ -247,13 +247,13 @@ const formatAddress = (address: Address): string[] => {
                     <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-2xl font-bold text-copy flex items-center gap-2">
-                                <div v-html="IconUser" class="size-6 text-primary"></div>
+                                <div v-html="IconUser" class="size-6 text-primary-content"></div>
                                 General Details
                             </h2>
                             <button
                                 @click="isEditingDetails = !isEditingDetails"
                                 class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition"
-                                :class="isEditingDetails ? 'text-error hover:bg-error-light' : 'text-primary hover:bg-primary-light'"
+                                :class="isEditingDetails ? 'text-error hover:bg-error-light' : 'text-primary-content hover:bg-primary-dark'"
                                 aria-label="Toggle editing general details"
                             >
                                 <div v-html="isEditingDetails ? IconX : IconEdit"></div>
@@ -300,7 +300,7 @@ const formatAddress = (address: Address): string[] => {
                     <!-- Password Update -->
                     <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
                         <h2 class="text-2xl font-bold text-copy flex items-center gap-2 mb-4">
-                            <div v-html="IconLock" class="size-6 text-primary"></div>
+                            <div v-html="IconLock" class="size-6 text-primary-content"></div>
                             Update Password
                         </h2>
 
@@ -355,12 +355,12 @@ const formatAddress = (address: Address): string[] => {
                     <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold text-copy flex items-center gap-2">
-                                <div v-html="IconMapPin" class="size-6 text-primary"></div>
+                                <div v-html="IconMapPin" class="size-6 text-primary-content"></div>
                                 My Addresses
                             </h2>
                             <button
                                 @click="openAddressModal()"
-                                class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-primary hover:bg-primary-light transition border-2 border-copy"
+                                class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-primary-content hover:bg-primary-dark transition border-2 border-copy"
                                 aria-label="Add new address"
                             >
                                 <div v-html="IconPlusCircle"></div>
@@ -388,9 +388,9 @@ const formatAddress = (address: Address): string[] => {
                                 <div class="flex gap-2 mt-3 pt-3 border-t border-copy-light">
                                     <button
                                         @click="openAddressModal(address)"
-                                        class="flex items-center gap-1 text-sm text-primary hover:text-primary-dark font-semibold transition"
+                                        class="flex items-center gap-1 text-sm text-primary-content hover:text-primary-dark font-semibold transition"
                                     >
-                                        <div v-html="IconEdit" class="size-4"></div>
+                                        <div v-html="IconEdit" class="size-4 text-primary-content"></div>
                                         Edit
                                     </button>
                                     <span class="text-copy-lighter">|</span>
