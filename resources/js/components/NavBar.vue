@@ -326,18 +326,54 @@
                     </a>
 
                     <div class="hidden sm:block">
-                        <a
-                            v-if="$page.props.auth.user"
-                            href="/account"
-                            class="relative inline-flex items-center text-sm font-bold transition duration-150 group"
-                        >
-                            <div class="border-2 border-copy bg-primary-content rounded-lg">
-                                <span class="block relative -m-0.5 px-4 py-2 rounded-lg border-2 border-copy text-foreground bg-primary transition duration-150 group-hover:translate-x-[-4px] group-hover:translate-y-[-4px]">
-                                     <svg class="size-5 mr-1.5 inline-block align-middle" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                     {{ firstName }}
-                                </span>
+                        <div v-if="$page.props.auth.user" class="relative">
+
+                            <button
+                                @click="toggleDropdown"
+                                class="relative inline-flex items-center text-sm font-bold transition duration-150 group z-20 focus:outline-none"
+                                :aria-expanded="isOpen ? 'true' : 'false'"
+                                aria-haspopup="true"
+                            >
+                                <div class="border-2 border-copy bg-primary-content rounded-lg">
+                                    <span class="block relative -m-0.5 px-4 py-2 rounded-lg border-2 border-copy text-foreground bg-primary transition duration-150 group-hover:translate-x-[-4px] group-hover:translate-y-[-4px]">
+                                         <svg class="size-5 mr-1.5 inline-block align-middle" fill="none" viewBox="0 0 24 24" stroke="currentColor" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                         {{ firstName }}
+                                    </span>
+                                </div>
+                            </button>
+
+                            <div
+                                v-if="isOpen"
+                                class="absolute right-0 mt-2 w-48 rounded-lg shadow-xl bg-white dark:bg-gray-800 border-2 border-copy z-30 origin-top-right animate-in fade-in zoom-in-95 duration-150 ease-out"
+                                @click="isOpen = false"
+                                v-click-outside="() => isOpen = false"
+                            >
+                                <Link
+                                    href="/account"
+                                    class="block px-4 py-2 text-sm text-copy hover:bg-secondary-light transition rounded-t-lg font-semibold"
+                                >
+                                    Account
+                                </Link>
+                                <Link
+                                    href="/orders"
+                                    class="block px-4 py-2 text-sm text-copy hover:bg-secondary-light transition font-semibold"
+                                >
+                                    Orders
+                                </Link>
+
+                                <div class="border-t border-copy-light/50"></div>
+
+                                <Link
+                                    :href="route('logout')"
+                                    method="post"
+                                    as="button"
+                                    type="button"
+                                    class="w-full text-left block px-4 py-2 text-sm text-error hover:bg-red-50/70 dark:hover:bg-red-900/50 transition rounded-b-lg font-semibold"
+                                >
+                                    Log Out
+                                </Link>
                             </div>
-                        </a>
+                        </div>
 
                         <a
                             v-else
@@ -405,10 +441,17 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { login, register } from '@/routes';
-import { usePage } from '@inertiajs/vue3';
+import { usePage, Link, router } from '@inertiajs/vue3';
 
+declare const route: (name: string) => string;
+
+const isOpen = ref(false); // for dropdown
 const isMobileMenuOpen = ref(false);
 const page = usePage();
+
+const toggleDropdown = () => {
+    isOpen.value = !isOpen.value;
+};
 
 const firstName = computed(() => {
     const user = page.props.auth.user;
