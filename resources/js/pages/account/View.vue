@@ -342,7 +342,7 @@ const formatAddress = (address: Address): string[] => {
                                 <button
                                     type="submit"
                                     :disabled="passwordForm.processing"
-                                    class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50"
+                                    class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-secondary-content bg-secondary hover:bg-secondary-dark transition disabled:opacity-50"
                                 >
                                     <div v-html="IconLock"></div>
                                     {{ passwordForm.processing ? 'Updating...' : 'Update Password' }}
@@ -388,9 +388,9 @@ const formatAddress = (address: Address): string[] => {
                                 <div class="flex gap-2 mt-3 pt-3 border-t border-copy-light">
                                     <button
                                         @click="openAddressModal(address)"
-                                        class="flex items-center gap-1 text-sm text-primary-content hover:text-primary-dark font-semibold transition"
+                                        class="flex items-center gap-1 text-sm text-warning-content hover:text-warning font-semibold transition"
                                     >
-                                        <div v-html="IconEdit" class="size-4 text-primary-content"></div>
+                                        <div v-html="IconEdit" class="size-4 text-warning-content"></div>
                                         Edit
                                     </button>
                                     <span class="text-copy-lighter">|</span>
