@@ -288,7 +288,7 @@ const formatAddress = (address: Address): string[] => {
                                 <button
                                     type="submit"
                                     :disabled="detailForm.processing"
-                                    class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50"
+                                    class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-secondary-content bg-secondary hover:bg-secondary-dark transition disabled:opacity-50"
                                 >
                                     <div v-html="IconCheck"></div>
                                     {{ detailForm.processing ? 'Saving...' : 'Save Changes' }}
@@ -376,8 +376,8 @@ const formatAddress = (address: Address): string[] => {
                                 :class="address.is_default ? 'border-primary bg-primary-light/10 shadow-md' : 'border-copy-light hover:border-copy'"
                             >
                                 <div class="text-sm font-bold uppercase mb-1 flex justify-between items-center">
-                                    <span :class="address.is_default ? 'text-primary' : 'text-copy-lighter'">{{ address.type }} Address</span>
-                                    <span v-if="address.is_default" class="text-xs text-primary bg-primary-light/50 px-2 py-0.5 rounded-full font-extrabold">DEFAULT</span>
+                                    <span :class="address.is_default ? 'text-secondary-content' : 'text-copy-lighter'">{{ address.type }} Address</span>
+                                    <span v-if="address.is_default" class="text-xs text-secondary-content bg-secondary/50 px-2 py-0.5 rounded-full font-extrabold">DEFAULT</span>
                                 </div>
 
                                 <!-- Address Lines -->
