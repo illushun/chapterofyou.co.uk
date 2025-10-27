@@ -220,4 +220,28 @@
     .text-primary-content {
         color: var(--primary-content);
     }
+
+    .text-success {
+        color: var(--success);
+    }
+
+    .text-success-content {
+        color: var(--success-content);
+    }
+
+    .text-error {
+        color: var(--error);
+    }
+
+    .text-error-content {
+        color: var(--error-content);
+    }
+
+    .text-warning {
+        color: var(--warning);
+    }
+
+    .text-warning-content {
+        color: var(--warning-content);
+    }
 }
