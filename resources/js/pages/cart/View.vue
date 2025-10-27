@@ -27,7 +27,7 @@ const props = defineProps<{
 
 const hasItems = computed(() => props.cartItems.length > 0);
 const taxRate = 0.20;
-const shippingCost = computed(() => props.cartTotal > 100 ? 0.00 : 4.99);
+const shippingCost = computed(() => props.cartTotal >= 50 ? 0.00 : 4.99);
 
 const vat = computed(() => roundToTwo(props.cartTotal * taxRate));
 const finalTotal = computed(() => roundToTwo(props.cartTotal + vat.value + shippingCost.value));
@@ -137,7 +137,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
 
                                             <button
                                                 @click="removeProduct(item.product_id)"
-                                                class="p-2 rounded-lg text-error hover:bg-error-light transition border-2 border-copy shadow-md flex-shrink-0 w-fit"
+                                                class="p-2 rounded-lg text-error hover:bg-error-light transition border-2 border-copy flex-shrink-0 w-fit"
                                                 aria-label="Remove item"
                                             >
                                                 <div v-html="IconTrash"></div>
@@ -228,7 +228,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                 </a>
 
                                 <p v-if="shippingCost > 0" class="text-center text-sm text-copy-lighter mt-3">
-                                    Add {{ formatCurrency(100 - props.cartTotal) }} more for FREE shipping!
+                                    Add {{ formatCurrency(50 - props.cartTotal) }} more for FREE shipping!
                                 </p>
                             </div>
                         </div>
