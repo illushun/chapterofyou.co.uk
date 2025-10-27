@@ -252,7 +252,7 @@ const formatAddress = (address: Address): string[] => {
                             </h2>
                             <button
                                 @click="isEditingDetails = !isEditingDetails"
-                                class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition"
+                                class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-primary-content hover:bg-primary-dark transition border-2 border-copy"
                                 :class="isEditingDetails ? 'text-error hover:bg-error-light' : 'text-primary-content hover:bg-primary-dark'"
                                 aria-label="Toggle editing general details"
                             >
