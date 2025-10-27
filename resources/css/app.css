@@ -215,3 +215,9 @@
         @apply bg-background text-copy;
     }
 }
+
+@layer components {
+    .text-primary-content {
+        color: var(--primary-content);
+    }
+}
