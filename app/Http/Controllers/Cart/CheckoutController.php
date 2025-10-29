@@ -157,7 +157,7 @@ class CheckoutController extends Controller
                 $order = $this->createOrderAndClearCart($cart, $summary, $request->all(), $paymentIntent);
 
                 // Redirect to confirmation page with the new Order ID
-                return redirect()->route('order.confirmation', ['id' => $order->id, 'request' => $request])
+                return redirect()->route('order.confirmation', ['id' => $order->id, 'request' => $request, 'total' => $order->grand_total])
                                  ->with('success', "Order #{$order->id} successfully placed.");
 
             } catch (\Exception $e) {
