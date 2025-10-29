@@ -355,7 +355,7 @@
                                     Account
                                 </Link>
                                 <Link
-                                    href="/orders"
+                                    href="/account/orders"
                                     class="block px-4 py-2 text-sm text-copy hover:bg-secondary-light transition font-semibold"
                                 >
                                     Orders

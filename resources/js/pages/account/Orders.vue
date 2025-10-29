@@ -114,7 +114,7 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
                                     <!-- Order # -->
                                     <div class="col-span-2 md:col-span-1 font-bold text-lg md:text-copy">
                                         <span class="md:hidden text-copy-lighter text-sm block mb-0.5">Order Number</span>
-                                        {{ order.order_number }}
+                                        {{ order.id }}
                                     </div>
 
                                     <!-- Date -->
