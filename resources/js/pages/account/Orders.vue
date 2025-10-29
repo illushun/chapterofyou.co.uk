@@ -81,8 +81,8 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
                 </div>
 
                 <!-- Main Content Card -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl p-0.5">
-                    <div class="rounded-xl border-2 border-copy bg-foreground p-6 sm:p-8">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 flex flex-col sm:flex-row items-start gap-4">
 
                         <div v-if="!hasOrders" class="text-center py-12">
                             <div class="text-copy-light mx-auto mb-4" v-html="IconBox"></div>
