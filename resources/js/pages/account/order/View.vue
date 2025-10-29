@@ -57,5 +57,13 @@ const props = defineProps<{
 
     <Head title="Order " />
 
-    <p># order.id</p>
+    <div class="min-h-[70vh] bg-background text-copy p-4 md:p-8 lg:p-12">
+
+        <div class="max-w-3xl mx-auto text-center">
+
+            <p># {{ order.id }}</p>
+
+        </div>
+
+    </div>
 </template>
