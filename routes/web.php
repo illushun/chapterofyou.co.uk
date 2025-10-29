@@ -6,6 +6,7 @@ use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Cart\CartController;
 use App\Http\Controllers\Cart\CheckoutController;
 use App\Http\Controllers\Account\AccountController;
+use App\Http\Controllers\Account\OrderController;
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProductController;
@@ -33,6 +34,8 @@ Route::prefix('cart')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/account', [AccountController::class, 'index'])->name('account.index');
+
+    Route::get('/account/orders', [OrderController::class, 'index'])->name('account.orders.index');
 
     Route::put('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
     Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
