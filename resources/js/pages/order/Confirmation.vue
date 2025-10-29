@@ -43,7 +43,7 @@ const customerEmail = computed(() => props.request?.email ?? 'your_email@example
             <div class="max-w-3xl mx-auto text-center">
 
                 <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
+                    <div class="relative rounded-xl -m-0.5 bg-foreground p-4">
 
                         <div class="text-green-600 mx-auto mb-6 flex items-center justify-center" v-html="IconCheckCircle"></div>
 
