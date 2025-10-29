@@ -40,4 +40,18 @@ class OrderController extends Controller
             'orders' => $orders,
         ]);
     }
+
+    /**
+     * Display individual order detail
+     *
+     * @return \Inertia\Response
+     */
+    public function show(Order $order)
+    {
+        $order->load(['user:id,name,email', 'items.product:id,mpn,name,cost,stock_qty']);
+
+        return Inertia::render('account/order/View', [
+            'order' => $order,
+        ]);
+    }
 }

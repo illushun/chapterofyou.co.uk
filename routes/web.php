@@ -36,6 +36,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/account', [AccountController::class, 'index'])->name('account.index');
 
     Route::get('/account/orders', [OrderController::class, 'index'])->name('account.orders.index');
+    Route::get('/account/orders/{order}', [OrderController::class, 'show'])->name('account.order.view');
 
     Route::put('/account/profile', [AccountController::class, 'updateProfile'])->name('account.profile.update');
     Route::put('/account/password', [AccountController::class, 'updatePassword'])->name('account.password.update');
