@@ -36,7 +36,7 @@ class OrderController extends Controller
                 ];
             });
 
-        return Inertia::render('Account/Orders', [
+        return Inertia::render('account/Orders', [
             'orders' => $orders,
         ]);
     }
