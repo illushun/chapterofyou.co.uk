@@ -124,6 +124,9 @@ defineProps<{
                             />
                             Log in
                         </Button>
+
+                        <a href="{{ route('socialite.redirect', 'google') }}">Login with Google</a>
+                        <a href="{{ route('socialite.redirect', 'facebook') }}">Login with Facebook</a>
                     </div>
 
                     <div class="text-center text-sm text-copy">
