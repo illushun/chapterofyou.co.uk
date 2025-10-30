@@ -15,6 +15,8 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminCartController;
 use App\Http\Controllers\Admin\Label\CLPLabelController;
 
+use App\Http\Controllers\Auth\SocialiteController;
+
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
