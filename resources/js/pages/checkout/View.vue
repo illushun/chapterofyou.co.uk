@@ -5,6 +5,7 @@ import { onMounted, ref, computed, nextTick } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 
 const IconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`;
+const IconPlus = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
 
 // --- Global Declarations ---
 declare const Stripe: any;
@@ -95,6 +96,10 @@ const paymentError = ref<string | null>(null);
 const hasClientSecret = ref(false);
 // State for the initial loading spinner (fetching secret and waiting for Stripe to load)
 const isLoadingInitialData = ref(true);
+// State to track the currently selected saved address
+const selectedAddressId = ref<number | null>(null);
+// New state: controls visibility of address inputs when NO saved address is selected
+const isManualAddressVisible = ref(false);
 
 // Template Ref for direct DOM access (Crucial)
 const paymentContainer = ref<HTMLElement | null>(null);
@@ -134,6 +139,17 @@ const formatAddress = (address: Address): string[] => {
 
 const hasItems = computed(() => props.cartItems.length > 0);
 
+// Computed property to control the visibility of the detailed address input section
+const isShippingAddressVisible = computed(() => {
+    // Show if an address is selected (populates form automatically)
+    if (selectedAddressId.value !== null) {
+        return true;
+    }
+    // Show if the user has manually toggled the input fields
+    return isManualAddressVisible.value;
+});
+
+
 /**
  * Formats a number as currency (GBP).
  */
@@ -144,6 +160,40 @@ const formatCurrency = (amount: number | string): string => {
     }
     return `£${numAmount.toFixed(2)}`;
 };
+
+/**
+ * Applies a saved address to the form.
+ */
+const selectAddress = (address: Address) => {
+    selectedAddressId.value = address.id;
+    addressForm.email = ''; // Clear contact info if needed, or leave it to be filled by the user's profile info
+    addressForm.fullName = '';
+    addressForm.telephone = '';
+    addressForm.addressLine1 = address.line_1;
+    addressForm.addressLine2 = address.line_2;
+    addressForm.city = address.city;
+    addressForm.county = address.county;
+    addressForm.postcode = address.postcode;
+    addressForm.country = address.country;
+    // Always show inputs when an address is selected
+    isManualAddressVisible.value = true;
+};
+
+/**
+ * Clears the form fields back to empty state.
+ */
+const clearAddressSelection = () => {
+    selectedAddressId.value = null;
+    // Reset all address fields but keep contact fields if they were entered
+    addressForm.addressLine1 = '';
+    addressForm.addressLine2 = '';
+    addressForm.city = '';
+    addressForm.county = '';
+    addressForm.postcode = '';
+    addressForm.country = 'United Kingdom';
+    // Hide the address inputs again
+    isManualAddressVisible.value = false;
+}
 
 
 /**
@@ -341,10 +391,23 @@ const finalizeOrder = (piId: string, type: string) => {
 // --- LIFECYCLE HOOK ---
 
 onMounted(async () => {
+    // 1. Check for default address and select it automatically for a faster checkout
+    const defaultAddress = props.addresses.find(a => a.is_default);
+    if (defaultAddress) {
+        // Use nextTick to ensure form is fully ready before populating
+        await nextTick();
+        selectAddress(defaultAddress);
+        // Note: selectAddress sets isManualAddressVisible = true
+    } else if (props.addresses.length === 0) {
+        // If there are no saved addresses at all, automatically open the manual address form
+        isManualAddressVisible.value = true;
+    }
+
+
     if (hasItems.value) {
-        // 1. AWAIT script loading first
+        // 2. AWAIT script loading first
         await loadStripeScript();
-        // 2. Then, initialize Stripe elements
+        // 3. Then, initialize Stripe elements
         await initializeStripe();
     } else {
         isLoadingInitialData.value = false;
@@ -387,114 +450,25 @@ onMounted(async () => {
                         <!-- Shipping/Contact Details Form -->
                         <!-- Applying the Cart's Double Border Style (Outer) -->
                         <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
-                            <!-- Inner Border (Form is now wrapped) -->
-                            <form @submit.prevent="handleCardPayment" class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6 space-y-6">
-
-                                <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">1. Shipping & Contact</h2>
-
-                                <!-- Email -->
-                                <div>
-                                    <label for="email" class="block text-sm font-bold text-copy mb-1">Email Address</label>
-                                    <input id="email" type="email" v-model="addressForm.email" required
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.email}]"
-                                        placeholder="your@email.com"
-                                    >
-                                    <p v-if="addressForm.errors.email" class="text-sm text-error mt-1">{{ addressForm.errors.email }}</p>
-                                </div>
-
-                                <!-- Full Name -->
-                                <div>
-                                    <label for="fullName" class="block text-sm font-bold text-copy mb-1">Full Name</label>
-                                    <input id="fullName" type="text" v-model="addressForm.fullName" required
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.fullName}]"
-                                        placeholder="Jane Doe"
-                                    >
-                                    <p v-if="addressForm.errors.fullName" class="text-sm text-error mt-1">{{ addressForm.errors.fullName }}</p>
-                                </div>
-
-                                <!-- Telephone -->
-                                <div>
-                                    <label for="telephone" class="block text-sm font-bold text-copy mb-1">Telephone (Optional)</label>
-                                    <input id="telephone" type="tel" v-model="addressForm.telephone"
-                                        :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.telephone}]"
-                                        placeholder="07700 900000"
-                                    >
-                                    <p v-if="addressForm.errors.telephone" class="text-sm text-error mt-1">{{ addressForm.errors.telephone }}</p>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <!-- Address Line 1 -->
-                                    <div class="md:col-span-2">
-                                        <label for="addressLine1" class="block text-sm font-bold text-copy mb-1">Address Line 1</label>
-                                        <input id="addressLine1" type="text" v-model="addressForm.addressLine1" required
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine1}]"
-                                            placeholder="123 Example Street"
-                                        >
-                                        <p v-if="addressForm.errors.addressLine1" class="text-sm text-error mt-1">{{ addressForm.errors.addressLine1 }}</p>
-                                    </div>
-
-                                    <!-- Address Line 2 (Optional) -->
-                                    <div class="md:col-span-2">
-                                        <label for="addressLine2" class="block text-sm font-bold text-copy mb-1">Address Line 2 (Optional)</label>
-                                        <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine2}]"
-                                            placeholder="Apartment, suite, etc."
-                                        >
-                                    </div>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <!-- City -->
-                                    <div>
-                                        <label for="city" class="block text-sm font-bold text-copy mb-1">City</label>
-                                        <input id="city" type="text" v-model="addressForm.city" required
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.city}]"
-                                            placeholder="London"
-                                        >
-                                        <p v-if="addressForm.errors.city" class="text-sm text-error mt-1">{{ addressForm.errors.city }}</p>
-                                    </div>
-
-                                    <!-- County (Optional) -->
-                                    <div>
-                                        <label for="county" class="block text-sm font-bold text-copy mb-1">County (Optional)</label>
-                                        <input id="county" type="text" v-model="addressForm.county"
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.county}]"
-                                            placeholder="Greater London"
-                                        >
-                                        <p v-if="addressForm.errors.county" class="text-sm text-error mt-1">{{ addressForm.errors.county }}</p>
-                                    </div>
-
-                                    <!-- Postcode -->
-                                    <div>
-                                        <label for="postcode" class="block text-sm font-bold text-copy mb-1">Postcode</label>
-                                        <input id="postcode" type="text" v-model="addressForm.postcode" required
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.postcode}]"
-                                            placeholder="SW1A 0AA"
-                                        >
-                                        <p v-if="addressForm.errors.postcode" class="text-sm text-error mt-1">{{ addressForm.errors.postcode }}</p>
-                                    </div>
-
-                                    <!-- Country -->
-                                    <div>
-                                        <label for="country" class="block text-sm font-bold text-copy mb-1">Country</label>
-                                        <input id="country" type="text" v-model="addressForm.country" readonly
-                                            class="w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary opacity-70"
-                                            placeholder="United Kingdom"
-                                        >
-                                    </div>
-                                </div>
-
-                                <!-- Saved Addresses -->
-                                <div>
+                            <!-- Saved Addresses -->
+                            <div v-if="addresses.length > 0" class="p-4 space-y-3 border-b-2 border-copy/10">
+                                <h2 class="text-2xl font-bold text-copy">Saved Addresses</h2>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div
                                         v-for="address in addresses"
                                         :key="address.id"
-                                        class="relative p-4 border-2 rounded-lg transition"
-                                        :class="address.is_default ? 'border-primary bg-primary-light/10 shadow-md' : 'border-copy-light hover:border-copy'"
+                                        @click="selectAddress(address)"
+                                        class="relative p-4 border-2 rounded-xl transition cursor-pointer"
+                                        :class="{
+                                            'border-primary ring-4 ring-primary/30 bg-primary/5 hover:border-primary-dark shadow-lg': selectedAddressId === address.id,
+                                            'border-copy/30 hover:border-copy/70 bg-background/50': selectedAddressId !== address.id
+                                        }"
                                     >
                                         <div class="text-sm font-bold uppercase mb-1 flex justify-between items-center">
-                                            <span :class="address.is_default ? 'text-secondary-content' : 'text-copy-lighter'">{{ address.type }} Address</span>
-                                            <span v-if="address.is_default" class="text-xs text-secondary-content bg-secondary/50 px-2 py-0.5 rounded-full font-extrabold">DEFAULT</span>
+                                            <span :class="selectedAddressId === address.id ? 'text-primary-dark' : 'text-copy-lighter'">
+                                                {{ address.type }} Address
+                                            </span>
+                                            <span v-if="address.is_default" class="text-xs text-primary bg-primary/20 px-2 py-0.5 rounded-full font-extrabold">DEFAULT</span>
                                         </div>
 
                                         <p v-for="line in formatAddress(address)" :key="line" class="text-copy text-base">
@@ -502,6 +476,148 @@ onMounted(async () => {
                                         </p>
                                     </div>
                                 </div>
+                                <button
+                                    v-if="selectedAddressId !== null"
+                                    @click="clearAddressSelection"
+                                    type="button"
+                                    class="text-sm text-red-600 hover:text-red-800 transition font-semibold pt-2"
+                                >
+                                    Clear Selection & Enter Manually
+                                </button>
+                            </div>
+
+
+                            <!-- Inner Border (Form is now wrapped) -->
+                            <form @submit.prevent="handleCardPayment" class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6 space-y-6">
+
+                                <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">
+                                    1. Contact & Shipping Details
+                                </h2>
+
+                                <!-- Contact Fields (ALWAYS VISIBLE) -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Email -->
+                                    <div>
+                                        <label for="email" class="block text-sm font-bold text-copy mb-1">
+                                            Email Address <span class="text-error">*</span>
+                                        </label>
+                                        <input id="email" type="email" v-model="addressForm.email" required
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.email}]"
+                                            placeholder="your@email.com"
+                                        >
+                                        <p v-if="addressForm.errors.email" class="text-sm text-error mt-1">{{ addressForm.errors.email }}</p>
+                                    </div>
+
+                                    <!-- Full Name -->
+                                    <div>
+                                        <label for="fullName" class="block text-sm font-bold text-copy mb-1">
+                                            Full Name <span class="text-error">*</span>
+                                        </label>
+                                        <input id="fullName" type="text" v-model="addressForm.fullName" required
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.fullName}]"
+                                            placeholder="Jane Doe"
+                                        >
+                                        <p v-if="addressForm.errors.fullName" class="text-sm text-error mt-1">{{ addressForm.errors.fullName }}</p>
+                                    </div>
+
+                                    <!-- Telephone -->
+                                    <div>
+                                        <label for="telephone" class="block text-sm font-bold text-copy mb-1">Telephone (Optional)</label>
+                                        <input id="telephone" type="tel" v-model="addressForm.telephone"
+                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.telephone}]"
+                                            placeholder="07700 900000"
+                                        >
+                                        <p v-if="addressForm.errors.telephone" class="text-sm text-error mt-1">{{ addressForm.errors.telephone }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Shipping Address Toggle/Inputs -->
+                                <div v-if="!isShippingAddressVisible" class="pt-4 pb-2">
+                                    <button
+                                        type="button"
+                                        @click="isManualAddressVisible = true"
+                                        class="w-full py-3 bg-primary/10 text-primary font-bold rounded-lg border border-primary/50 hover:bg-primary/20 transition-colors flex items-center justify-center shadow-md"
+                                    >
+                                        <div v-html="IconPlus" class="size-5 mr-2"></div>
+                                        Add Shipping Address
+                                    </button>
+                                </div>
+
+
+                                <!-- SHIPPING ADDRESS FIELDS (Conditional Block) -->
+                                <div v-if="isShippingAddressVisible" class="space-y-6 pt-4 border-t border-copy/10">
+                                    <h3 class="text-xl font-bold text-copy">Shipping Address</h3>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- Address Line 1 -->
+                                        <div class="md:col-span-2">
+                                            <label for="addressLine1" class="block text-sm font-bold text-copy mb-1">
+                                                Address Line 1 <span class="text-error">*</span>
+                                            </label>
+                                            <input id="addressLine1" type="text" v-model="addressForm.addressLine1" required
+                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine1}]"
+                                                placeholder="123 Example Street"
+                                            >
+                                            <p v-if="addressForm.errors.addressLine1" class="text-sm text-error mt-1">{{ addressForm.errors.addressLine1 }}</p>
+                                        </div>
+
+                                        <!-- Address Line 2 (Optional) -->
+                                        <div class="md:col-span-2">
+                                            <label for="addressLine2" class="block text-sm font-bold text-copy mb-1">Address Line 2 (Optional)</label>
+                                            <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
+                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.addressLine2}]"
+                                                placeholder="Apartment, suite, etc."
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <!-- City -->
+                                        <div>
+                                            <label for="city" class="block text-sm font-bold text-copy mb-1">
+                                                City <span class="text-error">*</span>
+                                            </label>
+                                            <input id="city" type="text" v-model="addressForm.city" required
+                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.city}]"
+                                                placeholder="London"
+                                            >
+                                            <p v-if="addressForm.errors.city" class="text-sm text-error mt-1">{{ addressForm.errors.city }}</p>
+                                        </div>
+
+                                        <!-- County (Optional) -->
+                                        <div>
+                                            <label for="county" class="block text-sm font-bold text-copy mb-1">County (Optional)</label>
+                                            <input id="county" type="text" v-model="addressForm.county"
+                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.county}]"
+                                                placeholder="Greater London"
+                                            >
+                                            <p v-if="addressForm.errors.county" class="text-sm text-error mt-1">{{ addressForm.errors.county }}</p>
+                                        </div>
+
+                                        <!-- Postcode -->
+                                        <div>
+                                            <label for="postcode" class="block text-sm font-bold text-copy mb-1">
+                                                Postcode <span class="text-error">*</span>
+                                            </label>
+                                            <input id="postcode" type="text" v-model="addressForm.postcode" required
+                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', {'border-error': addressForm.errors.postcode}]"
+                                                placeholder="SW1A 0AA"
+                                            >
+                                            <p v-if="addressForm.errors.postcode" class="text-sm text-error mt-1">{{ addressForm.errors.postcode }}</p>
+                                        </div>
+
+                                        <!-- Country -->
+                                        <div>
+                                            <label for="country" class="block text-sm font-bold text-copy mb-1">Country</label>
+                                            <input id="country" type="text" v-model="addressForm.country" readonly
+                                                class="w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary opacity-70"
+                                                placeholder="United Kingdom"
+                                            >
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- END SHIPPING ADDRESS FIELDS -->
+
 
                                 <!-- Save Info Checkbox -->
                                 <div class="flex items-center pt-4">

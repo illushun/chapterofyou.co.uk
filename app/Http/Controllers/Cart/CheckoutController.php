@@ -39,6 +39,7 @@ class CheckoutController extends Controller
             return redirect()->route('login');
         }
         $user = Auth::user();
+        $shipping_addresses = $user->addresses()->where('type', 'shipping')->orderBy('is_default', 'desc')->get();
 
         // user cart
         $cart = $this->cartManager->getCurrentCart();
@@ -50,7 +51,7 @@ class CheckoutController extends Controller
         return Inertia::render('checkout/View', [
             'summary' => $summary,
             'cartItems' => $cart->items->load('product'),
-            'addresses' => $user->addresses()->orderBy('is_default', 'desc')->get(),
+            'addresses' => $shipping_addresses,
         ]);
     }
 
