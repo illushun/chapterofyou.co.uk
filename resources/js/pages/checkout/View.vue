@@ -66,11 +66,25 @@ interface Summary {
     total: number;
 }
 
+interface Address {
+    id: number;
+    user_id: number;
+    type: string;
+    is_default: boolean;
+    line_1: string;
+    line_2: string;
+    city: string;
+    county: string;
+    postcode: string;
+    country: string;
+}
+
 // --- PROPS ---
 
 const props = defineProps<{
     cartItems: CartItem[];
     summary: Summary;
+    addresses: Address[];
 }>();
 
 // --- STATE ---
