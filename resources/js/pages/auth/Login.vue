@@ -127,32 +127,10 @@ defineProps<{
 
                         <a
                             :href="route('socialite.redirect', 'google')"
-                            class="w-full inline-flex items-center justify-center p-3 text-lg font-bold rounded-lg bg-white text-copy border-2 border-copy shadow-lg transition-colors duration-300 hover:bg-gray-50"
+                            class="w-full inline-flex items-center justify-center p-3 text-lg font-bold rounded-lg bg-white text-copy border-2 border-copy transition-colors duration-300 hover:bg-gray-50"
                             data-test="google-login-button"
                         >
-                            <svg
-                                class="w-6 h-6 mr-3"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    d="M12 4.41c2.44 0 4.07.98 4.96 1.83l3.2-3.19C18.06 1.82 15.25.99 12 .99 7.08.99 2.95 3.19.96 7.07l3.85 3c.96-2.82 4.04-4.66 7.19-4.66z"
-                                    fill="#ea4335"
-                                />
-                                <path
-                                    d="M23.36 12c0-.85-.08-1.5-.18-2.18H12v4.11h6.35c-.27 1.34-1.05 2.5-2.22 3.28l3.35 2.6c2.08-1.93 3.38-4.78 3.38-8.01z"
-                                    fill="#4285f4"
-                                />
-                                <path
-                                    d="M4.81 14.99c-.43-1.3-.67-2.7-.67-4.14s.24-2.84.67-4.14L.96 7.07C.33 8.35 0 9.77 0 11.23c0 1.46.33 2.88.96 4.16l3.85-2.4z"
-                                    fill="#fbbc05"
-                                />
-                                <path
-                                    d="M12 20.91c3.15 0 5.86-1.04 7.82-2.92l-3.35-2.6c-.84.55-1.92.89-3.47.89-3.15 0-5.83-1.84-7.18-4.66l-3.85 3c2.02 3.88 6.16 6.07 10.03 6.07z"
-                                    fill="#34a853"
-                                />
-                            </svg>
+                            <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32" width="64" height="64"><defs><path id="A" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></defs><clipPath id="B"><use xlink:href="#A"/></clipPath><g transform="matrix(.727273 0 0 .727273 -.954545 -1.45455)"><path d="M0 37V11l17 13z" clip-path="url(#B)" fill="#fbbc05"/><path d="M0 11l17 13 7-6.1L48 14V0H0z" clip-path="url(#B)" fill="#ea4335"/><path d="M0 37l30-23 7.9 1L48 0v48H0z" clip-path="url(#B)" fill="#34a853"/><path d="M48 48L17 24l-4-3 35-10z" clip-path="url(#B)" fill="#4285f4"/></g></svg>
                             Login with Google
                         </a>
                     </div>
