@@ -125,8 +125,36 @@ defineProps<{
                             Log in
                         </Button>
 
-                        <a :href="route('socialite.redirect', 'google')">Login with Google</a>
-                        <a :href="route('socialite.redirect', 'facebook')">Login with Facebook</a>
+                        <a
+                            :href="route('socialite.redirect', 'google')"
+                            class="w-full inline-flex items-center justify-center p-3 text-lg font-bold rounded-lg bg-white text-copy border-2 border-copy shadow-lg transition-colors duration-300 hover:bg-gray-50"
+                            data-test="google-login-button"
+                        >
+                            <svg
+                                class="w-6 h-6 mr-3"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M12 4.41c2.44 0 4.07.98 4.96 1.83l3.2-3.19C18.06 1.82 15.25.99 12 .99 7.08.99 2.95 3.19.96 7.07l3.85 3c.96-2.82 4.04-4.66 7.19-4.66z"
+                                    fill="#ea4335"
+                                />
+                                <path
+                                    d="M23.36 12c0-.85-.08-1.5-.18-2.18H12v4.11h6.35c-.27 1.34-1.05 2.5-2.22 3.28l3.35 2.6c2.08-1.93 3.38-4.78 3.38-8.01z"
+                                    fill="#4285f4"
+                                />
+                                <path
+                                    d="M4.81 14.99c-.43-1.3-.67-2.7-.67-4.14s.24-2.84.67-4.14L.96 7.07C.33 8.35 0 9.77 0 11.23c0 1.46.33 2.88.96 4.16l3.85-2.4z"
+                                    fill="#fbbc05"
+                                />
+                                <path
+                                    d="M12 20.91c3.15 0 5.86-1.04 7.82-2.92l-3.35-2.6c-.84.55-1.92.89-3.47.89-3.15 0-5.83-1.84-7.18-4.66l-3.85 3c2.02 3.88 6.16 6.07 10.03 6.07z"
+                                    fill="#34a853"
+                                />
+                            </svg>
+                            Login with Google
+                        </a>
                     </div>
 
                     <div class="text-center text-sm text-copy">
