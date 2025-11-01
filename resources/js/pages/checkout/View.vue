@@ -120,6 +120,16 @@ const addressForm = useForm({
     saveInfo: false,
 });
 
+const formatAddress = (address: Address): string[] => {
+    const lines = [address.line_1];
+    if (address.line_2) lines.push(address.line_2);
+    lines.push(address.city);
+    if (address.county) lines.push(address.county);
+    lines.push(address.postcode);
+    lines.push(address.country);
+    return lines.filter(line => line);
+}
+
 // --- COMPUTED & METHODS ---
 
 const hasItems = computed(() => props.cartItems.length > 0);
@@ -476,17 +486,20 @@ onMounted(async () => {
 
                                 <!-- Saved Addresses -->
                                 <div>
-                                    <div v-for="address in addresses" :key="address.id" class="flex gap-3 justify-start">
-                                        <div>
-                                            <p>{{ address.type }}</p>
-                                            <p>{{ address.is_default }}</p>
-                                            <p>{{ address.line_1 }}</p>
-                                            <p>{{ address.line_2 }}</p>
-                                            <p>{{ address.city }}</p>
-                                            <p>{{ address.county }}</p>
-                                            <p>{{ address.postcode }}</p>
-                                            <p>{{ address.country }}</p>
+                                    <div
+                                        v-for="address in addresses"
+                                        :key="address.id"
+                                        class="relative p-4 border-2 rounded-lg transition"
+                                        :class="address.is_default ? 'border-primary bg-primary-light/10 shadow-md' : 'border-copy-light hover:border-copy'"
+                                    >
+                                        <div class="text-sm font-bold uppercase mb-1 flex justify-between items-center">
+                                            <span :class="address.is_default ? 'text-secondary-content' : 'text-copy-lighter'">{{ address.type }} Address</span>
+                                            <span v-if="address.is_default" class="text-xs text-secondary-content bg-secondary/50 px-2 py-0.5 rounded-full font-extrabold">DEFAULT</span>
                                         </div>
+
+                                        <p v-for="line in formatAddress(address)" :key="line" class="text-copy text-base">
+                                            {{ line }}
+                                        </p>
                                     </div>
                                 </div>
 
