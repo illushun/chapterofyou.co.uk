@@ -460,6 +460,22 @@ onMounted(async () => {
                                     </div>
                                 </div>
 
+                                <!-- Saved Addresses -->
+                                <div>
+                                    <div v-for="address in addresses" :key="address.id" class="flex gap-3 justify-start">
+                                        <div>
+                                            <p>{{ address.type }}</p>
+                                            <p>{{ address.is_default }}</p>
+                                            <p>{{ address.line_1 }}</p>
+                                            <p>{{ address.line_2 }}</p>
+                                            <p>{{ address.city }}</p>
+                                            <p>{{ address.county }}</p>
+                                            <p>{{ address.postcode }}</p>
+                                            <p>{{ address.country }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Save Info Checkbox -->
                                 <div class="flex items-center pt-4">
                                     <input id="saveInfo" type="checkbox" v-model="addressForm.saveInfo"

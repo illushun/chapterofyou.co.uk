@@ -35,16 +35,22 @@ class CheckoutController extends Controller
      */
     public function index()
     {
-        $cart = $this->cartManager->getCurrentCart();
+        if (!Auth::check()) {
+            return redirect()->route('login');
+        }
+        $user = Auth::user();
 
+        // user cart
+        $cart = $this->cartManager->getCurrentCart();
         if ($cart->items->isEmpty()) {
             return redirect()->route('cart.view')->with('error', 'Your cart is empty.');
         }
-
         $summary = $this->calculateFinalTotal($cart);
+
         return Inertia::render('checkout/View', [
             'summary' => $summary,
             'cartItems' => $cart->items->load('product'),
+            'addresses' => $user->addreses()->get(),
         ]);
     }
 
