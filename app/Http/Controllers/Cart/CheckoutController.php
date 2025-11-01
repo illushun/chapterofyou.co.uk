@@ -50,7 +50,7 @@ class CheckoutController extends Controller
         return Inertia::render('checkout/View', [
             'summary' => $summary,
             'cartItems' => $cart->items->load('product'),
-            'addresses' => $user->addreses()->get(),
+            'addresses' => $user->addresses()->get(),
         ]);
     }
 
