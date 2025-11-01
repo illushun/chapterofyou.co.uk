@@ -49,8 +49,8 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
-Route::get('{provider}', [SocialiteController::class, 'redirectToProvider'])->name('socialite.redirect');
-Route::get('{provider}/callback', [SocialiteController::class, 'handleProviderCallback'])->name('socialite.callback');
+Route::get('sl/{provider}', [SocialiteController::class, 'redirectToProvider'])->name('socialite.redirect');
+Route::get('/sl/{provider}/callback', [SocialiteController::class, 'handleProviderCallback'])->name('socialite.callback');
 
 Route::get('/account/addresses/lookup', [AccountController::class, 'lookupAddress'])->name('address.lookup');
 
