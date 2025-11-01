@@ -213,7 +213,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                 </div>
 
                                 <!-- Total -->
-                                <div class="mt-6 pt-4 border-t-2 border-copy-light flex justify-between items-center">
+                                <div class="mt-6 mb-6 pt-4 border-t-2 border-copy-light flex justify-between items-center">
                                     <span class="text-2xl font-extrabold text-copy">Order Total</span>
                                     <span class="text-4xl font-black text-primary">{{ formatCurrency(finalTotal) }}</span>
                                 </div>
@@ -221,13 +221,13 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                 <a
                                     href="/checkout"
                                     :disabled="!hasItems"
-                                    class="mt-6 w-full py-4 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 hover:bg-primary-dark rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                                    class="w-full flex justify-center items-center py-4 px-2 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 hover:bg-primary-dark rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     style="background-color: var(--primary); color: var(--primary-content);"
                                 >
                                     Proceed to Checkout
                                 </a>
 
-                                <p v-if="shippingCost > 0" class="text-center text-sm text-copy-lighter mt-3">
+                                <p v-if="shippingCost > 0" class="text-center text-sm text-copy-lighter mt-6">
                                     Add {{ formatCurrency(50 - props.cartTotal) }} more for FREE shipping!
                                 </p>
                             </div>
