@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Category;
+use App\Models\Product;
 
 class AdminCategoryController extends Controller
 {
@@ -22,6 +23,22 @@ class AdminCategoryController extends Controller
 
         return Inertia::render('admin/category/Index', [
             'categories' => $categories,
+        ]);
+    }
+
+    /**
+     * Show the form for creating a new resource. (Create)
+     */
+    public function create()
+    {
+        $categories = Category::select('id', 'name')->get();
+        $parentProducts = Product::select('id', 'name')->get();
+
+        return Inertia::render('admin/product/CreateEdit', [
+            'categories' => $categories,
+            'parentProducts' => $parentProducts,
+            'isEditing' => false,
+            'productImages' => [],
         ]);
     }
 }
