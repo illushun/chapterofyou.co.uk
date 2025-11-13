@@ -69,7 +69,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('products', AdminProductController::class)->except(['show']);
     Route::get('/products/relationships', [AdminProductController::class, 'relationshipIndex'])->name('products.relationships');
 
-    Route::get('orders', [AdminCategoryController::class, 'index'])->name('categories.index');
+    Route::get('categories', [AdminCategoryController::class, 'index'])->name('categories.index');
 
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
