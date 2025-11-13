@@ -7,16 +7,14 @@ use App\Http\Controllers\Cart\CartController;
 use App\Http\Controllers\Cart\CheckoutController;
 use App\Http\Controllers\Account\AccountController;
 use App\Http\Controllers\Account\OrderController;
-
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Admin\AdminOrderController;
+use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminCartController;
 use App\Http\Controllers\Admin\Label\CLPLabelController;
-
 use App\Http\Controllers\Auth\SocialiteController;
-
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -46,7 +44,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/account/addresses', [AccountController::class, 'storeAddress'])->name('address.store');
     Route::put('/account/addresses/{address}', [AccountController::class, 'updateAddress'])->name('address.update');
     Route::delete('/account/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('address.destroy');
-
 });
 
 Route::get('sl/{provider}', [SocialiteController::class, 'redirectToProvider'])->name('socialite.redirect');
@@ -72,6 +69,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('products', AdminProductController::class)->except(['show']);
     Route::get('/products/relationships', [AdminProductController::class, 'relationshipIndex'])->name('products.relationships');
 
+    Route::get('orders', [AdminCategoryController::class, 'index'])->name('categories.index');
+
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
     // Example: update status
@@ -89,5 +88,5 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';
