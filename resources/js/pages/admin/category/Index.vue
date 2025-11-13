@@ -18,7 +18,7 @@ interface CategoriesPaginated {
 }
 
 const props = defineProps<{
-    orders: CategoriesPaginated;
+    categories: CategoriesPaginated;
 }>();
 
 const formatDate = (dateString: string): string => {
