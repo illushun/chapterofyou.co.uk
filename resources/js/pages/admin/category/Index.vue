@@ -21,6 +21,18 @@ const props = defineProps<{
     categories: CategoriesPaginated;
 }>();
 
+const confirmDelete = (category: Category) => {
+    console.info(`Attempting to delete category: ${category.name}`);
+    if (confirm(`Are you sure you want to delete the category: ${category.name}? This action cannot be undone.`)) {
+        router.delete(route('admin.categories.destroy', category.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                console.log('Category deleted successfully.');
+            },
+        });
+    }
+};
+
 const formatDate = (dateString: string): string => {
     // Standard format for cards and tables
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -57,6 +69,10 @@ const paginate = (url: string | null) => {
 
         <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
             <h2 class="text-3xl font-black">Categories</h2>
+            <Link :href="route('admin.categories.create')"
+                class="relative rounded-lg -m-0.5 px-4 py-2 text-sm font-bold text-primary-content transition border-2 border-copy bg-primary hover:bg-primary-dark shadow-md">
+            + Add New Category
+            </Link>
         </div>
 
         <div v-if="categories.data.length"
@@ -70,7 +86,6 @@ const paginate = (url: string | null) => {
                 <table class="min-w-full text-sm divide-y divide-copy-light/50">
                     <thead>
                         <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
-                            <th class="px-4 py-3">Category ID</th>
                             <th class="px-4 py-3"></th>
                             <th class="px-4 py-3">Name</th>
                             <th class="px-4 py-3">Status</th>
@@ -81,8 +96,10 @@ const paginate = (url: string | null) => {
                     <tbody class="divide-y divide-copy-light/50">
                         <tr v-for="category in categories.data" :key="category.id"
                             class="hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-semibold text-primary">#{{ category.id }}</td>
-                            <td class="px-4 py-3">img</td>
+                            <td class="px-4 py-3">
+                                <img :src="category.image ?? 'https://placehold.co/50x50/333/fff?text=NO'"
+                                    :alt="category.name" class="size-10 object-contain border border-copy p-1 rounded">
+                            </td>
                             <td class="px-4 py-3">{{ category.name }}</td>
                             <td class="px-4 py-3">
                                 <span
