@@ -14,9 +14,11 @@ class AdminCategoryController extends Controller
      */
     public function index(Request $request)
     {
-        $categories = Category::select('id', 'name', 'image', 'status', 'created_at')
+        $categories = Category::query()
+            ->select('id', 'name', 'image', 'status', 'created_at')
             ->orderByDesc('created_at')
             ->paginate(15);
+
 
         return Inertia::render('admin/category/Index', [
             'categories' => $categories,
