@@ -16,6 +16,12 @@ interface ProductImage {
     image: string;
 }
 
+interface ProductReview {
+    product_id: string;
+    user_id: string;
+    message: string;
+}
+
 interface ProductVariation {
     id: number;
     mpn: string;
@@ -34,6 +40,7 @@ interface ProductDetailData {
     stock_qty: number;
     total_unique_views: number;
     images: ProductImage[];
+    reviews: ProductReview[];
     categories: { id: number; name: string }[];
     children: ProductVariation[];
     seo?: { meta_title: string; meta_description: string };
@@ -183,11 +190,11 @@ const pageTitle = computed(() => {
 });
 
 const formattedCost = computed(() => {
-  const numericCost = Number(currentVariation.value.cost);
-  if (isNaN(numericCost)) {
-    return 'N/A';
-  }
-  return `£${numericCost.toFixed(2)}`;
+    const numericCost = Number(currentVariation.value.cost);
+    if (isNaN(numericCost)) {
+        return 'N/A';
+    }
+    return `£${numericCost.toFixed(2)}`;
 });
 </script>
 
@@ -201,24 +208,23 @@ const formattedCost = computed(() => {
             <div class="grid grid-cols-1 lg:grid-cols-2 lg:gap-16">
 
                 <div class="lg:sticky lg:top-8 self-start">
-                    <button
-                        @click="openImageModal"
+                    <button @click="openImageModal"
                         class="relative rounded-lg border-2 border-copy bg-primary-light w-full transition hover:opacity-80 focus:ring-4 focus:ring-primary-content"
-                        style="background-color: var(--secondary);"
-                        aria-label="View product image large"
-                    >
-                        <div class="relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-hidden h-[400px] sm:h-[500px] flex items-center justify-center p-6 cursor-pointer">
-                            <span v-if="isPopular" class="absolute top-3 left-3 z-10 inline-flex items-center rounded-full bg-error px-3 py-0.5 text-xs font-bold text-error-content shadow-lg ring-1 ring-inset ring-error-content/50">
+                        style="background-color: var(--secondary);" aria-label="View product image large">
+                        <div
+                            class="relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-hidden h-[400px] sm:h-[500px] flex items-center justify-center p-6 cursor-pointer">
+                            <span v-if="isPopular"
+                                class="absolute top-3 left-3 z-10 inline-flex items-center rounded-full bg-error px-3 py-0.5 text-xs font-bold text-error-content shadow-lg ring-1 ring-inset ring-error-content/50">
                                 🔥 POPULAR
                             </span>
-                            <img
-                                :src="mainImageUrl"
-                                :alt="'Main image of ' + props.product.name"
-                                class="w-full h-full object-contain transition duration-500"
-                            />
-                            <div class="absolute inset-0 flex items-center justify-center bg-primary-light bg-opacity-10 opacity-0 hover:opacity-100 transition duration-300">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="size-12 text-primary-content" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                            <img :src="mainImageUrl" :alt="'Main image of ' + props.product.name"
+                                class="w-full h-full object-contain transition duration-500" />
+                            <div
+                                class="absolute inset-0 flex items-center justify-center bg-primary-light bg-opacity-10 opacity-0 hover:opacity-100 transition duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="size-12 text-primary-content" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                 </svg>
                             </div>
                         </div>
@@ -226,20 +232,13 @@ const formattedCost = computed(() => {
 
                     <div v-if="props.product.images.length > 1" class="mt-6">
                         <div class="grid grid-cols-4 gap-4">
-                            <button
-                                v-for="(image, index) in props.product.images"
-                                :key="index"
-                                @click="selectedImageIndex = index"
-                                :class="[
+                            <button v-for="(image, index) in props.product.images" :key="index"
+                                @click="selectedImageIndex = index" :class="[
                                     'rounded-lg border-2 p-1 transition relative',
                                     selectedImageIndex === index ? 'border-primary-content bg-primary-light' : 'border-copy bg-secondary-light hover:bg-primary-light'
-                                ]"
-                            >
-                                <img
-                                    :src="image.image"
-                                    :alt="'Thumbnail ' + (index + 1)"
-                                    class="size-full object-cover rounded-md"
-                                />
+                                ]">
+                                <img :src="image.image" :alt="'Thumbnail ' + (index + 1)"
+                                    class="size-full object-cover rounded-md" />
                             </button>
                         </div>
                     </div>
@@ -251,7 +250,8 @@ const formattedCost = computed(() => {
                             <li><a href="/products" class="hover:text-primary-content transition">Products</a></li>
                             <li v-for="category in props.product.categories" :key="category.id">
                                 <span class="mx-2">/</span>
-                                <a :href="'/products?categories=' + category.id" class="hover:text-primary-content transition">{{ category.name }}</a>
+                                <a :href="'/products?categories=' + category.id"
+                                    class="hover:text-primary-content transition">{{ category.name }}</a>
                             </li>
                         </ol>
                     </nav>
@@ -260,12 +260,10 @@ const formattedCost = computed(() => {
                     <p class="text-copy-lighter mb-6">{{ currentVariation.mpn }}</p>
 
                     <div class="mb-6">
-                        <span
-                            :class="[
-                                'inline-flex items-center rounded-full px-3 py-1 text-sm font-bold',
-                                isOutOfStock ? 'bg-error text-error-content' : 'bg-success text-success-content'
-                            ]"
-                        >
+                        <span :class="[
+                            'inline-flex items-center rounded-full px-3 py-1 text-sm font-bold',
+                            isOutOfStock ? 'bg-error text-error-content' : 'bg-success text-success-content'
+                        ]">
                             {{ isOutOfStock ? 'Out of Stock' : `In Stock` }}
                         </span>
                     </div>
@@ -274,22 +272,18 @@ const formattedCost = computed(() => {
                         {{ formattedCost }}
                     </p>
 
-                    <div v-if="props.product.children && props.product.children.length > 0" class="mb-8 border-t-2 border-copy pt-4">
+                    <div v-if="props.product.children && props.product.children.length > 0"
+                        class="mb-8 border-t-2 border-copy pt-4">
                         <h3 class="text-lg font-bold text-copy mb-3">Choose Option:</h3>
                         <div class="flex flex-wrap gap-3">
-                            <button
-                                v-for="variation in props.product.children"
-                                :key="variation.id"
-                                @click="selectedVariationId = variation.id"
-                                :disabled="variation.stock_qty <= 0"
-                                :class="[
+                            <button v-for="variation in props.product.children" :key="variation.id"
+                                @click="selectedVariationId = variation.id" :disabled="variation.stock_qty <= 0" :class="[
                                     'px-4 py-2 rounded-lg border-2 border-copy text-sm font-semibold transition-all shadow-md',
                                     variation.id === selectedVariationId
                                         ? 'bg-secondary text-secondary-content'
                                         : 'bg-foreground text-copy-light hover:bg-secondary-light',
                                     variation.stock_qty <= 0 && 'opacity-50 cursor-not-allowed line-through'
-                                ]"
-                            >
+                                ]">
                                 {{ variation.name }}
                             </button>
                         </div>
@@ -300,55 +294,40 @@ const formattedCost = computed(() => {
 
                         <div class="flex flex-grow gap-4">
 
-                            <div class="flex items-center rounded-lg border-2 border-copy bg-foreground flex-shrink-0 w-1/3 max-w-[150px] lg:w-auto">
-                                <button
-                                    @click="decreaseQuantity"
-                                    :disabled="quantity <= 1"
+                            <div
+                                class="flex items-center rounded-lg border-2 border-copy bg-foreground flex-shrink-0 w-1/3 max-w-[150px] lg:w-auto">
+                                <button @click="decreaseQuantity" :disabled="quantity <= 1"
                                     class="rounded-l-md border-r-2 border-copy p-3 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
-                                    aria-label="Decrease quantity"
-                                >
+                                    aria-label="Decrease quantity">
                                     <div v-html="IconMinus"></div>
                                 </button>
 
-                                <input
-                                    type="number"
-                                    v-model.number="quantity"
-                                    min="1"
-                                    :max="currentVariation.stock_qty"
+                                <input type="number" v-model.number="quantity" min="1" :max="currentVariation.stock_qty"
                                     @change="quantity = Math.max(1, Math.min(currentVariation.stock_qty, Number(quantity) || 1))"
                                     class="w-12 h-full text-center text-sm font-bold bg-foreground text-copy border-none focus:ring-0 p-0 m-0"
-                                    aria-label="Product quantity"
-                                />
+                                    aria-label="Product quantity" />
 
-                                <button
-                                    @click="increaseQuantity"
-                                    :disabled="quantity >= currentVariation.stock_qty"
+                                <button @click="increaseQuantity" :disabled="quantity >= currentVariation.stock_qty"
                                     class="rounded-r-md border-l-2 border-copy p-3 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
-                                    aria-label="Increase quantity"
-                                >
+                                    aria-label="Increase quantity">
                                     <div v-html="IconPlus"></div>
                                 </button>
                             </div>
 
-                            <button
-                                @click="handleAddToCart()"
+                            <button @click="handleAddToCart()"
                                 :disabled="isOutOfStock || quantity > currentVariation.stock_qty || quantity < 1"
                                 :class="[
                                     'relative rounded-lg -m-0.5 flex-1 inline-flex items-center justify-center gap-2 border-2 border-copy px-8 py-3 text-lg font-bold text-primary-content transition hover:bg-primary-dark shadow-lg',
                                     isOutOfStock ? 'bg-border text-copy-lighter cursor-not-allowed' : 'bg-primary'
-                                ]"
-                                style="background-color: var(--primary);"
-                            >
+                                ]" style="background-color: var(--primary);">
                                 <div v-html="IconCart"></div>
                                 {{ isOutOfStock ? 'Notify Me' : 'Add to Cart' }}
                             </button>
                         </div>
 
-                        <button
-                            @click="handleFavourite()"
+                        <button @click="handleFavourite()"
                             class="rounded-lg border-2 border-copy p-3 text-copy-light transition hover:bg-error-light hover:text-error-content shadow-lg w-fit lg:flex-shrink-0 flex items-center justify-center"
-                            aria-label="Add to favourites"
-                        >
+                            aria-label="Add to favourites">
                             <div v-html="IconStar" class="size-6 flex items-center justify-center"></div>
                         </button>
 
@@ -356,10 +335,13 @@ const formattedCost = computed(() => {
 
                     <div class="border-t-2 border-copy pt-6">
                         <h2 class="text-2xl font-bold text-copy mb-3">Details</h2>
-                        <div
-                            class="text-copy-light leading-relaxed"
-                            v-html="props.product.description"
-                        ></div>
+                        <div class="text-copy-light leading-relaxed" v-html="props.product.description"></div>
+                    </div>
+
+                    <div class="border-t-2 border-copy pt-6">
+                        <h2 class="text-2xl font-bold text-copy mb-3">Reviews</h2>
+                        <div v-if="props.product.reviews.length > 0" class="text-copy-light leading-relaxed">Review
+                        </div>
                     </div>
                 </div>
 
@@ -373,11 +355,8 @@ const formattedCost = computed(() => {
 
             <ul class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
                 <li v-for="product in props.related" :key="product.id">
-                    <ProductSpringCard
-                        :product="product"
-                        @add-to-cart="handleAddToCart(product)"
-                        @favourite="handleFavourite(product)"
-                    />
+                    <ProductSpringCard :product="product" @add-to-cart="handleAddToCart(product)"
+                        @favourite="handleFavourite(product)" />
                 </li>
             </ul>
         </div>
@@ -385,10 +364,6 @@ const formattedCost = computed(() => {
 
     <SuccessToast ref="successToastRef" />
 
-    <ModalImageViewer
-        :images="props.product.images || []"
-        :initial-index="selectedImageIndex"
-        :open="isModalOpen"
-        @update:open="isModalOpen = $event"
-    />
+    <ModalImageViewer :images="props.product.images || []" :initial-index="selectedImageIndex" :open="isModalOpen"
+        @update:open="isModalOpen = $event" />
 </template>

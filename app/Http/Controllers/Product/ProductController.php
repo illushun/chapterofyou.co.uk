@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
-
 use App\Models\Product;
 use App\Models\Product\View as ProductView;
 use App\Models\Category;
@@ -31,9 +30,9 @@ class ProductController extends Controller
             'search', 'categories', 'min_price', 'max_price', 'sort', 'in_stock'
         ]);
 
-        $products = Product
-            ::with('categories')
+        $products = Product::with('categories')
             ->with('images')
+            ->with('reviews')
             ->with('seo:product_id,slug')
             ->withCount('uniqueViews')
             ->filter($filters)
@@ -77,6 +76,7 @@ class ProductController extends Controller
         $product = Product::with([
                 'images:product_id,image',
                 'categories:category.id,category.name',
+                'reviews',
                 'uniqueViews',
                 // Check if the product has variations (children)
                 'children' => function ($query) {
@@ -89,8 +89,7 @@ class ProductController extends Controller
             ->where(function ($query) use ($idOrSlug) {
                 if (is_numeric($idOrSlug)) {
                     $query->where('id', $idOrSlug);
-                }
-                else {
+                } else {
                     $query->whereHas('seo', function ($q) use ($idOrSlug) {
                         $q->where('slug', $idOrSlug);
                     });
@@ -109,9 +108,9 @@ class ProductController extends Controller
 
         $parentProduct = null;
         if ($product->parent_product_id) {
-             $parentProduct = Product::where('id', $product->parent_product_id)
-                ->select('id', 'name', 'mpn', 'description')
-                ->first();
+            $parentProduct = Product::where('id', $product->parent_product_id)
+               ->select('id', 'name', 'mpn', 'description')
+               ->first();
         }
 
         $categoryIds = $product->categories->pluck('id');

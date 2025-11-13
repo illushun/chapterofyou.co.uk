@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Product\Review;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-
 use App\Models\Category;
 use App\Models\Product\Category as ProductCategory;
 use App\Models\Product\Image;
+use App\Models\Product\Review;
 use App\Models\Product\Seo;
 use App\Models\Product\View as ProductView;
 
@@ -73,6 +74,11 @@ class Product extends Model
     {
         // calculates the total count of unique views for the product
         return $this->uniqueViews()->count();
+    }
+
+    public function reviews()
+    {
+        return $this->hasMany(Review::class);
     }
 
     /**
