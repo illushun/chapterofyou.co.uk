@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Models\Category;
 use App\Models\Product\Category as ProductCategory;
 use App\Models\Product\Image;
-use App\Models\Product\Review;
 use App\Models\Product\Seo;
 use App\Models\Product\View as ProductView;
 
