@@ -74,6 +74,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('categories', [AdminCategoryController::class, 'index'])->name('categories.index');
 
+    Route::get('reviews', [AdminOrderController::class, 'index'])->name('reviews.index');
+    Route::get('reviews/{review}', [AdminOrderController::class, 'show'])->name('reviews.show');
+
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
     // Example: update status

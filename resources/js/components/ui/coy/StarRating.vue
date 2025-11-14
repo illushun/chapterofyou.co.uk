@@ -32,8 +32,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['update:rating']);
-
-// Tracks the rating based on hover for visual feedback before clicking
 const hoverRating = ref(0);
 
 // The rating currently being displayed (either actual rating or hover rating)
