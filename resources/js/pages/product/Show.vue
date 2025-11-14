@@ -262,7 +262,7 @@ const formattedCost = computed(() => {
     <section class="py-20">
         <div class="mx-auto max-w-screen-xl p-4 md:p-8 lg:p-12">
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 lg:gap-16">
+            <div class="grid grid-cols-1 lg:grid-cols-2 mb-8 lg:gap-16">
 
                 <div class="lg:sticky lg:top-8 self-start">
                     <button @click="openImageModal"
@@ -400,7 +400,7 @@ const formattedCost = computed(() => {
 
             <div class="border-t-2 border-copy pt-6">
                 <h2 class="text-2xl font-bold text-copy mb-3">Customer Reviews ({{ props.product.approved_reviews_count
-                }})</h2>
+                    }})</h2>
 
                 <div class="flex items-center gap-4 mb-6" v-if="props.product.approved_reviews_count > 0">
                     <StarRating :rating="props.product.average_rating" :size="24" class="text-secondary-content" />
