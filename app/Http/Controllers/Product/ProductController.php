@@ -164,7 +164,7 @@ class ProductController extends Controller
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store('reviews', 'public');
-                $uploadedImages[] = $path;
+                $uploadedImages[] = "https://chapterofyou.co.uk/storage/" . $path;
             }
         }
 
