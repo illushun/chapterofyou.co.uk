@@ -73,7 +73,7 @@ const paginate = (url: string | null) => {
             <h2 class="text-3xl font-black">Reviews (Recent)</h2>
         </div>
 
-        <div v-if="orders.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
+        <div v-if="reviews.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
 
             <!--
                 DESKTOP TABLE VIEW
@@ -95,9 +95,9 @@ const paginate = (url: string | null) => {
                         <tr v-for="review in reviews.data" :key="review.id" class="hover:bg-secondary-light transition">
                             <td class="px-4 py-3 font-semibold text-primary">#{{ review.id }}</td>
                             <td class="px-4 py-3">
-                                <span v-if="order.user">
+                                <span v-if="review.user">
                                     <Link :href="route('admin.users.show', review.user.id)" class="hover:underline">{{
-                                        order.user.name }}</Link><br>
+                                        review.user.name }}</Link><br>
                                     <span class="text-xs text-copy-light">{{ review.user.email }}</span>
                                 </span>
                                 <span v-else class="text-copy-light italic">Guest</span>
@@ -111,7 +111,7 @@ const paginate = (url: string | null) => {
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <Link :href="route('admin.reviews.show', order.id)"
+                                <Link :href="route('admin.reviews.show', review.id)"
                                     class="text-blue-500 hover:text-blue-700 transition font-semibold">
                                 View Details
                                 </Link>
@@ -129,11 +129,11 @@ const paginate = (url: string | null) => {
                 <div v-for="review in reviews.data" :key="review.id"
                     class="p-4 bg-foreground hover:bg-secondary-light transition">
 
-                    <!-- Order ID and Status -->
+                    <!-- Review ID and Status -->
                     <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
                         <div>
-                            <div class="text-xs text-copy-light uppercase font-medium">Order ID</div>
-                            <Link :href="route('admin.reviews.show', order.id)"
+                            <div class="text-xs text-copy-light uppercase font-medium">Review ID</div>
+                            <Link :href="route('admin.reviews.show', review.id)"
                                 class="text-xl font-bold text-primary hover:underline">
                             #{{ review.id }}
                             </Link>
