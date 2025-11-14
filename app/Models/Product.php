@@ -94,11 +94,6 @@ class Product extends Model
         return $this->hasMany(Review::class)->approved();
     }
 
-    public function scopeApproved(Builder $query): void
-    {
-        $query->where('status', 'approved');
-    }
-
     /**
      * Scope a query to filter products.
      *

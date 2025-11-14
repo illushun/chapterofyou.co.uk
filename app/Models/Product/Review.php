@@ -4,6 +4,7 @@ namespace App\Models\Product;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\User;
 use App\Models\Product;
 
@@ -52,5 +53,10 @@ class Review extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function scopeApproved(Builder $query): void
+    {
+        $query->where('status', 'approved');
     }
 }
