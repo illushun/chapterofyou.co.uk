@@ -262,100 +262,6 @@ const formattedCost = computed(() => {
     <section class="py-20">
         <div class="mx-auto max-w-screen-xl p-4 md:p-8 lg:p-12">
 
-            <div class="border-t-2 border-copy pt-6">
-                <h2 class="text-2xl font-bold text-copy mb-3">Customer Reviews ({{ props.product.approved_reviews_count
-                    }})</h2>
-
-                <div class="flex items-center gap-4 mb-6" v-if="props.product.approved_reviews_count > 0">
-                    <StarRating :rating="props.product.average_rating" :size="24" class="text-secondary-content" />
-                    <span class="text-xl font-semibold text-copy">
-                        {{ props.product.average_rating.toFixed(2) }} Average Rating
-                    </span>
-                </div>
-
-                <div v-if="props.canReview" class="mb-8 p-6 border-2 border-copy rounded-lg bg-foreground-light">
-                    <h3 class="text-xl font-bold text-copy mb-4">Write a Review</h3>
-                    <form @submit.prevent="submitReview">
-                        <div class="mb-4">
-                            <label class="block text-sm font-medium text-copy mb-2">Your Rating</label>
-                            <div class="flex gap-1">
-                                <StarRating :rating="reviewForm.rating" :editable="true"
-                                    @update:rating="reviewForm.rating = $event" :size="30" class="text-secondary" />
-                            </div>
-                            <p v-if="reviewForm.errors.rating" class="text-error text-sm mt-1">{{
-                                reviewForm.errors.rating }}</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="review_message" class="block text-sm font-medium text-copy mb-2">Your
-                                Message</label>
-                            <textarea id="review_message" v-model="reviewForm.message" rows="4"
-                                class="w-full rounded-lg border-2 border-copy bg-background p-3 text-copy focus:border-primary-content focus:ring-primary-content"
-                                :class="{ 'border-error': reviewForm.errors.message }"></textarea>
-                            <p v-if="reviewForm.errors.message" class="text-error text-sm mt-1">{{
-                                reviewForm.errors.message }}</p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="review_images" class="block text-sm font-medium text-copy mb-2">Upload Images
-                                (Max 3)</label>
-                            <input type="file" id="review_images" multiple accept="image/*" @change="handleImageUpload"
-                                class="block w-full text-sm text-copy file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-content hover:file:bg-primary-dark"
-                                :class="{ 'border-error': reviewForm.errors['images.0'] }">
-                            <p v-if="reviewForm.errors['images'] || reviewForm.errors['images.0']"
-                                class="text-error text-sm mt-1">
-                                {{ reviewForm.errors['images'] || reviewForm.errors['images.0'] }}
-                            </p>
-                        </div>
-
-                        <button type="submit" :disabled="reviewForm.processing || reviewForm.rating === 0"
-                            class="rounded-lg border-2 border-copy px-6 py-2 text-md font-bold text-primary-content transition"
-                            :class="{ 'bg-primary hover:bg-primary-dark': reviewForm.rating > 0, 'bg-border text-copy-lighter cursor-not-allowed': reviewForm.rating === 0 }"
-                            :style="reviewForm.rating > 0 ? { 'background-color': 'var(--primary)' } : {}">
-                            Submit Review
-                        </button>
-                    </form>
-                </div>
-                <div v-else-if="auth.user" class="p-4 bg-secondary-light border border-copy rounded-lg text-copy-light">
-                    You must have purchased this product to submit a review.
-                </div>
-                <div v-else class="p-4 bg-secondary-light border border-copy rounded-lg text-copy-light">
-                    <a :href="route('login')" class="font-semibold text-primary-content hover:underline">Log in</a> to
-                    see if you are eligible to leave a review.
-                </div>
-
-                <div v-if="props.product.reviews.length > 0" class="mt-8 space-y-8">
-                    <div v-for="review in props.product.reviews" :key="review.id"
-                        class="p-6 border-2 border-copy rounded-lg bg-foreground shadow-md relative">
-
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex flex-col">
-                                <StarRating :rating="review.rating" :size="18" class="text-secondary-content mb-1" />
-                                <p class="font-semibold text-copy">{{ review.user.name }}</p>
-                                <p class="text-sm text-copy-lighter">Reviewed on {{ new
-                                    Date(review.created_at).toLocaleDateString() }}</p>
-                            </div>
-
-                            <button v-if="auth.user && auth.user.id === review.user_id" @click="deleteReview(review.id)"
-                                class="text-error-content bg-error hover:bg-error-dark p-2 rounded-full transition"
-                                aria-label="Delete review" title="Delete your review">
-                                <div v-html="IconDelete"></div>
-                            </button>
-                        </div>
-
-                        <p class="text-copy-light mb-4">{{ review.message }}</p>
-
-                        <div v-if="review.review_images && review.review_images.length" class="flex gap-2">
-                            <img v-for="(image, idx) in review.review_images" :key="idx" :src="image"
-                                class="size-16 object-cover rounded-md border border-copy cursor-pointer"
-                                @click="openImageModal" :alt="`Review image ${idx + 1}`" />
-                        </div>
-                    </div>
-                </div>
-                <div v-else class="text-copy-lighter italic mt-4">
-                    No approved reviews yet. Be the first!
-                </div>
-            </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 lg:gap-16">
 
                 <div class="lg:sticky lg:top-8 self-start">
@@ -490,6 +396,101 @@ const formattedCost = computed(() => {
                     </div>
                 </div>
 
+            </div>
+
+            <div class="border-t-2 border-copy pt-6">
+                <h2 class="text-2xl font-bold text-copy mb-3">Customer Reviews ({{ props.product.approved_reviews_count
+                }})</h2>
+
+                <div class="flex items-center gap-4 mb-6" v-if="props.product.approved_reviews_count > 0">
+                    <StarRating :rating="props.product.average_rating" :size="24" class="text-secondary-content" />
+                    <span class="text-xl font-semibold text-copy">
+                        {{ props.product.average_rating.toFixed(2) }} Average Rating
+                    </span>
+                </div>
+
+                <div v-if="props.canReview" class="mb-8 p-6 border-2 border-copy rounded-lg bg-foreground-light">
+                    <h3 class="text-xl font-bold text-copy mb-4">Write a Review</h3>
+                    <form @submit.prevent="submitReview">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-copy mb-2">Your Rating</label>
+                            <div class="flex gap-1">
+                                <StarRating :rating="reviewForm.rating" :editable="true"
+                                    @update:rating="reviewForm.rating = $event" :size="30" class="text-secondary" />
+                            </div>
+                            <p v-if="reviewForm.errors.rating" class="text-error text-sm mt-1">{{
+                                reviewForm.errors.rating }}</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="review_message" class="block text-sm font-medium text-copy mb-2">Your
+                                Message</label>
+                            <textarea id="review_message" v-model="reviewForm.message" rows="4"
+                                class="w-full rounded-lg border-2 border-copy bg-background p-3 text-copy focus:border-primary-content focus:ring-primary-content"
+                                :class="{ 'border-error': reviewForm.errors.message }"></textarea>
+                            <p v-if="reviewForm.errors.message" class="text-error text-sm mt-1">{{
+                                reviewForm.errors.message }}</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="review_images" class="block text-sm font-medium text-copy mb-2">Upload Images
+                                (Max 3)</label>
+                            <input type="file" id="review_images" multiple accept="image/*" @change="handleImageUpload"
+                                class="block w-full text-sm text-copy file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-content hover:file:bg-primary-dark"
+                                :class="{ 'border-error': reviewForm.errors['images.0'] }">
+                            <p v-if="reviewForm.errors['images'] || reviewForm.errors['images.0']"
+                                class="text-error text-sm mt-1">
+                                {{ reviewForm.errors['images'] || reviewForm.errors['images.0'] }}
+                            </p>
+                        </div>
+
+                        <button type="submit" :disabled="reviewForm.processing || reviewForm.rating === 0"
+                            class="rounded-lg border-2 border-copy px-6 py-2 text-md font-bold text-primary-content transition"
+                            :class="{ 'bg-primary hover:bg-primary-dark': reviewForm.rating > 0, 'bg-border text-copy-lighter cursor-not-allowed': reviewForm.rating === 0 }"
+                            :style="reviewForm.rating > 0 ? { 'background-color': 'var(--primary)' } : {}">
+                            Submit Review
+                        </button>
+                    </form>
+                </div>
+                <div v-else-if="auth.user" class="p-4 bg-secondary-light border border-copy rounded-lg text-copy-light">
+                    You must have purchased this product to submit a review.
+                </div>
+                <div v-else class="p-4 bg-secondary-light border border-copy rounded-lg text-copy-light">
+                    <a :href="route('login')" class="font-semibold text-primary-content hover:underline">Log in</a> to
+                    see if you are eligible to leave a review.
+                </div>
+
+                <div v-if="props.product.reviews.length > 0" class="mt-8 space-y-8">
+                    <div v-for="review in props.product.reviews" :key="review.id"
+                        class="p-6 border-2 border-copy rounded-lg bg-foreground shadow-md relative">
+
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex flex-col">
+                                <StarRating :rating="review.rating" :size="18" class="text-secondary-content mb-1" />
+                                <p class="font-semibold text-copy">{{ review.user.name }}</p>
+                                <p class="text-sm text-copy-lighter">Reviewed on {{ new
+                                    Date(review.created_at).toLocaleDateString() }}</p>
+                            </div>
+
+                            <button v-if="auth.user && auth.user.id === review.user_id" @click="deleteReview(review.id)"
+                                class="text-error-content bg-error hover:bg-error-dark p-2 rounded-full transition"
+                                aria-label="Delete review" title="Delete your review">
+                                <div v-html="IconDelete"></div>
+                            </button>
+                        </div>
+
+                        <p class="text-copy-light mb-4">{{ review.message }}</p>
+
+                        <div v-if="review.review_images && review.review_images.length" class="flex gap-2">
+                            <img v-for="(image, idx) in review.review_images" :key="idx" :src="image"
+                                class="size-16 object-cover rounded-md border border-copy cursor-pointer"
+                                @click="openImageModal" :alt="`Review image ${idx + 1}`" />
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="text-copy-lighter italic mt-4">
+                    No approved reviews yet. Be the first!
+                </div>
             </div>
         </div>
     </section>
