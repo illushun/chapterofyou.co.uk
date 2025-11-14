@@ -44,6 +44,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/account/addresses', [AccountController::class, 'storeAddress'])->name('address.store');
     Route::put('/account/addresses/{address}', [AccountController::class, 'updateAddress'])->name('address.update');
     Route::delete('/account/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('address.destroy');
+
+    Route::post('/product/{product}/review', [ProductController::class, 'storeReview'])->name('products.review.store');
+    Route::delete('/product/{review}/review', [ProductController::class, 'destroyReview'])->name('products.review.destroy');
 });
 
 Route::get('sl/{provider}', [SocialiteController::class, 'redirectToProvider'])->name('socialite.redirect');

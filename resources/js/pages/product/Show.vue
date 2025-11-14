@@ -1,25 +1,32 @@
 <script setup lang="ts">
 import NavBar from '@/components/NavBar.vue';
-import { Head, usePage, router } from '@inertiajs/vue3';
+import { Head, usePage, router, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import ModalImageViewer from '@/components/ui/coy/ModalImageViewer.vue';
+import StarRating from '@/components/ui/coy/StarRating.vue';
 
 const IconStar = `<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.152A1.5 1.5 0 0113.951 2.152l1.621 3.436a1.5 1.5 0 001.194.887l3.778.548a1.5 1.5 0 01.832 2.578l-2.73 2.66a1.5 1.5 0 00-.435 1.334l.643 3.766a1.5 1.5 0 01-2.175 1.583l-3.38-1.777a1.5 1.5 0 00-1.396 0l-3.38 1.777a1.5 1.5 0 01-2.175-1.583l.643-3.766a1.5 1.5 0 00-.435-1.334l-2.73-2.66a1.5 1.5 0 01.832-2.578l3.778-.548a1.5 1.5 0 001.194-.887l1.621-3.436z" /></svg>`;
 const IconCart = `<svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`;
 const IconMinus = `<svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>`;
 const IconPlus = `<svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m-8-8h16" /></svg>`;
+const IconDelete = `<svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>`;
 
 interface ProductImage {
     image: string;
 }
 
 interface ProductReview {
-    product_id: string;
-    user_id: string;
+    id: number;
+    product_id: number;
+    user_id: number;
     message: string;
+    rating: number;
+    review_images: string[];
+    created_at: string;
+    user: { id: number; name: string };
 }
 
 interface ProductVariation {
@@ -39,6 +46,8 @@ interface ProductDetailData {
     cost: number;
     stock_qty: number;
     total_unique_views: number;
+    average_rating: number;
+    approved_reviews_count: number;
     images: ProductImage[];
     reviews: ProductReview[];
     categories: { id: number; name: string }[];
@@ -50,9 +59,12 @@ interface ProductProps {
     product: ProductDetailData;
     parent?: ProductDetailData | null;
     related: ProductDetailData[];
+    canReview: boolean;
 }
 
 const props = defineProps<ProductProps>();
+const page = usePage();
+const auth = computed(() => page.props.auth as any);
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 const isModalOpen = ref(false);
 
@@ -75,6 +87,50 @@ const mainImageUrl = computed(() => props.product.images[selectedImageIndex.valu
 const openImageModal = () => {
     if ((props.product.images || []).length > 0) {
         isModalOpen.value = true;
+    }
+};
+
+const reviewForm = useForm({
+    rating: 0,
+    message: '',
+    images: [] as File[],
+});
+
+const submitReview = () => {
+    reviewForm.post(route('products.review.store', props.product.id), {
+        onSuccess: () => {
+            if (successToastRef.value) {
+                successToastRef.value.show('Review submitted! Awaiting approval.', 'star');
+            }
+            reviewForm.reset('rating', 'message', 'images');
+        },
+        onError: (errors) => {
+            console.error('Review submission failed:', errors);
+        }
+    });
+};
+
+const deleteReview = (reviewId: number) => {
+    if (confirm('Are you sure you want to delete your review?')) {
+        router.delete(route('products.review.destroy', reviewId), {
+            preserveScroll: true,
+            onSuccess: () => {
+                if (successToastRef.value) {
+                    successToastRef.value.show('Review deleted successfully!', 'trash');
+                }
+            },
+            onError: (errors) => {
+                console.error('Review deletion failed:', errors);
+            }
+        });
+    }
+};
+
+const handleImageUpload = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    if (target.files) {
+        // Limit to 3 images
+        reviewForm.images = Array.from(target.files).slice(0, 3);
     }
 };
 
@@ -205,6 +261,101 @@ const formattedCost = computed(() => {
 
     <section class="py-20">
         <div class="mx-auto max-w-screen-xl p-4 md:p-8 lg:p-12">
+
+            <div class="border-t-2 border-copy pt-6">
+                <h2 class="text-2xl font-bold text-copy mb-3">Customer Reviews ({{ props.product.approved_reviews_count
+                    }})</h2>
+
+                <div class="flex items-center gap-4 mb-6" v-if="props.product.approved_reviews_count > 0">
+                    <StarRating :rating="props.product.average_rating" :size="24" class="text-secondary-content" />
+                    <span class="text-xl font-semibold text-copy">
+                        {{ props.product.average_rating.toFixed(2) }} Average Rating
+                    </span>
+                </div>
+
+                <div v-if="props.canReview" class="mb-8 p-6 border-2 border-copy rounded-lg bg-foreground-light">
+                    <h3 class="text-xl font-bold text-copy mb-4">Write a Review</h3>
+                    <form @submit.prevent="submitReview">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-copy mb-2">Your Rating</label>
+                            <div class="flex gap-1">
+                                <StarRating :rating="reviewForm.rating" :editable="true"
+                                    @update:rating="reviewForm.rating = $event" :size="30" class="text-secondary" />
+                            </div>
+                            <p v-if="reviewForm.errors.rating" class="text-error text-sm mt-1">{{
+                                reviewForm.errors.rating }}</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="review_message" class="block text-sm font-medium text-copy mb-2">Your
+                                Message</label>
+                            <textarea id="review_message" v-model="reviewForm.message" rows="4"
+                                class="w-full rounded-lg border-2 border-copy bg-background p-3 text-copy focus:border-primary-content focus:ring-primary-content"
+                                :class="{ 'border-error': reviewForm.errors.message }"></textarea>
+                            <p v-if="reviewForm.errors.message" class="text-error text-sm mt-1">{{
+                                reviewForm.errors.message }}</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="review_images" class="block text-sm font-medium text-copy mb-2">Upload Images
+                                (Max 3)</label>
+                            <input type="file" id="review_images" multiple accept="image/*" @change="handleImageUpload"
+                                class="block w-full text-sm text-copy file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-content hover:file:bg-primary-dark"
+                                :class="{ 'border-error': reviewForm.errors['images.0'] }">
+                            <p v-if="reviewForm.errors['images'] || reviewForm.errors['images.0']"
+                                class="text-error text-sm mt-1">
+                                {{ reviewForm.errors['images'] || reviewForm.errors['images.0'] }}
+                            </p>
+                        </div>
+
+                        <button type="submit" :disabled="reviewForm.processing || reviewForm.rating === 0"
+                            class="rounded-lg border-2 border-copy px-6 py-2 text-md font-bold text-primary-content transition"
+                            :class="{ 'bg-primary hover:bg-primary-dark': reviewForm.rating > 0, 'bg-border text-copy-lighter cursor-not-allowed': reviewForm.rating === 0 }"
+                            :style="reviewForm.rating > 0 ? { 'background-color': 'var(--primary)' } : {}">
+                            Submit Review
+                        </button>
+                    </form>
+                </div>
+                <div v-else-if="auth.user" class="p-4 bg-secondary-light border border-copy rounded-lg text-copy-light">
+                    You must have purchased this product to submit a review.
+                </div>
+                <div v-else class="p-4 bg-secondary-light border border-copy rounded-lg text-copy-light">
+                    <a :href="route('login')" class="font-semibold text-primary-content hover:underline">Log in</a> to
+                    see if you are eligible to leave a review.
+                </div>
+
+                <div v-if="props.product.reviews.length > 0" class="mt-8 space-y-8">
+                    <div v-for="review in props.product.reviews" :key="review.id"
+                        class="p-6 border-2 border-copy rounded-lg bg-foreground shadow-md relative">
+
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex flex-col">
+                                <StarRating :rating="review.rating" :size="18" class="text-secondary-content mb-1" />
+                                <p class="font-semibold text-copy">{{ review.user.name }}</p>
+                                <p class="text-sm text-copy-lighter">Reviewed on {{ new
+                                    Date(review.created_at).toLocaleDateString() }}</p>
+                            </div>
+
+                            <button v-if="auth.user && auth.user.id === review.user_id" @click="deleteReview(review.id)"
+                                class="text-error-content bg-error hover:bg-error-dark p-2 rounded-full transition"
+                                aria-label="Delete review" title="Delete your review">
+                                <div v-html="IconDelete"></div>
+                            </button>
+                        </div>
+
+                        <p class="text-copy-light mb-4">{{ review.message }}</p>
+
+                        <div v-if="review.review_images && review.review_images.length" class="flex gap-2">
+                            <img v-for="(image, idx) in review.review_images" :key="idx" :src="image"
+                                class="size-16 object-cover rounded-md border border-copy cursor-pointer"
+                                @click="openImageModal" :alt="`Review image ${idx + 1}`" />
+                        </div>
+                    </div>
+                </div>
+                <div v-else class="text-copy-lighter italic mt-4">
+                    No approved reviews yet. Be the first!
+                </div>
+            </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 lg:gap-16">
 
                 <div class="lg:sticky lg:top-8 self-start">
@@ -336,12 +487,6 @@ const formattedCost = computed(() => {
                     <div class="border-t-2 border-copy pt-6">
                         <h2 class="text-2xl font-bold text-copy mb-3">Details</h2>
                         <div class="text-copy-light leading-relaxed" v-html="props.product.description"></div>
-                    </div>
-
-                    <div class="border-t-2 border-copy pt-6">
-                        <h2 class="text-2xl font-bold text-copy mb-3">Reviews</h2>
-                        <div v-if="props.product.reviews.length > 0" class="text-copy-light leading-relaxed">Review
-                        </div>
                     </div>
                 </div>
 

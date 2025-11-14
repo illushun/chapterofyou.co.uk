@@ -30,7 +30,11 @@ class Product extends Model
 
     protected $hidden = [];
 
-    protected $appends = ['total_unique_views'];
+    protected $appends = [
+        'total_unique_views',
+        'average_rating',
+        'approved_reviews_count'
+    ];
 
     public function categories()
     {
@@ -69,15 +73,30 @@ class Product extends Model
         return $this->hasMany(ProductView::class);
     }
 
+    public function getAverageRatingAttribute(): float
+    {
+        return (float) $this->reviews()->approved()->avg('rating') ?? 0.0;
+    }
+
     public function getTotalUniqueViewsAttribute()
     {
         // calculates the total count of unique views for the product
         return $this->uniqueViews()->count();
     }
 
+    public function getApprovedReviewsCountAttribute(): int
+    {
+        return $this->reviews()->approved()->count();
+    }
+
     public function reviews()
     {
-        return $this->hasMany(Review::class);
+        return $this->hasMany(Review::class)->approved();
+    }
+
+    public function scopeApproved(Builder $query): void
+    {
+        $query->where('status', 'approved');
     }
 
     /**

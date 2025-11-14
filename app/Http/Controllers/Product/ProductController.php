@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Product;
 use App\Models\Product\View as ProductView;
 use App\Models\Category;
+use App\Models\Product\Review;
+use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
@@ -76,7 +78,7 @@ class ProductController extends Controller
         $product = Product::with([
                 'images:product_id,image',
                 'categories:category.id,category.name',
-                'reviews',
+                'reviews.user:id,name',
                 'uniqueViews',
                 // Check if the product has variations (children)
                 'children' => function ($query) {
@@ -124,10 +126,80 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
+        $canReview = false;
+        if (Auth::check()) {
+            $canReview = Auth::user()->hasPurchased($product->id);
+        }
+
         return Inertia::render('product/Show', [
             'product' => $product->loadMissing('seo'),
             'parent' => $parentProduct,
             'related' => $relatedProducts,
+            'canReview' => $canReview,
         ]);
+    }
+
+    /**
+     * Store a newly created review resource in storage.
+     * Requires authentication and proof of purchase.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Product  $product
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function storeReview(Request $request, Product $product)
+    {
+        $request->validate([
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'message' => ['required', 'string', 'max:1000'],
+            'images' => ['nullable', 'array', 'max:3'], // Max 3 images
+            'images.*' => ['image', 'max:2048', 'mimes:jpeg,png,jpg'], // Max 2MB per image
+        ]);
+
+        if (!Auth::check() || !Auth::user()->hasPurchased($product->id)) {
+            return redirect()->back()->withErrors(['review' => 'You must be logged in and have purchased this product to leave a review.']);
+        }
+
+        $uploadedImages = [];
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $image) {
+                $path = $image->store('reviews', 'public');
+                $uploadedImages[] = $path;
+            }
+        }
+
+        $product->reviews()->create([
+            'user_id' => Auth::id(),
+            'rating' => $request->rating,
+            'message' => $request->message,
+            'review_images' => $uploadedImages,
+            'status' => 'pending', // Reviews must be approved
+        ]);
+
+        return redirect()->back()->with('success', 'Your review has been submitted and is awaiting approval!');
+    }
+
+    /**
+     * Remove the specified review from storage.
+     *
+     * @param  \App\Models\Product\Review  $review
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function destroyReview(Review $review)
+    {
+        if (!Auth::check() || $review->user_id !== Auth::id()) {
+            return redirect()->back()->withErrors(['review_delete' => 'You are not authorised to delete this review.']);
+        }
+
+        // Delete images from storage
+        if ($review->review_images) {
+            foreach ($review->review_images as $imagePath) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($imagePath);
+            }
+        }
+
+        $review->delete();
+
+        return redirect()->back()->with('success', 'Your review has been successfully deleted.');
     }
 }
