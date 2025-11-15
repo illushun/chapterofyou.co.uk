@@ -28,7 +28,7 @@ class AdminMessageController extends Controller
     /**
      * Display the specified message.
      */
-    public function show(Message $message)
+    public function show(ContactMessage $message)
     {
         return Inertia::render('admin/message/Show', [
             'message' => $message,
