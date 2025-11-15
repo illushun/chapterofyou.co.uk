@@ -21,7 +21,9 @@ use Inertia\Inertia;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about-us', [HomeController::class, 'about'])->name('about');
+
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
+Route::post('/contact', [HomeController::class, 'storeContact'])->name('contact.store');
 
 Route::get('/products', [ProductController::class, 'index'])->name('products');
 Route::get('/product/{idOrSlug}', [ProductController::class, 'show'])->name('products.show');

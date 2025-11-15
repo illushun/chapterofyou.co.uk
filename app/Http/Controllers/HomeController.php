@@ -3,12 +3,18 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Inertia\Inertia; // Essential for the Inertia/Vue integration
+use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
+use App\Models\ContactMessage;
 
 class HomeController extends Controller
 {
     private const ALLOWED_IP = '82.18.187.157';
+
+    private function checkIp(Request $request): bool
+    {
+        return $request->ip() === self::ALLOWED_IP;
+    }
 
     /**
      * Display the application's landing page.
@@ -19,7 +25,7 @@ class HomeController extends Controller
         $clientIp = $request->ip();
         logger()->channel('load_website')->info("[{$clientIp}] Recorded access attempt:");
 
-        if ($clientIp === self::ALLOWED_IP) {
+        if ($this->checkIp($request)) {
             logger()->channel('load_website')->info("[{$clientIp}] Accepted. Redirecting to actual webpage.");
 
             return Inertia::render('home/LandingPage', [
@@ -40,8 +46,7 @@ class HomeController extends Controller
 
     public function about(Request $request): \Inertia\Response
     {
-        $clientIp = $request->ip();
-        if ($clientIp !== self::ALLOWED_IP) {
+        if ($this->checkIp($request)) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
@@ -54,8 +59,7 @@ class HomeController extends Controller
 
     public function contact(Request $request)
     {
-        $clientIp = $request->ip();
-        if ($clientIp !== self::ALLOWED_IP) {
+        if ($this->checkIp($request)) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
@@ -64,5 +68,26 @@ class HomeController extends Controller
         return Inertia::render('Contact', [
             'siteName' => 'Chapter of You',
         ]);
+    }
+
+    /**
+     * Store a new contact message in the database.
+     */
+    public function storeContact(Request $request)
+    {
+        if (!$this->checkIp($request)) {
+            Log::warning('Contact form submission attempt blocked due to IP restriction.', ['ip' => $request->ip()]);
+            return redirect()->route('home');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'subject' => 'nullable|string|max:255',
+            'message' => 'required|string|max:2000',
+        ]);
+
+        ContactMessage::create($validated);
+        return redirect()->back()->with('success', 'Thank you for your message! I will get back to you soon.');
     }
 }

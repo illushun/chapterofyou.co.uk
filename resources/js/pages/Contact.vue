@@ -10,5 +10,10 @@ import NavBar from '@/components/NavBar.vue';
 
     <Head title="Contact" />
 
-    Hello world
+    <section class="py-20 bg-background min-h-screen">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            Hello world
+        </div>
+    </section>
+
 </template>
