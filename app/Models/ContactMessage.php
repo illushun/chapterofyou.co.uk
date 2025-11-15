@@ -9,6 +9,8 @@ class ContactMessage extends Model
 {
     use HasFactory;
 
+    protected $table = 'contact_message';
+
     protected $fillable = [
         'name',
         'email',
