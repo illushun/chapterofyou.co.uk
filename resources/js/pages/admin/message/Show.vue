@@ -30,7 +30,7 @@ const formatDate = (dateString: string): string =>
 <template>
     <AdminLayout>
 
-        <Head :title="`Message #${review.id}`" />
+        <Head :title="`Message #${message.id}`" />
 
         <div class="flex justify-between items-start mb-6 border-b-2 border-copy pb-2">
             <div>
@@ -82,7 +82,7 @@ const formatDate = (dateString: string): string =>
                             <div class="flex justify-between">
                                 <span>Have Read:</span>
                                 <span :class="['font-bold uppercase']">{{ message.is_read
-                                    }}</span>
+                                }}</span>
                             </div>
                         </div>
                     </div>
