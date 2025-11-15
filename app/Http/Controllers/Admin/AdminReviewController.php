@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Product\Review;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class AdminReviewController extends Controller
 {
     /**
-     * Display a listing of orders.
+     * Display a listing of reviews.
      */
     public function index(Request $request)
     {
@@ -26,7 +27,7 @@ class AdminReviewController extends Controller
     }
 
     /**
-     * Display the specified order.
+     * Display the specified review.
      */
     public function show(Review $review)
     {
@@ -35,5 +36,20 @@ class AdminReviewController extends Controller
         return Inertia::render('admin/review/Show', [
             'review' => $review,
         ]);
+    }
+
+    /**
+     * Update the specified review status in storage.
+     */
+    public function update(Request $request, Review $review)
+    {
+        $request->validate([
+            'status' => ['required', Rule::in(['pending', 'approved', 'rejected'])],
+        ]);
+
+        $review->status = $request->status;
+        $review->save();
+
+        return redirect()->back()->with('success', "Review #{$review->id} status updated to {$review->status} successfully.");
     }
 }
