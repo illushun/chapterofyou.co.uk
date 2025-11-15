@@ -15,23 +15,23 @@ class AdminMessageController extends Controller
      */
     public function index(Request $request)
     {
-        $reviews = ContactMessage::query()
+        $messages = ContactMessage::query()
             ->select('id', 'name', 'email', 'subject', 'message', 'is_read', 'created_at')
             ->orderByDesc('created_at')
             ->paginate(15);
 
         return Inertia::render('admin/message/Index', [
-            'messages' => $reviews,
+            'messages' => $messages,
         ]);
     }
 
     /**
      * Display the specified message.
      */
-    public function show(Review $review)
+    public function show(Message $message)
     {
         return Inertia::render('admin/message/Show', [
-            'message' => $review,
+            'message' => $message,
         ]);
     }
 }
