@@ -46,7 +46,7 @@ class HomeController extends Controller
 
     public function about(Request $request): \Inertia\Response
     {
-        if ($this->checkIp($request)) {
+        if (!$this->checkIp($request)) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
@@ -59,7 +59,7 @@ class HomeController extends Controller
 
     public function contact(Request $request)
     {
-        if ($this->checkIp($request)) {
+        if (!$this->checkIp($request)) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
