@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\WaitlistController;
@@ -78,8 +79,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('categories', [AdminCategoryController::class, 'index'])->name('categories.index');
 
-    Route::get('messages', [AdminReviewController::class, 'index'])->name('messages.index');
-    Route::get('messages/{message}', [AdminReviewController::class, 'show'])->name('messages.show');
+    Route::get('messages', [AdminMessageController::class, 'index'])->name('messages.index');
+    Route::get('messages/{message}', [AdminMessageController::class, 'show'])->name('messages.show');
 
     Route::get('reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
     Route::get('reviews/{review}', [AdminReviewController::class, 'show'])->name('reviews.show');
