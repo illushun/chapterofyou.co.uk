@@ -17,7 +17,7 @@ class AdminReviewController extends Controller
     {
         $reviews = Review::with('user:id,name,email')
             ->with('product:id,mpn')
-            ->select('id', 'user_id', 'rating', 'status', 'created_at')
+            ->select('id', 'user_id', 'product_id', 'rating', 'status', 'created_at')
             ->orderByDesc('created_at')
             ->paginate(15);
 

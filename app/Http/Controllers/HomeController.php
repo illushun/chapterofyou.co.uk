@@ -51,4 +51,18 @@ class HomeController extends Controller
             'siteName' => 'Chapter of You',
         ]);
     }
+
+    public function contact(Request $request)
+    {
+        $clientIp = $request->ip();
+        if ($clientIp !== self::ALLOWED_IP) {
+            return Inertia::render('Welcome', [
+                'siteName' => 'Chapter of You',
+            ]);
+        }
+
+        return Inertia::render('Contact', [
+            'siteName' => 'Chapter of You',
+        ]);
+    }
 }
