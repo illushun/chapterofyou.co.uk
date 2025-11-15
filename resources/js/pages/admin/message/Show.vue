@@ -38,7 +38,7 @@ const formatDate = (dateString: string): string =>
                 <p class="text-copy-light">Created at {{ formatDate(message.created_at) }}</p>
             </div>
             <span :class="['px-4 py-1.5 rounded-full text-lg font-bold uppercase border-2']">
-                {{ nessage.is_read }}
+                {{ message.is_read }}
             </span>
         </div>
 
@@ -82,7 +82,7 @@ const formatDate = (dateString: string): string =>
                             <div class="flex justify-between">
                                 <span>Have Read:</span>
                                 <span :class="['font-bold uppercase']">{{ message.is_read
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                     </div>
