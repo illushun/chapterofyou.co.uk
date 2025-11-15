@@ -21,7 +21,7 @@ class AdminMessageController extends Controller
             ->paginate(15);
 
         return Inertia::render('admin/message/Index', [
-            'reviews' => $reviews,
+            'messages' => $reviews,
         ]);
     }
 
@@ -31,7 +31,7 @@ class AdminMessageController extends Controller
     public function show(Review $review)
     {
         return Inertia::render('admin/message/Show', [
-            'review' => $review,
+            'message' => $review,
         ]);
     }
 }

@@ -82,7 +82,7 @@ const paginate = (url: string | null) => {
                             </td>
                             <td class="px-4 py-3">
                                 <span v-if="message.subject" class="text-xs text-copy-light">{{ message.subject
-                                    }}</span>
+                                }}</span>
                                 <span v-else class="text-xs text-copy-light italic">No subject..</span>
                             </td>
                             <td class="px-4 py-3">{{ formatDate(message.created_at) }}</td>
@@ -106,7 +106,7 @@ const paginate = (url: string | null) => {
                 <div v-for="message in messages.data" :key="message.id"
                     class="p-4 bg-foreground hover:bg-secondary-light transition">
 
-                    <!-- Review ID and Status -->
+                    <!-- Message ID and Status -->
                     <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
                         <div>
                             <div class="text-xs text-copy-light uppercase font-medium">Message ID</div>
@@ -123,8 +123,8 @@ const paginate = (url: string | null) => {
                     <!-- User Info -->
                     <div class="py-2 border-b border-copy-light/30">
                         <div class="text-xs text-copy-light uppercase font-medium">User</div>
-                        <div class="mt-1 text-sm text-copy-light">{{ review.name }}</div>
-                        <div class="mt-1 text-sm text-copy-light">{{ review.email }}</div>
+                        <div class="mt-1 text-sm text-copy-light">{{ message.name }}</div>
+                        <div class="mt-1 text-sm text-copy-light">{{ message.email }}</div>
                     </div>
 
                     <!-- Date, Have Read, and Actions -->
