@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Courier;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Product\Seo;
@@ -118,7 +117,7 @@ class AdminProductController extends Controller
      */
     public function edit(Product $product)
     {
-        $product->load(['seo:product_id,meta_title,meta_description,slug', 'categories:id']);
+        $product->load(['seo:product_id,meta_title,meta_description,slug', 'categories:id', 'courier:courier_id,per_item']);
         $categories = Category::select('id', 'name')->get();
 
         $parentProducts = Product::where('id', '!=', $product->id)->select('id', 'name')->get();
@@ -132,9 +131,12 @@ class AdminProductController extends Controller
                 return $image;
             });
 
+        $couriers = Courier::select('*')->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
+
         return Inertia::render('admin/product/CreateEdit', [
             'product' => $product,
             'categories' => $categories,
+            'couriers' => $couriers,
             'parentProducts' => $parentProducts,
             'selectedCategoryIds' => $product->categories->pluck('id'),
             'productImages' => $productImages,

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Product\Courier as ProductCourier;
 use App\Models\Product\Review;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -92,6 +93,11 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class)->approved();
+    }
+
+    public function courier()
+    {
+        return $this->hasOne(ProductCourier::class);
     }
 
     /**

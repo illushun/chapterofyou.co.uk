@@ -231,16 +231,15 @@ onMounted(() => {
 
 <template>
     <AdminLayout>
+
         <Head title="Product Relationships" />
 
         <!-- Consistent Header Style -->
         <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
             <h2 class="text-3xl font-black">Product Relationship Visualizer</h2>
-            <Link
-                :href="route('admin.products.index')"
-                class="text-sm font-semibold text-blue-500 hover:text-blue-700 transition"
-            >
-                &larr; Back to Products
+            <Link :href="route('admin.products.index')"
+                class="text-sm font-semibold text-blue-500 hover:text-blue-700 transition">
+            &larr; Back to Products
             </Link>
         </div>
 
@@ -257,36 +256,30 @@ onMounted(() => {
                 <form @submit.prevent="assignRelationship" class="space-y-4">
                     <!-- Parent Product Select -->
                     <div>
-                        <label for="parent_select" class="block text-sm font-medium text-copy mb-1">Parent Product</label>
-                        <select
-                            id="parent_select"
-                            v-model="parentProductId"
-                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-secondary-light text-copy focus:ring-primary focus:border-primary transition"
-                        >
+                        <label for="parent_select" class="block text-sm font-medium text-copy mb-1">Parent
+                            Product</label>
+                        <select id="parent_select" v-model="parentProductId"
+                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-secondary-light text-copy focus:ring-primary focus:border-primary transition">
                             <option :value="null" disabled>Select Parent Product</option>
-                            <option v-for="p in props.productsData" :key="p.id" :value="p.id">{{ p.name }} (ID: {{ p.id }})</option>
+                            <option v-for="p in props.productsData" :key="p.id" :value="p.id">{{ p.name }} (ID: {{ p.id
+                                }})</option>
                         </select>
                     </div>
 
                     <!-- Child Product Select -->
                     <div>
                         <label for="child_select" class="block text-sm font-medium text-copy mb-1">Child Product</label>
-                        <select
-                            id="child_select"
-                            v-model="childProductId"
-                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-secondary-light text-copy focus:ring-primary focus:border-primary transition"
-                        >
+                        <select id="child_select" v-model="childProductId"
+                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-secondary-light text-copy focus:ring-primary focus:border-primary transition">
                             <option :value="null" disabled>Select Child Product</option>
                             <!-- Prevent a product from being a child of itself -->
-                            <option v-for="p in props.productsData.filter(p => p.id !== parentProductId)" :key="p.id" :value="p.id">{{ p.name }} (ID: {{ p.id }})</option>
+                            <option v-for="p in props.productsData.filter(p => p.id !== parentProductId)" :key="p.id"
+                                :value="p.id">{{ p.name }} (ID: {{ p.id }})</option>
                         </select>
                     </div>
 
-                    <button
-                        type="submit"
-                        :disabled="!parentProductId || !childProductId"
-                        class="w-full px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
+                    <button type="submit" :disabled="!parentProductId || !childProductId"
+                        class="w-full px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
                         Assign Relationship
                     </button>
                 </form>
@@ -294,10 +287,16 @@ onMounted(() => {
                 <div class="mt-8 pt-4 border-t border-copy-light/50">
                     <h3 class="font-semibold text-copy mb-2">Legend</h3>
                     <ul class="text-sm text-copy-light space-y-1">
-                        <li class="flex items-center"><span class="w-3 h-3 rounded-full mr-2 flex-shrink-0" style="background-color: #1f77b4;"></span>Root Product (No Parent) - Larger node</li>
-                        <li class="flex items-center"><span class="w-3 h-3 rounded-full mr-2 flex-shrink-0" style="background-color: #ff7f0e;"></span>Child Product - Smaller node</li>
+                        <li class="flex items-center"><span class="w-3 h-3 rounded-full mr-2 flex-shrink-0"
+                                style="background-color: #1f77b4;"></span>Root Product (No Parent) - Larger node</li>
+                        <li class="flex items-center"><span class="w-3 h-3 rounded-full mr-2 flex-shrink-0"
+                                style="background-color: #ff7f0e;"></span>Child Product - Smaller node</li>
                         <li class="flex items-center mt-3 text-xs">
-                            <svg class="w-4 h-4 mr-2 text-copy-light" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <svg class="w-4 h-4 mr-2 text-copy-light" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
                             Click node to edit product.
                         </li>
                     </ul>
@@ -306,7 +305,8 @@ onMounted(() => {
 
             <!-- Visualization Panel (Styled as a Card) -->
             <div class="lg:col-span-2 relative min-h-[600px] rounded-lg border-2 border-copy bg-foreground shadow-lg">
-                <div v-if="isLoading" class="absolute inset-0 flex flex-col items-center justify-center rounded-lg z-10 bg-foreground/90">
+                <div v-if="isLoading"
+                    class="absolute inset-0 flex flex-col items-center justify-center rounded-lg z-10 bg-foreground/90">
                     <span class="loading loading-spinner loading-lg text-primary"></span>
                     <p class="ml-3 text-lg text-copy mt-2">Building Network Graph...</p>
                 </div>
