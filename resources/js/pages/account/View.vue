@@ -539,8 +539,9 @@ const formatAddress = (address: Address): string[] => {
                         <button type="submit" :disabled="addressForm.processing"
                             class="flex items-center px-6 py-2 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50">
                             <div v-html="IconCheck" class="size-5 mr-1"></div>
-                            {{ addressForm.processing ? 'Saving...' : (editingAddress ? 'Update Address' : 'Save
-                            Address') }}
+                            {{
+                                addressForm.processing ? 'Saving...' : (editingAddress ? 'Update Address' : 'Save Address')
+                            }}
                         </button>
                     </div>
                 </form>
