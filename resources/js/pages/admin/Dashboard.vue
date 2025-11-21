@@ -64,18 +64,20 @@ const chartData = computed(() => {
 
 <template>
     <AdminLayout>
+
         <Head title="Admin Dashboard" />
 
         <h2 class="text-3xl font-black mb-6 border-b-2 border-copy pb-2">Dashboard Overview</h2>
 
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <div v-for="card in statCards" :key="card.label"
-                class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg"
-            >
-                <div class="relative rounded-lg -m-0.5 p-5 bg-foreground border-2 border-copy transition hover:shadow-xl">
+                class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
+                <div
+                    class="relative rounded-lg -m-0.5 p-5 bg-foreground border-2 border-copy transition hover:shadow-lg">
                     <div class="flex items-center justify-between">
                         <p class="text-3xl font-extrabold text-copy">{{ card.value }}</p>
-                        <svg class="size-8 opacity-70" :class="card.colorClass" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg class="size-8 opacity-70" :class="card.colorClass" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="card.icon"></path>
                         </svg>
                     </div>
@@ -86,40 +88,42 @@ const chartData = computed(() => {
 
         <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            <div class="lg:col-span-2 rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
+            <div class="lg:col-span-2 rounded-lg border-2 border-copy bg-[var(--primary-content)]">
                 <div class="relative rounded-lg -m-0.5 p-6 bg-foreground border-2 border-copy">
-                    <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Revenue Last 7 Days</h3>
-                    <div class="h-64 flex items-center justify-center text-copy-light border-2 border-dashed border-copy-light p-4">
+                    <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Revenue Last 7 Days
+                    </h3>
+                    <div
+                        class="h-64 flex items-center justify-center text-copy-light border-2 border-dashed border-copy-light p-4">
                         <p class="text-lg">Chart Placeholder: [{{ chartData.join(', ') }}]</p>
                     </div>
                 </div>
             </div>
 
-            <div class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
-                <div class="relative rounded-lg -m-0.5 p-6 bg-foreground border-2 border-copy">
-                    <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Product Health</h3>
-                    <ul class="space-y-3">
-                        <li class="flex justify-between items-center text-lg text-copy font-semibold">
-                            <span>Enabled & In Stock</span>
-                            <span class="text-green-500 font-extrabold">{{ props.stats.products.in_stock }}</span>
-                        </li>
-                        <li class="flex justify-between items-center text-lg text-copy font-semibold">
-                            <span>Out of Stock</span>
-                            <span class="text-yellow-500 font-extrabold">{{ props.stats.products.out_of_stock }}</span>
-                        </li>
-                        <li class="flex justify-between items-center text-lg text-copy font-semibold">
-                            <span>Disabled/Draft</span>
-                            <span class="text-error font-extrabold">{{ props.stats.products.disabled }}</span>
-                        </li>
-                        <li class="pt-3 border-t-2 border-copy-light flex justify-between items-center text-xl text-copy font-black">
-                            <span>Total Unique Products</span>
-                            <span>{{ props.stats.products.total_products }}</span>
-                        </li>
-                    </ul>
-                    <Link :href="route('admin.products.index')" class="mt-4 w-full block text-center py-2 rounded-lg border-2 border-copy text-sm font-bold bg-secondary-light hover:bg-secondary transition">
-                        Manage Products →
-                    </Link>
-                </div>
+            <div class="relative rounded-lg -m-0.5 p-6 bg-foreground border-2 border-copy">
+                <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Product Health</h3>
+                <ul class="space-y-3">
+                    <li class="flex justify-between items-center text-lg text-copy font-semibold">
+                        <span>Enabled & In Stock</span>
+                        <span class="text-green-500 font-extrabold">{{ props.stats.products.in_stock }}</span>
+                    </li>
+                    <li class="flex justify-between items-center text-lg text-copy font-semibold">
+                        <span>Out of Stock</span>
+                        <span class="text-yellow-500 font-extrabold">{{ props.stats.products.out_of_stock }}</span>
+                    </li>
+                    <li class="flex justify-between items-center text-lg text-copy font-semibold">
+                        <span>Disabled/Draft</span>
+                        <span class="text-error font-extrabold">{{ props.stats.products.disabled }}</span>
+                    </li>
+                    <li
+                        class="pt-3 border-t-2 border-copy-light flex justify-between items-center text-xl text-copy font-black">
+                        <span>Total Unique Products</span>
+                        <span>{{ props.stats.products.total_products }}</span>
+                    </li>
+                </ul>
+                <Link :href="route('admin.products.index')"
+                    class="mt-4 w-full block text-center py-2 rounded-lg border-2 border-copy text-sm font-bold bg-secondary-light hover:bg-secondary transition">
+                Manage Products
+                </Link>
             </div>
         </div>
     </AdminLayout>
