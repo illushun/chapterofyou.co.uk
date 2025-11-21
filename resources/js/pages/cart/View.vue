@@ -118,7 +118,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                         <div v-if="hasItems" class="flex flex-col gap-6">
 
                             <div v-for="item in props.cartItems" :key="item.id"
-                                class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                                class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                                 <div
                                     class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 flex flex-col sm:flex-row items-start gap-4">
 

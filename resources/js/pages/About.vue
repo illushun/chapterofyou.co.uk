@@ -58,40 +58,36 @@ onMounted(async () => {
     <Head title="About Us" />
 
     <style scoped>
-    .fade-in-section {
-        opacity: 0;
-        transform: translateY(20px);
-        transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-    }
+        .fade-in-section {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
 
-    .fade-in-section.is-visible {
-        opacity: 1;
-        transform: translateY(0);
-    }
+        .fade-in-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 
-    <section class="py-20 bg-background min-h-screen">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section class="py-20">
+        <div class="mx-auto max-w-screen-xl p-4 md:p-8 lg:p-12">
 
             <div
-                class="border-2 border-copy bg-foreground p-6 sm:p-10 md:p-12 rounded-xl shadow-xl transition duration-500 hover:shadow-2xl space-y-4 text-copy"
-            >
+                class="border-2 border-copy bg-foreground p-6 sm:p-10 md:p-12 rounded-xl transition duration-500 hover:shadow-2xl space-y-4 text-copy">
                 <template v-for="(section, index) in sections" :key="index">
 
                     <div :ref="setRef" class="fade-in-section">
                         <div v-if="section.type === 'p' || section.type === 'h2' || section.type === 'h3'">
-                            <component
-                                :is="section.type"
-                                :class="section.classes"
-                                v-html="section.content"
-                            >
+                            <component :is="section.type" :class="section.classes" v-html="section.content">
                             </component>
                         </div>
 
                         <div v-else-if="section.type === 'divider'" :class="section.classes">
-                            <hr v-if="!section.reverse" class="flex-grow border-t-2 border-copy-light w-1/4"/>
+                            <hr v-if="!section.reverse" class="flex-grow border-t-2 border-copy-light w-1/4" />
                             <div v-html="section.content" :class="section.reverse ? 'order-1 mx-4' : 'mx-4'"></div>
-                            <hr :class="['flex-grow border-t-2 border-copy-light w-1/4', section.reverse ? 'order-2' : '']"/>
+                            <hr
+                                :class="['flex-grow border-t-2 border-copy-light w-1/4', section.reverse ? 'order-2' : '']" />
                         </div>
 
                     </div>

@@ -383,7 +383,7 @@ const formattedCost = computed(() => {
                         </div>
 
                         <button @click="handleFavourite()"
-                            class="rounded-lg border-2 border-copy p-3 text-copy-light transition hover:bg-error-light hover:text-error-content shadow-lg w-fit lg:flex-shrink-0 flex items-center justify-center"
+                            class="rounded-lg border-2 border-copy p-3 text-copy-light transition hover:bg-error-light hover:text-error-content w-fit lg:flex-shrink-0 flex items-center justify-center"
                             aria-label="Add to favourites">
                             <div v-html="IconStar" class="size-6 flex items-center justify-center"></div>
                         </button>
@@ -400,7 +400,7 @@ const formattedCost = computed(() => {
 
             <div class="border-t-2 border-copy pt-6">
                 <h2 class="text-2xl font-bold text-copy mb-3">Customer Reviews ({{ props.product.approved_reviews_count
-                    }})</h2>
+                }})</h2>
 
                 <div class="flex items-center gap-4 mb-6" v-if="props.product.approved_reviews_count > 0">
                     <StarRating :rating="props.product.average_rating" :size="24" class="text-secondary-content" />
@@ -462,7 +462,7 @@ const formattedCost = computed(() => {
 
                 <div v-if="props.product.reviews.length > 0" class="mt-8 space-y-8">
                     <div v-for="review in props.product.reviews" :key="review.id"
-                        class="p-6 border-2 border-copy rounded-lg bg-foreground shadow-md relative">
+                        class="p-6 border-2 border-copy rounded-lg bg-foreground relative">
 
                         <div class="flex justify-between items-start mb-3">
                             <div class="flex flex-col">

@@ -35,14 +35,15 @@ const submit = () => {
 
     <Head title="Contact Us" />
 
-    <section class="py-20 bg-background min-h-screen">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section class="py-20">
+        <div class="mx-auto max-w-screen-xl p-4 md:p-8 lg:p-12">
+
             <h1 class="text-4xl font-black text-copy mb-4">Get In Touch</h1>
             <p class="text-xl text-copy-light mb-8">
                 I'd love to hear from you! Please fill out the form below and i'll respond as quickly as possible.
             </p>
 
-            <form @submit.prevent="submit" class="bg-foreground p-8 rounded-xl border-2 border-copy shadow-xl">
+            <form @submit.prevent="submit" class="bg-foreground p-8 rounded-xl border-2 border-copy">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="name" class="block text-sm font-medium text-copy mb-2">Your Name <span
