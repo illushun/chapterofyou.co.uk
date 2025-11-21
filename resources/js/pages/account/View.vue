@@ -165,7 +165,7 @@ const fetchAddresses = async () => {
         // Update results
         lookupResults.value = data.addresses || [];
         if (lookupResults.value.length === 0) {
-             lookupError.value = 'No addresses found matching your query.';
+            lookupError.value = 'No addresses found matching your query.';
         }
     } catch (e) {
         lookupError.value = 'An unexpected network error occurred. Check your network or API key.';
@@ -238,24 +238,23 @@ const formatAddress = (address: Address): string[] => {
                 <!-- Header -->
                 <div class="mb-8 border-b-2 border-copy-light pb-4">
                     <h1 class="text-4xl sm:text-5xl font-black text-copy mb-2">My Account</h1>
-                    <p class="text-lg text-copy-lighter">Manage your personal details, security, and shipping addresses.</p>
+                    <p class="text-lg text-copy-lighter">Manage your personal details, security, and shipping addresses.
+                    </p>
                 </div>
 
                 <div class="space-y-10">
 
                     <!-- General Details -->
-                    <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
+                    <div class="rounded-xl border-2 border-copy bg-foreground p-6">
                         <div class="flex justify-between items-center mb-4">
                             <h2 class="text-2xl font-bold text-copy flex items-center gap-2">
                                 <div v-html="IconUser" class="size-6 text-primary-content"></div>
                                 General Details
                             </h2>
-                            <button
-                                @click="isEditingDetails = !isEditingDetails"
+                            <button @click="isEditingDetails = !isEditingDetails"
                                 class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-primary-content hover:bg-primary-dark transition border-2 border-copy"
                                 :class="isEditingDetails ? 'text-error hover:bg-error-light' : 'text-primary-content hover:bg-primary-dark'"
-                                aria-label="Toggle editing general details"
-                            >
+                                aria-label="Toggle editing general details">
                                 <div v-html="isEditingDetails ? IconX : IconEdit"></div>
                                 {{ isEditingDetails ? 'Cancel' : 'Edit' }}
                             </button>
@@ -264,32 +263,24 @@ const formatAddress = (address: Address): string[] => {
                         <form @submit.prevent="saveDetails" class="grid sm:grid-cols-2 gap-4">
                             <div>
                                 <label for="name" class="block text-sm font-medium text-copy-lighter mb-1">Name</label>
-                                <input
-                                    id="name"
-                                    type="text"
-                                    v-model="detailForm.name"
+                                <input id="name" type="text" v-model="detailForm.name"
                                     :disabled="!isEditingDetails || detailForm.processing"
-                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy transition disabled:bg-copy-light/20 disabled:border-copy-light"
-                                >
-                                <p v-if="detailForm.errors.name" class="text-xs text-error mt-1">{{ detailForm.errors.name }}</p>
+                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy transition disabled:bg-copy-light/20 disabled:border-copy-light">
+                                <p v-if="detailForm.errors.name" class="text-xs text-error mt-1">{{
+                                    detailForm.errors.name }}</p>
                             </div>
                             <div>
-                                <label for="email" class="block text-sm font-medium text-copy-lighter mb-1">Email Address</label>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    v-model="detailForm.email"
+                                <label for="email" class="block text-sm font-medium text-copy-lighter mb-1">Email
+                                    Address</label>
+                                <input id="email" type="email" v-model="detailForm.email"
                                     :disabled="!isEditingDetails || detailForm.processing"
-                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy transition disabled:bg-copy-light/20 disabled:border-copy-light"
-                                >
-                                <p v-if="detailForm.errors.email" class="text-xs text-error mt-1">{{ detailForm.errors.email }}</p>
+                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy transition disabled:bg-copy-light/20 disabled:border-copy-light">
+                                <p v-if="detailForm.errors.email" class="text-xs text-error mt-1">{{
+                                    detailForm.errors.email }}</p>
                             </div>
                             <div v-if="isEditingDetails" class="sm:col-span-2 flex justify-end pt-2">
-                                <button
-                                    type="submit"
-                                    :disabled="detailForm.processing"
-                                    class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-secondary-content bg-secondary hover:bg-secondary-dark transition disabled:opacity-50"
-                                >
+                                <button type="submit" :disabled="detailForm.processing"
+                                    class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-secondary-content bg-secondary hover:bg-secondary-dark transition disabled:opacity-50">
                                     <div v-html="IconCheck"></div>
                                     {{ detailForm.processing ? 'Saving...' : 'Save Changes' }}
                                 </button>
@@ -298,7 +289,7 @@ const formatAddress = (address: Address): string[] => {
                     </div>
 
                     <!-- Password Update -->
-                    <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
+                    <div class="rounded-xl border-2 border-copy bg-foreground p-6">
                         <h2 class="text-2xl font-bold text-copy flex items-center gap-2 mb-4">
                             <div v-html="IconLock" class="size-6 text-primary-content"></div>
                             Update Password
@@ -306,44 +297,36 @@ const formatAddress = (address: Address): string[] => {
 
                         <form @submit.prevent="updatePassword" class="grid sm:grid-cols-3 gap-4">
                             <div>
-                                <label for="current_password" class="block text-sm font-medium text-copy-lighter mb-1">Current Password</label>
-                                <input
-                                    id="current_password"
-                                    type="password"
-                                    v-model="passwordForm.current_password"
+                                <label for="current_password"
+                                    class="block text-sm font-medium text-copy-lighter mb-1">Current Password</label>
+                                <input id="current_password" type="password" v-model="passwordForm.current_password"
                                     autocomplete="current-password"
-                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy"
-                                >
-                                <p v-if="passwordForm.errors.current_password" class="text-xs text-error mt-1">{{ passwordForm.errors.current_password }}</p>
+                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                                <p v-if="passwordForm.errors.current_password" class="text-xs text-error mt-1">{{
+                                    passwordForm.errors.current_password }}</p>
                             </div>
                             <div>
-                                <label for="password" class="block text-sm font-medium text-copy-lighter mb-1">New Password</label>
-                                <input
-                                    id="password"
-                                    type="password"
-                                    v-model="passwordForm.password"
+                                <label for="password" class="block text-sm font-medium text-copy-lighter mb-1">New
+                                    Password</label>
+                                <input id="password" type="password" v-model="passwordForm.password"
                                     autocomplete="new-password"
-                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy"
-                                >
-                                <p v-if="passwordForm.errors.password" class="text-xs text-error mt-1">{{ passwordForm.errors.password }}</p>
+                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                                <p v-if="passwordForm.errors.password" class="text-xs text-error mt-1">{{
+                                    passwordForm.errors.password }}</p>
                             </div>
                             <div>
-                                <label for="password_confirmation" class="block text-sm font-medium text-copy-lighter mb-1">Confirm New Password</label>
-                                <input
-                                    id="password_confirmation"
-                                    type="password"
-                                    v-model="passwordForm.password_confirmation"
-                                    autocomplete="new-password"
-                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy"
-                                >
-                                <p v-if="passwordForm.errors.password_confirmation" class="text-xs text-error mt-1">{{ passwordForm.errors.password_confirmation }}</p>
+                                <label for="password_confirmation"
+                                    class="block text-sm font-medium text-copy-lighter mb-1">Confirm New
+                                    Password</label>
+                                <input id="password_confirmation" type="password"
+                                    v-model="passwordForm.password_confirmation" autocomplete="new-password"
+                                    class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                                <p v-if="passwordForm.errors.password_confirmation" class="text-xs text-error mt-1">{{
+                                    passwordForm.errors.password_confirmation }}</p>
                             </div>
                             <div class="sm:col-span-3 flex justify-end pt-2">
-                                <button
-                                    type="submit"
-                                    :disabled="passwordForm.processing"
-                                    class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-secondary-content bg-secondary hover:bg-secondary-dark transition disabled:opacity-50"
-                                >
+                                <button type="submit" :disabled="passwordForm.processing"
+                                    class="flex items-center gap-2 px-6 py-3 border-2 border-copy rounded-lg font-bold text-secondary-content bg-secondary hover:bg-secondary-dark transition disabled:opacity-50">
                                     <div v-html="IconLock"></div>
                                     {{ passwordForm.processing ? 'Updating...' : 'Update Password' }}
                                 </button>
@@ -352,32 +335,30 @@ const formatAddress = (address: Address): string[] => {
                     </div>
 
                     <!-- Addresses -->
-                    <div class="rounded-xl border-2 border-copy bg-foreground shadow-xl p-6">
+                    <div class="rounded-xl border-2 border-copy bg-foreground p-6">
                         <div class="flex justify-between items-center mb-6">
                             <h2 class="text-2xl font-bold text-copy flex items-center gap-2">
                                 <div v-html="IconMapPin" class="size-6 text-primary-content"></div>
                                 My Addresses
                             </h2>
-                            <button
-                                @click="openAddressModal()"
+                            <button @click="openAddressModal()"
                                 class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-primary-content hover:bg-primary-dark transition border-2 border-copy"
-                                aria-label="Add new address"
-                            >
+                                aria-label="Add new address">
                                 <div v-html="IconPlusCircle"></div>
                                 Add New
                             </button>
                         </div>
 
                         <div v-if="addresses.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div
-                                v-for="address in addresses"
-                                :key="address.id"
+                            <div v-for="address in addresses" :key="address.id"
                                 class="relative p-4 border-2 rounded-lg transition"
-                                :class="address.is_default ? 'border-primary bg-primary-light/10 shadow-md' : 'border-copy-light hover:border-copy'"
-                            >
+                                :class="address.is_default ? 'border-primary bg-primary-light/10 shadow-md' : 'border-copy-light hover:border-copy'">
                                 <div class="text-sm font-bold uppercase mb-1 flex justify-between items-center">
-                                    <span :class="address.is_default ? 'text-secondary-content' : 'text-copy-lighter'">{{ address.type }} Address</span>
-                                    <span v-if="address.is_default" class="text-xs text-secondary-content bg-secondary/50 px-2 py-0.5 rounded-full font-extrabold">DEFAULT</span>
+                                    <span
+                                        :class="address.is_default ? 'text-secondary-content' : 'text-copy-lighter'">{{
+                                            address.type }} Address</span>
+                                    <span v-if="address.is_default"
+                                        class="text-xs text-secondary-content bg-secondary/50 px-2 py-0.5 rounded-full font-extrabold">DEFAULT</span>
                                 </div>
 
                                 <!-- Address Lines -->
@@ -386,19 +367,15 @@ const formatAddress = (address: Address): string[] => {
                                 </p>
 
                                 <div class="flex gap-2 mt-3 pt-3 border-t border-copy-light">
-                                    <button
-                                        @click="openAddressModal(address)"
-                                        class="flex items-center gap-1 text-sm text-warning-content hover:text-warning font-semibold transition"
-                                    >
+                                    <button @click="openAddressModal(address)"
+                                        class="flex items-center gap-1 text-sm text-warning-content hover:text-warning font-semibold transition">
                                         <div v-html="IconEdit" class="size-4 text-warning-content"></div>
                                         Edit
                                     </button>
                                     <span class="text-copy-lighter">|</span>
-                                    <button
-                                        @click="router.delete(route('address.destroy', address.id))"
+                                    <button @click="router.delete(route('address.destroy', address.id))"
                                         class="flex items-center gap-1 text-sm text-error hover:text-error-dark font-semibold transition"
-                                        :disabled="address.is_default"
-                                    >
+                                        :disabled="address.is_default">
                                         <div v-html="IconTrash" class="size-4"></div>
                                         Remove
                                     </button>
@@ -406,7 +383,8 @@ const formatAddress = (address: Address): string[] => {
                             </div>
                         </div>
 
-                        <div v-else class="text-center p-8 border-4 border-dashed border-copy-light rounded-xl bg-background/50">
+                        <div v-else
+                            class="text-center p-8 border-4 border-dashed border-copy-light rounded-xl bg-background/50">
                             <p class="text-lg text-copy-lighter">You have not added any saved addresses yet.</p>
                         </div>
                     </div>
@@ -418,36 +396,35 @@ const formatAddress = (address: Address): string[] => {
     </section>
 
     <!-- Address Add/Edit Modal -->
-    <div v-if="isAddressModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 transition-opacity duration-300 p-4" @click.self="resetAddressModal">
-        <div class="relative bg-foreground rounded-xl shadow-2xl max-w-lg w-full border-2 border-copy max-h-[90vh] overflow-y-auto">
+    <div v-if="isAddressModalOpen"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-gray-900 bg-opacity-75 transition-opacity duration-300 p-4"
+        @click.self="resetAddressModal">
+        <div
+            class="relative bg-foreground rounded-xl shadow-2xl max-w-lg w-full border-2 border-copy max-h-[90vh] overflow-y-auto">
 
             <div class="p-6">
-                <div class="flex justify-between items-start mb-6 border-b pb-3 border-copy-light sticky top-0 bg-foreground">
+                <div
+                    class="flex justify-between items-start mb-6 border-b pb-3 border-copy-light sticky top-0 bg-foreground">
                     <h3 class="text-2xl font-bold text-copy">
                         {{ editingAddress ? 'Edit Address' : 'Add New Address' }}
                     </h3>
-                    <button @click="resetAddressModal" class="p-1 rounded-full text-copy hover:bg-copy-light transition" aria-label="Close dialog">
+                    <button @click="resetAddressModal" class="p-1 rounded-full text-copy hover:bg-copy-light transition"
+                        aria-label="Close dialog">
                         <div v-html="IconX" class="size-6"></div>
                     </button>
                 </div>
 
                 <!-- ADDRESS LOOKUP STEP -->
                 <div v-if="modalStep === 'lookup'">
-                    <p class="text-copy-lighter mb-4">Start typing your street name, postcode, or house number to find your address quickly.</p>
+                    <p class="text-copy-lighter mb-4">Start typing your street name, postcode, or house number to find
+                        your address quickly.</p>
 
                     <form @submit.prevent="fetchAddresses" class="flex gap-2 mb-4">
-                        <input
-                            type="text"
-                            v-model="lookupQuery"
-                            placeholder="e.g. 10 Downing Street or SW1A 0AA"
+                        <input type="text" v-model="lookupQuery" placeholder="e.g. 10 Downing Street or SW1A 0AA"
                             :disabled="isLookupLoading"
-                            class="flex-grow p-3 border-2 border-copy rounded-lg bg-background text-copy"
-                        >
-                        <button
-                            type="submit"
-                            :disabled="isLookupLoading || lookupQuery.length < 3"
-                            class="flex items-center gap-2 px-4 py-3 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50"
-                        >
+                            class="flex-grow p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                        <button type="submit" :disabled="isLookupLoading || lookupQuery.length < 3"
+                            class="flex items-center gap-2 px-4 py-3 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50">
                             <div v-html="IconSearch"></div>
                         </button>
                     </form>
@@ -456,24 +433,21 @@ const formatAddress = (address: Address): string[] => {
                     <p v-if="isLookupLoading" class="text-primary font-semibold text-center py-4">Searching...</p>
 
                     <!-- Lookup Results -->
-                    <div v-if="lookupResults.length > 0" class="space-y-2 max-h-64 overflow-y-auto border p-2 rounded-lg border-copy-light mb-4">
+                    <div v-if="lookupResults.length > 0"
+                        class="space-y-2 max-h-64 overflow-y-auto border p-2 rounded-lg border-copy-light mb-4">
                         <p class="text-sm font-semibold text-copy-lighter mb-2 border-b pb-2">Select your address:</p>
-                        <button
-                            v-for="(address, index) in lookupResults" :key="index"
-                            @click="selectAddress(address)"
-                            class="w-full text-left p-3 rounded-lg border border-copy-light hover:bg-primary-light/20 transition flex justify-between items-center"
-                        >
+                        <button v-for="(address, index) in lookupResults" :key="index" @click="selectAddress(address)"
+                            class="w-full text-left p-3 rounded-lg border border-copy-light hover:bg-primary-light/20 transition flex justify-between items-center">
                             <span class="text-copy text-sm">
-                                {{ address.line_1 }}{{ address.line_2 ? ', ' + address.line_2 : '' }}, {{ address.city }}
+                                {{ address.line_1 }}{{ address.line_2 ? ', ' + address.line_2 : '' }}, {{ address.city
+                                }}
                             </span>
                             <div v-html="IconArrowRight" class="size-4 text-primary"></div>
                         </button>
                     </div>
 
-                    <button
-                        @click="enterAddressManually"
-                        class="w-full py-3 border-2 border-copy rounded-lg font-semibold text-copy hover:bg-secondary-light transition mt-4"
-                    >
+                    <button @click="enterAddressManually"
+                        class="w-full py-3 border-2 border-copy rounded-lg font-semibold text-copy hover:bg-secondary-light transition mt-4">
                         Enter Address Manually
                     </button>
                 </div>
@@ -485,15 +459,18 @@ const formatAddress = (address: Address): string[] => {
                     <!-- Address Type & Default -->
                     <div class="flex flex-col sm:flex-row gap-4 border-b pb-4 border-copy-light">
                         <div class="flex-1">
-                            <label for="type" class="block text-sm font-medium text-copy-lighter mb-1">Address Type</label>
-                            <select id="type" v-model="addressForm.type" class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                            <label for="type" class="block text-sm font-medium text-copy-lighter mb-1">Address
+                                Type</label>
+                            <select id="type" v-model="addressForm.type"
+                                class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
                                 <option value="shipping">Shipping</option>
                                 <option value="billing">Billing</option>
                             </select>
                         </div>
                         <div class="flex items-end pb-1 sm:pb-3">
                             <label class="flex items-center space-x-2 text-copy font-semibold">
-                                <input type="checkbox" v-model="addressForm.is_default" class="size-5 text-primary border-copy rounded">
+                                <input type="checkbox" v-model="addressForm.is_default"
+                                    class="size-5 text-primary border-copy rounded">
                                 <span>Set as Default</span>
                             </label>
                         </div>
@@ -501,58 +478,69 @@ const formatAddress = (address: Address): string[] => {
 
                     <!-- Address Lines -->
                     <div>
-                        <label for="line_1" class="block text-sm font-medium text-copy-lighter mb-1">Address Line 1</label>
-                        <input id="line_1" type="text" v-model="addressForm.line_1" class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
-                        <p v-if="addressForm.errors.line_1" class="text-xs text-error mt-1">{{ addressForm.errors.line_1 }}</p>
+                        <label for="line_1" class="block text-sm font-medium text-copy-lighter mb-1">Address Line
+                            1</label>
+                        <input id="line_1" type="text" v-model="addressForm.line_1"
+                            class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                        <p v-if="addressForm.errors.line_1" class="text-xs text-error mt-1">{{ addressForm.errors.line_1
+                        }}</p>
                     </div>
                     <div>
-                        <label for="line_2" class="block text-sm font-medium text-copy-lighter mb-1">Address Line 2 (Optional)</label>
-                        <input id="line_2" type="text" v-model="addressForm.line_2" class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
-                        <p v-if="addressForm.errors.line_2" class="text-xs text-error mt-1">{{ addressForm.errors.line_2 }}</p>
+                        <label for="line_2" class="block text-sm font-medium text-copy-lighter mb-1">Address Line 2
+                            (Optional)</label>
+                        <input id="line_2" type="text" v-model="addressForm.line_2"
+                            class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                        <p v-if="addressForm.errors.line_2" class="text-xs text-error mt-1">{{ addressForm.errors.line_2
+                        }}</p>
                     </div>
 
                     <!-- City, County, Postcode (Responsive Grid) -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <div>
                             <label for="city" class="block text-sm font-medium text-copy-lighter mb-1">City</label>
-                            <input id="city" type="text" v-model="addressForm.city" class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
-                            <p v-if="addressForm.errors.city" class="text-xs text-error mt-1">{{ addressForm.errors.city }}</p>
+                            <input id="city" type="text" v-model="addressForm.city"
+                                class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                            <p v-if="addressForm.errors.city" class="text-xs text-error mt-1">{{ addressForm.errors.city
+                            }}</p>
                         </div>
                         <div>
-                            <label for="county" class="block text-sm font-medium text-copy-lighter mb-1">County (Optional)</label>
-                            <input id="county" type="text" v-model="addressForm.county" class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
-                            <p v-if="addressForm.errors.county" class="text-xs text-error mt-1">{{ addressForm.errors.county }}</p>
+                            <label for="county" class="block text-sm font-medium text-copy-lighter mb-1">County
+                                (Optional)</label>
+                            <input id="county" type="text" v-model="addressForm.county"
+                                class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                            <p v-if="addressForm.errors.county" class="text-xs text-error mt-1">{{
+                                addressForm.errors.county }}</p>
                         </div>
                         <div>
-                            <label for="postcode" class="block text-sm font-medium text-copy-lighter mb-1">Postcode</label>
-                            <input id="postcode" type="text" v-model="addressForm.postcode" class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
-                            <p v-if="addressForm.errors.postcode" class="text-xs text-error mt-1">{{ addressForm.errors.postcode }}</p>
+                            <label for="postcode"
+                                class="block text-sm font-medium text-copy-lighter mb-1">Postcode</label>
+                            <input id="postcode" type="text" v-model="addressForm.postcode"
+                                class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                            <p v-if="addressForm.errors.postcode" class="text-xs text-error mt-1">{{
+                                addressForm.errors.postcode }}</p>
                         </div>
                     </div>
 
                     <!-- Country -->
                     <div>
                         <label for="country" class="block text-sm font-medium text-copy-lighter mb-1">Country</label>
-                        <input id="country" type="text" v-model="addressForm.country" class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
-                        <p v-if="addressForm.errors.country" class="text-xs text-error mt-1">{{ addressForm.errors.country }}</p>
+                        <input id="country" type="text" v-model="addressForm.country"
+                            class="w-full p-3 border-2 border-copy rounded-lg bg-background text-copy">
+                        <p v-if="addressForm.errors.country" class="text-xs text-error mt-1">{{
+                            addressForm.errors.country }}</p>
                     </div>
 
                     <div class="flex justify-between items-center mt-4 pt-4 border-t border-copy-light">
-                        <button
-                            type="button"
-                            @click="modalStep = 'lookup'; addressForm.reset();"
-                            class="flex items-center gap-1 text-sm text-copy-lighter hover:text-copy transition"
-                        >
+                        <button type="button" @click="modalStep = 'lookup'; addressForm.reset();"
+                            class="flex items-center gap-1 text-sm text-copy-lighter hover:text-copy transition">
                             <div v-html="IconArrowLeft" class="size-4"></div>
                             Back to Lookup
                         </button>
-                        <button
-                            type="submit"
-                            :disabled="addressForm.processing"
-                            class="flex items-center px-6 py-2 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50"
-                        >
+                        <button type="submit" :disabled="addressForm.processing"
+                            class="flex items-center px-6 py-2 border-2 border-copy rounded-lg font-bold text-primary-content bg-primary hover:bg-primary-dark transition disabled:opacity-50">
                             <div v-html="IconCheck" class="size-5 mr-1"></div>
-                            {{ addressForm.processing ? 'Saving...' : (editingAddress ? 'Update Address' : 'Save Address') }}
+                            {{ addressForm.processing ? 'Saving...' : (editingAddress ? 'Update Address' : 'Save
+                            Address') }}
                         </button>
                     </div>
                 </form>

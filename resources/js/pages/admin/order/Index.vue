@@ -98,11 +98,11 @@ const paginate = (url: string | null) => {
                     </thead>
                     <tbody class="divide-y divide-copy-light/50">
                         <tr v-for="order in orders.data" :key="order.id" class="hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-semibold text-primary">#{{ order.id }}</td>
+                            <td class="px-4 py-3 font-semibold text-primary">COY-0000{{ order.id }}</td>
                             <td class="px-4 py-3">
                                 <span v-if="order.user">
                                     <Link :href="route('admin.users.show', order.user.id)" class="hover:underline">{{
-                                    order.user.name }}</Link><br>
+                                        order.user.name }}</Link><br>
                                     <span class="text-xs text-copy-light">{{ order.user.email }}</span>
                                 </span>
                                 <span v-else class="text-copy-light italic">Guest</span>

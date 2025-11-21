@@ -74,14 +74,15 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
                 <!-- Header and Back Link -->
                 <div class="mb-8">
                     <h1 class="text-5xl font-black text-copy mb-2">My Orders</h1>
-                    <a href="/account" class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
+                    <a href="/account"
+                        class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
                         <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
                         Back to Account
                     </a>
                 </div>
 
                 <!-- Main Content Card -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
 
                         <div v-if="!hasOrders" class="text-center py-12">
@@ -90,14 +91,16 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
                             <p class="text-copy-lighter mb-6">
                                 It looks like you haven't placed any orders with us. Time to explore our products!
                             </p>
-                            <a href="/products" class="inline-block px-6 py-3 border-2 border-copy rounded-lg text-lg font-bold text-secondary-content bg-secondary hover:bg-secondary-dark transition">
+                            <a href="/products"
+                                class="inline-block px-6 py-3 border-2 border-copy rounded-lg text-lg font-bold text-secondary-content bg-secondary hover:bg-secondary-dark transition">
                                 Start Shopping
                             </a>
                         </div>
 
                         <div v-else class="space-y-4">
                             <!-- Table Header (Visible on medium screens and up) -->
-                            <div class="hidden md:grid md:grid-cols-5 gap-4 py-3 px-4 font-bold text-copy border-b-2 border-copy-light">
+                            <div
+                                class="hidden md:grid md:grid-cols-5 gap-4 py-3 px-4 font-bold text-copy border-b-2 border-copy-light">
                                 <div class="col-span-1">Order #</div>
                                 <div class="col-span-1">Date</div>
                                 <div class="col-span-1 text-center">Total</div>
@@ -106,15 +109,17 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
                             </div>
 
                             <!-- Order List Items -->
-                            <div v-for="order in currentOrders" :key="order.id" class="relative rounded-lg p-4 transition duration-200 ease-in-out hover:bg-background/50 border-2 border-transparent hover:border-copy-light cursor-pointer">
+                            <div v-for="order in currentOrders" :key="order.id"
+                                class="relative rounded-lg p-4 transition duration-200 ease-in-out hover:bg-background/50 border-2 border-transparent hover:border-copy-light cursor-pointer">
 
                                 <!-- Responsive Grid for Order Data -->
                                 <div class="grid grid-cols-2 md:grid-cols-5 gap-y-3 md:gap-4 items-center">
 
                                     <!-- Order # -->
                                     <div class="col-span-2 md:col-span-1 font-bold text-lg md:text-copy">
-                                        <span class="md:hidden text-copy-lighter text-sm block mb-0.5">Order Number</span>
-                                        {{ order.id }}
+                                        <span class="md:hidden text-copy-lighter text-sm block mb-0.5">Order
+                                            Number</span>
+                                        COY-0000{{ order.id }}
                                     </div>
 
                                     <!-- Date -->
@@ -124,7 +129,8 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
                                     </div>
 
                                     <!-- Total -->
-                                    <div class="col-span-1 md:col-span-1 text-right md:text-center font-extrabold text-primary">
+                                    <div
+                                        class="col-span-1 md:col-span-1 text-right md:text-center font-extrabold text-primary">
                                         <span class="md:hidden text-copy-lighter text-sm block mb-0.5">Total</span>
                                         {{ formatCurrency(order.total) }}
                                     </div>
@@ -132,14 +138,16 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
                                     <!-- Status Badge -->
                                     <div class="col-span-2 md:col-span-1 flex justify-start md:justify-center">
                                         <!-- NOTE: Changed status classes to standard Tailwind colors for better contrast on light backgrounds -->
-                                        <span :class="getStatusClasses(order.status)" class="text-xs font-semibold px-3 py-1 rounded-full border">
+                                        <span :class="getStatusClasses(order.status)"
+                                            class="text-xs font-semibold px-3 py-1 rounded-full border">
                                             {{ order.status }}
                                         </span>
                                     </div>
 
                                     <!-- Detail Link/Button -->
                                     <div class="col-span-2 md:col-span-1 text-right mt-3 md:mt-0">
-                                        <a :href="`/account/orders/${order.id}`" class="text-primary text-sm font-semibold hover:text-primary-dark transition">
+                                        <a :href="`/account/orders/${order.id}`"
+                                            class="text-primary text-sm font-semibold hover:text-primary-dark transition">
                                             View Details &rarr;
                                         </a>
                                     </div>
