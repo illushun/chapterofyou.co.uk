@@ -51,7 +51,7 @@ const paginate = (url: string | null) => {
             <h2 class="text-3xl font-black">Messages (Recent)</h2>
         </div>
 
-        <div v-if="messages.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
+        <div v-if="messages.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
 
             <!--
                 DESKTOP TABLE VIEW

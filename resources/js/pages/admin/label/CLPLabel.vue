@@ -185,10 +185,12 @@ const saveLabel = () => {
 
 <template>
     <AdminLayout>
+
         <Head title="CLP Label Generator" />
 
         <!-- Success Notification -->
-        <div v-if="props.flash?.success" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg" role="alert">
+        <div v-if="props.flash?.success" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg"
+            role="alert">
             <p class="font-bold">Success!</p>
             <p>{{ props.flash.success }}</p>
         </div>
@@ -196,11 +198,9 @@ const saveLabel = () => {
         <!-- Header -->
         <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
             <h2 class="text-3xl font-black">CLP Label Generator</h2>
-            <Link
-                :href="route('admin.products.index')"
-                class="text-sm font-semibold text-blue-500 hover:text-blue-700 transition"
-            >
-                &larr; Back to Products
+            <Link :href="route('admin.products.index')"
+                class="text-sm font-semibold text-blue-500 hover:text-blue-700 transition">
+            &larr; Back to Products
             </Link>
         </div>
 
@@ -208,7 +208,7 @@ const saveLabel = () => {
         <form @submit.prevent="saveLabel" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <!-- 1. CLP Control Panel (Inputs) -->
-            <div class="lg:col-span-1 p-6 rounded-lg border-2 border-copy bg-foreground shadow-lg h-full space-y-5">
+            <div class="lg:col-span-1 p-6 rounded-lg border-2 border-copy bg-foreground h-full space-y-5">
                 <h2 class="text-xl font-bold mb-4 text-copy">Label Data & Ingredients</h2>
                 <p class="text-copy-light mb-6 text-sm">
                     Enter product details and select ingredients to generate and save the CLP label.
@@ -221,27 +221,34 @@ const saveLabel = () => {
                     <!-- Product Selection -->
                     <div v-if="props.products?.length">
                         <label for="product_id" class="block text-sm font-medium text-copy mb-1">Link to Product</label>
-                        <select
-                            id="product_id"
-                            v-model="form.productId"
+                        <select id="product_id" v-model="form.productId"
                             class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition"
-                            :class="{'border-error': form.errors.product_id}"
-                        >
+                            :class="{ 'border-error': form.errors.product_id }">
                             <option :value="null">-- Select Product (Optional) --</option>
-                            <option v-for="p in props.products" :key="p.id" :value="p.id">{{ p.name }} (ID: {{ p.id }})</option>
+                            <option v-for="p in props.products" :key="p.id" :value="p.id">{{ p.name }} (ID: {{ p.id }})
+                            </option>
                         </select>
-                        <div v-if="form.errors.product_id" class="text-error text-xs mt-1">{{ form.errors.product_id }}</div>
+                        <div v-if="form.errors.product_id" class="text-error text-xs mt-1">{{ form.errors.product_id }}
+                        </div>
                     </div>
 
                     <div>
                         <label for="product_name" class="block text-sm font-medium text-copy mb-1">Product Name</label>
-                        <input type="text" id="product_name" v-model="form.productName" class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition" :class="{'border-error': form.errors.product_name}">
-                        <div v-if="form.errors.product_name" class="text-error text-xs mt-1">{{ form.errors.product_name }}</div>
+                        <input type="text" id="product_name" v-model="form.productName"
+                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition"
+                            :class="{ 'border-error': form.errors.product_name }">
+                        <div v-if="form.errors.product_name" class="text-error text-xs mt-1">{{ form.errors.product_name
+                        }}</div>
                     </div>
                     <div>
-                        <label for="concentration" class="block text-sm font-medium text-copy mb-1">Concentration (%)</label>
-                        <input type="number" id="concentration" v-model.number="form.concentration" min="0" max="100" step="0.01" class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition" :class="{'border-error': form.errors.concentration_percent}">
-                        <div v-if="form.errors.concentration_percent" class="text-error text-xs mt-1">{{ form.errors.concentration_percent }}</div>
+                        <label for="concentration" class="block text-sm font-medium text-copy mb-1">Concentration
+                            (%)</label>
+                        <input type="number" id="concentration" v-model.number="form.concentration" min="0" max="100"
+                            step="0.01"
+                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition"
+                            :class="{ 'border-error': form.errors.concentration_percent }">
+                        <div v-if="form.errors.concentration_percent" class="text-error text-xs mt-1">{{
+                            form.errors.concentration_percent }}</div>
                     </div>
                 </div>
 
@@ -249,19 +256,30 @@ const saveLabel = () => {
                 <div class="space-y-4 p-4 border border-copy-light/50 rounded-lg bg-secondary-light">
                     <h3 class="font-bold text-copy">Supplier Details</h3>
                     <div>
-                        <label for="supplier_name" class="block text-sm font-medium text-copy mb-1">Supplier Name</label>
-                        <input type="text" id="supplier_name" v-model="form.supplierName" class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition" :class="{'border-error': form.errors.supplier_name}">
-                        <div v-if="form.errors.supplier_name" class="text-error text-xs mt-1">{{ form.errors.supplier_name }}</div>
+                        <label for="supplier_name" class="block text-sm font-medium text-copy mb-1">Supplier
+                            Name</label>
+                        <input type="text" id="supplier_name" v-model="form.supplierName"
+                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition"
+                            :class="{ 'border-error': form.errors.supplier_name }">
+                        <div v-if="form.errors.supplier_name" class="text-error text-xs mt-1">{{
+                            form.errors.supplier_name }}</div>
                     </div>
                     <div>
                         <label for="supplier_address" class="block text-sm font-medium text-copy mb-1">Address</label>
-                        <input type="text" id="supplier_address" v-model="form.supplierAddress" class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition" :class="{'border-error': form.errors.supplier_address}">
-                        <div v-if="form.errors.supplier_address" class="text-error text-xs mt-1">{{ form.errors.supplier_address }}</div>
+                        <input type="text" id="supplier_address" v-model="form.supplierAddress"
+                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition"
+                            :class="{ 'border-error': form.errors.supplier_address }">
+                        <div v-if="form.errors.supplier_address" class="text-error text-xs mt-1">{{
+                            form.errors.supplier_address }}</div>
                     </div>
                     <div>
-                        <label for="supplier_phone" class="block text-sm font-medium text-copy mb-1">Contact Phone</label>
-                        <input type="text" id="supplier_phone" v-model="form.supplierPhone" class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition" :class="{'border-error': form.errors.supplier_phone}">
-                        <div v-if="form.errors.supplier_phone" class="text-error text-xs mt-1">{{ form.errors.supplier_phone }}</div>
+                        <label for="supplier_phone" class="block text-sm font-medium text-copy mb-1">Contact
+                            Phone</label>
+                        <input type="text" id="supplier_phone" v-model="form.supplierPhone"
+                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-white text-copy focus:ring-primary focus:border-primary transition"
+                            :class="{ 'border-error': form.errors.supplier_phone }">
+                        <div v-if="form.errors.supplier_phone" class="text-error text-xs mt-1">{{
+                            form.errors.supplier_phone }}</div>
                     </div>
                 </div>
 
@@ -269,13 +287,9 @@ const saveLabel = () => {
                 <div class="space-y-3 p-4 border border-copy-light/50 rounded-lg bg-secondary-light">
                     <h3 class="font-bold text-copy">Hazardous Ingredients</h3>
                     <div v-for="ing in mockIngredients" :key="ing.id" class="flex items-center">
-                        <input
-                            type="checkbox"
-                            :id="`ing-${ing.id}`"
-                            :value="ing.id"
+                        <input type="checkbox" :id="`ing-${ing.id}`" :value="ing.id"
                             v-model="form.selectedIngredientIds"
-                            class="w-4 h-4 text-primary bg-white border-copy-light/50 rounded focus:ring-primary transition"
-                        >
+                            class="w-4 h-4 text-primary bg-white border-copy-light/50 rounded focus:ring-primary transition">
                         <label :for="`ing-${ing.id}`" class="ml-2 text-sm text-copy cursor-pointer">
                             {{ ing.name }} <span class="text-copy-light">({{ ing.signal_word }})</span>
                         </label>
@@ -283,11 +297,8 @@ const saveLabel = () => {
                 </div>
 
                 <!-- Save Button -->
-                <button
-                    type="submit"
-                    :disabled="form.processing"
-                    class="w-full px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                <button type="submit" :disabled="form.processing"
+                    class="w-full px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
                     {{ form.processing ? 'Saving...' : 'Save Generated Label' }}
                 </button>
                 <div v-if="form.errors.hazard_statements" class="text-error text-xs mt-1">
@@ -296,22 +307,29 @@ const saveLabel = () => {
             </div>
 
             <!-- 2. Live Label Preview (Visualization) -->
-            <div class="lg:col-span-2 relative p-6 rounded-lg border-2 border-copy bg-secondary-light shadow-lg min-h-[600px] flex justify-center items-start">
+            <div
+                class="lg:col-span-2 relative p-6 rounded-lg border-2 border-copy bg-secondary-light min-h-[600px] flex justify-center items-start">
 
-                <div class="w-full max-w-sm p-4 bg-white border-2 border-black shadow-xl" :class="{'border-dashed border-copy-light/50 text-copy-light': requiredHStatements.length === 0}">
+                <div class="w-full max-w-sm p-4 bg-white border-2 border-black shadow-xl"
+                    :class="{ 'border-dashed border-copy-light/50 text-copy-light': requiredHStatements.length === 0 }">
 
-                    <h3 class="text-lg font-extrabold text-center uppercase mb-3 text-copy">{{ form.productName || 'PRODUCT NAME' }}</h3>
+                    <h3 class="text-lg font-extrabold text-center uppercase mb-3 text-copy">{{ form.productName ||
+                        'PRODUCT NAME' }}</h3>
 
                     <!-- Signal Word & Pictograms -->
-                    <div v-if="requiredHStatements.length > 0" class="flex items-center border-b border-black pb-3 mb-3">
+                    <div v-if="requiredHStatements.length > 0"
+                        class="flex items-center border-b border-black pb-3 mb-3">
                         <div class="flex-shrink-0 flex space-x-2">
-                            <div v-for="picto in requiredPictograms" :key="picto" class="size-16 border-4 border-red-600 bg-white p-1 text-black font-bold flex items-center justify-center">
+                            <div v-for="picto in requiredPictograms" :key="picto"
+                                class="size-16 border-4 border-red-600 bg-white p-1 text-black font-bold flex items-center justify-center">
                                 <span v-html="getPictogramSvg(picto)" class="size-10 text-red-600"></span>
                             </div>
                         </div>
                         <div class="ml-4 flex-grow">
-                            <h4 class="text-3xl font-black uppercase text-black leading-none">{{ requiredSignalWord }}</h4>
-                            <div v-if="form.errors.signal_word" class="text-error text-xs mt-1">{{ form.errors.signal_word }}</div>
+                            <h4 class="text-3xl font-black uppercase text-black leading-none">{{ requiredSignalWord }}
+                            </h4>
+                            <div v-if="form.errors.signal_word" class="text-error text-xs mt-1">{{
+                                form.errors.signal_word }}</div>
                         </div>
                     </div>
                     <div v-else class="text-center p-3 border border-dashed border-copy-light rounded mb-3">

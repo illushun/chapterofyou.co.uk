@@ -37,13 +37,14 @@ const paginate = (url: string | null) => {
 
 <template>
     <AdminLayout>
+
         <Head title="Manage Users" />
 
         <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
             <h2 class="text-3xl font-black">Registered Users</h2>
         </div>
 
-        <div v-if="users.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
+        <div v-if="users.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
 
             <!--
                 DESKTOP TABLE VIEW
@@ -68,16 +69,19 @@ const paginate = (url: string | null) => {
                             <td class="px-4 py-3">{{ user.email }}</td>
                             <td class="px-4 py-3 text-copy-light">{{ formatDate(user.created_at) }}</td>
                             <td class="px-4 py-3">
-                                <span v-if="user.is_admin" class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary-light text-primary border border-primary-dark">
+                                <span v-if="user.is_admin"
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary-light text-primary border border-primary-dark">
                                     Admin
                                 </span>
-                                <span v-else class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-gray-500/20 text-gray-700 border border-gray-700">
+                                <span v-else
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-gray-500/20 text-gray-700 border border-gray-700">
                                     Customer
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <Link :href="route('admin.users.show', user.id)" class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                    View Details
+                                <Link :href="route('admin.users.show', user.id)"
+                                    class="text-blue-500 hover:text-blue-700 transition font-semibold">
+                                View Details
                                 </Link>
                             </td>
                         </tr>
@@ -90,20 +94,24 @@ const paginate = (url: string | null) => {
                 (Visible below 'md' breakpoint, stacked layout for small screens)
             -->
             <div class="md:hidden divide-y divide-copy-light/50">
-                <div v-for="user in users.data" :key="user.id" class="p-4 bg-foreground hover:bg-secondary-light transition">
+                <div v-for="user in users.data" :key="user.id"
+                    class="p-4 bg-foreground hover:bg-secondary-light transition">
 
                     <!-- Header: Name, ID, Role -->
                     <div class="flex justify-between items-start border-b border-copy-light/30 pb-2 mb-2">
                         <div>
                             <div class="text-xs text-copy-light uppercase font-medium">User ID: {{ user.id }}</div>
-                            <Link :href="route('admin.users.show', user.id)" class="text-lg font-bold text-copy hover:underline">
-                                {{ user.name }}
+                            <Link :href="route('admin.users.show', user.id)"
+                                class="text-lg font-bold text-copy hover:underline">
+                            {{ user.name }}
                             </Link>
                         </div>
-                        <span v-if="user.is_admin" class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary-light text-primary border border-primary-dark flex-shrink-0">
+                        <span v-if="user.is_admin"
+                            class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary-light text-primary border border-primary-dark flex-shrink-0">
                             Admin
                         </span>
-                        <span v-else class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-gray-500/20 text-gray-700 border border-gray-700 flex-shrink-0">
+                        <span v-else
+                            class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-gray-500/20 text-gray-700 border border-gray-700 flex-shrink-0">
                             Customer
                         </span>
                     </div>
@@ -125,8 +133,9 @@ const paginate = (url: string | null) => {
 
                     <!-- Actions -->
                     <div class="pt-3 text-right border-t border-copy-light/30 mt-3">
-                        <Link :href="route('admin.users.show', user.id)" class="px-3 py-1 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
-                            View Details
+                        <Link :href="route('admin.users.show', user.id)"
+                            class="px-3 py-1 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
+                        View Details
                         </Link>
                     </div>
                 </div>
@@ -140,13 +149,10 @@ const paginate = (url: string | null) => {
         <div v-if="users.last_page > 1" class="mt-6 flex justify-center">
             <ol class="flex gap-2 text-sm font-medium">
                 <li v-for="link in users.links" :key="link.label">
-                    <button
-                        @click.prevent="paginate(link.url)"
-                        :disabled="!link.url"
-                        :class="{'px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold': true, 'bg-primary text-primary-content shadow-md': link.active, 'bg-foreground hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed': !link.active}"
+                    <button @click.prevent="paginate(link.url)" :disabled="!link.url"
+                        :class="{ 'px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold': true, 'bg-primary text-primary-content shadow-md': link.active, 'bg-foreground hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed': !link.active }"
                         v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')"
-                        :aria-label="link.label"
-                    >
+                        :aria-label="link.label">
                     </button>
                 </li>
             </ol>

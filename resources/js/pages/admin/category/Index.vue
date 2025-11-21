@@ -75,8 +75,7 @@ const paginate = (url: string | null) => {
             </Link>
         </div>
 
-        <div v-if="categories.data.length"
-            class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
+        <div v-if="categories.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
 
             <!--
                 DESKTOP TABLE VIEW

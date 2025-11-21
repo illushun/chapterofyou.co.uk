@@ -71,13 +71,14 @@ const paginate = (url: string | null) => {
 
 <template>
     <AdminLayout>
+
         <Head title="Manage Orders" />
 
         <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
             <h2 class="text-3xl font-black">Orders (Recent)</h2>
         </div>
 
-        <div v-if="orders.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)] shadow-lg">
+        <div v-if="orders.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
 
             <!--
                 DESKTOP TABLE VIEW
@@ -100,7 +101,8 @@ const paginate = (url: string | null) => {
                             <td class="px-4 py-3 font-semibold text-primary">#{{ order.id }}</td>
                             <td class="px-4 py-3">
                                 <span v-if="order.user">
-                                    <Link :href="route('admin.users.show', order.user.id)" class="hover:underline">{{ order.user.name }}</Link><br>
+                                    <Link :href="route('admin.users.show', order.user.id)" class="hover:underline">{{
+                                    order.user.name }}</Link><br>
                                     <span class="text-xs text-copy-light">{{ order.user.email }}</span>
                                 </span>
                                 <span v-else class="text-copy-light italic">Guest</span>
@@ -108,13 +110,15 @@ const paginate = (url: string | null) => {
                             <td class="px-4 py-3">{{ formatDate(order.created_at) }}</td>
                             <td class="px-4 py-3 font-bold text-primary">{{ formatCurrency(order.grand_total) }}</td>
                             <td class="px-4 py-3">
-                                <span :class="['px-3 py-1 rounded-full text-xs font-semibold uppercase', getStatusClasses(order.status)]">
+                                <span
+                                    :class="['px-3 py-1 rounded-full text-xs font-semibold uppercase', getStatusClasses(order.status)]">
                                     {{ order.status }}
                                 </span>
                             </td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <Link :href="route('admin.orders.show', order.id)" class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                    View Details
+                                <Link :href="route('admin.orders.show', order.id)"
+                                    class="text-blue-500 hover:text-blue-700 transition font-semibold">
+                                View Details
                                 </Link>
                             </td>
                         </tr>
@@ -127,17 +131,20 @@ const paginate = (url: string | null) => {
                 (Visible below 'md' breakpoint, stacked layout for small screens)
             -->
             <div class="md:hidden divide-y divide-copy-light/50">
-                <div v-for="order in orders.data" :key="order.id" class="p-4 bg-foreground hover:bg-secondary-light transition">
+                <div v-for="order in orders.data" :key="order.id"
+                    class="p-4 bg-foreground hover:bg-secondary-light transition">
 
                     <!-- Order ID and Status -->
                     <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
                         <div>
                             <div class="text-xs text-copy-light uppercase font-medium">Order ID</div>
-                            <Link :href="route('admin.orders.show', order.id)" class="text-xl font-bold text-primary hover:underline">
-                                #{{ order.id }}
+                            <Link :href="route('admin.orders.show', order.id)"
+                                class="text-xl font-bold text-primary hover:underline">
+                            #{{ order.id }}
                             </Link>
                         </div>
-                        <span :class="['mt-1 px-3 py-1 rounded-full text-xs font-semibold uppercase flex-shrink-0', getStatusClasses(order.status)]">
+                        <span
+                            :class="['mt-1 px-3 py-1 rounded-full text-xs font-semibold uppercase flex-shrink-0', getStatusClasses(order.status)]">
                             {{ order.status }}
                         </span>
                     </div>
@@ -146,7 +153,8 @@ const paginate = (url: string | null) => {
                     <div class="py-2 border-b border-copy-light/30">
                         <div class="text-xs text-copy-light uppercase font-medium">Customer</div>
                         <div v-if="order.user" class="mt-1">
-                            <Link :href="route('admin.users.show', order.user.id)" class="font-semibold text-copy hover:underline">{{ order.user.name }}</Link>
+                            <Link :href="route('admin.users.show', order.user.id)"
+                                class="font-semibold text-copy hover:underline">{{ order.user.name }}</Link>
                             <div class="text-sm text-copy-light">{{ order.user.email }}</div>
                         </div>
                         <div v-else class="text-copy-light italic mt-1 text-sm">Guest Checkout</div>
@@ -158,7 +166,8 @@ const paginate = (url: string | null) => {
                         <div class="flex flex-col space-y-1">
                             <div>
                                 <div class="text-xs text-copy-light uppercase font-medium">Total</div>
-                                <div class="font-bold text-lg text-primary">{{ formatCurrency(order.grand_total) }}</div>
+                                <div class="font-bold text-lg text-primary">{{ formatCurrency(order.grand_total) }}
+                                </div>
                             </div>
                             <div class="text-xs text-copy-light italic">
                                 Placed: {{ formatDate(order.created_at) }}
@@ -167,8 +176,9 @@ const paginate = (url: string | null) => {
 
                         <!-- Actions -->
                         <div class="flex-shrink-0">
-                            <Link :href="route('admin.orders.show', order.id)" class="px-4 py-2 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
-                                View
+                            <Link :href="route('admin.orders.show', order.id)"
+                                class="px-4 py-2 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
+                            View
                             </Link>
                         </div>
                     </div>
@@ -183,13 +193,10 @@ const paginate = (url: string | null) => {
         <div v-if="orders.last_page > 1" class="mt-6 flex justify-center">
             <ol class="flex gap-2 text-sm font-medium">
                 <li v-for="link in orders.links" :key="link.label">
-                    <button
-                        @click.prevent="paginate(link.url)"
-                        :disabled="!link.url"
-                        :class="{'px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold': true, 'bg-primary text-primary-content shadow-md': link.active, 'bg-foreground hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed': !link.active}"
+                    <button @click.prevent="paginate(link.url)" :disabled="!link.url"
+                        :class="{ 'px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold': true, 'bg-primary text-primary-content shadow-md': link.active, 'bg-foreground hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed': !link.active }"
                         v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')"
-                        :aria-label="link.label"
-                    >
+                        :aria-label="link.label">
                     </button>
                 </li>
             </ol>

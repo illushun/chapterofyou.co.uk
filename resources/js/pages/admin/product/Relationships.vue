@@ -236,7 +236,7 @@ onMounted(() => {
 
         <!-- Consistent Header Style -->
         <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">Product Relationship Visualizer</h2>
+            <h2 class="text-3xl font-black">Product Relationship Visualiser</h2>
             <Link :href="route('admin.products.index')"
                 class="text-sm font-semibold text-blue-500 hover:text-blue-700 transition">
             &larr; Back to Products
@@ -247,7 +247,7 @@ onMounted(() => {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <!-- Mass Assignment Panel (Styled as a Card) -->
-            <div class="lg:col-span-1 p-6 rounded-lg border-2 border-copy bg-foreground shadow-lg h-full">
+            <div class="lg:col-span-1 p-6 rounded-lg border-2 border-copy bg-foreground h-full">
                 <h2 class="text-xl font-bold mb-4 text-copy">Assign Relationship</h2>
                 <p class="text-copy-light mb-6 text-sm">
                     Select two products to establish a parent-child relationship.
@@ -262,7 +262,7 @@ onMounted(() => {
                             class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-secondary-light text-copy focus:ring-primary focus:border-primary transition">
                             <option :value="null" disabled>Select Parent Product</option>
                             <option v-for="p in props.productsData" :key="p.id" :value="p.id">{{ p.name }} (ID: {{ p.id
-                                }})</option>
+                            }})</option>
                         </select>
                     </div>
 
@@ -304,7 +304,7 @@ onMounted(() => {
             </div>
 
             <!-- Visualization Panel (Styled as a Card) -->
-            <div class="lg:col-span-2 relative min-h-[600px] rounded-lg border-2 border-copy bg-foreground shadow-lg">
+            <div class="lg:col-span-2 relative min-h-[600px] rounded-lg border-2 border-copy bg-foreground">
                 <div v-if="isLoading"
                     class="absolute inset-0 flex flex-col items-center justify-center rounded-lg z-10 bg-foreground/90">
                     <span class="loading loading-spinner loading-lg text-primary"></span>
