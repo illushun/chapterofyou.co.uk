@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminCourierController;
 use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\HomeController;
@@ -86,8 +87,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('reviews/{review}', [AdminReviewController::class, 'show'])->name('reviews.show');
     Route::put('reviews/update/{review}', [AdminReviewController::class, 'update'])->name('reviews.update');
 
-    Route::get('couriers', [AdminOrderController::class, 'index'])->name('couriers.index');
-    Route::get('couriers/{courier}', [AdminOrderController::class, 'show'])->name('couriers.show');
+    Route::get('couriers', [AdminCourierController::class, 'index'])->name('couriers.index');
+    Route::get('couriers/{courier}', [AdminCourierController::class, 'show'])->name('couriers.show');
 
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
