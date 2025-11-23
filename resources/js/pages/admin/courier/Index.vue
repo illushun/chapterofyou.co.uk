@@ -90,7 +90,7 @@ const paginate = (url: string | null) => {
                             class="hover:bg-secondary-light transition">
                             <td class="px-4 py-3 font-semibold text-primary">{{ courier.id }}</td>
                             <td class="px-4 py-3">
-                                <span v-else class="text-copy-light">{{ courier.name }}</span>
+                                <span class="text-copy-light">{{ courier.name }}</span>
                             </td>
                             <td class="px-4 py-3">
                                 <span
