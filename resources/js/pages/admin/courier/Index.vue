@@ -20,7 +20,7 @@ interface CouriersPaginated {
 }
 
 const props = defineProps<{
-    orders: CouriersPaginated;
+    couriers: CouriersPaginated;
 }>();
 
 const formatCurrency = (amount: number | string | null | undefined): string => {
@@ -66,7 +66,7 @@ const paginate = (url: string | null) => {
             <h2 class="text-3xl font-black">Couriers (Recent)</h2>
         </div>
 
-        <div v-if="orders.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
+        <div v-if="couriers.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
 
             <!--
                 DESKTOP TABLE VIEW
