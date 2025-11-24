@@ -146,6 +146,92 @@ const formatImageSize = (bytes: number): string => {
                     </div>
                 </div>
 
+                <!-- CATEGORY IMAGE SECTION -->
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
+                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Category Image
+                        </h3>
+
+                        <!-- Image Upload Area -->
+                        <label for="file-upload" class="block cursor-pointer">
+                            <div
+                                class="h-24 border-2 border-dashed border-copy-light flex items-center justify-center text-copy-light p-4 rounded-lg bg-secondary-light transition hover:bg-secondary-dark">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>Click to select file or drag and drop (Max 2MB image)</span>
+                            </div>
+                            <input type="file" id="file-upload" accept="image/jpeg,image/png,image/webp"
+                                @change="handleFileUpload" class="hidden" />
+                        </label>
+                        <div v-if="form.errors['new_image']" class="text-xs text-error mt-1">{{
+                            form.errors['new_image'] }}</div>
+
+
+                        <!-- New Image Queue -->
+                        <div v-if="form.new_image != ''" class="mt-4 border-t border-copy-light pt-3">
+                            <h4 class="text-sm font-bold text-copy mb-2">New Image to Upload ({{ form.new_image.length
+                            }})</h4>
+                            <ul class="space-y-2">
+                                <li class="flex items-center justify-between p-2 rounded-lg bg-secondary-dark">
+                                    <div class="truncate text-sm text-copy">
+                                        {{ form.new_image.name }}
+                                        <span class="text-copy-light ml-2">({{ formatImageSize(form.new_image.size)
+                                            }})</span>
+                                    </div>
+                                    <button type="button" @click="removeNewImage(index)"
+                                        class="text-error hover:text-red-700 transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
+                                            fill="currentColor">
+                                            <path fill-rule="evenodd"
+                                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.72-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z"
+                                                clip-rule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Existing Image Grid -->
+                        <div v-if="props.category.image != ''" class="mt-6 border-t border-copy-light pt-3">
+                            <h4 class="text-sm font-bold text-copy mb-2">Existing Image</h4>
+                            <!-- Mobile Fix: Switch to grid-cols-1 default for better mobile readability, scaling up to sm:grid-cols-2, etc. -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <div class="relative rounded-lg overflow-hidden border-2 shadow-md transition border-success/80"
+                                    :class="{
+                                        'ring-2 ring-error/50': form.images_to_delete.includes(form.category.image)
+                                    }">
+                                    <!-- Image Thumbnail -->
+                                    <img :src="props.category.image" alt="Category Image"
+                                        class="w-full h-24 object-cover"
+                                        onerror="this.onerror=null;this.src='https://placehold.co/150x96/f0f0f0/666?text=No+Image';" />
+
+                                    <!-- Action Buttons -->
+                                    <div class="absolute bottom-0 right-0 p-1 flex gap-1 bg-black/50 rounded-tl-lg">
+
+                                        <!-- Delete Button -->
+                                        <button type="button" @click="deleteExistingImage(props.category.image)"
+                                            title="Mark for Deletion"
+                                            class="p-1 rounded-full bg-error text-white transition hover:scale-110"
+                                            :class="{ 'opacity-50': form.images_to_delete.includes(props.category.image) }"
+                                            :disabled="form.images_to_delete.includes(props.category.image)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
+                                                fill="currentColor">
+                                                <path fill-rule="evenodd"
+                                                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.72-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z"
+                                                    clip-rule="evenodd" />
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- END CATEGORY IMAGE SECTION -->
             </div>
 
             <div class="lg:col-span-1 space-y-6">
