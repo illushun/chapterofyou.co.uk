@@ -129,7 +129,7 @@ const paginate = (url: string | null) => {
                     <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
                         <div>
                             <div class="text-xs text-copy-light uppercase font-medium">Courier ID</div>
-                            <Link :href="route('admin.couriers.show', courier.id)"
+                            <Link :href="route('admin.couriers.edit', courier.id)"
                                 class="text-xl font-bold text-primary hover:underline">
                             #{{ courier.id }}
                             </Link>
@@ -162,7 +162,7 @@ const paginate = (url: string | null) => {
 
                         <!-- Actions -->
                         <div class="flex-shrink-0">
-                            <Link :href="route('admin.couriers.show', courier.id)"
+                            <Link :href="route('admin.couriers.edit', courier.id)"
                                 class="px-4 py-2 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
                             View
                             </Link>

@@ -95,14 +95,4 @@ class AdminCourierController extends Controller
         return redirect()->route('admin.couriers.index')
             ->with('success', "Courier '{$courier->name}' deleted successfully.");
     }
-
-    /**
-     * Display the specified courier.
-     */
-    public function show(Courier $courier)
-    {
-        return Inertia::render('admin/courier/Show', [
-            'courier' => $courier,
-        ]);
-    }
 }
