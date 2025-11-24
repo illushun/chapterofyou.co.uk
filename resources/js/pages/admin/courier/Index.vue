@@ -23,6 +23,19 @@ const props = defineProps<{
     couriers: CouriersPaginated;
 }>();
 
+const confirmDelete = (courier: Courier) => {
+    console.info(`Attempting to delete courier: ${courier.name}`);
+    if (confirm(`Are you sure you want to delete the courier: ${courier.name}? This action cannot be undone.`)) {
+        router.delete(route('admin.couriers.destroy', courier.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                console.log('Courier deleted successfully.');
+                // Placeholder for success notification
+            },
+        });
+    }
+};
+
 const formatCurrency = (amount: number | string | null | undefined): string => {
     const numericAmount = Number(amount) || 0;
     return `£${numericAmount.toFixed(2)}`;
@@ -115,6 +128,10 @@ const paginate = (url: string | null) => {
                                     class="text-blue-500 hover:text-blue-700 transition font-semibold">
                                 Edit
                                 </Link>
+                                <button @click="confirmDelete(courier)"
+                                    class="text-error hover:text-error-dark transition font-semibold">
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     </tbody>
