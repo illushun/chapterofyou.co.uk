@@ -55,6 +55,7 @@ const props = defineProps<{
     couriers: Courier[];
     parentProducts: ParentProduct[];
     selectedCategoryIds: number[]; // Array of category IDs for the product
+    selectedCourierIds: number[]; // Array of courier IDs for the product
     productImages: ProductImage[]; // Array of existing images for the product
     isEditing: boolean;
     errors: Record<string, string>;
@@ -70,6 +71,7 @@ const form = useForm({
     stock_qty: props.product?.stock_qty || 0,
     parent_product_id: props.product?.parent_product_id || null, // New field
     category_ids: props.selectedCategoryIds || ([] as number[]),
+    courier_ids: props.selectedCourierIds || ([] as number[]),
     meta_title: props.product?.seo?.meta_title || '',
     meta_description: props.product?.seo?.meta_description || '',
     slug: props.product?.seo?.slug || '',
@@ -166,6 +168,16 @@ const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
         }
     } else {
         form.category_ids = form.category_ids.filter(id => id !== categoryId);
+    }
+};
+
+const handleCourierChange = (courierId: number, isChecked: boolean) => {
+    if (isChecked) {
+        if (!form.courier_ids.includes(courierId)) {
+            form.courier_ids.push(courierId);
+        }
+    } else {
+        form.courier_ids = form.courier_ids.filter(id => id !== courierId);
     }
 };
 
@@ -536,6 +548,8 @@ const formatImageSize = (bytes: number): string => {
                                     <label :for="'courier-' + courier.id"
                                         class="inline-flex items-center gap-3 cursor-pointer transition hover:text-primary-content">
                                         <input type="checkbox" :id="'courier-' + courier.id" :value="courier.id"
+                                            :checked="form.courier_ids.includes(courier.id)"
+                                            @change="handleCourierChange(courier.id, ($event.target as HTMLInputElement).checked)"
                                             class="size-5 border-2 border-copy text-primary focus:ring-primary" />
                                         <span class="text-sm text-copy font-medium"> {{ courier.type }} - {{
                                             courier.name }} </span>

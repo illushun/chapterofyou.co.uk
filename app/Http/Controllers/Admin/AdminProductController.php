@@ -55,10 +55,12 @@ class AdminProductController extends Controller
     public function create()
     {
         $categories = Category::select('id', 'name')->get();
+        $couriers = Courier::select(['id', 'name'])->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
         $parentProducts = Product::select('id', 'name')->get();
 
         return Inertia::render('admin/product/CreateEdit', [
             'categories' => $categories,
+            'couriers' => $couriers,
             'parentProducts' => $parentProducts,
             'isEditing' => false,
             'productImages' => [],
@@ -79,6 +81,8 @@ class AdminProductController extends Controller
             'stock_qty' => ['required', 'integer', 'min:0'],
             'category_ids' => ['array'],
             'category_ids.*' => ['exists:category,id'],
+            'courier_ids' => ['array'],
+            'courier_ids.*' => ['exists:courier,id'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')],
@@ -94,6 +98,11 @@ class AdminProductController extends Controller
             // Sync Categories
             if (!empty($validated['category_ids'])) {
                 $product->categories()->sync($validated['category_ids']);
+            }
+
+            // Sync Couriers
+            if (!empty($validated['courier_ids'])) {
+                $product->courier()->sync($validated['courier_ids']);
             }
 
             // Create SEO Record
@@ -131,7 +140,7 @@ class AdminProductController extends Controller
                 return $image;
             });
 
-        $couriers = Courier::select('*')->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
+        $couriers = Courier::select(['id', 'name'])->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
 
         return Inertia::render('admin/product/CreateEdit', [
             'product' => $product,
@@ -139,6 +148,7 @@ class AdminProductController extends Controller
             'couriers' => $couriers,
             'parentProducts' => $parentProducts,
             'selectedCategoryIds' => $product->categories->pluck('id'),
+            'selectedCourierIds' => $product->courier->pluck('id'),
             'productImages' => $productImages,
             'isEditing' => true,
         ]);
