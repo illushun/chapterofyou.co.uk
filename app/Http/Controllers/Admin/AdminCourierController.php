@@ -7,6 +7,7 @@ use App\Models\Courier;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
 
 class AdminCourierController extends Controller
 {
