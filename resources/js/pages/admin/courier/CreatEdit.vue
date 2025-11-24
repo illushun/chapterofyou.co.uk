@@ -96,10 +96,10 @@ const submit = () => {
                                 <select id="type" v-model="form.type"
                                     class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
                                     :class="{ 'border-error': form.errors.type }">
-                                    <option :value="Royal Mail">Royal Mail</option>
-                                    <option :value="FedEx">FedEx</option>
-                                    <option :value="Evri">Evri</option>
-                                    <option :value="DPD">DPD</option>
+                                    <option value="Royal Mail">Royal Mail</option>
+                                    <option value="FedEx">FedEx</option>
+                                    <option value="Evri">Evri</option>
+                                    <option value="DPD">DPD</option>
                                 </select>
                                 <div v-if="form.errors.type" class="text-xs text-error mt-1">{{
                                     form.errors.type }}</div>
