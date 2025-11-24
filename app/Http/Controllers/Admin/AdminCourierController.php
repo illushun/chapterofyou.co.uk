@@ -12,7 +12,7 @@ class AdminCourierController extends Controller
     /**
      * Display a listing of couriers.
      */
-    public function index(Request $request)
+    public function index()
     {
         $couriers = Courier::query()
             ->select('id', 'name', 'type', 'status', 'cost', 'created_at')
