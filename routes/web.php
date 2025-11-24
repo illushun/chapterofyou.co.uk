@@ -75,10 +75,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
+    // resources
     Route::resource('products', AdminProductController::class)->except(['show']);
-    Route::get('/products/relationships', [AdminProductController::class, 'relationshipIndex'])->name('products.relationships');
+    Route::resource('categories', AdminCategoryController::class)->except(['show']);
+    Route::resource('couriers', AdminCourierController::class)->except(['show']);
 
-    Route::get('categories', [AdminCategoryController::class, 'index'])->name('categories.index');
+    Route::get('/products/relationships', [AdminProductController::class, 'relationshipIndex'])->name('products.relationships');
 
     Route::get('messages', [AdminMessageController::class, 'index'])->name('messages.index');
     Route::get('messages/{message}', [AdminMessageController::class, 'show'])->name('messages.show');
@@ -87,8 +89,6 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('reviews/{review}', [AdminReviewController::class, 'show'])->name('reviews.show');
     Route::put('reviews/update/{review}', [AdminReviewController::class, 'update'])->name('reviews.update');
 
-    Route::resource('couriers', AdminCourierController::class)->except(['show']);
-    //Route::get('couriers/{courier}', [AdminCourierController::class, 'show'])->name('couriers.show');
 
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
