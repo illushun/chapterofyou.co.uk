@@ -118,8 +118,6 @@ const paginate = (url: string | null) => {
                         <img :src="category.image ?? 'https://placehold.co/64x64/333/fff?text=NO'" :alt="category.name"
                             class="size-16 object-contain border border-copy p-1 rounded flex-shrink-0">
                         <div class="flex-grow min-w-0">
-                            <div class="text-xs text-copy-light uppercase font-semibold truncate">{{ product.mpn }}
-                            </div>
                             <Link :href="route('admin.categories.edit', category.id)"
                                 class="text-lg font-bold text-primary hover:underline block leading-snug">
                             {{ category.name }}
@@ -152,7 +150,7 @@ const paginate = (url: string | null) => {
 
         <div v-if="categories.last_page > 1" class="mt-6 flex justify-center">
             <ol class="flex gap-2 text-sm font-medium">
-                <li v-for="link in products.links" :key="link.label">
+                <li v-for="link in categories.links" :key="link.label">
                     <button @click.prevent="paginate(link.url)" :disabled="!link.url"
                         :class="{ 'px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold': true, 'bg-primary text-primary-content shadow-md': link.active, 'bg-foreground hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed': !link.active }"
                         v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')"
