@@ -64,6 +64,10 @@ const paginate = (url: string | null) => {
 
         <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
             <h2 class="text-3xl font-black">Couriers (Recent)</h2>
+            <Link :href="route('admin.couriers.create')"
+                class="relative rounded-lg -m-0.5 px-4 py-2 text-sm font-bold text-primary-content transition border-2 border-copy bg-primary hover:bg-primary-dark shadow-md">
+            + Add New Courier
+            </Link>
         </div>
 
         <div v-if="couriers.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
