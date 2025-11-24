@@ -39,6 +39,6 @@ class Courier extends Model
 
     public function courier()
     {
-        return $this->belongsTo(AppCourier::class);
+        return $this->belongsTo(AppCourier::class, 'courier_id');
     }
 }
