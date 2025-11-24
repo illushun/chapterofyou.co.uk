@@ -128,7 +128,10 @@ class AdminProductController extends Controller
      */
     public function edit(Product $product)
     {
-        $product->load(['seo:product_id,meta_title,meta_description,slug', 'categories:id', 'courier:courier_id,per_item']);
+        // eager load
+        $product->load(['seo:product_id,meta_title,meta_description,slug', 'categories:id']);
+        $product->load('courier');
+
         $categories = Category::select('id', 'name')->get();
 
         $parentProducts = Product::where('id', '!=', $product->id)->select('id', 'name')->get();
@@ -150,7 +153,7 @@ class AdminProductController extends Controller
             'couriers' => $couriers,
             'parentProducts' => $parentProducts,
             'selectedCategoryIds' => $product->categories->pluck('id'),
-            'selectedCourierId' => $product->courier?->id,
+            'selectedCourierId' => $product->courier?->courier_id,
             'productImages' => $productImages,
             'isEditing' => true,
         ]);
@@ -170,6 +173,7 @@ class AdminProductController extends Controller
             'stock_qty' => ['required', 'integer', 'min:0'],
             'category_ids' => ['array'],
             'category_ids.*' => ['exists:category,id'],
+            'courier_id' => ['nullable', 'exists:courier,id'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')->ignore($product->seo->id ?? null, 'id')],
@@ -190,6 +194,15 @@ class AdminProductController extends Controller
 
             // Sync Categories
             $product->categories()->sync($validated['category_ids'] ?? []);
+
+            // Update or create courier Record
+            $product->courier()->updateOrCreate(
+                ['product_id' => $product->id],
+                [
+                    'courier_id' => $validated['courier_id'] ?? null,
+                    'per_item' => false,
+                ]
+            );
 
             // Update or create SEO Record
             $product->seo()->updateOrCreate(
