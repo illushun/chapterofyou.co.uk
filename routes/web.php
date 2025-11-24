@@ -88,7 +88,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('reviews/update/{review}', [AdminReviewController::class, 'update'])->name('reviews.update');
 
     Route::resource('couriers', AdminCourierController::class)->except(['show']);
-    Route::get('couriers/{courier}', [AdminCourierController::class, 'show'])->name('couriers.show');
+    //Route::get('couriers/{courier}', [AdminCourierController::class, 'show'])->name('couriers.show');
 
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');

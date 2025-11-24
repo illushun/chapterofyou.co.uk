@@ -107,9 +107,9 @@ const paginate = (url: string | null) => {
                             </td>
                             <td class="px-4 py-3">{{ formatDate(courier.created_at) }}</td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <Link :href="route('admin.couriers.show', courier.id)"
+                                <Link :href="route('admin.couriers.edit', courier.id)"
                                     class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                View Courier
+                                Edit
                                 </Link>
                             </td>
                         </tr>
