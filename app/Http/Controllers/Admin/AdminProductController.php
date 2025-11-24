@@ -196,13 +196,17 @@ class AdminProductController extends Controller
             $product->categories()->sync($validated['category_ids'] ?? []);
 
             // Update or create courier Record
-            $product->courier()->updateOrCreate(
-                ['product_id' => $product->id],
-                [
-                    'courier_id' => $validated['courier_id'] ?? null,
-                    'per_item' => false,
-                ]
-            );
+            if ($validated['courier_id'] === null) {
+                $product->courier()->delete();
+            } else {
+                $product->courier()->create(
+                    [
+                        'product_id' => $product->id,
+                        'courier_id' => $validated['courier_id'],
+                        'per_item' => false,
+                    ]
+                );
+            }
 
             // Update or create SEO Record
             $product->seo()->updateOrCreate(
