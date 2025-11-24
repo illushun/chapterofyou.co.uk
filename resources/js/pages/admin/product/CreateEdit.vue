@@ -239,7 +239,7 @@ const formatImageSize = (bytes: number): string => {
         <form @submit.prevent="submit" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             <div class="lg:col-span-2 space-y-6">
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">General
                             Information</h3>
@@ -298,7 +298,7 @@ const formatImageSize = (bytes: number): string => {
                     </div>
                 </div>
 
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Pricing &
                             Inventory</h3>
@@ -328,7 +328,7 @@ const formatImageSize = (bytes: number): string => {
                 </div>
 
                 <!-- PRODUCT IMAGES SECTION -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Product Images
                             (Max 5 Total)</h3>
@@ -356,7 +356,7 @@ const formatImageSize = (bytes: number): string => {
                         <!-- New Images Queue -->
                         <div v-if="form.new_images.length" class="mt-4 border-t border-copy-light pt-3">
                             <h4 class="text-sm font-bold text-copy mb-2">New Images to Upload ({{ form.new_images.length
-                                }})</h4>
+                            }})</h4>
                             <ul class="space-y-2">
                                 <li v-for="(file, index) in form.new_images" :key="index"
                                     class="flex items-center justify-between p-2 rounded-lg bg-secondary-dark">
@@ -445,7 +445,7 @@ const formatImageSize = (bytes: number): string => {
                 <!-- END PRODUCT IMAGES SECTION -->
 
 
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">SEO & URL</h3>
 
@@ -455,7 +455,7 @@ const formatImageSize = (bytes: number): string => {
                                 class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
                                 :class="{ 'border-error': form.errors.meta_title }" />
                             <div v-if="form.errors.meta_title" class="text-xs text-error mt-1">{{ form.errors.meta_title
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <div class="mb-4">
@@ -486,7 +486,7 @@ const formatImageSize = (bytes: number): string => {
 
             <div class="lg:col-span-1 space-y-6">
 
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Status & Actions
                         </h3>
@@ -513,7 +513,7 @@ const formatImageSize = (bytes: number): string => {
                     </div>
                 </div>
 
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Categories</h3>
 
@@ -532,11 +532,11 @@ const formatImageSize = (bytes: number): string => {
                             </ul>
                         </div>
                         <div v-if="form.errors.category_ids" class="text-xs text-error mt-2">{{ form.errors.category_ids
-                            }}</div>
+                        }}</div>
                     </div>
                 </div>
 
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Couriers</h3>
 

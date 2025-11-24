@@ -75,7 +75,7 @@ const submit = () => {
         <form @submit.prevent="submit" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
             <div class="lg:col-span-2 space-y-6">
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">General
                             Information</h3>
@@ -108,7 +108,7 @@ const submit = () => {
                     </div>
                 </div>
 
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Pricing</h3>
 
@@ -129,7 +129,7 @@ const submit = () => {
 
             <div class="lg:col-span-1 space-y-6">
 
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
                         <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Status & Actions
                         </h3>
