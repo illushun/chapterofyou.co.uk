@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Courier;
+use App\Models\Product\Courier as ProductCourier;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
@@ -81,8 +82,7 @@ class AdminProductController extends Controller
             'stock_qty' => ['required', 'integer', 'min:0'],
             'category_ids' => ['array'],
             'category_ids.*' => ['exists:category,id'],
-            'courier_ids' => ['array'],
-            'courier_ids.*' => ['exists:courier,id'],
+            'courier_id.*' => ['exists:courier,id'],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')],
@@ -100,10 +100,12 @@ class AdminProductController extends Controller
                 $product->categories()->sync($validated['category_ids']);
             }
 
-            // Sync Couriers
-            if (!empty($validated['courier_ids'])) {
-                $product->courier()->sync($validated['courier_ids']);
-            }
+            // Create Product Courier Record
+            $product->courier()->create([
+                'product_id' => $product->id,
+                'courier_id' => $validated['courier_id'] ?? null,
+                'per_item' => false,
+            ]);
 
             // Create SEO Record
             $product->seo()->create([
@@ -148,7 +150,7 @@ class AdminProductController extends Controller
             'couriers' => $couriers,
             'parentProducts' => $parentProducts,
             'selectedCategoryIds' => $product->categories->pluck('id'),
-            'selectedCourierIds' => $product->courier->pluck('id'),
+            'selectedCourierId' => $product->courier?->id,
             'productImages' => $productImages,
             'isEditing' => true,
         ]);
