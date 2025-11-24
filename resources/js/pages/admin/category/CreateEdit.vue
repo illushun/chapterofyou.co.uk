@@ -12,7 +12,7 @@ interface Category {
     status: 'enabled' | 'disabled';
 }
 
-// Define props passed from AdminProductController
+// Define props passed from AdminCategoryController
 const props = defineProps<{
     category?: Category; // Only present when editing
     isEditing: boolean;
@@ -33,19 +33,6 @@ const form = useForm({
 // Computed properties
 const title = computed(() => (props.isEditing ? `Edit Category: ${props.category?.name}` : 'Create New Category'));
 const submitLabel = computed(() => (props.isEditing ? 'Update Category' : 'Create Category'));
-
-// Filter existing images based on deletion queue
-const filteredExistingImages = computed(() => {
-    return props.productImages.filter(image =>
-        !form.images_to_delete.includes(image.id)
-    ).map(image => {
-        // Apply pending status toggle for display purposes
-        if (form.images_to_toggle.includes(image.id)) {
-            return { ...image, is_enabled: !image.is_enabled };
-        }
-        return image;
-    });
-});
 
 // --- Image Management Methods ---
 
@@ -90,7 +77,7 @@ const deleteExistingImage = (imageId: number) => {
 // --- Form submission logic ---
 const submit = () => {
     if (props.isEditing && props.category) {
-        // When updating an existing product, files must be sent via POST,
+        // When updating an existing category, files must be sent via POST,
         // and we use transform to inject the _method: 'put' field for method spoofing.
         form.transform((data) => ({
             ...data,
@@ -186,13 +173,13 @@ const formatImageSize = (bytes: number): string => {
                         <!-- New Image Queue -->
                         <div v-if="form.new_image != ''" class="mt-4 border-t border-copy-light pt-3">
                             <h4 class="text-sm font-bold text-copy mb-2">New Image to Upload ({{ form.new_image.length
-                                }})</h4>
+                            }})</h4>
                             <ul class="space-y-2">
                                 <li class="flex items-center justify-between p-2 rounded-lg bg-secondary-dark">
                                     <div class="truncate text-sm text-copy">
                                         {{ form.new_image.name }}
                                         <span class="text-copy-light ml-2">({{ formatImageSize(form.new_image.size)
-                                        }})</span>
+                                            }})</span>
                                     </div>
                                     <button type="button" @click="removeNewImage(index)"
                                         class="text-error hover:text-red-700 transition">
