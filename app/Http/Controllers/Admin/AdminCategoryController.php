@@ -18,7 +18,7 @@ class AdminCategoryController extends Controller
     {
         $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
 
-        // Store file in the 'product_images' directory within the 'public' disk
+        // Store file in the 'category_images' directory within the 'public' disk
         $path = $file->storeAs('category_images', $fileName, 'public');
         $category->update(['image' => Storage::url($path)]);
     }
@@ -44,7 +44,7 @@ class AdminCategoryController extends Controller
      */
     public function create()
     {
-        return Inertia::render('admin/product/CreateEdit', [
+        return Inertia::render('admin/category/CreateEdit', [
             'isEditing' => false,
         ]);
     }
