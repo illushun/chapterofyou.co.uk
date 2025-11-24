@@ -104,7 +104,7 @@ class AdminProductController extends Controller
             $product->courier()->create([
                 'product_id' => $product->id,
                 'courier_id' => $validated['courier_id'] ?? null,
-                'per_item' => false,
+                'per_item' => "no",
             ]);
 
             // Create SEO Record
@@ -199,11 +199,11 @@ class AdminProductController extends Controller
             if ($validated['courier_id'] === null) {
                 $product->courier()->delete();
             } else {
-                $product->courier()->create(
+                $product->courier()->updateOrCreate(
+                    ['product_id' => $product->id],
                     [
-                        'product_id' => $product->id,
                         'courier_id' => $validated['courier_id'],
-                        'per_item' => false,
+                        'per_item' => "no",
                     ]
                 );
             }
