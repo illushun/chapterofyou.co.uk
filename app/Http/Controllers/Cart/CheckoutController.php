@@ -12,7 +12,6 @@ use Stripe\Stripe;
 use Stripe\PaymentIntent;
 use Illuminate\Support\Facades\Auth;
 use Stripe\Exception\ApiErrorException;
-
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -63,15 +62,51 @@ class CheckoutController extends Controller
     public function calculateFinalTotal(Cart $cart)
     {
         $subtotal = 0;
+        $shippingCost = 0.00;
+
+        $has_per_items = false;
+        $product_shipping_prices = [];
 
         foreach ($cart->items as $item) {
             // Ensure product exists before accessing cost
             $productPrice = $item->product->cost ?? 0.00;
             $subtotal += $productPrice * $item->quantity;
+
+            if ($item->product->courier->per_item == 'yes' && !$has_per_items) {
+                $has_per_items = true;
+            }
+
+            $product_shipping_prices[] = [
+                'cost' => $item->product->courier->courier->cost,
+                'per_item' => $item->product->courier->per_item,
+                'quantity' => $item->quantity,
+            ];
         }
 
-        // free shipping?
-        $shippingCost = ($subtotal >= 50) ? 0.00 : 4.99;
+        // get the lowest shipping cost from the non per_item products
+        if (!$has_per_items) {
+            $lowestShipping = null;
+            foreach ($product_shipping_prices as $psp) {
+                if ($lowestShipping === null || $psp['cost'] < $lowestShipping) {
+                    $lowestShipping = $psp['cost'];
+                }
+            }
+            $shippingCost = $lowestShipping ?? 0.00;
+        }
+
+        // if there are per_item shipping costs, calculate them
+        if ($has_per_items) {
+            foreach ($product_shipping_prices as $psp) {
+                if ($psp['per_item'] == 'yes') {
+                    $shippingCost += $psp['cost'] * $psp['quantity'];
+                }
+            }
+        }
+
+        // free shipping over £50
+        if ($subtotal >= 50) {
+            $shippingCost = 0.00;
+        }
 
         // tax
         $tax = round($subtotal * 0.20, 2);
