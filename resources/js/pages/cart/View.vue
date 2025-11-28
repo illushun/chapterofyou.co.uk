@@ -27,10 +27,9 @@ const props = defineProps<{
 
 const hasItems = computed(() => props.cartItems.length > 0);
 const taxRate = 0.20;
-const shippingCost = computed(() => props.cartTotal >= 50 ? 0.00 : 4.99);
 
 const vat = computed(() => roundToTwo(props.cartTotal * taxRate));
-const finalTotal = computed(() => roundToTwo(props.cartTotal + vat.value + shippingCost.value));
+const finalTotal = computed(() => roundToTwo(props.cartTotal + vat.value));
 
 function roundToTwo(num: number): number {
     return Math.round(num * 100) / 100;
@@ -212,9 +211,8 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                     </div>
                                     <div class="flex justify-between">
                                         <span>Shipping</span>
-                                        <span
-                                            :class="['font-bold', shippingCost === 0 ? 'text-green-600' : 'text-copy']">
-                                            {{ shippingCost === 0 ? 'FREE' : formatCurrency(shippingCost) }}
+                                        <span :class="['font-bold', 'text-copy']">
+                                            Calculated at checkout
                                         </span>
                                     </div>
                                 </div>
@@ -224,7 +222,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                     class="mt-6 mb-4 pt-4 border-t-2 border-copy-light flex justify-between items-center">
                                     <span class="text-2xl font-extrabold text-copy">Order Total</span>
                                     <span class="text-4xl font-black text-primary">{{ formatCurrency(finalTotal)
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <a href="/checkout" :disabled="!hasItems"
@@ -233,7 +231,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                     Proceed to Checkout
                                 </a>
 
-                                <p v-if="shippingCost > 0" class="text-center text-sm text-copy-lighter mt-6">
+                                <p class="text-center text-sm text-copy-lighter mt-6">
                                     Add {{ formatCurrency(50 - props.cartTotal) }} more for FREE shipping!
                                 </p>
                             </div>
