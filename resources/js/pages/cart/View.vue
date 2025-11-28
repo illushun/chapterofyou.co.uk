@@ -211,7 +211,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                     </div>
                                     <div class="flex justify-between">
                                         <span>Shipping</span>
-                                        <span :class="['font-bold', 'text-copy']">
+                                        <span class="text-copy text-sm">
                                             Calculated at checkout
                                         </span>
                                     </div>
@@ -222,7 +222,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                     class="mt-6 mb-4 pt-4 border-t-2 border-copy-light flex justify-between items-center">
                                     <span class="text-2xl font-extrabold text-copy">Order Total</span>
                                     <span class="text-4xl font-black text-primary">{{ formatCurrency(finalTotal)
-                                    }}</span>
+                                        }}</span>
                                 </div>
 
                                 <a href="/checkout" :disabled="!hasItems"
@@ -231,7 +231,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                     Proceed to Checkout
                                 </a>
 
-                                <p class="text-center text-sm text-copy-lighter mt-6">
+                                <p v-if="props.cartTotal < 50" class="text-center text-sm text-copy-lighter mt-6">
                                     Add {{ formatCurrency(50 - props.cartTotal) }} more for FREE shipping!
                                 </p>
                             </div>
