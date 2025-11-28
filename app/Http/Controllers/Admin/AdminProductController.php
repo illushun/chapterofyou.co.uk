@@ -145,7 +145,7 @@ class AdminProductController extends Controller
                 return $image;
             });
 
-        $couriers = Courier::select(['id', 'name'])->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
+        $couriers = Courier::select(['id', 'name', 'type', 'cost'])->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
 
         return Inertia::render('admin/product/CreateEdit', [
             'product' => $product,

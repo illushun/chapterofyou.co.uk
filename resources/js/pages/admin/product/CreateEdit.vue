@@ -360,7 +360,7 @@ const formatImageSize = (bytes: number): string => {
                         <!-- New Images Queue -->
                         <div v-if="form.new_images.length" class="mt-4 border-t border-copy-light pt-3">
                             <h4 class="text-sm font-bold text-copy mb-2">New Images to Upload ({{ form.new_images.length
-                            }})</h4>
+                                }})</h4>
                             <ul class="space-y-2">
                                 <li v-for="(file, index) in form.new_images" :key="index"
                                     class="flex items-center justify-between p-2 rounded-lg bg-secondary-dark">
@@ -459,7 +459,7 @@ const formatImageSize = (bytes: number): string => {
                                 class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
                                 :class="{ 'border-error': form.errors.meta_title }" />
                             <div v-if="form.errors.meta_title" class="text-xs text-error mt-1">{{ form.errors.meta_title
-                            }}</div>
+                                }}</div>
                         </div>
 
                         <div class="mb-4">
@@ -536,7 +536,7 @@ const formatImageSize = (bytes: number): string => {
                             </ul>
                         </div>
                         <div v-if="form.errors.category_ids" class="text-xs text-error mt-2">{{ form.errors.category_ids
-                        }}</div>
+                            }}</div>
                     </div>
                 </div>
 
@@ -559,7 +559,7 @@ const formatImageSize = (bytes: number): string => {
 
                                         <div class="mr-2 text-sm text-copy-light"> - £{{ courier.cost }}
                                         </div>
-                                        <select :id="'courier-status-' + courier.id" v-model="courier_per_item"
+                                        <select :id="'courier-status-' + courier.id" v-model="form.courier_per_item"
                                             class="size-5 border-2 border-copy text-primary focus:ring-primary mr-2">
                                             <option value="yes">Yes</option>
                                             <option value="no">No</option>
