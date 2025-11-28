@@ -211,7 +211,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                     </div>
                                     <div class="flex justify-between">
                                         <span>Shipping</span>
-                                        <span class="text-copy text-sm">
+                                        <span class="text-copy text-sm flex items-center italic">
                                             Calculated at checkout
                                         </span>
                                     </div>
