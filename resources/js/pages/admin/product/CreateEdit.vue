@@ -557,12 +557,12 @@ const formatImageSize = (bytes: number): string => {
                                         <span class="text-sm text-copy font-medium"> {{ courier.type }} - {{
                                             courier.name }} </span>
 
-                                        <div class="mr-2 text-sm text-copy-light"> - £{{ courier.cost.toFixed(2) }}
+                                        <div class="mr-2 text-sm text-copy-light"> - £{{ courier.cost }}
                                         </div>
-                                        <select :id="'courier-status-' + courier.id" v-model="courier.status"
+                                        <select :id="'courier-status-' + courier.id" v-model="courier_per_item"
                                             class="size-5 border-2 border-copy text-primary focus:ring-primary mr-2">
-                                            <option value="enabled">Enabled</option>
-                                            <option value="disabled">Disabled</option>
+                                            <option value="yes">Yes</option>
+                                            <option value="no">No</option>
                                         </select>
                                     </label>
                                 </li>
