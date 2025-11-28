@@ -56,6 +56,7 @@ const props = defineProps<{
     parentProducts: ParentProduct[];
     selectedCategoryIds: number[]; // Array of category IDs for the product
     selectedCourierId: number | null; // courier ID for the product
+    courierPerItem: string; // Whether courier is charged per item
     productImages: ProductImage[]; // Array of existing images for the product
     isEditing: boolean;
     errors: Record<string, string>;
@@ -72,6 +73,7 @@ const form = useForm({
     parent_product_id: props.product?.parent_product_id || null, // New field
     category_ids: props.selectedCategoryIds || ([] as number[]),
     courier_id: props.selectedCourierId || null,
+    courier_per_item: props.courierPerItem || "no",
     meta_title: props.product?.seo?.meta_title || '',
     meta_description: props.product?.seo?.meta_description || '',
     slug: props.product?.seo?.slug || '',
@@ -174,8 +176,10 @@ const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
 const handleCourierChange = (courierId: number, isChecked: boolean) => {
     if (isChecked) {
         form.courier_id = courierId;
+        form.courier_per_item = "no";
     } else {
         form.courier_id = null;
+        form.courier_per_item = "no";
     }
 };
 
@@ -545,12 +549,30 @@ const formatImageSize = (bytes: number): string => {
                                 <li v-for="courier in couriers" :key="courier.id">
                                     <label :for="'courier-' + courier.id"
                                         class="inline-flex items-center gap-3 cursor-pointer transition hover:text-primary-content">
-                                        <input type="checkbox" :id="'courier-' + courier.id" :value="courier.id"
-                                            :checked="form.courier_id == courier.id"
-                                            @change="handleCourierChange(courier.id, ($event.target as HTMLInputElement).checked)"
+                                        <input type="radio" name="courier" :id="'courier-' + courier.id"
+                                            :value="courier.id" :checked="form.courier_id == courier.id"
+                                            @change="handleCourierChange(courier.id, true)"
                                             class="size-5 border-2 border-copy text-primary focus:ring-primary" />
+
                                         <span class="text-sm text-copy font-medium"> {{ courier.type }} - {{
                                             courier.name }} </span>
+
+                                        <div class="mr-2 text-sm text-copy-light"> - £{{ courier.cost.toFixed(2) }}
+                                        </div>
+                                        <select :id="'courier-status-' + courier.id" v-model="courier.status"
+                                            class="size-5 border-2 border-copy text-primary focus:ring-primary mr-2">
+                                            <option value="enabled">Enabled</option>
+                                            <option value="disabled">Disabled</option>
+                                        </select>
+                                    </label>
+                                </li>
+                                <li>
+                                    <label for="courier-none"
+                                        class="inline-flex items-center gap-3 cursor-pointer transition hover:text-primary-content">
+                                        <input type="radio" name="courier" id="courier-none" value=""
+                                            :checked="form.courier_id == null" @change="handleCourierChange(0, false)"
+                                            class="size-5 border-2 border-copy text-primary focus:ring-primary" />
+                                        <span class="text-sm text-copy font-medium"> No Courier Selected </span>
                                     </label>
                                 </li>
                             </ul>

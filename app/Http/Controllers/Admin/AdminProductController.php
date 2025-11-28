@@ -104,7 +104,7 @@ class AdminProductController extends Controller
             $product->courier()->create([
                 'product_id' => $product->id,
                 'courier_id' => $validated['courier_id'] ?? null,
-                'per_item' => "no",
+                'per_item' => $validated['courier_per_item'] ?? 'no',
             ]);
 
             // Create SEO Record
@@ -154,6 +154,7 @@ class AdminProductController extends Controller
             'parentProducts' => $parentProducts,
             'selectedCategoryIds' => $product->categories->pluck('id'),
             'selectedCourierId' => $product->courier?->courier_id,
+            'courierPerItem' => $product->courier?->per_item,
             'productImages' => $productImages,
             'isEditing' => true,
         ]);
@@ -174,6 +175,7 @@ class AdminProductController extends Controller
             'category_ids' => ['array'],
             'category_ids.*' => ['exists:category,id'],
             'courier_id' => ['nullable', 'exists:courier,id'],
+            'courier_per_item' => ['nullable', Rule::in(['yes', 'no'])],
             'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')->ignore($product->seo->id ?? null, 'id')],
@@ -203,7 +205,7 @@ class AdminProductController extends Controller
                     ['product_id' => $product->id],
                     [
                         'courier_id' => $validated['courier_id'],
-                        'per_item' => "no",
+                        'per_item' => $validated['courier_per_item'] ?? 'no',
                     ]
                 );
             }
