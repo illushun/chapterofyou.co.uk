@@ -92,7 +92,7 @@ class AdminProductController extends Controller
             'new_images.*' => ['image', 'max:2048', 'mimes:jpeg,png,webp'], // Max 2MB, common image types
         ]);
 
-        return DB::transaction(function () use ($validated) {
+        return DB::transaction(function () use ($validated, $request) {
             $product = Product::create($validated);
 
             // Sync Categories
