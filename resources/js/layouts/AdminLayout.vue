@@ -3,6 +3,19 @@ import { Link, Head, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import type { Route } from 'ziggy-js';
 
+import DashboardIcon from '@/components/icons/DashboardIcon.vue'
+import ProductsIcon from '@/components/icons/ProductsIcon.vue'
+import RelationshipsIcon from '@/components/icons/RelationshipsIcon.vue'
+import CategoriesIcon from '@/components/icons/CategoriesIcon.vue'
+import ReviewsIcon from '@/components/icons/ReviewsIcon.vue'
+import MessagesIcon from '@/components/icons/MessagesIcon.vue'
+import OrdersIcon from '@/components/icons/OrdersIcon.vue'
+import CouriersIcon from '@/components/icons/CouriersIcon.vue'
+import UsersIcon from '@/components/icons/UsersIcon.vue'
+import CartsIcon from '@/components/icons/CartsIcon.vue'
+import ClpLabelsIcon from '@/components/icons/ClpLabelsIcon.vue'
+import ViewWebsiteIcon from '@/components/icons/ViewWebsiteIcon.vue'
+
 declare const route: Route;
 
 const isRouteActive = (name: string): boolean => {
@@ -10,18 +23,18 @@ const isRouteActive = (name: string): boolean => {
 };
 
 const navLinks = [
-    { name: 'Dashboard', route: 'admin.dashboard', icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m15.356 2H21v-5' },
-    { name: 'Products', route: 'admin.products.index', icon: 'M5 8h.01M19 8h.01M10 8h.01M5 12h.01M19 12h.01M10 12h.01M5 16h.01M19 16h.01M10 16h.01M21 12a9 9 0 01-9 9 9 9 0 01-9-9c0-4.97 4.03-9 9-9s9 4.03 9 9z' },
-    { name: 'Relationships', route: 'admin.products.relationships', icon: 'M5 8h.01M19 8h.01M10 8h.01M5 12h.01M19 12h.01M10 12h.01M5 16h.01M19 16h.01M10 16h.01M21 12a9 9 0 01-9 9 9 9 0 01-9-9c0-4.97 4.03-9 9-9s9 4.03 9 9z' },
-    { name: 'Categories', route: 'admin.categories.index', icon: 'M5 8h.01M19 8h.01M10 8h.01M5 12h.01M19 12h.01M10 12h.01M5 16h.01M19 16h.01M10 16h.01M21 12a9 9 0 01-9 9 9 9 0 01-9-9c0-4.97 4.03-9 9-9s9 4.03 9 9z' },
-    { name: 'Reviews', route: 'admin.reviews.index', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' },
-    { name: 'Messages', route: 'admin.messages.index', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' },
-    { name: 'Orders', route: 'admin.orders.index', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' },
-    { name: 'Couriers', route: 'admin.couriers.index', icon: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z' },
-    { name: 'Users', route: 'admin.users.index', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-    { name: 'Carts', route: 'admin.carts.index', icon: 'M3 10h18M7 15h10M4 10V7a3 3 0 013-3h10a3 3 0 013 3v3' },
-    { name: 'CLP Labels', route: 'admin.clp-labels.index', icon: 'M3 10h18M7 15h10M4 10V7a3 3 0 013-3h10a3 3 0 013 3v3' },
-    { name: 'View Website', route: 'home', icon: 'M10 19l-7-7m0 0l7-7m-7 7h18', external: true },
+    { name: 'Dashboard', route: 'admin.dashboard', icon: DashboardIcon },
+    { name: 'Products', route: 'admin.products.index', icon: ProductsIcon },
+    { name: 'Relationships', route: 'admin.products.relationships', icon: RelationshipsIcon },
+    { name: 'Categories', route: 'admin.categories.index', icon: CategoriesIcon },
+    { name: 'Reviews', route: 'admin.reviews.index', icon: ReviewsIcon },
+    { name: 'Messages', route: 'admin.messages.index', icon: MessagesIcon },
+    { name: 'Orders', route: 'admin.orders.index', icon: OrdersIcon },
+    { name: 'Couriers', route: 'admin.couriers.index', icon: CouriersIcon },
+    { name: 'Users', route: 'admin.users.index', icon: UsersIcon },
+    { name: 'Carts', route: 'admin.carts.index', icon: CartsIcon },
+    { name: 'CLP Labels', route: 'admin.clp-labels.index', icon: ClpLabelsIcon },
+    { name: 'View Website', route: 'home', icon: ViewWebsiteIcon, external: true },
 ];
 
 const page = usePage();
@@ -63,10 +76,8 @@ const getTitle = computed(() => {
                                 ? 'bg-primary font-bold text-primary-content border-copy shadow-md'
                                 : 'bg-foreground hover:bg-secondary-light',
                         ]">
-                        <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="link.icon" />
-                        </svg>
+
+                        <component :is="link.icon"></component>
                         <span>{{ link.name }}</span>
                         </Link>
                     </nav>
@@ -134,10 +145,8 @@ const getTitle = computed(() => {
                                         ? 'bg-primary font-bold text-primary-content border-copy shadow-md'
                                         : 'bg-foreground hover:bg-secondary-light',
                                 ]">
-                            <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="link.icon" />
-                            </svg>
+
+                            <component :is="link.icon"></component>
                             <span>{{ link.name }}</span>
                             </Link>
                         </nav>
