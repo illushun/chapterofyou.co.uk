@@ -201,7 +201,7 @@ const formatImageSize = (bytes: number): string => {
                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                 <div class="relative rounded-lg overflow-hidden border-2 shadow-md transition border-success/80"
                                     :class="{
-                                        'ring-2 ring-error/50': form.images_to_delete.includes(form.category.image)
+                                        'ring-2 ring-error/50': form.images_to_delete.includes(props.category?.image)
                                     }">
                                     <!-- Image Thumbnail -->
                                     <img :src="props.category.image" alt="Category Image"
@@ -212,11 +212,11 @@ const formatImageSize = (bytes: number): string => {
                                     <div class="absolute bottom-0 right-0 p-1 flex gap-1 bg-black/50 rounded-tl-lg">
 
                                         <!-- Delete Button -->
-                                        <button type="button" @click="deleteExistingImage(props.category.image)"
+                                        <button type="button" @click="deleteExistingImage(props.category?.image)"
                                             title="Mark for Deletion"
                                             class="p-1 rounded-full bg-error text-white transition hover:scale-110"
-                                            :class="{ 'opacity-50': form.images_to_delete.includes(props.category.image) }"
-                                            :disabled="form.images_to_delete.includes(props.category.image)">
+                                            :class="{ 'opacity-50': form.images_to_delete.includes(props.category?.image) }"
+                                            :disabled="form.images_to_delete.includes(props.category?.image)">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
                                                 fill="currentColor">
                                                 <path fill-rule="evenodd"
