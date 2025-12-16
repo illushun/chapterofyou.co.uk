@@ -42,7 +42,7 @@
         <!-- <meta name="twitter:image" content="https://www.chapterofyou.co.uk/images/share_image.png"> -->
 
         <!-- Favicon -->
-        <link rel="icon" href="{{ asset('favicon.ico') }}" type="image/x-icon">
+        <link rel="icon" href="{{ asset('storage/images/website_icon.ico') }}" type="image/x-icon">
 
         <!-- Content Language -->
         <meta http-equiv="Content-Language" content="en">
