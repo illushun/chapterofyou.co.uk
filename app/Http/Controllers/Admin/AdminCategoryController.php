@@ -138,7 +138,9 @@ class AdminCategoryController extends Controller
     public function destroy(Category $category)
     {
         $categoryName = $category->name;
-        Storage::disk('public')->delete($category->image);
+        if ($category->image) {
+            Storage::disk('public')->delete($category->image);
+        }
         $category->delete();
 
         return redirect()->route('admin.categories.index')
