@@ -29,17 +29,13 @@
         <meta property="og:description" content="Discover luxurious hand-made reed diffusers">
         <meta property="og:url" content="https://www.chapterofyou.co.uk">
         <meta property="og:type" content="website">
-
-        <!-- Add an image tag here -->
-        <!-- <meta property="og:image" content="https://www.chapterofyou.co.uk/images/share_image.png"> -->
+        <meta property="og:image" content="{{ asset('storage/images/large_image.png') }}">
 
         <!-- Twitter Card Meta Tags -->
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="Chapter of You | Your chapter, your self-care">
         <meta name="twitter:description" content="Discover luxurious hand-made reed diffusers">
-
-        <!-- Link to the image used for sharing -->
-        <!-- <meta name="twitter:image" content="https://www.chapterofyou.co.uk/images/share_image.png"> -->
+        <meta name="twitter:image" content="{{ asset('storage/images/large_image.png') }}">
 
         <!-- Favicon -->
         <link rel="icon" href="{{ asset('storage/images/website_icon.ico') }}" type="image/x-icon">
