@@ -60,7 +60,7 @@ class AdminCategoryController extends Controller
             'status' => ['required', Rule::in(['enabled', 'disabled'])],
         ]);
 
-        return DB::transaction(function () use ($validated) {
+        return DB::transaction(function () use ($validated, $request) {
             $category = Category::create($validated);
 
             if ($request->hasFile('image')) {
@@ -104,9 +104,9 @@ class AdminCategoryController extends Controller
 
             if (!empty($validated['images_to_delete'])) {
 
-                dd($imagesToDelete);
+                dd($validated['images_to_delete']);
 
-                /*foreach ($imagesToDelete as $image) {
+                /*foreach ($validated['images_to_delete'] as $image) {
                     Storage::disk('public')->delete($image->image);
                     $image->delete();
                 }*/
@@ -114,9 +114,9 @@ class AdminCategoryController extends Controller
 
             if (!empty($validated['images_to_toggle'])) {
 
-                dd($imagesToToggle);
+                dd($validated['images_to_toggle']);
 
-                /*foreach ($imagesToToggle as $image) {
+                /*foreach ($validated['images_to_toggle'] as $image) {
                     $newStatus = $image->status === 'enabled' ? 'disabled' : 'enabled';
                     $image->update(['status' => $newStatus]);
                 }*/
