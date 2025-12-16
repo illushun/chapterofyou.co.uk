@@ -109,7 +109,7 @@ const isExpired = (expiresAt: string | null): boolean => {
                             <td class="px-4 py-3 text-right whitespace-nowrap">
                                 <Link :href="route('admin.carts.show', cart.id)"
                                     class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                View Contents
+                                View
                                 </Link>
                             </td>
                         </tr>

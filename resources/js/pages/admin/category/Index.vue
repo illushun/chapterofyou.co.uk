@@ -79,7 +79,7 @@ const paginate = (url: string | null) => {
                             </td>
                             <td class="px-4 py-3">
                                 <Link :href="route('admin.categories.edit', category.id)"
-                                    class="text-primary hover:underline font-medium">
+                                    class="text-primary-content hover:underline font-medium">
                                 {{ category.name }}
                                 </Link>
                             </td>
@@ -96,7 +96,7 @@ const paginate = (url: string | null) => {
                                 Edit
                                 </Link>
                                 <button @click="confirmDelete(category)"
-                                    class="text-error hover:text-error-dark transition font-semibold">
+                                    class="text-error-content hover:text-error-dark transition font-semibold cursor-pointer">
                                     Delete
                                 </button>
                             </td>

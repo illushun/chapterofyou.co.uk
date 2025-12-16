@@ -181,7 +181,7 @@ const paginate = (url: string | null) => {
                             Edit
                             </Link>
                             <button @click="confirmDelete(product)"
-                                class="text-sm text-error hover:text-error-dark transition font-semibold">
+                                class="text-sm text-error hover:text-error-dark transition font-semibold cursor-pointer">
                                 Delete
                             </button>
                         </div>

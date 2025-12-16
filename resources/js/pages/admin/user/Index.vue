@@ -54,7 +54,7 @@ const paginate = (url: string | null) => {
                 <table class="min-w-full text-sm divide-y divide-copy-light/50">
                     <thead>
                         <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
-                            <th class="px-4 py-3">ID</th>
+                            <th class="px-4 py-3">#</th>
                             <th class="px-4 py-3">Name</th>
                             <th class="px-4 py-3">Email</th>
                             <th class="px-4 py-3">Joined</th>
@@ -65,12 +65,12 @@ const paginate = (url: string | null) => {
                     <tbody class="divide-y divide-copy-light/50">
                         <tr v-for="user in users.data" :key="user.id" class="hover:bg-secondary-light transition">
                             <td class="px-4 py-3 font-semibold">{{ user.id }}</td>
-                            <td class="px-4 py-3 font-semibold">{{ user.name }}</td>
+                            <td class="px-4 py-3">{{ user.name }}</td>
                             <td class="px-4 py-3">{{ user.email }}</td>
                             <td class="px-4 py-3 text-copy-light">{{ formatDate(user.created_at) }}</td>
                             <td class="px-4 py-3">
                                 <span v-if="user.is_admin"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary-light text-primary border border-primary-dark">
+                                    class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary text-primary-content border border-primary-dark">
                                     Admin
                                 </span>
                                 <span v-else
@@ -81,7 +81,7 @@ const paginate = (url: string | null) => {
                             <td class="px-4 py-3 text-right whitespace-nowrap">
                                 <Link :href="route('admin.users.show', user.id)"
                                     class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                View Details
+                                View
                                 </Link>
                             </td>
                         </tr>

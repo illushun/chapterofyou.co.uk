@@ -93,7 +93,7 @@ const paginate = (url: string | null) => {
                 <table class="min-w-full text-sm divide-y divide-copy-light/50">
                     <thead>
                         <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
-                            <th class="px-4 py-3">Courier ID</th>
+                            <th class="px-4 py-3">#</th>
                             <th class="px-4 py-3">Name</th>
                             <th class="px-4 py-3">Type</th>
                             <th class="px-4 py-3">Cost</th>
@@ -105,7 +105,7 @@ const paginate = (url: string | null) => {
                     <tbody class="divide-y divide-copy-light/50">
                         <tr v-for="courier in couriers.data" :key="courier.id"
                             class="hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-semibold text-primary">{{ courier.id }}</td>
+                            <td class="px-4 py-3 font-semibold">{{ courier.id }}</td>
                             <td class="px-4 py-3">
                                 <span class="text-copy-light">{{ courier.name }}</span>
                             </td>
@@ -115,7 +115,7 @@ const paginate = (url: string | null) => {
                                     {{ courier.type }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 font-bold text-primary">{{ formatCurrency(courier.cost) }}</td>
+                            <td class="px-4 py-3 font-bold text-primary-content">{{ formatCurrency(courier.cost) }}</td>
                             <td class="px-4 py-3">
                                 <span
                                     :class="['px-3 py-1 rounded-full text-xs font-semibold uppercase', getStatusClasses(courier.status)]">
@@ -129,7 +129,7 @@ const paginate = (url: string | null) => {
                                 Edit
                                 </Link>
                                 <button @click="confirmDelete(courier)"
-                                    class="text-error hover:text-error-dark transition font-semibold">
+                                    class="text-error-content hover:text-error transition font-semibold cursor-pointer">
                                     Delete
                                 </button>
                             </td>

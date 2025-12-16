@@ -88,7 +88,7 @@ const paginate = (url: string | null) => {
                 <table class="min-w-full text-sm divide-y divide-copy-light/50">
                     <thead>
                         <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
-                            <th class="px-4 py-3">Order ID</th>
+                            <th class="px-4 py-3">#</th>
                             <th class="px-4 py-3">Customer</th>
                             <th class="px-4 py-3">Date</th>
                             <th class="px-4 py-3">Total</th>
@@ -98,7 +98,7 @@ const paginate = (url: string | null) => {
                     </thead>
                     <tbody class="divide-y divide-copy-light/50">
                         <tr v-for="order in orders.data" :key="order.id" class="hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-semibold text-primary">COY-0000{{ order.id }}</td>
+                            <td class="px-4 py-3 font-semibold">COY-0000{{ order.id }}</td>
                             <td class="px-4 py-3">
                                 <span v-if="order.user">
                                     <Link :href="route('admin.users.show', order.user.id)" class="hover:underline">{{
@@ -108,7 +108,8 @@ const paginate = (url: string | null) => {
                                 <span v-else class="text-copy-light italic">Guest</span>
                             </td>
                             <td class="px-4 py-3">{{ formatDate(order.created_at) }}</td>
-                            <td class="px-4 py-3 font-bold text-primary">{{ formatCurrency(order.grand_total) }}</td>
+                            <td class="px-4 py-3 font-bold text-primary-content">{{ formatCurrency(order.grand_total) }}
+                            </td>
                             <td class="px-4 py-3">
                                 <span
                                     :class="['px-3 py-1 rounded-full text-xs font-semibold uppercase', getStatusClasses(order.status)]">
@@ -118,7 +119,7 @@ const paginate = (url: string | null) => {
                             <td class="px-4 py-3 text-right whitespace-nowrap">
                                 <Link :href="route('admin.orders.show', order.id)"
                                     class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                View Details
+                                View
                                 </Link>
                             </td>
                         </tr>

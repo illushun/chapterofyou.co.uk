@@ -61,7 +61,7 @@ const paginate = (url: string | null) => {
                 <table class="min-w-full text-sm divide-y divide-copy-light/50">
                     <thead>
                         <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
-                            <th class="px-4 py-3">Message ID</th>
+                            <th class="px-4 py-3">#</th>
                             <th class="px-4 py-3">Name</th>
                             <th class="px-4 py-3">Email</th>
                             <th class="px-4 py-3">Subject</th>
@@ -73,24 +73,20 @@ const paginate = (url: string | null) => {
                     <tbody class="divide-y divide-copy-light/50">
                         <tr v-for="message in messages.data" :key="message.id"
                             class="hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-semibold text-primary">#{{ message.id }}</td>
+                            <td class="px-4 py-3 font-semibold">#{{ message.id }}</td>
+                            <td class="px-4 py-3">{{ message.name }}</td>
+                            <td class="px-4 py-3">{{ message.email }}</td>
                             <td class="px-4 py-3">
-                                <span class="text-xs text-copy-light">{{ message.name }}</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="text-xs text-copy-light">{{ message.email }}</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span v-if="message.subject" class="text-xs text-copy-light">{{ message.subject
-                                }}</span>
-                                <span v-else class="text-xs text-copy-light italic">No subject..</span>
+                                <span v-if="message.subject">{{ message.subject
+                                    }}</span>
+                                <span v-else class="text-copy-light italic">No subject...</span>
                             </td>
                             <td class="px-4 py-3">{{ formatDate(message.created_at) }}</td>
-                            <td class="px-4 py-3 font-bold text-primary">{{ message.is_read }}</td>
+                            <td class="px-4 py-3 font-bold text-primary-content">{{ message.is_read }}</td>
                             <td class="px-4 py-3 text-right whitespace-nowrap">
                                 <Link :href="route('admin.messages.show', message.id)"
                                     class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                View Message
+                                View
                                 </Link>
                             </td>
                         </tr>
