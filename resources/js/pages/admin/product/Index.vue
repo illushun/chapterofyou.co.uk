@@ -94,7 +94,7 @@ const paginate = (url: string | null) => {
                             <td class="px-4 py-3 font-semibold">{{ product.mpn }}</td>
                             <td class="px-4 py-3">
                                 <Link :href="route('admin.products.edit', product.id)"
-                                    class="text-primary hover:underline font-medium">
+                                    class="text-primary-content hover:underline font-medium">
                                 {{ product.name }}
                                 </Link>
                                 <span v-if="product.parent_product_id"
@@ -118,7 +118,7 @@ const paginate = (url: string | null) => {
                                 Edit
                                 </Link>
                                 <button @click="confirmDelete(product)"
-                                    class="text-error hover:text-error-dark transition font-semibold">
+                                    class="text-error-content hover:text-error-dark transition font-semibold">
                                     Delete
                                 </button>
                             </td>
