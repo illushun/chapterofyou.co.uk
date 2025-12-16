@@ -132,9 +132,8 @@ const paginate = (url: string | null) => {
                     <!-- Review ID and Status -->
                     <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
                         <div>
-                            <div class="text-xs text-copy-light uppercase font-medium">Review ID</div>
                             <Link :href="route('admin.reviews.show', review.id)"
-                                class="text-xl font-bold text-primary hover:underline">
+                                class="text-xl font-bold hover:underline">
                             #{{ review.id }}
                             </Link>
                         </div>
@@ -160,7 +159,7 @@ const paginate = (url: string | null) => {
                         <div class="flex flex-col space-y-1">
                             <div>
                                 <div class="text-xs text-copy-light uppercase font-medium">Rating</div>
-                                <div class="font-bold text-lg text-primary">{{ review.rating }}
+                                <div class="font-bold text-lg text-primary-content">{{ review.rating }}
                                 </div>
                             </div>
                             <div class="text-xs text-copy-light italic">

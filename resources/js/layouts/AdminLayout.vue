@@ -68,7 +68,7 @@ const getTitle = computed(() => {
             :class="{ 'w-64': true, 'fixed top-0 left-0 h-full hidden lg:block': true, 'p-4': true, 'border-r-2 border-copy': true }"
             style="background-color: var(--secondary);">
             <div class="sticky top-4">
-                <div class="relative rounded-lg -m-0.5 p-4 bg-foreground border-2 border-copy">
+                <div class="relative rounded-lg mb-2 -m-0.5 p-4 bg-foreground border-2 border-copy">
                     <nav class="space-y-2">
                         <Link v-for="link in navLinks" :key="link.route" :href="route(link.route)" :class="[
                             'relative flex items-center gap-3 rounded-lg -m-0.5 px-4 py-2 transition-colors duration-200 border-2 border-copy text-copy',
@@ -124,8 +124,8 @@ const getTitle = computed(() => {
                     style="background-color: var(--secondary);">
                     <div class="relative rounded-lg -m-0.5 p-4 bg-foreground border-2 border-copy">
                         <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
-                            <h1 class="text-xl font-black text-primary-content" style="color: var(--primary);">
-                                C.o.Y. Admin
+                            <h1 class="text-xl font-black text-primary-content">
+                                Admin Panel
                             </h1>
                             <button @click="sidebarOpen = false" class="text-copy-light hover:text-copy transition"
                                 aria-label="Close menu">
@@ -140,7 +140,7 @@ const getTitle = computed(() => {
                         <nav class="space-y-2">
                             <Link v-for="link in navLinks" :key="link.route" :href="route(link.route)"
                                 @click="sidebarOpen = false" :class="[
-                                    'relative flex items-center gap-3 rounded-lg -m-0.5 px-4 py-2 transition-colors duration-200 border-2 border-copy text-copy',
+                                    'relative flex items-center mb-2 gap-3 rounded-lg -m-0.5 px-4 py-2 transition-colors duration-200 border-2 border-copy text-copy',
                                     isRouteActive(link.route)
                                         ? 'bg-primary font-bold text-primary-content border-copy shadow-md'
                                         : 'bg-foreground hover:bg-secondary-light',

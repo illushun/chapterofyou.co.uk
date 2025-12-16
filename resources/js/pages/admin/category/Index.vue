@@ -96,7 +96,7 @@ const paginate = (url: string | null) => {
                                 Edit
                                 </Link>
                                 <button @click="confirmDelete(category)"
-                                    class="text-error-content hover:text-error-dark transition font-semibold cursor-pointer">
+                                    class="text-error-content hover:text-error transition font-semibold cursor-pointer">
                                     Delete
                                 </button>
                             </td>
@@ -119,7 +119,7 @@ const paginate = (url: string | null) => {
                             class="size-16 object-contain border border-copy p-1 rounded flex-shrink-0">
                         <div class="flex-grow min-w-0">
                             <Link :href="route('admin.categories.edit', category.id)"
-                                class="text-lg font-bold text-primary hover:underline block leading-snug">
+                                class="text-lg font-bold text-primary-content hover:underline block leading-snug">
                             {{ category.name }}
                             </Link>
                             <span :class="['mt-1 px-2 py-0.5 rounded-full text-xs font-semibold uppercase inline-block',
@@ -138,7 +138,7 @@ const paginate = (url: string | null) => {
                             Edit
                             </Link>
                             <button @click="confirmDelete(category)"
-                                class="text-sm text-error hover:text-error-dark transition font-semibold">
+                                class="text-sm text-error-content hover:text-error transition font-semibold">
                                 Delete
                             </button>
                         </div>

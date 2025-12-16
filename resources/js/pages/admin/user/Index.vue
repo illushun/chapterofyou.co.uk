@@ -100,14 +100,13 @@ const paginate = (url: string | null) => {
                     <!-- Header: Name, ID, Role -->
                     <div class="flex justify-between items-start border-b border-copy-light/30 pb-2 mb-2">
                         <div>
-                            <div class="text-xs text-copy-light uppercase font-medium">User ID: {{ user.id }}</div>
                             <Link :href="route('admin.users.show', user.id)"
                                 class="text-lg font-bold text-copy hover:underline">
                             {{ user.name }}
                             </Link>
                         </div>
                         <span v-if="user.is_admin"
-                            class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary-light text-primary border border-primary-dark flex-shrink-0">
+                            class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary text-primary-content border border-primary-dark flex-shrink-0">
                             Admin
                         </span>
                         <span v-else
@@ -121,13 +120,13 @@ const paginate = (url: string | null) => {
                         <!-- Email -->
                         <div>
                             <div class="text-xs text-copy-light uppercase font-medium">Email</div>
-                            <div class="text-sm font-semibold text-copy truncate">{{ user.email }}</div>
+                            <div class="text-sm text-copy truncate">{{ user.email }}</div>
                         </div>
 
                         <!-- Joined Date -->
                         <div class="text-right">
                             <div class="text-xs text-copy-light uppercase font-medium">Joined</div>
-                            <div class="text-sm font-semibold text-copy">{{ formatDate(user.created_at) }}</div>
+                            <div class="text-sm text-copy">{{ formatDate(user.created_at) }}</div>
                         </div>
                     </div>
 
@@ -135,7 +134,7 @@ const paginate = (url: string | null) => {
                     <div class="pt-3 text-right border-t border-copy-light/30 mt-3">
                         <Link :href="route('admin.users.show', user.id)"
                             class="px-3 py-1 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
-                        View Details
+                        View
                         </Link>
                     </div>
                 </div>

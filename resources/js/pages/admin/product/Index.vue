@@ -118,7 +118,7 @@ const paginate = (url: string | null) => {
                                 Edit
                                 </Link>
                                 <button @click="confirmDelete(product)"
-                                    class="text-error-content hover:text-error-dark transition font-semibold">
+                                    class="text-error-content hover:text-error transition font-semibold">
                                     Delete
                                 </button>
                             </td>
@@ -144,7 +144,7 @@ const paginate = (url: string | null) => {
                             <div class="text-xs text-copy-light uppercase font-semibold truncate">{{ product.mpn }}
                             </div>
                             <Link :href="route('admin.products.edit', product.id)"
-                                class="text-lg font-bold text-primary hover:underline block leading-snug">
+                                class="text-lg font-bold text-primary-content hover:underline block leading-snug">
                             {{ product.name }}
                             <span v-if="product.parent_product_id"
                                 class="text-xs text-copy-light ml-1 font-normal">(Variant)</span>
@@ -181,7 +181,7 @@ const paginate = (url: string | null) => {
                             Edit
                             </Link>
                             <button @click="confirmDelete(product)"
-                                class="text-sm text-error hover:text-error-dark transition font-semibold cursor-pointer">
+                                class="text-sm text-error-content hover:text-error transition font-semibold cursor-pointer">
                                 Delete
                             </button>
                         </div>

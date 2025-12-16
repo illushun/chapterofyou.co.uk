@@ -149,9 +149,8 @@ const paginate = (url: string | null) => {
                     <!-- Order ID and Status -->
                     <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
                         <div>
-                            <div class="text-xs text-copy-light uppercase font-medium">Courier ID</div>
                             <Link :href="route('admin.couriers.edit', courier.id)"
-                                class="text-xl font-bold text-primary hover:underline">
+                                class="text-xl font-bold hover:underline">
                             #{{ courier.id }}
                             </Link>
                         </div>
@@ -173,7 +172,7 @@ const paginate = (url: string | null) => {
                         <div class="flex flex-col space-y-1">
                             <div>
                                 <div class="text-xs text-copy-light uppercase font-medium">Cost</div>
-                                <div class="font-bold text-lg text-primary">{{ formatCurrency(courier.cost) }}
+                                <div class="font-bold text-lg text-primary-content">{{ formatCurrency(courier.cost) }}
                                 </div>
                             </div>
                             <div class="text-xs text-copy-light italic">

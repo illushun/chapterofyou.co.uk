@@ -105,9 +105,8 @@ const paginate = (url: string | null) => {
                     <!-- Message ID and Status -->
                     <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
                         <div>
-                            <div class="text-xs text-copy-light uppercase font-medium">Message ID</div>
                             <Link :href="route('admin.messages.show', message.id)"
-                                class="text-xl font-bold text-primary hover:underline">
+                                class="text-xl font-bold hover:underline">
                             #{{ message.id }}
                             </Link>
                         </div>
@@ -119,8 +118,8 @@ const paginate = (url: string | null) => {
                     <!-- User Info -->
                     <div class="py-2 border-b border-copy-light/30">
                         <div class="text-xs text-copy-light uppercase font-medium">User</div>
-                        <div class="mt-1 text-sm text-copy-light">{{ message.name }}</div>
-                        <div class="mt-1 text-sm text-copy-light">{{ message.email }}</div>
+                        <div class="mt-1 text-sm text-copy">{{ message.name }}</div>
+                        <div class="mt-1 text-sm text-copy">{{ message.email }}</div>
                     </div>
 
                     <!-- Date, Have Read, and Actions -->
@@ -129,7 +128,7 @@ const paginate = (url: string | null) => {
                         <div class="flex flex-col space-y-1">
                             <div>
                                 <div class="text-xs text-copy-light uppercase font-medium">Have Read?</div>
-                                <div class="font-bold text-lg text-primary">{{ message.is_read }}
+                                <div class="font-bold text-lg text-primary-content">{{ message.is_read }}
                                 </div>
                             </div>
                             <div class="text-xs text-copy-light italic">

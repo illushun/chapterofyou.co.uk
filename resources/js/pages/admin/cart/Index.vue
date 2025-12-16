@@ -132,7 +132,6 @@ const isExpired = (expiresAt: string | null): boolean => {
                                 :class="['px-2 py-0.5 rounded-full text-xs font-semibold uppercase', getStatus(cart).color]">
                                 {{ getStatus(cart).label }} Cart
                             </span>
-                            <div class="text-xs text-copy-light uppercase font-medium mt-1">Cart ID: {{ cart.id }}</div>
                         </div>
                         <div class="text-right">
                             <div class="text-xs text-copy-light uppercase font-medium">Items</div>
@@ -170,7 +169,7 @@ const isExpired = (expiresAt: string | null): boolean => {
                         <div class="flex-shrink-0">
                             <Link :href="route('admin.carts.show', cart.id)"
                                 class="px-3 py-1 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
-                            View Contents
+                            View
                             </Link>
                         </div>
                     </div>
