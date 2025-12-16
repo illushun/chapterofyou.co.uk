@@ -9,11 +9,14 @@ use App\Models\ContactMessage;
 
 class HomeController extends Controller
 {
-    private const ALLOWED_IP = '82.18.187.157';
+    private const ALLOWED_IPS = [
+        '82.18.187.157', // kace
+        '176.27.250.172' // stu
+    ];
 
-    private function checkIp(Request $request): bool
+    private function validIp(Request $request): bool
     {
-        return $request->ip() === self::ALLOWED_IP;
+        return in_array($request->ip(), self::ALLOWED_IPS);
     }
 
     /**
@@ -25,7 +28,7 @@ class HomeController extends Controller
         $clientIp = $request->ip();
         logger()->channel('load_website')->info("[{$clientIp}] Recorded access attempt:");
 
-        if ($this->checkIp($request)) {
+        if ($this->validIp($request)) {
             logger()->channel('load_website')->info("[{$clientIp}] Accepted. Redirecting to actual webpage.");
 
             return Inertia::render('home/LandingPage', [
@@ -46,7 +49,7 @@ class HomeController extends Controller
 
     public function about(Request $request): \Inertia\Response
     {
-        if (!$this->checkIp($request)) {
+        if (!$this->validIp($request)) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
@@ -59,7 +62,7 @@ class HomeController extends Controller
 
     public function contact(Request $request)
     {
-        if (!$this->checkIp($request)) {
+        if (!$this->validIp($request)) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
@@ -75,7 +78,7 @@ class HomeController extends Controller
      */
     public function storeContact(Request $request)
     {
-        if (!$this->checkIp($request)) {
+        if (!$this->validIp($request)) {
             Log::warning('Contact form submission attempt blocked due to IP restriction.', ['ip' => $request->ip()]);
             return redirect()->route('home');
         }

@@ -15,13 +15,20 @@ use Illuminate\Support\Facades\Auth;
 
 class ProductController extends Controller
 {
-    private const ALLOWED_IP = '82.18.187.157';
+    private const ALLOWED_IPS = [
+        '82.18.187.157', // kace
+        '176.27.250.172' // stu
+    ];
+
+    private function validIp(Request $request): bool
+    {
+        return in_array($request->ip(), self::ALLOWED_IPS);
+    }
 
     public function index(Request $request): \Inertia\Response
     {
-        $clientIp = $request->ip();
         // if the user isnt whitelisted
-        if ($clientIp !== self::ALLOWED_IP) {
+        if (!$this->validIp($request)) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
@@ -66,9 +73,8 @@ class ProductController extends Controller
      */
     public function show(string $idOrSlug, Request $request)
     {
-        $clientIp = $request->ip();
         // if the user isnt whitelisted
-        if ($clientIp !== self::ALLOWED_IP) {
+        if (!$this->validIp($request)) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
