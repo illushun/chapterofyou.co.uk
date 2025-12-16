@@ -16,8 +16,8 @@
 
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <meta name="description" content="MyFPL offers game predictions, promising player data, and in-depth stats to help you dominate your Fantasy Premier League.">
-        <meta name="keywords" content="Fantasy Premier League, FPL, game predictions, player stats, Fantasy Football, player data, FPL analytics, MyFPL">
+        <meta name="description" content="Discover luxurious hand-made reed diffusers.">
+        <meta name="keywords" content="Reed Diffusers, Hand-made, Luxurious, Home Fragrance, Aromatherapy, Scented Oils, Relaxation, Wellness, Gift Ideas, Chapter of You">
 
         <meta name="robots" content="index, follow">
         <meta name="author" content="Stuart Davey">
@@ -52,8 +52,6 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" href="/favicon.ico" sizes="any">
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
