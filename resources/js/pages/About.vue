@@ -11,13 +11,13 @@ const sections = [
     { type: 'p', content: 'Welcome to Chapter of You, where my philosophy is simple and personal: "Your chapter, your self-care."', classes: 'text-lg md:text-xl leading-relaxed' },
     { type: 'p', content: 'I believe that cultivating true wellness starts with dedicating moments to yourself. I am founded on the commitment to provide tools and experiences that encourage you to pause, appreciate the present, and intentionally prioritise your personal peace.', classes: 'text-lg leading-relaxed' },
     { type: 'divider', content: IconLeaf, classes: 'flex items-center justify-center py-4' },
-    { type: 'h3', content: 'My Reed Diffusers', classes: 'text-3xl font-extrabold text-primary pt-2' },
+    { type: 'h3', content: 'My Reed Diffusers', classes: 'text-3xl font-extrabold text-primary-content pt-2' },
     { type: 'p', content: 'My current collection is driven by the art of creating the perfect, serene atmosphere in your home. I specialise exclusively in luxurious, hand-made reed diffusers. Every scent is meticulously blended and poured by hand, designed to transform your space into a personal sanctuary. I select only the highest quality ingredients, ensuring each diffuser provides a long-lasting, gentle reminder to breathe deeply and prioritise your inner balance.', classes: 'text-lg leading-relaxed' },
-    { type: 'h3', content: 'Launching in 2026', classes: 'text-3xl font-extrabold text-primary pt-2' },
+    { type: 'h3', content: 'Launching in 2026', classes: 'text-3xl font-extrabold text-primary-content pt-2' },
     { type: 'p', content: 'I am thrilled to announce that my mission to support your self-care journey will expand significantly in 2026.', classes: 'text-lg leading-relaxed' },
     { type: 'p', content: 'I will be launching a curated range of dedicated beauty services. This expansion is part of my commitment to nurturing your wellbeing by helping you look and feel your absolute best through specialised, high-quality care. Keep an eye on my progress as I prepare to offer these exciting services.', classes: 'text-lg leading-relaxed' },
     { type: 'divider', content: IconLeaf, classes: 'flex items-center justify-center py-4' },
-    { type: 'h3', content: 'Join My Community', classes: 'text-3xl font-extrabold text-primary pt-2' },
+    { type: 'h3', content: 'Join My Community', classes: 'text-3xl font-extrabold text-primary-content pt-2' },
     { type: 'p', content: 'At Chapter of You, you are more than a customer, you are an active participant in a community dedicated to intentional self-care and inner peace. I invite you to explore my exquisite diffusers today and look forward to sharing my next chapter with you in 2026. Thank you for letting me be a small part of your beautiful journey', classes: 'text-lg leading-relaxed' }
 ];
 

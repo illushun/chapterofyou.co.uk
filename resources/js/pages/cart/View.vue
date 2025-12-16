@@ -105,7 +105,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                 <div class="mb-8">
                     <h1 class="text-5xl font-black text-copy mb-2">Your Shopping Cart</h1>
                     <a href="/products"
-                        class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
+                        class="inline-flex items-center text-primary-content hover:text-primary transition font-semibold">
                         <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
                         Continue Shopping
                     </a>
@@ -139,7 +139,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                             </div>
 
                                             <button @click="removeProduct(item.product_id)"
-                                                class="p-2 rounded-lg text-error hover:bg-error-light transition border-2 border-copy flex-shrink-0 w-fit"
+                                                class="p-2 rounded-lg text-error-content hover:bg-error transition border-2 border-copy flex-shrink-0 w-fit"
                                                 aria-label="Remove item">
                                                 <div v-html="IconTrash"></div>
                                             </button>
@@ -172,7 +172,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                             <div class="text-right">
                                                 <p class="text-sm font-semibold text-copy-lighter hidden sm:block">Item
                                                     Subtotal:</p>
-                                                <p class="text-2xl font-black text-primary">{{
+                                                <p class="text-2xl font-black text-primary-content">{{
                                                     calculateItemSubtotal(item) }}</p>
                                             </div>
                                         </div>
@@ -187,7 +187,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                             class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-foreground/50">
                             <p class="text-2xl font-semibold text-copy mb-4">Your cart is currently empty.</p>
                             <a href="/products"
-                                class="text-primary hover:text-primary-dark transition font-bold underline">
+                                class="text-primary-content hover:text-primary transition font-bold underline">
                                 Browse Products and Start Shopping
                             </a>
                         </div>
@@ -221,7 +221,7 @@ const calculateItemSubtotal = (item: CartItem): string => {
                                 <div
                                     class="mt-6 mb-4 pt-4 border-t-2 border-copy-light flex justify-between items-center">
                                     <span class="text-2xl font-extrabold text-copy">Order Total</span>
-                                    <span class="text-4xl font-black text-primary">{{ formatCurrency(finalTotal)
+                                    <span class="text-4xl font-black text-primary-content">{{ formatCurrency(finalTotal)
                                         }}</span>
                                 </div>
 

@@ -75,7 +75,7 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
                 <div class="mb-8">
                     <h1 class="text-5xl font-black text-copy mb-2">My Orders</h1>
                     <a href="/account"
-                        class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
+                        class="inline-flex items-center text-primary-content hover:text-primary transition font-semibold">
                         <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
                         Back to Account
                     </a>
@@ -130,14 +130,13 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
 
                                     <!-- Total -->
                                     <div
-                                        class="col-span-1 md:col-span-1 text-right md:text-center font-extrabold text-primary">
+                                        class="col-span-1 md:col-span-1 text-right md:text-center font-extrabold text-primary-content">
                                         <span class="md:hidden text-copy-lighter text-sm block mb-0.5">Total</span>
                                         {{ formatCurrency(order.total) }}
                                     </div>
 
                                     <!-- Status Badge -->
                                     <div class="col-span-2 md:col-span-1 flex justify-start md:justify-center">
-                                        <!-- NOTE: Changed status classes to standard Tailwind colors for better contrast on light backgrounds -->
                                         <span :class="getStatusClasses(order.status)"
                                             class="text-xs font-semibold px-3 py-1 rounded-full border">
                                             {{ order.status }}
@@ -147,8 +146,8 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
                                     <!-- Detail Link/Button -->
                                     <div class="col-span-2 md:col-span-1 text-right mt-3 md:mt-0">
                                         <a :href="`/account/orders/${order.id}`"
-                                            class="text-primary text-sm font-semibold hover:text-primary-dark transition">
-                                            View Details &rarr;
+                                            class="text-primary-content text-sm font-semibold hover:text-primary transition">
+                                            View &rarr;
                                         </a>
                                     </div>
                                 </div>

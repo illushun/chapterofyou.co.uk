@@ -253,7 +253,7 @@ const formatAddress = (address: Address): string[] => {
                             </h2>
                             <button @click="isEditingDetails = !isEditingDetails"
                                 class="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg text-primary-content hover:bg-primary-dark transition border-2 border-copy"
-                                :class="isEditingDetails ? 'text-error hover:bg-error-light' : 'text-primary-content hover:bg-primary-dark'"
+                                :class="isEditingDetails ? 'text-error-content hover:bg-error' : 'text-primary-content hover:bg-primary-dark'"
                                 aria-label="Toggle editing general details">
                                 <div v-html="isEditingDetails ? IconX : IconEdit"></div>
                                 {{ isEditingDetails ? 'Cancel' : 'Edit' }}
@@ -352,7 +352,7 @@ const formatAddress = (address: Address): string[] => {
                         <div v-if="addresses.length" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div v-for="address in addresses" :key="address.id"
                                 class="relative p-4 border-2 rounded-lg transition"
-                                :class="address.is_default ? 'border-primary bg-primary-light/10 shadow-md' : 'border-copy-light hover:border-copy'">
+                                :class="address.is_default ? 'border-primary-content bg-primary-content/10 shadow-md' : 'border-copy-light hover:border-copy'">
                                 <div class="text-sm font-bold uppercase mb-1 flex justify-between items-center">
                                     <span
                                         :class="address.is_default ? 'text-secondary-content' : 'text-copy-lighter'">{{
@@ -374,7 +374,7 @@ const formatAddress = (address: Address): string[] => {
                                     </button>
                                     <span class="text-copy-lighter">|</span>
                                     <button @click="router.delete(route('address.destroy', address.id))"
-                                        class="flex items-center gap-1 text-sm text-error hover:text-error-dark font-semibold transition"
+                                        class="flex items-center gap-1 text-sm text-error-content hover:text-error font-semibold transition"
                                         :disabled="address.is_default">
                                         <div v-html="IconTrash" class="size-4"></div>
                                         Remove
