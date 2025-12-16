@@ -195,7 +195,7 @@ const formatImageSize = (bytes: number): string => {
                         </div>
 
                         <!-- Existing Image Grid -->
-                        <div v-if="props.category.image != ''" class="mt-6 border-t border-copy-light pt-3">
+                        <div v-if="props.category?.image != ''" class="mt-6 border-t border-copy-light pt-3">
                             <h4 class="text-sm font-bold text-copy mb-2">Existing Image</h4>
                             <!-- Mobile Fix: Switch to grid-cols-1 default for better mobile readability, scaling up to sm:grid-cols-2, etc. -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -204,7 +204,7 @@ const formatImageSize = (bytes: number): string => {
                                         'ring-2 ring-error/50': form.images_to_delete.includes(props.category?.image)
                                     }">
                                     <!-- Image Thumbnail -->
-                                    <img :src="props.category.image" alt="Category Image"
+                                    <img :src="props.category?.image" alt="Category Image"
                                         class="w-full h-24 object-cover"
                                         onerror="this.onerror=null;this.src='https://placehold.co/150x96/f0f0f0/666?text=No+Image';" />
 
