@@ -175,7 +175,7 @@ const pictogramSvgs: Record<string, string> = {
                 <div id="label-preview"
                     class="w-full max-w-sm p-4 bg-white border-2 border-black shadow-xl min-h-[300px]">
                     <h3 class="text-lg font-extrabold text-center uppercase mb-3">{{ form.productName || 'PRODUCT NAME'
-                        }}</h3>
+                    }}</h3>
                     <div class="flex items-center border-b border-black pb-3 mb-3">
                         <div class="flex gap-2">
                             <span v-for="picto in form.pictograms" :key="picto" v-html="pictogramSvgs[picto]"
