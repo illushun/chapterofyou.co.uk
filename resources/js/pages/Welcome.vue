@@ -4,12 +4,6 @@
 
         <div class="max-w-3xl w-full">
 
-            <div style="display: flex; justify-content: space-between; align-items: center; background-color: red;">
-                <div style="width: 33%; overflow: hidden; background-color: orange;"><img src="" /></div>
-                <div style="width: 33%; overflow: hidden; background-color: blue;"><img src="" /></div>
-                <div style="width: 33%; overflow: hidden; background-color: green;"><img src="" /></div>
-            </div>
-
             <header class="text-center mb-12">
                 <div class="flex justify-center mb-4">
                     <div class="h-16 w-16 rounded-full flex items-center justify-center shadow-xl"
