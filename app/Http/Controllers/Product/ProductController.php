@@ -27,8 +27,14 @@ class ProductController extends Controller
 
     public function index(Request $request): \Inertia\Response
     {
-        // if the user isnt whitelisted
-        if (!$this->validIp($request)) {
+        if (!Auth::check()) {
+            return Inertia::render('Welcome', [
+                'siteName' => 'Chapter of You',
+            ]);
+        }
+
+        $user = Auth::user();
+        if (!$user->is_admin) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
@@ -73,8 +79,14 @@ class ProductController extends Controller
      */
     public function show(string $idOrSlug, Request $request)
     {
-        // if the user isnt whitelisted
-        if (!$this->validIp($request)) {
+        if (!Auth::check()) {
+            return Inertia::render('Welcome', [
+                'siteName' => 'Chapter of You',
+            ]);
+        }
+
+        $user = Auth::user();
+        if (!$user->is_admin) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);

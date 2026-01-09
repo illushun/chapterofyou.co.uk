@@ -727,7 +727,7 @@ onMounted(async () => {
                                 <div class="mt-6 pt-4 border-t-2 border-copy/10 flex justify-between items-center">
                                     <span class="text-2xl font-extrabold text-copy">Order Total</span>
                                     <span class="text-4xl font-black text-primary">{{ formatCurrency(summary.total)
-                                    }}</span>
+                                        }}</span>
                                 </div>
 
                                 <!-- Order Review -->
