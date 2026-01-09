@@ -41,13 +41,14 @@ class HomeController extends Controller
         if ($user->is_admin) {
             logger()->channel('load_website')->info("[{$clientIp}] Admin user detected. Redirecting to actual webpage.");
 
-            return Inertia::render('home/LandingPage', [
+            return redirect('/products');
+            /*return Inertia::render('home/LandingPage', [
                 'promoText' => 'Free shipping on all orders over £50!',
                 'featuredCategories' => [
                     ['name' => 'Candles', 'href' => '/category/candles', 'image' => '/images/cat-candles.jpg'],
                     ['name' => 'Services', 'href' => '/services', 'image' => '/images/cat-services.jpg'],
                 ]
-            ]);
+            ]);*/
         } else {
             logger()->channel('load_website')->info("[{$clientIp}] Regular user detected.");
         }
