@@ -6,6 +6,8 @@ interface LandingPageProps {
 }
 
 const props = defineProps<LandingPageProps>();
+
+window.location.replace("https://chapterofyou.co.uk/products");
 </script>
 
 <template>
