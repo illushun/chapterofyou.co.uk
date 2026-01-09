@@ -221,7 +221,7 @@ const fetchPaymentIntent = async () => {
 
     } catch (error: any) {
         console.error("Error fetching payment intent:", error.message);
-        paymentError.value = "Could not initialize payment: " + error.message;
+        paymentError.value = "Could not initialise payment: " + error.message;
     }
 };
 
@@ -379,7 +379,7 @@ const finalizeOrder = (piId: string, type: string) => {
             },
             onError: (errors) => {
                 const errorKey = Object.keys(errors)[0];
-                paymentError.value = errors[errorKey] || "Order finalization failed on the server. Please contact support.";
+                paymentError.value = errors[errorKey] || "Order finalisation failed on the server. Please contact support.";
             },
             onFinish: () => {
                 isProcessing.value = false;
@@ -422,8 +422,7 @@ onMounted(async () => {
 
     <!-- Utility styles for Tailwind variables -->
     <!-- Defining the same color variables as your cart page -->
-    <section class="py-20"
-        :style="{ '--primary': '#4f46e5', '--primary-dark': '#4338ca', '--primary-content': '#ffffff', '--background': '#f9fafb', '--foreground': '#ffffff', '--copy': '#1f2937', '--copy-lighter': '#4b5563', '--error': '#ef4444' }">
+    <section class="py-20">
 
         <div class="min-h-screen text-copy p-4 md:p-8 lg:p-12">
             <div class="max-w-6xl mx-auto">
@@ -453,7 +452,7 @@ onMounted(async () => {
 
                         <!-- Shipping/Contact Details Form -->
                         <!-- Applying the Cart's Double Border Style (Outer) -->
-                        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                        <div class="rounded-xl border-2 border-copy">
                             <!-- Saved Addresses -->
                             <div v-if="addresses.length > 0" class="p-4 space-y-3 border-b-2 border-copy/10">
                                 <h2 class="text-2xl font-bold text-copy">Saved Addresses</h2>
