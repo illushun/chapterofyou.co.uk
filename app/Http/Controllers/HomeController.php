@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use App\Models\ContactMessage;
 
 class HomeController extends Controller
@@ -28,8 +29,17 @@ class HomeController extends Controller
         $clientIp = $request->ip();
         logger()->channel('load_website')->info("[{$clientIp}] Recorded access attempt:");
 
-        if ($this->validIp($request)) {
-            logger()->channel('load_website')->info("[{$clientIp}] Accepted. Redirecting to actual webpage.");
+        if (!Auth::check()) {
+            //return redirect()->route('login');
+            logger()->channel('load_website')->info("[{$clientip}] Not logged in. Redirecting to waiting list.");
+            return Inertia::render('Welcome', [
+                'siteName' => 'Chapter of You',
+            ]);
+        }
+
+        $user = Auth::user();
+        if ($user->is_admin) {
+            logger()->channel('load_website')->info("[{$clientIp}] Admin user detected. Redirecting to actual webpage.");
 
             return Inertia::render('home/LandingPage', [
                 'promoText' => 'Free shipping on all orders over £50!',
@@ -39,7 +49,7 @@ class HomeController extends Controller
                 ]
             ]);
         } else {
-            logger()->channel('load_website')->info("[{$clientIp}] Denied. Redirecting to waiting list.");
+            logger()->channel('load_website')->info("[{$clientIp}] Regular user detected.");
         }
 
         return Inertia::render('Welcome', [
@@ -49,15 +59,24 @@ class HomeController extends Controller
 
     public function about(Request $request): \Inertia\Response
     {
-        if (!$this->validIp($request)) {
+        if (!Auth::check()) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
         }
 
-        return Inertia::render('About', [
-            'siteName' => 'Chapter of You',
-        ]);
+        $user = Auth::user();
+        if ($user->is_admin) {
+            return Inertia::render('About', [
+                'siteName' => 'Chapter of You',
+            ]);
+        }
+
+        if (!$this->validIp($request)) {
+            return Inertia::render('Welcome', [
+                'siteName' => 'Chapter of You',
+            ]);
+        }
     }
 
     public function contact(Request $request)
