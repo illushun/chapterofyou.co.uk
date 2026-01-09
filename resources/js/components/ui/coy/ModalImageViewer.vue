@@ -77,46 +77,40 @@ watch(() => props.open, (newOpen) => {
 
 <template>
     <Transition name="fade">
-        <div
-            v-if="open"
-            @click.self="closeModal"
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-90 transition-opacity"
-        >
-            <div
-                class="relative w-full max-w-4xl h-full max-h-[90vh] rounded-xl"
-            >
-                <div class="relative -m-0.5 w-full h-full rounded-lg border-2 border-copy bg-foreground p-4 md:p-8 flex flex-col items-center justify-center">
+        <div v-if="open" @click.self="closeModal"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-90 transition-opacity">
+            <div class="relative w-full max-w-4xl h-full max-h-[90vh] rounded-xl">
+                <div
+                    class="relative -m-0.5 w-full h-full rounded-lg border-2 border-copy bg-foreground flex flex-col items-center justify-center">
 
-                    <button
-                        @click="closeModal"
+                    <button @click="closeModal"
                         class="absolute top-4 right-4 z-10 p-2 rounded-lg border-2 border-copy bg-error text-error-content transition hover:bg-error-dark"
-                        aria-label="Close image viewer"
-                    >
-                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        aria-label="Close image viewer">
+                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
                     </button>
 
                     <div class="relative flex-1 w-full flex items-center justify-center overflow-hidden">
-                        <img
-                            :src="currentImageUrl"
-                            alt="Large product view"
-                            class="max-w-full max-h-full object-contain transition-transform duration-300"
-                        />
+                        <img :src="currentImageUrl" alt="Large product view"
+                            class="w-full max-h-full object-cover transition-transform duration-300" />
                     </div>
 
-                    <div v-if="imageCount > 1" class="absolute inset-y-0 w-full flex items-center justify-between pointer-events-none p-4 md:p-8">
-                        <button
-                            @click.stop="showPrevious"
+                    <div v-if="imageCount > 1"
+                        class="absolute inset-y-0 w-full flex items-center justify-between pointer-events-none p-4 md:p-8">
+                        <button @click.stop="showPrevious"
                             class="pointer-events-auto p-3 rounded-full border-2 border-copy bg-primary text-primary-content transition hover:bg-primary-dark"
-                            aria-label="Previous image"
-                        >
-                            <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                            aria-label="Previous image">
+                            <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
                         </button>
-                        <button
-                            @click.stop="showNext"
+                        <button @click.stop="showNext"
                             class="pointer-events-auto p-3 rounded-full border-2 border-copy bg-primary text-primary-content transition hover:bg-primary-dark"
-                            aria-label="Next image"
-                        >
-                            <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                            aria-label="Next image">
+                            <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
                         </button>
                     </div>
 
@@ -129,8 +123,15 @@ watch(() => props.open, (newOpen) => {
     </Transition>
     <Teleport to="body">
         <style scoped>
-            .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
-            .fade-enter-from, .fade-leave-to { opacity: 0; }
+            .fade-enter-active,
+            .fade-leave-active {
+                transition: opacity 0.3s ease;
+            }
+
+            .fade-enter-from,
+            .fade-leave-to {
+                opacity: 0;
+            }
         </style>
     </Teleport>
 </template>
