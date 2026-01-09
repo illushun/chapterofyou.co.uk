@@ -269,13 +269,13 @@ const formattedCost = computed(() => {
                         class="relative rounded-lg border-2 border-copy bg-primary-light w-full transition hover:opacity-80 focus:ring-4 focus:ring-primary-content"
                         style="background-color: var(--secondary);" aria-label="View product image large">
                         <div
-                            class="relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-hidden h-[400px] sm:h-[500px] flex items-center justify-center p-6 cursor-pointer">
+                            class="relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-hidden h-[400px] sm:h-[500px] flex items-center justify-center cursor-pointer">
                             <span v-if="isPopular"
                                 class="absolute top-3 left-3 z-10 inline-flex items-center rounded-full bg-error px-3 py-0.5 text-xs font-bold text-error-content shadow-lg ring-1 ring-inset ring-error-content/50">
                                 🔥 POPULAR
                             </span>
                             <img :src="mainImageUrl" :alt="'Main image of ' + props.product.name"
-                                class="w-full h-full object-contain transition duration-500" />
+                                class="w-full h-full object-cover transition duration-500" />
                             <div
                                 class="absolute inset-0 flex items-center justify-center bg-primary-light bg-opacity-10 opacity-0 hover:opacity-100 transition duration-300">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="size-12 text-primary-content" fill="none"
@@ -400,7 +400,7 @@ const formattedCost = computed(() => {
 
             <div class="border-t-2 border-copy pt-6">
                 <h2 class="text-2xl font-bold text-copy mb-3">Customer Reviews ({{ props.product.approved_reviews_count
-                }})</h2>
+                    }})</h2>
 
                 <div class="flex items-center gap-4 mb-6" v-if="props.product.approved_reviews_count > 0">
                     <StarRating :rating="props.product.average_rating" :size="24" class="text-secondary-content" />

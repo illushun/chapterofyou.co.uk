@@ -7,19 +7,19 @@ const IconStar = `<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="n
 const IconCart = `<svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`;
 
 interface ProductCardData {
-  id: number;
-  name: string;
-  mpn: string;
-  cost: number;
-  stock_qty: number;
-  images?: { image: string }[];
-  total_unique_views?: number;
-  seo?: { slug: string };
+    id: number;
+    name: string;
+    mpn: string;
+    cost: number;
+    stock_qty: number;
+    images?: { image: string }[];
+    total_unique_views?: number;
+    seo?: { slug: string };
 }
 
 interface ProductCardProps {
-  product: ProductCardData;
-  className?: string;
+    product: ProductCardData;
+    className?: string;
 }
 
 const props = defineProps<ProductCardProps>();
@@ -29,27 +29,27 @@ const imageUrl = computed(() => props.product.images?.[0]?.image || 'https://via
 const isTapped = ref(false);
 
 const springTransition = {
-  type: 'spring',
-  stiffness: 200,
-  damping: 10,
-  mass: 1,
+    type: 'spring',
+    stiffness: 200,
+    damping: 10,
+    mass: 1,
 };
 
 const cardRef = ref<HTMLElement | null>(null);
 const innerRef = ref<HTMLElement | null>(null);
 
 const motionCard = useMotion(cardRef, {
-  initial: { x: 0, y: 0 },
-  hovered: { x: -6, y: -6 },
+    initial: { x: 0, y: 0 },
+    hovered: { x: -6, y: -6 },
 }, {
-  transition: springTransition,
+    transition: springTransition,
 });
 
 const motionInner = useMotion(innerRef, {
-  initial: { x: 0, y: 0 },
-  hovered: { x: -6, y: -6 },
+    initial: { x: 0, y: 0 },
+    hovered: { x: -6, y: -6 },
 }, {
-  transition: springTransition,
+    transition: springTransition,
 });
 
 // Use 'copy' for the bold border and 'foreground' for the inner card's main color
@@ -71,11 +71,11 @@ const truncatedName = computed(() => {
 });
 
 const formattedCost = computed(() => {
-  const numericCost = Number(props.product.cost);
-  if (isNaN(numericCost)) {
-    return 'N/A';
-  }
-  return `£${numericCost.toFixed(2)}`;
+    const numericCost = Number(props.product.cost);
+    if (isNaN(numericCost)) {
+        return 'N/A';
+    }
+    return `£${numericCost.toFixed(2)}`;
 });
 
 const handleTouchStart = () => {
@@ -123,69 +123,55 @@ const productLink = computed(() => {
 </script>
 
 <template>
-  <div
-    ref="cardRef"
-    @mouseenter="motionCard.apply('hovered')"
-    @mouseleave="motionCard.apply('initial')"
-    @touchstart.stop="handleTouchStart"
-    :class="[mergedBaseClass, { 'group-hovered': isTapped }]"
-    style="background-color: var(--primary-content);"  >
-    <div
-      ref="innerRef"
-      @mouseenter="motionInner.apply('hovered')"
-      @mouseleave="motionInner.apply('initial')"
-      :class="mergedInnerClass"
-    >
-      <span v-if="isPopular" class="absolute top-3 left-3 z-10 inline-flex items-center rounded-full bg-error px-3 py-0.5 text-xs font-bold text-error-content shadow-lg ring-1 ring-inset ring-error-content/50">
-          🔥 POPULAR
-      </span>
+    <div ref="cardRef" @mouseenter="motionCard.apply('hovered')" @mouseleave="motionCard.apply('initial')"
+        @touchstart.stop="handleTouchStart" :class="[mergedBaseClass, { 'group-hovered': isTapped }]"
+        style="background-color: var(--primary-content);">
+        <div ref="innerRef" @mouseenter="motionInner.apply('hovered')" @mouseleave="motionInner.apply('initial')"
+            :class="mergedInnerClass">
+            <span v-if="isPopular"
+                class="absolute top-3 left-3 z-10 inline-flex items-center rounded-full bg-error px-3 py-0.5 text-xs font-bold text-error-content shadow-lg ring-1 ring-inset ring-error-content/50">
+                🔥 POPULAR
+            </span>
 
-      <a :href="productLink" class="absolute inset-0 z-[1] block">
-          <span class="sr-only">View product: {{ product.name }}</span>
-      </a>
-
-      <button
-        class="absolute top-3 right-3 z-20 p-2 rounded-full bg-foreground border border-border transition-colors hover:bg-error-light hover:text-error-content shadow-md"
-        aria-label="Add to favourites"
-        @click.stop.prevent="$emit('favourite', product.id)"
-      >
-        <div v-html="IconStar" class="size-5"></div>
-      </button>
-
-      <div class="h-48 overflow-hidden bg-foreground flex items-center justify-center p-4">
-        <img
-          :src="imageUrl"
-          :alt="'Image of ' + product.name"
-          class="w-full h-full object-contain transition duration-500 group-hover:scale-105"
-        />
-      </div>
-
-      <div class="p-4 border-t-2 border-copy bg-foreground">
-        <div class="block">
-          <p class="text-xs font-medium uppercase tracking-wider text-copy-lighter">{{ product.mpn }}</p>
-          <p class="flex items-center text-xl font-bold text-copy transition truncate mt-1">
-            <span class="mr-2">{{ truncatedName }}</span>
-          </p>
-        </div>
-
-        <div class="mt-4 flex justify-between items-end">
-            <p class="text-3xl font-black text-primary-content">
-                {{ formattedCost }}
-            </p>
+            <a :href="productLink" class="absolute inset-0 z-[1] block">
+                <span class="sr-only">View product: {{ product.name }}</span>
+            </a>
 
             <button
-                class="z-20 p-2 border-2 border-copy text-primary-content rounded-lg transition-colors duration-300 ease-in-out hover:bg-primary-dark hover:text-foreground shadow-md"
-                aria-label="Add product to cart"
-                @click.stop="$emit('addToCart', product.id)"
-                style="background-color: var(--primary);"
-            >
-                <div v-html="IconCart"></div>
+                class="absolute top-3 right-3 z-20 p-2 rounded-full bg-foreground border border-border transition-colors hover:bg-error-light hover:text-error-content shadow-md"
+                aria-label="Add to favourites" @click.stop.prevent="$emit('favourite', product.id)">
+                <div v-html="IconStar" class="size-5"></div>
             </button>
-        </div>
-      </div>
 
-      </div>
-  </div>
+            <div class="h-48 overflow-hidden bg-foreground flex items-center justify-center">
+                <img :src="imageUrl" :alt="'Image of ' + product.name"
+                    class="w-full h-full object-cover transition duration-500 group-hover:scale-105" />
+            </div>
+
+            <div class="p-4 border-t-2 border-copy bg-foreground">
+                <div class="block">
+                    <p class="text-xs font-medium uppercase tracking-wider text-copy-lighter">{{ product.mpn }}</p>
+                    <p class="flex items-center text-xl font-bold text-copy transition truncate mt-1">
+                        <span class="mr-2">{{ truncatedName }}</span>
+                    </p>
+                </div>
+
+                <div class="mt-4 flex justify-between items-end">
+                    <p class="text-3xl font-black text-primary-content">
+                        {{ formattedCost }}
+                    </p>
+
+                    <button
+                        class="z-20 p-2 border-2 border-copy text-primary-content rounded-lg transition-colors duration-300 ease-in-out hover:bg-primary-dark hover:text-foreground shadow-md"
+                        aria-label="Add product to cart" @click.stop="$emit('addToCart', product.id)"
+                        style="background-color: var(--primary);">
+                        <div v-html="IconCart"></div>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </template>
 
 <style scoped>
@@ -199,23 +185,31 @@ const productLink = computed(() => {
 .group-hovered .group-hover\:translate-x-1 {
     transform: translateX(0.25rem);
 }
+
 .group-hovered .group-hover\:scale-105 {
     transform: scale(1.05);
 }
+
 .group-hovered .group-hover\:translate-y-0 {
     transform: translateY(0);
 }
+
 .group-hovered .group-hover\:opacity-100 {
     opacity: 1;
 }
+
 /* Replaced generic sky-600 with primary-dark/primary-content equivalents */
 .group-hovered .group-hover\:bg-sky-600 {
     background-color: var(--primary-dark);
 }
+
 .group-hovered .group-hover\:text-white {
-    color: var(--foreground); /* Use foreground for white/light text */
+    color: var(--foreground);
+    /* Use foreground for white/light text */
 }
+
 .group-hovered .group-hover\:text-sky-600 {
-    color: var(--primary-content); /* Use primary-content for the main accent text color */
+    color: var(--primary-content);
+    /* Use primary-content for the main accent text color */
 }
 </style>
