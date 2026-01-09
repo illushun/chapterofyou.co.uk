@@ -31,7 +31,7 @@ class HomeController extends Controller
 
         if (!Auth::check()) {
             //return redirect()->route('login');
-            logger()->channel('load_website')->info("[{$clientip}] Not logged in. Redirecting to waiting list.");
+            logger()->channel('load_website')->info("[{$clientIp}] Not logged in. Redirecting to waiting list.");
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
@@ -72,22 +72,27 @@ class HomeController extends Controller
             ]);
         }
 
-        if (!$this->validIp($request)) {
-            return Inertia::render('Welcome', [
-                'siteName' => 'Chapter of You',
-            ]);
-        }
+        return Inertia::render('Welcome', [
+            'siteName' => 'Chapter of You',
+        ]);
     }
 
     public function contact(Request $request)
     {
-        if (!$this->validIp($request)) {
+        if (!Auth::check()) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
         }
 
-        return Inertia::render('Contact', [
+        $user = Auth::user();
+        if ($user->is_admin) {
+            return Inertia::render('Contact', [
+                'siteName' => 'Chapter of You',
+            ]);
+        }
+
+        return Inertia::render('Welcome', [
             'siteName' => 'Chapter of You',
         ]);
     }
