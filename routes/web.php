@@ -103,6 +103,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/clp-labels', [CLPLabelController::class, 'index'])->name('clp-labels.index');
     Route::post('/clp-labels', [CLPLabelController::class, 'store'])->name('clp-labels.store');
+    Route::get('/clp-labels/{product}/calculate', [CLPLabelController::class, 'calculate'])->name('clp-labels.calculate');
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');

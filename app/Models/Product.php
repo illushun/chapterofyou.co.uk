@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Product\Courier as ProductCourier;
+use App\Models\Product\Material;
 use App\Models\Product\Review;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -98,6 +99,18 @@ class Product extends Model
     public function courier()
     {
         return $this->hasOne(ProductCourier::class);
+    }
+
+    public function materials()
+    {
+        return $this->hasMany(Material::class);
+    }
+
+    public function oils()
+    {
+        return $this->belongsToMany(Oil::class, 'product_material')
+            ->withPivot('percentage')
+            ->withTimestamps();
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin\Label;
 
 use App\Http\Controllers\Controller;
+use App\Services\CLP\CLPCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -52,5 +53,14 @@ class CLPLabelController extends Controller
 
         //CLPLabel::create($validated);
         return redirect()->back()->with('success', 'CLP Label successfully generated and saved!');
+    }
+
+    public function calculate(Product $product)
+    {
+        $calculator = app(CLPCalculator::class);
+
+        $result = $calculator->calculate($product);
+
+        return response()->json($result);
     }
 }
