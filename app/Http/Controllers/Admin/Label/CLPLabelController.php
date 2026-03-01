@@ -12,19 +12,21 @@ use App\Models\Label\CLP as CLPLabel;
 
 class CLPLabelController extends Controller
 {
-    /**
-     * Display the CLP Label Generator page.
-     */
     public function index()
     {
         $clpLabels = CLPLabel::with('product')
-            ->orderByDesc('created_at')
+            ->latest()
             ->limit(10)
             ->get();
 
+        $products = Product::with([
+            'oils.hazards',
+            'oils.components'
+        ])->get(['id', 'name']);
+
         return Inertia::render('admin/label/CLPLabel', [
             'recentLabels' => $clpLabels,
-            'products' => Product::all(['id', 'name']),
+            'products' => $products,
         ]);
     }
 
@@ -57,8 +59,12 @@ class CLPLabelController extends Controller
 
     public function calculate(Product $product)
     {
-        $calculator = app(CLPCalculator::class);
+        $product->load([
+            'oils.hazards',
+            'oils.components'
+        ]);
 
+        $calculator = app(CLPCalculator::class);
         $result = $calculator->calculate($product);
 
         return response()->json($result);

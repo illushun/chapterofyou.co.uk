@@ -5,15 +5,30 @@ import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import html2pdf from 'html2pdf.js';
 
+interface Product {
+    id: number;
+    name: string;
+};
+
+interface CLPLabel {
+    id: number;
+    product?: Product;
+    created_at: string;
+};
+
 const props = defineProps<{
-    products: Array
+    products: Product[];
+    recentLabels: CLPLabel[];
+    flash?: {
+        success?: string;
+    };
 }>();
 
 const form = ref({
     productId: '',
     signalWord: '',
     pictograms: [],
-    hazardStatements: '',
+    hazardStatements: [] as string[],
 });
 
 const loading = ref(false);
@@ -31,7 +46,7 @@ const generateFromProduct = async () => {
 
         form.value.signalWord = data.signal_word ?? '';
         form.value.pictograms = data.required_pictograms ?? [];
-        form.value.hazardStatements = (data.hazard_statements ?? []).join('\n');
+        form.value.hazardStatements = data.hazard_statements ?? [];
 
     } catch (error) {
         console.error(error);
@@ -100,7 +115,7 @@ const pictogramMap = {
 
                 <!-- Hazard Statements -->
                 <div class="whitespace-pre-line text-sm text-center">
-                    {{ form.hazardStatements }}
+                    {{ form.hazardStatements.join('\n') }}
                 </div>
             </div>
 
