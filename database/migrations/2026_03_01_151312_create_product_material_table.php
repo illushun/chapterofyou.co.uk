@@ -18,7 +18,7 @@ return new class () extends Migration {
                 ->onDelete('cascade');
 
             $table->foreignId('oil_id')
-                ->constrained('oils')
+                ->constrained('oil')
                 ->onDelete('cascade');
 
             $table->decimal('percentage', 5, 2); // 6.00 = 6%
