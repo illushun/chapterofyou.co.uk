@@ -35,9 +35,13 @@ interface Oil {
     name: string;
     supplier: string | null;
     cas_primary: string | null;
-    sds_documents: SdsDocument[];
+    sds_documents: SdsDocument[] | undefined;
     hazards: OilHazard[];
     components: OilComponent[];
+}
+
+function sdsDocs(oil: Oil): SdsDocument[] {
+    return oil.sds_documents ?? [];
 }
 
 const props = defineProps<{ oils: Oil[] }>();
@@ -110,7 +114,7 @@ function cancelEditHazard() {
 async function submitAddOil() {
     if (!newOil.value.name.trim()) return;
 
-    await axios.post('/admin/oils', newOil.value);
+    await axios.post(`/admin/oils`, newOil.value);
     newOil.value = { name: '', supplier: '', cas_primary: '' };
     showAddForm.value = false;
     router.reload({ only: ['oils'] });
@@ -119,13 +123,13 @@ async function submitAddOil() {
 async function submitUpdateHazard(oilId: number, hazardId: number) {
     const data = hazardEdits.value[hazardId];
 
-    await axios.put('/admin/oils/${oilId}/hazards/${hazardId}', data);
+    await axios.put(`/admin/oils/${oilId}/hazards/${hazardId}`, data);
     editingHazard.value = null;
     router.reload({ only: ['oils'] });
 }
 
 async function submitAddHazard(oilId: number) {
-    await axios.post('admin/oils/${oilId}/hazard', newHazard.value);
+    await axios.post(`admin/oils/${oilId}/hazard`, newHazard.value);
     showAddHazard.value = null;
     newHazard.value = { hazard_code: '', hazard_class: '', category: '', signal_word: 'Warning', pictogram: 'exclamation' };
     router.reload({ only: ['oils'] });
@@ -144,7 +148,7 @@ async function handleFileUpload(oilId: number, event: Event) {
     form.append('sds', file);
 
     try {
-        await axios.post('admin/oils/${oilId}/sds', form, {
+        await axios.post(`admin/oils/${oilId}/sds`, form, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         router.reload({ only: ['oils'] });
@@ -216,8 +220,8 @@ async function handleFileUpload(oilId: number, event: Event) {
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="badge"
-                            :class="oil.sds_documents.some(d => d.parsed) ? 'badge-success' : 'badge-warning'">
-                            {{oil.sds_documents.some(d => d.parsed) ? 'SDS parsed' : 'No SDS'}}
+                            :class="sdsDocs(oil).some(d => d.parsed) ? 'badge-success' : 'badge-warning'">
+                            {{sdsDocs(oil).some(d => d.parsed) ? 'SDS parsed' : 'No SDS'}}
                         </span>
                         <span class="badge badge-gray">
                             {{ oil.hazards.length }} hazard{{ oil.hazards.length !== 1 ? 's' : '' }}
@@ -406,9 +410,9 @@ async function handleFileUpload(oilId: number, event: Event) {
                     <!-- ── SDS TAB ── -->
                     <div v-if="tabFor(oil.id) === 'sds'">
                         <div class="flex flex-col gap-2 mb-3">
-                            <p v-if="!oil.sds_documents.length" class="empty-msg">No SDS uploaded yet.</p>
+                            <p v-if="!sdsDocs(oil).length" class="empty-msg">No SDS uploaded yet.</p>
 
-                            <div v-for="doc in oil.sds_documents" :key="doc.id" class="sds-item">
+                            <div v-for="doc in sdsDocs(oil)" :key="doc.id" class="sds-item">
                                 <span class="text-base">📄</span>
                                 <div class="flex-1">
                                     <div class="text-xs font-medium text-gray-800">
