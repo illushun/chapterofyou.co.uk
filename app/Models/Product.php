@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Label\CLP;
 use App\Models\Product\Courier as ProductCourier;
 use App\Models\Product\Material;
 use App\Models\Product\Review;
@@ -111,6 +112,11 @@ class Product extends Model
         return $this->belongsToMany(Oil::class, 'product_material')
             ->withPivot('percentage')
             ->withTimestamps();
+    }
+
+    public function clpLabel()
+    {
+        return $this->hasOne(CLP::class);
     }
 
     /**

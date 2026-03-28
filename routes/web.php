@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AdminCourierController;
 use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Admin\Label\OilController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\Product\ProductController;
@@ -101,9 +102,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('carts', [AdminCartController::class, 'index'])->name('carts.index');
     Route::get('carts/{cart}', [AdminCartController::class, 'show'])->name('carts.show');
 
+    Route::get('/oils', [OilController::class, 'index'])->name('oils.index');
+    Route::post('/oils', [OilController::class, 'store'])->name('oils.store');
+    Route::post('/oils/{oil}/sds', [OilController::class, 'uploadSds'])->name('oils.sds.upload');
+
     Route::get('/clp-labels', [CLPLabelController::class, 'index'])->name('clp-labels.index');
-    Route::post('/clp-labels', [CLPLabelController::class, 'store'])->name('clp-labels.store');
     Route::get('/clp-labels/{product}/calculate', [CLPLabelController::class, 'calculate'])->name('clp-labels.calculate');
+    Route::post('/clp-labels/{product}/save', [CLPLabelController::class, 'save'])->name('clp-labels.save');
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');

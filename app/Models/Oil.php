@@ -25,6 +25,11 @@ class Oil extends Model
         return $this->hasMany(OilComponent::class);
     }
 
+    public function sdsDocuments()
+    {
+        return $this->hasMany(SDSDocument::class);
+    }
+
     public function products()
     {
         return $this->belongsToMany(Product::class, 'product_material')

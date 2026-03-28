@@ -5,7 +5,6 @@ namespace App\Models\Label;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
 use App\Models\Product;
 
 class CLP extends Model
@@ -15,18 +14,10 @@ class CLP extends Model
     protected $table = 'label_clp';
 
     protected $fillable = [
-        'product_id',
-        'product_name',
-        'concentration_percent',
-        'supplier_name',
-        'supplier_address',
-        'supplier_phone',
-        'signal_word',
-        'required_pictograms',
-        'hazard_statements',
-        'precautionary_statements',
-        'supplementary_info',
-        'ingredients_json',
+        'product_id', 'product_name', 'supplier_name',
+        'supplier_address', 'supplier_phone', 'signal_word',
+        'required_pictograms', 'hazard_statements',
+        'precautionary_statements', 'supplementary_info', 'ingredients_json',
     ];
 
     /**
@@ -34,11 +25,10 @@ class CLP extends Model
      * Use 'array' cast for JSON columns in Eloquent.
      */
     protected $casts = [
-        'required_pictograms' => 'array',
-        'hazard_statements' => 'array',
+        'required_pictograms'      => 'array',
+        'hazard_statements'        => 'array',
         'precautionary_statements' => 'array',
-        'ingredients_json' => 'array',
-        'concentration_percent' => 'float',
+        'ingredients_json'         => 'array',
     ];
 
     /**

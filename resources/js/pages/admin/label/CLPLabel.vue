@@ -10,58 +10,54 @@ interface Product {
     name: string;
 };
 
-interface CLPLabel {
-    id: number;
-    product?: Product;
-    created_at: string;
-};
+interface ClpResult {
+    signal_word: string | null
+    required_pictograms: string[]
+    hazard_statements: Record<string, string>
+}
 
 const props = defineProps<{
     products: Product[];
-    recentLabels: CLPLabel[];
-    flash?: {
-        success?: string;
-    };
 }>();
 
-const form = ref({
-    productId: '',
-    signalWord: '',
-    pictograms: [],
-    hazardStatements: [] as string[],
-});
-
+const selectedProductId = ref<number | null>(null);
 const loading = ref(false);
+const clpResult = ref<ClpResult | null>(null);
+const productName = ref('');
 
-const generateFromProduct = async () => {
-    if (!form.value.productId) return;
-    loading.value = true;
+// Pictogram SVG paths (GHS/CLP standard)
+const pictogramMap: Record<string, string> = {
+    exclamation: '/images/clp/GHS07.svg',
+    'health-hazard': '/images/clp/GHS08.svg',
+    environment: '/images/clp/GHS09.svg',
+    flame: '/images/clp/GHS02.svg',
+    skull: '/images/clp/GHS06.svg',
+    corrosion: '/images/clp/GHS05.svg',
+    oxidizer: '/images/clp/GHS03.svg',
+    'gas-cylinder': '/images/clp/GHS04.svg',
+    explosion: '/images/clp/GHS01.svg',
+}
+
+async function onProductChange() {
+    if (!selectedProductId.value) return
+
+    loading.value = true
+    clpResult.value = null
 
     try {
-        const response = await axios.get(
-            route('admin.clp-labels.calculate', form.value.productId)
-        );
-
-        const data = response.data;
-
-        form.value.signalWord = data.signal_word ?? '';
-        form.value.pictograms = data.required_pictograms ?? [];
-        form.value.hazardStatements = data.hazard_statements ?? [];
-
-    } catch (error) {
-        console.error(error);
-        alert('Failed to calculate CLP.');
+        const res = await axios.get(`/admin/clp-labels/${selectedProductId.value}/calculate`)
+        clpResult.value = res.data.clp
+        productName.value = res.data.product.name
+    } finally {
+        loading.value = false
     }
+}
 
-    loading.value = false;
-};
-
-const pictogramMap = {
-    exclamation: '/images/clp/exclamation.png',
-    flame: '/images/clp/flame.png',
-    corrosion: '/images/clp/corrosion.png',
-    environment: '/images/clp/environment.png'
-};
+const signalWordClass = (word: string | null) => {
+    if (word === 'Danger') return 'text-red-700 border-red-500'
+    if (word === 'Warning') return 'text-amber-600 border-amber-400'
+    return 'text-gray-500 border-gray-300'
+}
 </script>
 
 <template>
@@ -69,56 +65,65 @@ const pictogramMap = {
 
         <Head title="CLP Label Generator" />
 
-        <div v-if="props.flash?.success" class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg"
-            role="alert">
-            <p class="font-bold">Success!</p>
-            <p>{{ props.flash.success }}</p>
+        <!-- Product selector -->
+        <div class="mb-8">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Select Product</label>
+            <select v-model="selectedProductId" @change="onProductChange"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option :value="null" disabled>— choose a product —</option>
+                <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
+            </select>
         </div>
 
-        <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">CLP Label Generator</h2>
-            <Link :href="route('admin.products.index')"
-                class="text-sm font-semibold text-blue-500 hover:text-blue-700 transition">
-            &larr; Back to Products
-            </Link>
-        </div>
+        <!-- Loading -->
+        <div v-if="loading" class="text-gray-400 text-sm">Calculating CLP classification…</div>
 
-        <div class="p-6 max-w-4xl mx-auto">
-            <!-- Product Selection -->
-            <div class="mb-6">
-                <label class="block font-medium mb-2">Select Product</label>
-                <select v-model="form.productId" @change="generateFromProduct" class="w-full border rounded p-2">
-                    <option value="">Choose product...</option>
-                    <option v-for="product in products" :key="product.id" :value="product.id">
-                        {{ product.name }}
-                    </option>
-                </select>
+        <!-- Label Preview -->
+        <div v-if="clpResult" class="border-2 border-gray-900 rounded-lg p-6 bg-white shadow-sm space-y-6">
+            <!-- Header -->
+            <div class="border-b pb-4">
+                <p class="text-xs uppercase text-gray-400 tracking-widest">CLP Label Preview</p>
+                <h2 class="text-xl font-bold mt-1">{{ productName }}</h2>
             </div>
 
-            <!-- Loading -->
-            <div v-if="loading" class="mb-4 text-gray-500">
-                Calculating CLP...
+            <!-- Signal Word -->
+            <div v-if="clpResult.signal_word" class="inline-block border-2 rounded px-4 py-1 font-bold text-lg"
+                :class="signalWordClass(clpResult.signal_word)">
+                {{ clpResult.signal_word }}
+            </div>
+            <div v-else class="text-green-600 font-medium">
+                ✓ No hazard classification required at this concentration
             </div>
 
-            <!-- Label Preview -->
-            <div v-if="form.signalWord" class="border-2 border-black p-6 bg-white">
-
-                <h2 class="text-xl font-bold mb-4 text-center">
-                    {{ form.signalWord }}
-                </h2>
-
-                <!-- Pictograms -->
-                <div class="flex gap-4 justify-center mb-4">
-                    <img v-for="pic in form.pictograms" :key="pic" :src="pictogramMap[pic]"
-                        class="w-16 h-16 object-contain" />
-                </div>
-
-                <!-- Hazard Statements -->
-                <div class="whitespace-pre-line text-sm text-center">
-                    {{ form.hazardStatements.join('\n') }}
+            <!-- Pictograms -->
+            <div v-if="clpResult.required_pictograms.length" class="space-y-2">
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Pictograms</p>
+                <div class="flex flex-wrap gap-3">
+                    <div v-for="pic in clpResult.required_pictograms" :key="pic"
+                        class="w-16 h-16 border border-red-600 rounded flex items-center justify-center bg-white"
+                        :title="pic">
+                        <img v-if="pictogramMap[pic]" :src="pictogramMap[pic]" :alt="pic" class="w-12 h-12" />
+                        <span v-else class="text-xs text-center text-gray-400 capitalize">{{ pic }}</span>
+                    </div>
                 </div>
             </div>
 
+            <!-- Hazard Statements -->
+            <div v-if="Object.keys(clpResult.hazard_statements).length" class="space-y-2">
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Hazard Statements</p>
+                <ul class="space-y-1">
+                    <li v-for="(statement, code) in clpResult.hazard_statements" :key="code" class="text-sm">
+                        <span class="font-mono font-medium text-gray-800">{{ code }}</span>
+                        <span class="text-gray-600"> — {{ statement }}</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- No hazards -->
+            <div v-if="!clpResult.signal_word && !Object.keys(clpResult.hazard_statements).length"
+                class="text-sm text-gray-500 italic">
+                No hazard statements triggered for this formulation.
+            </div>
         </div>
     </AdminLayout>
 </template>

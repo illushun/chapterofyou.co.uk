@@ -14,59 +14,45 @@ class CLPLabelController extends Controller
 {
     public function index()
     {
-        $clpLabels = CLPLabel::with('product')
-            ->latest()
-            ->limit(10)
-            ->get();
-
-        $products = Product::with([
-            'oils.hazards',
-            'oils.components'
-        ])->get(['id', 'name']);
-
-        return Inertia::render('admin/label/CLPLabel', [
-            'recentLabels' => $clpLabels,
-            'products' => $products,
-        ]);
+        $products = Product::select('id', 'name')->orderBy('name')->get();
+        return Inertia::render('admin/label/CLPLabel', compact('products'));
     }
 
-    /**
-     * Store a newly created CLP label in the database.
-     */
-    public function store(Request $request)
+    public function calculate(Product $product, CLPCalculator $calculator)
     {
-        $validated = $request->validate([
-            'product_id' => ['nullable', 'exists:products,id'],
-            'product_name' => ['required', 'string', 'max:255'],
-            'allergen_info' => ['nullable', 'string', 'max:255'],
-            'mass_volume' => ['nullable', 'string', 'max:50'],
-            'units' => ['nullable', 'string', Rule::in(['g', 'ml'])],
-            'concentration_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'supplier_name' => ['required', 'string', 'max:255'],
-            'supplier_address' => ['required', 'string'],
-            'supplier_phone' => ['required', 'string', 'max:50'],
-            'signal_word' => ['nullable', 'string', Rule::in(['Danger', 'Warning'])],
-            'required_pictograms' => ['nullable', 'array'],
-            'hazard_statements' => ['nullable', 'array'],
-            'precautionary_statements' => ['nullable', 'array'],
-            'supplementary_info' => ['nullable', 'string'],
-            'ingredients_json' => ['nullable', 'array'],
-        ]);
-
-        //CLPLabel::create($validated);
-        return redirect()->back()->with('success', 'CLP Label successfully generated and saved!');
-    }
-
-    public function calculate(Product $product)
-    {
-        $product->load([
-            'oils.hazards',
-            'oils.components'
-        ]);
-
-        $calculator = app(CLPCalculator::class);
         $result = $calculator->calculate($product);
 
-        return response()->json($result);
+        return response()->json([
+            'product'    => ['id' => $product->id, 'name' => $product->name],
+            'clp'        => $result,
+        ]);
+    }
+
+    public function save(Request $request, Product $product, CLPCalculator $calculator)
+    {
+        $request->validate([
+            'supplier_name'    => 'nullable|string',
+            'supplier_address' => 'nullable|string',
+            'supplier_phone'   => 'nullable|string',
+        ]);
+
+        $clp = $calculator->calculate($product);
+
+        CLPLabel::updateOrCreate(
+            ['product_id' => $product->id],
+            [
+                'product_name'             => $product->name,
+                'supplier_name'            => $request->supplier_name,
+                'supplier_address'         => $request->supplier_address,
+                'supplier_phone'           => $request->supplier_phone,
+                'signal_word'              => $clp['signal_word'],
+                'required_pictograms'      => $clp['required_pictograms'],
+                'hazard_statements'        => $clp['hazard_statements'],
+                'precautionary_statements' => [],
+                'ingredients_json'         => [],
+            ]
+        );
+
+        return back()->with('success', 'Label saved.');
     }
 }
