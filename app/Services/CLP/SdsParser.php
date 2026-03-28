@@ -108,7 +108,6 @@ class SdsParser
 
     // -------------------------------------------------------
     // Static metadata for known H-codes
-    // Extend this as needed
     // -------------------------------------------------------
     protected function hazardCodeMeta(): array
     {
