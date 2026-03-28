@@ -114,7 +114,7 @@ function cancelEditHazard() {
 async function submitAddOil() {
     if (!newOil.value.name.trim()) return;
 
-    await axios.post(`/admin/oils`, newOil.value);
+    await axios.post(`oils`, newOil.value);
     newOil.value = { name: '', supplier: '', cas_primary: '' };
     showAddForm.value = false;
     router.reload({ only: ['oils'] });
@@ -123,13 +123,13 @@ async function submitAddOil() {
 async function submitUpdateHazard(oilId: number, hazardId: number) {
     const data = hazardEdits.value[hazardId];
 
-    await axios.put(`/admin/oils/${oilId}/hazards/${hazardId}`, data);
+    await axios.put(`oils/${oilId}/hazards/${hazardId}`, data);
     editingHazard.value = null;
     router.reload({ only: ['oils'] });
 }
 
 async function submitAddHazard(oilId: number) {
-    await axios.post(`admin/oils/${oilId}/hazard`, newHazard.value);
+    await axios.post(`oils/${oilId}/hazard`, newHazard.value);
     showAddHazard.value = null;
     newHazard.value = { hazard_code: '', hazard_class: '', category: '', signal_word: 'Warning', pictogram: 'exclamation' };
     router.reload({ only: ['oils'] });
@@ -148,7 +148,7 @@ async function handleFileUpload(oilId: number, event: Event) {
     form.append('sds', file);
 
     try {
-        await axios.post(`admin/oils/${oilId}/sds`, form, {
+        await axios.post(`oils/${oilId}/sds`, form, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         router.reload({ only: ['oils'] });
