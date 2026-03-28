@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Label;
 
 use App\Http\Controllers\Controller;
 use App\Models\Oil;
+use App\Models\OilHazard;
 use App\Models\SDSDocument;
 use App\Services\CLP\CLPCalculator;
 use App\Services\CLP\SdsParser;
@@ -17,7 +18,7 @@ class OilController extends Controller
 {
     public function index()
     {
-        $oils = Oil::with('sdsDocuments')->latest()->get();
+        $oils = Oil::with(['sdsDocuments', 'hazards', 'components'])->latest()->get();
         return Inertia::render('admin/label/oil/Index', compact('oils'));
     }
 
@@ -62,5 +63,26 @@ class OilController extends Controller
         }
 
         return back()->with('success', 'SDS uploaded and parsed.');
+    }
+
+    public function updateHazard(Request $request, Oil $oil, OilHazard $hazard)
+    {
+        $hazard->update($request->only(
+            'hazard_code',
+            'hazard_class',
+            'category',
+            'signal_word',
+            'pictogram'
+        ));
+        return back()->with('success', 'Hazard updated.');
+    }
+
+    public function storeHazard(Request $request, Oil $oil)
+    {
+        OilHazard::create(array_merge(
+            $request->only('hazard_code', 'hazard_class', 'category', 'signal_word', 'pictogram'),
+            ['oil_id' => $oil->id]
+        ));
+        return back()->with('success', 'Hazard added.');
     }
 }
