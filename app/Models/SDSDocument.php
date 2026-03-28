@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class SDSDocument extends Model
 {
+    protected $table = 'sds_document';
+
     protected $fillable = [
         'oil_id', 'file_path', 'document_hash',
         'version', 'issue_date', 'parsed',

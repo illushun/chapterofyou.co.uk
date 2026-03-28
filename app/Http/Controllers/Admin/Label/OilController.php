@@ -18,7 +18,7 @@ class OilController extends Controller
 {
     public function index()
     {
-        $oils = Oil::with(['sdsDocuments', 'hazards', 'components'])->latest()->get();
+        $oils = Oil::with(['sdsdocument', 'hazards', 'components'])->latest()->get();
         return Inertia::render('admin/label/oil/Index', compact('oils'));
     }
 
