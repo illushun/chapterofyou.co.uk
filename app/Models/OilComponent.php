@@ -9,6 +9,8 @@ class OilComponent extends Model
 {
     use HasFactory;
 
+    protected $table = 'oil_component';
+
     protected $fillable = [
         'oil_id',
         'name',

@@ -9,6 +9,8 @@ class Oil extends Model
 {
     use HasFactory;
 
+    protected $table = 'oil';
+
     protected $fillable = [
         'name',
         'supplier',
