@@ -120,7 +120,7 @@ class AdminProductController extends Controller
 
             // Oil formulation
             'materials'              => ['nullable', 'array'],
-            'materials.*.oil_id'     => ['required_with:materials', 'exists:oils,id', 'distinct'],
+            'materials.*.oil_id'     => ['required_with:materials', 'exists:oil,id', 'distinct'],
             'materials.*.percentage' => ['required_with:materials', 'numeric', 'min:0.01', 'max:100'],
         ]);
 
@@ -234,7 +234,7 @@ class AdminProductController extends Controller
 
             // Oil formulation
             'materials'              => ['nullable', 'array'],
-            'materials.*.oil_id'     => ['required_with:materials', 'exists:oils,id', 'distinct'],
+            'materials.*.oil_id'     => ['required_with:materials', 'exists:oil,id', 'distinct'],
             'materials.*.percentage' => ['required_with:materials', 'numeric', 'min:0.01', 'max:100'],
         ]);
 
