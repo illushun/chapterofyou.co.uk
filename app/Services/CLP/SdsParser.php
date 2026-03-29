@@ -15,7 +15,7 @@ use Smalot\PdfParser\Parser;
 
 class SdsParser
 {
-    public function parse(SdsDocument $document): bool
+    public function parse(SDSDocument $document): bool
     {
         $parser = new Parser();
         $pdf    = $parser->parseFile(Storage::disk('local')->path($document->file_path));
@@ -102,27 +102,65 @@ class SdsParser
     }
 
     // -------------------------------------------------------------------------
-    // Pull out just the lines under "Hazard statements:" in Section 2
-    // Stops when it hits the next field label (Supplemental, Precautionary, etc.)
+    // Extract H-code lines from Section 2 label elements (2.2)
+    //
+    // Handles two Nikura SDS formats:
+    //
+    // FORMAT A (e.g. Fresh Linen) — codes listed AFTER "Hazard statements:" label:
+    //   Signal word:         Danger
+    //   Hazard statements:   H304, May be fatal...
+    //                        H315, Causes skin irritation.
+    //   Supplemental...
+    //
+    // FORMAT B (e.g. Lemon v2) — codes listed BEFORE "Hazard statements:" label,
+    // immediately after the Signal word line:
+    //   Signal word:         Danger
+    //   H226, Flammable liquid and vapour.
+    //   H304, May be fatal...
+    //   Hazard statements:   (label appears again, codes repeat)
+    //   M factor:            None
+    //   Supplemental...
+    //
+    // Strategy: anchor on "Signal word:" and collect all H-code lines between
+    // there and the first non-hazard field (M factor / Supplemental / Precautionary).
+    // This captures both formats since the label element H-codes always follow
+    // the signal word in both cases, and we deduplicate before returning.
     // -------------------------------------------------------------------------
     protected function extractHazardStatementsBlock(string $section2): array
     {
-        // Find the start of the hazard statements block
-        if (!preg_match('/Hazard\s+statements\s*:(.*?)(?=(?:Supplemental|Precautionary|Pictogram|EUH|2\.3|Other\s+hazard|\Z))/si', $section2, $match)) {
-            // Fallback: grab any H-code lines from section 2 directly
-            preg_match_all('/\bH\d{3}\b[^\n]*/i', $section2, $lines);
-            return $lines[0] ?? [];
+        // Find the section 2.2 label elements block — anchor on Signal word
+        // Capture everything from Signal word up to Precautionary statements / Pictograms
+        if (!preg_match(
+            '/Signal\s+word\s*:.*?(?=(?:Precautionary\s+statements?|Pictograms?|2\.3|Other\s+hazards?|\Z))/si',
+            $section2,
+            $labelBlock
+        )) {
+            // No Signal word found — fall back to any H-code line in section 2
+            preg_match_all('/^\s*(H\d{3}[^\n]*)/m', $section2, $m);
+            return array_values(array_unique($m[1] ?? []));
         }
 
-        $block = $match[1];
+        $block = $labelBlock[0];
 
-        // Split into lines, filter to ones that start with or contain an H-code
+        // Collect every line containing an H-code
         $lines = array_filter(
             explode("\n", $block),
             fn ($line) => preg_match('/\bH\d{3}\b/', $line)
         );
 
-        return array_values($lines);
+        // Deduplicate by H-code — keep first occurrence of each code
+        $seen   = [];
+        $unique = [];
+        foreach ($lines as $line) {
+            if (preg_match('/\b(H\d{3})\b/', $line, $m)) {
+                if (!in_array($m[1], $seen)) {
+                    $seen[]   = $m[1];
+                    $unique[] = trim($line);
+                }
+            }
+        }
+
+        return $unique;
     }
 
     // -------------------------------------------------------------------------
