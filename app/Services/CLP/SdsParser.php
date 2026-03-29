@@ -5,6 +5,7 @@ namespace App\Services\CLP;
 use App\Models\Product;
 use App\Models\SDSDocument;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use App\Models\Oil;
@@ -17,7 +18,7 @@ class SdsParser
     public function parse(SDSDocument $document): bool
     {
         $parser = new Parser();
-        $pdf    = $parser->parseFile(storage_path('app/' . $document->file_path));
+        $pdf    = $parser->parseFile(Storage::disk('local')->path($document->file_path));
         $text   = $pdf->getText();
 
         $this->parseSection2($document->oil_id, $text);
