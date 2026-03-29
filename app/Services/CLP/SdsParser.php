@@ -312,18 +312,47 @@ class SdsParser
             'H225' => ['class' => 'Flammable Liquid',          'category' => '2',  'signal_word' => 'Danger',  'pictogram' => 'flame'],
             'H224' => ['class' => 'Flammable Liquid',          'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'flame'],
             'H227' => ['class' => 'Combustible Liquid',        'category' => '4',  'signal_word' => 'Warning', 'pictogram' => 'flame'],
-            // Aquatic
+            // Skin/Eye (additional)
+            'H316' => ['class' => 'Skin Irritation',           'category' => '3',  'signal_word' => null,      'pictogram' => null],
+            // Aquatic Acute
             'H400' => ['class' => 'Aquatic Acute',             'category' => '1',  'signal_word' => 'Warning', 'pictogram' => 'environment'],
+            'H401' => ['class' => 'Aquatic Acute',             'category' => '2',  'signal_word' => null,      'pictogram' => null],
+            'H402' => ['class' => 'Aquatic Acute',             'category' => '3',  'signal_word' => null,      'pictogram' => null],
+            // Aquatic Chronic
             'H410' => ['class' => 'Aquatic Chronic',           'category' => '1',  'signal_word' => 'Warning', 'pictogram' => 'environment'],
             'H411' => ['class' => 'Aquatic Chronic',           'category' => '2',  'signal_word' => null,      'pictogram' => 'environment'],
             'H412' => ['class' => 'Aquatic Chronic',           'category' => '3',  'signal_word' => null,      'pictogram' => null],
+            'H413' => ['class' => 'Aquatic Chronic',           'category' => '4',  'signal_word' => null,      'pictogram' => null],
+            // Acute Toxicity (additional)
+            'H300' => ['class' => 'Acute Toxicity Oral',       'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
+            'H301' => ['class' => 'Acute Toxicity Oral',       'category' => '3',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
+            'H310' => ['class' => 'Acute Toxicity Dermal',     'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
+            'H311' => ['class' => 'Acute Toxicity Dermal',     'category' => '3',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
+            'H330' => ['class' => 'Acute Toxicity Inhalation', 'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
+            'H331' => ['class' => 'Acute Toxicity Inhalation', 'category' => '3',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
             // Reproductive / STOT
             'H361' => ['class' => 'Reproductive Toxicity',     'category' => '2',  'signal_word' => 'Warning', 'pictogram' => 'health-hazard'],
             'H360' => ['class' => 'Reproductive Toxicity',     'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'health-hazard'],
+            'H362' => ['class' => 'Reproductive Toxicity',     'category' => null, 'signal_word' => null,      'pictogram' => null],
             'H336' => ['class' => 'STOT Single Exposure',      'category' => '3',  'signal_word' => 'Warning', 'pictogram' => 'exclamation'],
             'H335' => ['class' => 'STOT Single Exposure',      'category' => '3',  'signal_word' => 'Warning', 'pictogram' => 'exclamation'],
+            'H371' => ['class' => 'STOT Single Exposure',      'category' => '2',  'signal_word' => 'Warning', 'pictogram' => 'health-hazard'],
+            'H370' => ['class' => 'STOT Single Exposure',      'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'health-hazard'],
             'H373' => ['class' => 'STOT Repeated Exposure',    'category' => '2',  'signal_word' => 'Warning', 'pictogram' => 'health-hazard'],
             'H372' => ['class' => 'STOT Repeated Exposure',    'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'health-hazard'],
+            // Gasses / Pressure
+            'H280' => ['class' => 'Gases Under Pressure',      'category' => null, 'signal_word' => 'Warning', 'pictogram' => 'gas-cylinder'],
+            'H281' => ['class' => 'Gases Under Pressure',      'category' => null, 'signal_word' => 'Warning', 'pictogram' => 'gas-cylinder'],
+            // Explosive
+            'H200' => ['class' => 'Unstable Explosive',        'category' => null, 'signal_word' => 'Danger',  'pictogram' => 'explosion'],
+            'H201' => ['class' => 'Explosive',                 'category' => '1.1','signal_word' => 'Danger',  'pictogram' => 'explosion'],
+            'H202' => ['class' => 'Explosive',                 'category' => '1.2','signal_word' => 'Danger',  'pictogram' => 'explosion'],
+            'H203' => ['class' => 'Explosive',                 'category' => '1.3','signal_word' => 'Danger',  'pictogram' => 'explosion'],
+            'H204' => ['class' => 'Explosive',                 'category' => '1.4','signal_word' => 'Warning', 'pictogram' => 'explosion'],
+            // Oxidising
+            'H270' => ['class' => 'Oxidising Gas',             'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'oxidizer'],
+            'H271' => ['class' => 'Oxidising Liquid',          'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'oxidizer'],
+            'H272' => ['class' => 'Oxidising Liquid',          'category' => '3',  'signal_word' => 'Warning', 'pictogram' => 'oxidizer'],
         ];
 
         return $map[$code] ?? [];
