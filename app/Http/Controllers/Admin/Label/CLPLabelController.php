@@ -122,7 +122,7 @@ class CLPLabelController extends Controller
             }
 
             $filename = $pictogramMap[$picKey] . '.png';
-            $path     = public_path("images/clp/{$filename}");
+            $path     = public_path("storage/images/Pictograms/{$filename}");
 
             if (file_exists($path)) {
                 $imageData = base64_encode(file_get_contents($path));

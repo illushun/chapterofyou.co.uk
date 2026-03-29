@@ -28,15 +28,15 @@ const productName = ref('');
 
 // Pictogram SVG paths (GHS/CLP standard)
 const pictogramMap: Record<string, string> = {
-    exclamation: '/images/clp/GHS07.svg',
-    'health-hazard': '/images/clp/GHS08.svg',
-    environment: '/images/clp/GHS09.svg',
-    flame: '/images/clp/GHS02.svg',
-    skull: '/images/clp/GHS06.svg',
-    corrosion: '/images/clp/GHS05.svg',
-    oxidizer: '/images/clp/GHS03.svg',
-    'gas-cylinder': '/images/clp/GHS04.svg',
-    explosion: '/images/clp/GHS01.svg',
+    exclamation: '/storage/images/Pictograms/GHS07.png',
+    'health-hazard': '/storage/images/Pictograms/GHS08.png',
+    environment: '/storage/images/Pictograms/GHS09.png',
+    flame: '/storage/images/Pictograms/GHS02.png',
+    skull: '/storage/images/Pictograms/GHS06.png',
+    corrosion: '/storage/images/Pictograms/GHS05.png',
+    oxidizer: '/storage/images/Pictograms/GHS03.png',
+    'gas-cylinder': '/storage/images/Pictograms/GHS04.png',
+    explosion: '/storage/images/Pictograms/GHS01.png',
 }
 
 async function onProductChange() {
