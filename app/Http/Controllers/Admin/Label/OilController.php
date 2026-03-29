@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\Label;
 
 use App\Http\Controllers\Controller;
 use App\Models\Oil;
+use App\Models\OilComponent;
 use App\Models\OilHazard;
 use App\Models\SDSDocument;
 use App\Services\CLP\CLPCalculator;
@@ -84,5 +85,19 @@ class OilController extends Controller
             ['oil_id' => $oil->id]
         ));
         return back()->with('success', 'Hazard added.');
+    }
+
+    public function destroyHazard(Oil $oil, OilHazard $hazard)
+    {
+        abort_if($hazard->oil_id !== $oil->id, 403);
+        $hazard->delete();
+        return response()->json(['success' => true]);
+    }
+
+    public function destroyComponent(Oil $oil, OilComponent $component)
+    {
+        abort_if($component->oil_id !== $oil->id, 403);
+        $component->delete();
+        return response()->json(['success' => true]);
     }
 }

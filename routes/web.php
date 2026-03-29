@@ -107,6 +107,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('/oils/{oil}/sds', [OilController::class, 'uploadSds'])->name('oils.sds.upload');
     Route::put('/oils/{oil}/hazards/{hazard}', [OilController::class, 'updateHazard'])->name('oils.hazards.update');
     Route::post('/oils/{oil}/hazards', [OilController::class, 'storeHazard'])->name('oils.hazards.store');
+    Route::delete('/oils/{oil}/hazards/{hazard}', [OilController::class, 'destroyHazard'])->name('oils.hazards.destroy');
+    Route::delete('/oils/{oil}/components/{component}', [OilController::class, 'destroyComponent'])->name('oils.components.destroy');
 
     Route::get('/clp-labels', [CLPLabelController::class, 'index'])->name('clp-labels.index');
     Route::get('/clp-labels/{product}/calculate', [CLPLabelController::class, 'calculate'])->name('clp-labels.calculate');

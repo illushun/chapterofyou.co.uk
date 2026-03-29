@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import { ref, computed, onMounted } from 'vue';
+import { Head, router } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
 import axios from 'axios';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface OilHazard {
     id: number;
@@ -40,11 +42,15 @@ interface Oil {
     components: OilComponent[];
 }
 
+// ─── Props ────────────────────────────────────────────────────────────────────
+
 function sdsDocs(oil: Oil): SdsDocument[] {
     return oil.sds_documents ?? [];
 }
 
 const props = defineProps<{ oils: Oil[] }>();
+
+// ─── State ────────────────────────────────────────────────────────────────────
 
 const searchQuery = ref('');
 const openOilId = ref<number | null>(null);
@@ -72,6 +78,8 @@ const newHazard = ref({
 const uploadingFor = ref<number | null>(null);
 const fileInputRefs = ref<Record<number, HTMLInputElement | null>>({});
 
+// ─── Computed ─────────────────────────────────────────────────────────────────
+
 const filteredOils = computed(() => {
     const q = searchQuery.value.toLowerCase();
     if (!q) return props.oils;
@@ -79,6 +87,8 @@ const filteredOils = computed(() => {
         o => o.name.toLowerCase().includes(q) || (o.supplier ?? '').toLowerCase().includes(q)
     );
 });
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function initials(name: string): string {
     return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -111,10 +121,23 @@ function cancelEditHazard() {
     editingHazard.value = null;
 }
 
+async function deleteHazard(oilId: number, hazardId: number) {
+    if (!confirm('Remove this hazard?')) return;
+    await axios.delete(route('admin.oils.hazards.destroy', { oil: oilId, hazard: hazardId }));
+    router.reload({ only: ['oils'] });
+}
+
+async function deleteComponent(oilId: number, componentId: number) {
+    if (!confirm('Remove this component?')) return;
+    await axios.delete(route('admin.oils.components.destroy', { oil: oilId, component: componentId }));
+    router.reload({ only: ['oils'] });
+}
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
+
 async function submitAddOil() {
     if (!newOil.value.name.trim()) return;
-
-    await axios.post(`oils`, newOil.value);
+    await axios.post(route('admin.oils.store'), newOil.value);
     newOil.value = { name: '', supplier: '', cas_primary: '' };
     showAddForm.value = false;
     router.reload({ only: ['oils'] });
@@ -122,14 +145,13 @@ async function submitAddOil() {
 
 async function submitUpdateHazard(oilId: number, hazardId: number) {
     const data = hazardEdits.value[hazardId];
-
-    await axios.put(`oils/${oilId}/hazards/${hazardId}`, data);
+    await axios.put(route('admin.oils.hazards.update', { oil: oilId, hazard: hazardId }), data);
     editingHazard.value = null;
     router.reload({ only: ['oils'] });
 }
 
 async function submitAddHazard(oilId: number) {
-    await axios.post(`oils/${oilId}/hazard`, newHazard.value);
+    await axios.post(route('admin.oils.hazards.store', { oil: oilId }), newHazard.value);
     showAddHazard.value = null;
     newHazard.value = { hazard_code: '', hazard_class: '', category: '', signal_word: 'Warning', pictogram: 'exclamation' };
     router.reload({ only: ['oils'] });
@@ -148,7 +170,7 @@ async function handleFileUpload(oilId: number, event: Event) {
     form.append('sds', file);
 
     try {
-        await axios.post(`oils/${oilId}/sds`, form, {
+        await axios.post(route('admin.oils.sds.upload', { oil: oilId }), form, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         router.reload({ only: ['oils'] });
@@ -278,7 +300,12 @@ async function handleFileUpload(oilId: number, event: Event) {
                                             <span class="badge badge-gray">{{ hazard.pictogram || '—' }}</span>
                                         </td>
                                         <td class="text-right">
-                                            <button class="btn btn-sm" @click="startEditHazard(hazard)">Edit</button>
+                                            <div class="flex justify-end gap-1">
+                                                <button class="btn btn-sm"
+                                                    @click="startEditHazard(hazard)">Edit</button>
+                                                <button class="btn btn-sm btn-danger"
+                                                    @click="deleteHazard(oil.id, hazard.id)">Delete</button>
+                                            </div>
                                         </td>
                                     </tr>
 
@@ -383,6 +410,7 @@ async function handleFileUpload(oilId: number, event: Event) {
                                     <th>CAS</th>
                                     <th>Concentration (%)</th>
                                     <th>CLP classification</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -401,6 +429,10 @@ async function handleFileUpload(oilId: number, event: Event) {
                                                 class="badge badge-code mr-1">{{ code.trim() }}</span>
                                         </template>
                                         <span v-else class="text-gray-400">—</span>
+                                    </td>
+                                    <td class="text-right">
+                                        <button class="btn btn-sm btn-danger"
+                                            @click="deleteComponent(oil.id, comp.id)">Delete</button>
                                     </td>
                                 </tr>
                             </tbody>
