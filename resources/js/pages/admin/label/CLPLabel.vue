@@ -14,6 +14,7 @@ interface ClpResult {
     signal_word: string | null
     required_pictograms: string[]
     hazard_statements: Record<string, string>
+    precautionary_statements: Record<string, string>
 }
 
 const props = defineProps<{
@@ -115,6 +116,17 @@ const signalWordClass = (word: string | null) => {
                     <li v-for="(statement, code) in clpResult.hazard_statements" :key="code" class="text-sm">
                         <span class="font-mono font-medium text-gray-800">{{ code }}</span>
                         <span class="text-gray-600"> — {{ statement }}</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Precautionary Statements -->
+            <div v-if="Object.keys(clpResult.precautionary_statements).length" class="space-y-2">
+                <p class="text-xs font-semibold uppercase tracking-wider text-gray-500">Precautionary Statements</p>
+                <ul class="space-y-1">
+                    <li v-for="(text, code) in clpResult.precautionary_statements" :key="code" class="text-sm">
+                        <span class="font-mono font-medium text-gray-800">{{ code }}</span>
+                        <span class="text-gray-600"> — {{ text }}</span>
                     </li>
                 </ul>
             </div>
