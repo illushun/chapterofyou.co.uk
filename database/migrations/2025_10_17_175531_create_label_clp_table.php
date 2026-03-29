@@ -24,6 +24,7 @@ return new class () extends Migration {
             $table->json('precautionary_statements')->nullable();
             $table->text('supplementary_info')->nullable();
             $table->json('ingredients_json')->nullable();
+            $table->string('nominal_quantity')->nullable(); // e.g. "100 ml"
 
             $table->timestamps();
         });

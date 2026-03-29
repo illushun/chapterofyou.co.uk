@@ -111,6 +111,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/clp-labels', [CLPLabelController::class, 'index'])->name('clp-labels.index');
     Route::get('/clp-labels/{product}/calculate', [CLPLabelController::class, 'calculate'])->name('clp-labels.calculate');
     Route::post('/clp-labels/{product}/save', [CLPLabelController::class, 'save'])->name('clp-labels.save');
+    Route::get('/clp-labels/{product}/pdf', [CLPLabelController::class, 'pdf'])->name('clp-labels.pdf');
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
