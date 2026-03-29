@@ -101,7 +101,7 @@ class SdsParser
         }
     }
 
-    / -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Pull out just the lines under "Hazard statements:" in Section 2
     // Stops when it hits the next field label (Supplemental, Precautionary, etc.)
     // -------------------------------------------------------------------------
@@ -119,7 +119,7 @@ class SdsParser
         // Split into lines, filter to ones that start with or contain an H-code
         $lines = array_filter(
             explode("\n", $block),
-            fn($line) => preg_match('/\bH\d{3}\b/', $line)
+            fn ($line) => preg_match('/\bH\d{3}\b/', $line)
         );
 
         return array_values($lines);
