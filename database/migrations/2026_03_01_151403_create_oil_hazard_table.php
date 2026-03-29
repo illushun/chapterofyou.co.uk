@@ -17,9 +17,9 @@ return new class () extends Migration {
                 ->constrained('oil')
                 ->onDelete('cascade');
 
-            $table->string('hazard_class'); // Skin Sensitisation
-            $table->string('category');     // 1A / 1B
-            $table->string('hazard_code');  // H317
+            $table->string('hazard_class')->nullable(); // Skin Sensitisation
+            $table->string('category')->nullable(); // 1A / 1B
+            $table->string('hazard_code')->nullable();  // H317
             $table->string('signal_word')->nullable();
             $table->string('pictogram')->nullable();
 
