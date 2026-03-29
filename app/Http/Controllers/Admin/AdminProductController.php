@@ -15,6 +15,8 @@ use App\Models\Product;
 use App\Models\Category;
 use App\Models\Product\Seo;
 use App\Models\Product\Image as ProductImage;
+use App\Models\Oil;
+use App\Models\Product\Material;
 
 class AdminProductController extends Controller
 {
@@ -32,6 +34,29 @@ class AdminProductController extends Controller
             $product->images()->create([
                 'image' => Storage::url($path),
                 'status' => 'enabled',
+            ]);
+        }
+    }
+
+    /**
+    * Replace all product_material rows for this product with the submitted set.
+    * Using deleteAndInsert rather than upsert to keep it simple and reliable.
+    */
+    private function syncMaterials(Product $product, array $materials): void
+    {
+        // Wipe existing rows for this product
+        Material::where('product_id', $product->id)->delete();
+
+        // Re-insert the submitted set, skipping any rows with no oil selected
+        foreach ($materials as $material) {
+            if (empty($material['oil_id']) || $material['oil_id'] == 0) {
+                continue;
+            }
+
+            Material::create([
+                'product_id' => $product->id,
+                'oil_id'     => $material['oil_id'],
+                'percentage' => round((float) $material['percentage'], 4),
             ]);
         }
     }
@@ -55,16 +80,19 @@ class AdminProductController extends Controller
      */
     public function create()
     {
-        $categories = Category::select('id', 'name')->get();
-        $couriers = Courier::select(['id', 'name'])->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
+        $categories     = Category::select('id', 'name')->get();
+        $couriers       = Courier::select(['id', 'name'])->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
         $parentProducts = Product::select('id', 'name')->get();
+        $oils           = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
 
         return Inertia::render('admin/product/CreateEdit', [
-            'categories' => $categories,
-            'couriers' => $couriers,
-            'parentProducts' => $parentProducts,
-            'isEditing' => false,
-            'productImages' => [],
+            'categories'       => $categories,
+            'couriers'         => $couriers,
+            'parentProducts'   => $parentProducts,
+            'oils'             => $oils,
+            'productMaterials' => [],
+            'isEditing'        => false,
+            'productImages'    => [],
         ]);
     }
 
@@ -74,49 +102,53 @@ class AdminProductController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'mpn' => ['required', 'string', 'max:50', Rule::unique('product', 'mpn')],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'],
-            'status' => ['required', Rule::in(['enabled', 'disabled'])],
-            'cost' => ['required', 'numeric', 'min:0.01'],
-            'stock_qty' => ['required', 'integer', 'min:0'],
-            'category_ids' => ['array'],
-            'category_ids.*' => ['exists:category,id'],
-            'courier_id.*' => ['exists:courier,id'],
-            'meta_title' => ['nullable', 'string', 'max:255'],
+            'mpn'              => ['required', 'string', 'max:50', Rule::unique('product', 'mpn')],
+            'name'             => ['required', 'string', 'max:255'],
+            'description'      => ['required', 'string'],
+            'status'           => ['required', Rule::in(['enabled', 'disabled'])],
+            'cost'             => ['required', 'numeric', 'min:0.01'],
+            'stock_qty'        => ['required', 'integer', 'min:0'],
+            'category_ids'     => ['array'],
+            'category_ids.*'   => ['exists:category,id'],
+            'courier_id.*'     => ['exists:courier,id'],
+            'meta_title'       => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')],
+            'slug'             => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')],
             'parent_product_id' => ['nullable', 'exists:product,id'],
+            'new_images'       => ['nullable', 'array', 'max:5'],
+            'new_images.*'     => ['image', 'max:2048', 'mimes:jpeg,png,webp'],
 
-            'new_images' => ['nullable', 'array', 'max:5'], // Max 5 images per upload
-            'new_images.*' => ['image', 'max:2048', 'mimes:jpeg,png,webp'], // Max 2MB, common image types
+            // Oil formulation
+            'materials'              => ['nullable', 'array'],
+            'materials.*.oil_id'     => ['required_with:materials', 'exists:oils,id', 'distinct'],
+            'materials.*.percentage' => ['required_with:materials', 'numeric', 'min:0.01', 'max:100'],
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
             $product = Product::create($validated);
 
-            // Sync Categories
             if (!empty($validated['category_ids'])) {
                 $product->categories()->sync($validated['category_ids']);
             }
 
-            // Create Product Courier Record
             $product->courier()->create([
                 'product_id' => $product->id,
                 'courier_id' => $validated['courier_id'] ?? null,
-                'per_item' => $validated['courier_per_item'] ?? 'no',
+                'per_item'   => $validated['courier_per_item'] ?? 'no',
             ]);
 
-            // Create SEO Record
             $product->seo()->create([
-                'meta_title' => $validated['meta_title'] ?? $validated['name'],
+                'meta_title'       => $validated['meta_title'] ?? $validated['name'],
                 'meta_description' => $validated['meta_description'] ?? substr(strip_tags($validated['description']), 0, 160),
-                'slug' => $validated['slug'] ?? Str::slug($validated['name']),
+                'slug'             => $validated['slug'] ?? Str::slug($validated['name']),
             ]);
 
             if ($request->hasFile('new_images')) {
                 $this->handleImageUpload($product, $request->file('new_images'));
             }
+
+            // Sync oil formulation
+            $this->syncMaterials($product, $validated['materials'] ?? []);
 
             return redirect()->route('admin.products.index')
                 ->with('success', "Product '{$product->name}' created successfully!");
@@ -128,13 +160,11 @@ class AdminProductController extends Controller
      */
     public function edit(Product $product)
     {
-        // eager load
-        $product->load(['seo:product_id,meta_title,meta_description,slug', 'categories:id']);
-        $product->load('courier');
+        $product->load(['seo:product_id,meta_title,meta_description,slug', 'categories:id', 'courier']);
 
-        $categories = Category::select('id', 'name')->get();
-
+        $categories   = Category::select('id', 'name')->get();
         $parentProducts = Product::where('id', '!=', $product->id)->select('id', 'name')->get();
+        $oils         = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
 
         $productImages = $product->images()
             ->select('id', 'image', 'status')
@@ -145,18 +175,33 @@ class AdminProductController extends Controller
                 return $image;
             });
 
-        $couriers = Courier::select(['id', 'name', 'type', 'cost'])->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
+        $couriers = Courier::select(['id', 'name', 'type', 'cost'])
+            ->where('status', 'enabled')
+            ->orderBy('type', 'ASC')
+            ->orderBy('id', 'DESC')
+            ->get();
+
+        // Load existing oil links for this product
+        $productMaterials = Material::where('product_id', $product->id)
+            ->select('oil_id', 'percentage')
+            ->get()
+            ->map(fn ($m) => [
+                'oil_id'     => $m->oil_id,
+                'percentage' => number_format((float) $m->percentage, 2, '.', ''),
+            ]);
 
         return Inertia::render('admin/product/CreateEdit', [
-            'product' => $product,
-            'categories' => $categories,
-            'couriers' => $couriers,
-            'parentProducts' => $parentProducts,
+            'product'           => $product,
+            'categories'        => $categories,
+            'couriers'          => $couriers,
+            'parentProducts'    => $parentProducts,
             'selectedCategoryIds' => $product->categories->pluck('id'),
             'selectedCourierId' => $product->courier?->courier_id,
-            'courierPerItem' => $product->courier?->per_item,
-            'productImages' => $productImages,
-            'isEditing' => true,
+            'courierPerItem'    => $product->courier?->per_item,
+            'productImages'     => $productImages,
+            'oils'              => $oils,
+            'productMaterials'  => $productMaterials,
+            'isEditing'         => true,
         ]);
     }
 
@@ -166,38 +211,38 @@ class AdminProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'mpn' => ['required', 'string', 'max:50', Rule::unique('product', 'mpn')->ignore($product->id)],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'],
-            'status' => ['required', Rule::in(['enabled', 'disabled'])],
-            'cost' => ['required', 'numeric', 'min:0.01'],
-            'stock_qty' => ['required', 'integer', 'min:0'],
-            'category_ids' => ['array'],
-            'category_ids.*' => ['exists:category,id'],
-            'courier_id' => ['nullable', 'exists:courier,id'],
+            'mpn'              => ['required', 'string', 'max:50', Rule::unique('product', 'mpn')->ignore($product->id)],
+            'name'             => ['required', 'string', 'max:255'],
+            'description'      => ['required', 'string'],
+            'status'           => ['required', Rule::in(['enabled', 'disabled'])],
+            'cost'             => ['required', 'numeric', 'min:0.01'],
+            'stock_qty'        => ['required', 'integer', 'min:0'],
+            'category_ids'     => ['array'],
+            'category_ids.*'   => ['exists:category,id'],
+            'courier_id'       => ['nullable', 'exists:courier,id'],
             'courier_per_item' => ['nullable', Rule::in(['yes', 'no'])],
-            'meta_title' => ['nullable', 'string', 'max:255'],
+            'meta_title'       => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
-            'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')->ignore($product->seo->id ?? null, 'id')],
+            'slug'             => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')->ignore($product->seo->id ?? null, 'id')],
             'parent_product_id' => ['nullable', 'exists:product,id', Rule::notIn([$product->id])],
-
-            'new_images' => ['nullable', 'array', 'max:5'],
-            'new_images.*' => ['image', 'max:2048', 'mimes:jpeg,png,webp'],
-
+            'new_images'       => ['nullable', 'array', 'max:5'],
+            'new_images.*'     => ['image', 'max:2048', 'mimes:jpeg,png,webp'],
             'images_to_delete' => ['nullable', 'array'],
             'images_to_delete.*' => ['exists:product_image,id'],
-
             'images_to_toggle' => ['nullable', 'array'],
             'images_to_toggle.*' => ['exists:product_image,id'],
+
+            // Oil formulation
+            'materials'              => ['nullable', 'array'],
+            'materials.*.oil_id'     => ['required_with:materials', 'exists:oils,id', 'distinct'],
+            'materials.*.percentage' => ['required_with:materials', 'numeric', 'min:0.01', 'max:100'],
         ]);
 
         return DB::transaction(function () use ($request, $validated, $product) {
             $product->update($validated);
 
-            // Sync Categories
             $product->categories()->sync($validated['category_ids'] ?? []);
 
-            // Update or create courier Record
             if ($validated['courier_id'] === null) {
                 $product->courier()->delete();
             } else {
@@ -205,25 +250,24 @@ class AdminProductController extends Controller
                     ['product_id' => $product->id],
                     [
                         'courier_id' => $validated['courier_id'],
-                        'per_item' => $validated['courier_per_item'] ?? 'no',
+                        'per_item'   => $validated['courier_per_item'] ?? 'no',
                     ]
                 );
             }
 
-            // Update or create SEO Record
             $product->seo()->updateOrCreate(
                 ['product_id' => $product->id],
                 [
-                    'meta_title' => $validated['meta_title'] ?? $validated['name'],
+                    'meta_title'       => $validated['meta_title'] ?? $validated['name'],
                     'meta_description' => $validated['meta_description'] ?? substr(strip_tags($validated['description']), 0, 160),
-                    'slug' => $validated['slug'] ?? Str::slug($validated['name']),
+                    'slug'             => $validated['slug'] ?? Str::slug($validated['name']),
                 ]
             );
 
             if (!empty($validated['images_to_delete'])) {
                 $imagesToDelete = ProductImage::whereIn('id', $validated['images_to_delete'])
-                                              ->where('product_id', $product->id)
-                                              ->get();
+                    ->where('product_id', $product->id)
+                    ->get();
 
                 foreach ($imagesToDelete as $image) {
                     Storage::disk('public')->delete($image->image);
@@ -233,18 +277,20 @@ class AdminProductController extends Controller
 
             if (!empty($validated['images_to_toggle'])) {
                 $imagesToToggle = ProductImage::whereIn('id', $validated['images_to_toggle'])
-                                              ->where('product_id', $product->id)
-                                              ->get();
+                    ->where('product_id', $product->id)
+                    ->get();
 
                 foreach ($imagesToToggle as $image) {
-                    $newStatus = $image->status === 'enabled' ? 'disabled' : 'enabled';
-                    $image->update(['status' => $newStatus]);
+                    $image->update(['status' => $image->status === 'enabled' ? 'disabled' : 'enabled']);
                 }
             }
 
             if ($request->hasFile('new_images')) {
                 $this->handleImageUpload($product, $request->file('new_images'));
             }
+
+            // Sync oil formulation
+            $this->syncMaterials($product, $validated['materials'] ?? []);
 
             return redirect()->route('admin.products.index')
                 ->with('success', "Product '{$product->name}' updated successfully!");
@@ -283,4 +329,5 @@ class AdminProductController extends Controller
             'productsData' => $products,
         ]);
     }
+
 }

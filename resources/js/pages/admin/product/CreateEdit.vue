@@ -48,6 +48,18 @@ interface Product {
     };
 }
 
+interface Oil {
+    id: number;
+    name: string;
+    supplier: string | null;
+    cas_primary: string | null;
+}
+
+interface ProductMaterial {
+    oil_id: number;
+    percentage: string; // string so v-model on input works cleanly
+}
+
 // Define props passed from AdminProductController
 const props = defineProps<{
     product?: Product; // Only present when editing
@@ -57,6 +69,8 @@ const props = defineProps<{
     selectedCategoryIds: number[]; // Array of category IDs for the product
     selectedCourierId: number | null; // courier ID for the product
     courierPerItem: string; // Whether courier is charged per item
+    oils: Oil[];
+    productMaterials: ProductMaterial[]; // existing oil links for this product
     productImages: ProductImage[]; // Array of existing images for the product
     isEditing: boolean;
     errors: Record<string, string>;
@@ -74,6 +88,10 @@ const form = useForm({
     category_ids: props.selectedCategoryIds || ([] as number[]),
     courier_id: props.selectedCourierId || null,
     courier_per_item: props.courierPerItem || "no",
+    materials: (props.productMaterials ?? []).map(m => ({
+        oil_id: m.oil_id,
+        percentage: m.percentage,
+    })) as ProductMaterial[],
     meta_title: props.product?.seo?.meta_title || '',
     meta_description: props.product?.seo?.meta_description || '',
     slug: props.product?.seo?.slug || '',
@@ -182,6 +200,26 @@ const handleCourierChange = (courierId: number, isChecked: boolean) => {
         form.courier_per_item = "no";
     }
 };
+
+const addMaterial = () => {
+    form.materials.push({ oil_id: 0, percentage: '' });
+};
+
+const removeMaterial = (index: number) => {
+    form.materials.splice(index, 1);
+};
+
+// Prevent duplicate oil selections
+const availableOilsFor = (index: number): Oil[] => {
+    const selectedIds = form.materials
+        .map((m, i) => i !== index ? m.oil_id : null)
+        .filter(id => id !== null && id !== 0) as number[];
+    return props.oils.filter(o => !selectedIds.includes(o.id));
+};
+
+const materialsTotal = computed(() =>
+    form.materials.reduce((sum, m) => sum + (parseFloat(m.percentage) || 0), 0)
+);
 
 // --- Form submission logic ---
 const submit = () => {
@@ -360,7 +398,7 @@ const formatImageSize = (bytes: number): string => {
                         <!-- New Images Queue -->
                         <div v-if="form.new_images.length" class="mt-4 border-t border-copy-light pt-3">
                             <h4 class="text-sm font-bold text-copy mb-2">New Images to Upload ({{ form.new_images.length
-                                }})</h4>
+                            }})</h4>
                             <ul class="space-y-2">
                                 <li v-for="(file, index) in form.new_images" :key="index"
                                     class="flex items-center justify-between p-2 rounded-lg bg-secondary-dark">
@@ -459,7 +497,7 @@ const formatImageSize = (bytes: number): string => {
                                 class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
                                 :class="{ 'border-error': form.errors.meta_title }" />
                             <div v-if="form.errors.meta_title" class="text-xs text-error mt-1">{{ form.errors.meta_title
-                                }}</div>
+                            }}</div>
                         </div>
 
                         <div class="mb-4">
@@ -536,7 +574,7 @@ const formatImageSize = (bytes: number): string => {
                             </ul>
                         </div>
                         <div v-if="form.errors.category_ids" class="text-xs text-error mt-2">{{ form.errors.category_ids
-                            }}</div>
+                        }}</div>
                     </div>
                 </div>
 
@@ -577,6 +615,87 @@ const formatImageSize = (bytes: number): string => {
                                 </li>
                             </ul>
                         </div>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
+                        <h3 class="text-xl font-bold text-copy mb-1 border-b-2 border-copy-light pb-2">
+                            Fragrance Formulation
+                        </h3>
+                        <p class="text-xs text-copy-light mb-4">
+                            Link oils and their % in the final product for CLP calculation.
+                        </p>
+
+                        <!-- Total % indicator -->
+                        <div class="mb-4 flex items-center justify-between text-sm font-medium px-3 py-2 rounded-lg"
+                            :class="{
+                                'bg-green-50 text-green-700 border border-green-200': materialsTotal <= 100,
+                                'bg-red-50 text-red-700 border border-red-200': materialsTotal > 100,
+                            }">
+                            <span>Total</span>
+                            <span>{{ materialsTotal.toFixed(2) }}%</span>
+                        </div>
+
+                        <!-- Oil rows -->
+                        <div class="space-y-3 mb-4">
+                            <div v-for="(material, index) in form.materials" :key="index"
+                                class="flex items-center gap-2">
+                                <!-- Oil selector -->
+                                <select v-model="material.oil_id"
+                                    class="flex-1 rounded-lg border-2 border-copy bg-foreground p-2 text-copy text-sm focus:border-primary focus:ring-primary shadow-sm"
+                                    :class="{ 'border-error': material.oil_id === 0 && form.materials.length > 0 }">
+                                    <option :value="0" disabled>— select oil —</option>
+                                    <option v-for="oil in availableOilsFor(index)" :key="oil.id" :value="oil.id">
+                                        {{ oil.name }}
+                                        <template v-if="oil.supplier"> ({{ oil.supplier }})</template>
+                                    </option>
+                                    <!-- Always show the currently selected oil even if "taken" -->
+                                    <option
+                                        v-if="material.oil_id !== 0 && !availableOilsFor(index).find(o => o.id === material.oil_id)"
+                                        :value="material.oil_id">
+                                        {{props.oils.find(o => o.id === material.oil_id)?.name}}
+                                    </option>
+                                </select>
+
+                                <!-- Percentage input -->
+                                <div class="relative w-24 flex-shrink-0">
+                                    <input type="number" v-model="material.percentage" min="0.01" max="100" step="0.01"
+                                        placeholder="0.00"
+                                        class="w-full rounded-lg border-2 border-copy bg-foreground p-2 pr-7 text-copy text-sm focus:border-primary focus:ring-primary shadow-sm" />
+                                    <span
+                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-copy-light text-sm">%</span>
+                                </div>
+
+                                <!-- Remove button -->
+                                <button type="button" @click="removeMaterial(index)"
+                                    class="flex-shrink-0 p-2 rounded-lg border-2 border-copy text-error hover:bg-red-50 transition"
+                                    title="Remove">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
+                                        fill="currentColor">
+                                        <path fill-rule="evenodd"
+                                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.72-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z"
+                                            clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <p v-if="form.materials.length === 0" class="text-sm text-copy-light italic">
+                                No oils linked yet. Add one below.
+                            </p>
+                        </div>
+
+                        <!-- Validation errors -->
+                        <div v-if="form.errors.materials" class="text-xs text-error mb-3">
+                            {{ form.errors.materials }}
+                        </div>
+
+                        <!-- Add oil button -->
+                        <button type="button" @click="addMaterial"
+                            :disabled="form.materials.length >= props.oils.length"
+                            class="w-full py-2 border-2 border-dashed border-copy-light text-sm text-copy-light rounded-lg hover:border-copy hover:text-copy transition disabled:opacity-40 disabled:cursor-not-allowed">
+                            + Add oil
+                        </button>
                     </div>
                 </div>
             </div>
