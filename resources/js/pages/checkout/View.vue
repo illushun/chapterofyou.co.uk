@@ -245,7 +245,11 @@ const initializeStripe = async () => {
     await nextTick();
 
     // 4. Initialize Stripe and Elements
-    stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
+    if (import.meta.env.LIVE_CHECKOUT) {
+        stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
+    } else {
+        stripe.value = Stripe(import.meta.env.TEST_VITE_STRIPE_KEY);
+    }
     elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
 
     const appearance = {

@@ -27,7 +27,7 @@ class CheckoutController extends Controller
     public function __construct(CartManager $cartManager)
     {
         $this->cartManager = $cartManager;
-        Stripe::setApiKey(env('STRIPE_SECRET'));
+        Stripe::setApiKey(env('LIVE_CHECKOUT', true) ? env('STRIPE_SECRET') : env('TEST_STRIPE_SECRET'));
     }
 
     /**
