@@ -244,12 +244,8 @@ const initializeStripe = async () => {
     // 3. Wait for the next DOM update cycle (guarantees v-if has run)
     await nextTick();
 
-    // 4. Initialize Stripe and Elements
-    if (import.meta.env.LIVE_CHECKOUT) {
-        stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
-    } else {
-        stripe.value = Stripe(import.meta.env.TEST_VITE_STRIPE_KEY);
-    }
+    // 4. Initialise Stripe and Elements
+    stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
     elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
 
     const appearance = {
@@ -731,7 +727,7 @@ onMounted(async () => {
                                 <div class="mt-6 pt-4 border-t-2 border-copy/10 flex justify-between items-center">
                                     <span class="text-2xl font-extrabold text-copy">Order Total</span>
                                     <span class="text-4xl font-black text-primary">{{ formatCurrency(summary.total)
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <!-- Order Review -->
