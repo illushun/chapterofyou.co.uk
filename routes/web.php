@@ -3,7 +3,9 @@
 use App\Http\Controllers\Admin\AdminCourierController;
 use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Admin\AdminVoucherController;
 use App\Http\Controllers\Admin\Label\OilController;
+use App\Http\Controllers\Cart\VoucherController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\Product\ProductController;
@@ -66,6 +68,9 @@ Route::prefix('checkout')->group(function () {
 
     Route::post('/payment-intent', [CheckoutController::class, 'getPaymentIntent'])->name('checkout.payment_intent');
     Route::post('/process-payment', [CheckoutController::class, 'processPayment'])->name('checkout.process_payment');
+
+    Route::post('/voucher/apply', [VoucherController::class, 'apply']) ->name('voucher.apply');
+    Route::post('/voucher/remove', [VoucherController::class, 'remove'])->name('voucher.remove');
 });
 
 Route::get('/order/confirmation', function () {
@@ -114,6 +119,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/clp-labels/{product}/calculate', [CLPLabelController::class, 'calculate'])->name('clp-labels.calculate');
     Route::post('/clp-labels/{product}/save', [CLPLabelController::class, 'save'])->name('clp-labels.save');
     Route::get('/clp-labels/{product}/pdf', [CLPLabelController::class, 'pdf'])->name('clp-labels.pdf');
+
+    Route::get('/vouchers', [AdminVoucherController::class, 'index'])       ->name('vouchers.index');
+    Route::get('/vouchers/create', [AdminVoucherController::class, 'create'])      ->name('vouchers.create');
+    Route::post('/vouchers', [AdminVoucherController::class, 'store'])       ->name('vouchers.store');
+    Route::get('/vouchers/{voucher}/edit', [AdminVoucherController::class, 'edit'])        ->name('vouchers.edit');
+    Route::put('/vouchers/{voucher}', [AdminVoucherController::class, 'update'])      ->name('vouchers.update');
+    Route::delete('/vouchers/{voucher}', [AdminVoucherController::class, 'destroy'])     ->name('vouchers.destroy');
+    Route::get('/vouchers/{voucher}/usage', [AdminVoucherController::class, 'usage'])       ->name('vouchers.usage');
+    Route::get('/vouchers/generate-code', [AdminVoucherController::class, 'generateCode'])->name('vouchers.generate-code');
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { onMounted, ref, computed, nextTick } from 'vue';
+import axios from 'axios';
 
 import NavBar from '@/components/NavBar.vue';
 
@@ -65,6 +66,7 @@ interface Summary {
     tax: number;
     shipping: number;
     total: number;
+    voucher_discount: number;
 }
 
 interface Address {
@@ -86,6 +88,7 @@ const props = defineProps<{
     cartItems: CartItem[];
     summary: Summary;
     addresses: Address[];
+    appliedVoucher: { code: string; discount: number; type: string; value: number } | null;
 }>();
 
 // --- STATE ---
@@ -100,6 +103,48 @@ const isLoadingInitialData = ref(true);
 const selectedAddressId = ref<number | null>(null);
 // New state: controls visibility of address inputs when NO saved address is selected
 const isManualAddressVisible = ref(false);
+
+const voucherCode = ref('');
+const voucherLoading = ref(false);
+const voucherError = ref<string | null>(null);
+const voucherSuccess = ref<string | null>(null);
+const activeVoucher = ref(props.appliedVoucher ?? null);
+
+// Computed: show discount line in summary when a voucher is active
+const voucherDiscount = computed(() => activeVoucher.value?.discount ?? 0);
+
+async function applyVoucher() {
+    if (!voucherCode.value.trim()) return;
+    voucherLoading.value = true;
+    voucherError.value = null;
+    voucherSuccess.value = null;
+
+    try {
+        const { data } = await axios.post(route('checkout.voucher.apply'), {
+            code: voucherCode.value.trim(),
+        });
+        activeVoucher.value = data;
+        voucherSuccess.value = data.message;
+        voucherCode.value = '';
+
+        // Re-fetch payment intent with new total
+        await initializeStripe();
+
+    } catch (err: any) {
+        voucherError.value = err.response?.data?.error ?? 'Failed to apply voucher.';
+    } finally {
+        voucherLoading.value = false;
+    }
+}
+
+async function removeVoucher() {
+    await axios.post(route('checkout.voucher.remove'));
+    activeVoucher.value = null;
+    voucherSuccess.value = null;
+    voucherError.value = null;
+    // Re-fetch payment intent without discount
+    await initializeStripe();
+}
 
 // Template Ref for direct DOM access (Crucial)
 const paymentContainer = ref<HTMLElement | null>(null);
@@ -721,13 +766,56 @@ onMounted(async () => {
                                             {{ summary.shipping === 0 ? 'FREE' : formatCurrency(summary.shipping) }}
                                         </span>
                                     </div>
+
+                                    <!-- Voucher input -->
+                                    <div class="mt-4 border-t border-copy/10 pt-4">
+                                        <p class="text-sm font-bold text-copy mb-2">Discount Code</p>
+
+                                        <!-- Active voucher -->
+                                        <div v-if="activeVoucher"
+                                            class="flex items-center justify-between rounded-lg border border-green-300 bg-green-50 px-3 py-2 mb-2">
+                                            <div>
+                                                <span class="font-mono font-bold text-green-800 text-sm">{{
+                                                    activeVoucher.code }}</span>
+                                                <p class="text-xs text-green-700">
+                                                    -£{{ activeVoucher.discount.toFixed(2) }} off
+                                                </p>
+                                            </div>
+                                            <button type="button" @click="removeVoucher"
+                                                class="text-xs text-red-600 hover:text-red-800 font-semibold transition">Remove</button>
+                                        </div>
+
+                                        <!-- Input -->
+                                        <div v-else class="flex gap-2">
+                                            <input type="text" v-model="voucherCode" placeholder="Enter code…"
+                                                class="flex-1 rounded-lg border-2 border-copy/30 bg-background p-2 text-copy text-sm font-mono uppercase focus:border-primary focus:ring-primary"
+                                                @keyup.enter="applyVoucher" />
+                                            <button type="button" @click="applyVoucher"
+                                                :disabled="voucherLoading || !voucherCode.trim()"
+                                                class="rounded-lg border-2 border-copy px-3 py-2 text-sm font-bold transition disabled:opacity-50"
+                                                style="background-color: var(--primary); color: var(--primary-content);">
+                                                {{ voucherLoading ? '...' : 'Apply' }}
+                                            </button>
+                                        </div>
+
+                                        <p v-if="voucherSuccess" class="text-xs text-green-700 font-medium mt-1">{{
+                                            voucherSuccess }}</p>
+                                        <p v-if="voucherError" class="text-xs text-error font-medium mt-1">{{
+                                            voucherError }}</p>
+                                    </div>
+
+                                    <div v-if="voucherDiscount > 0"
+                                        class="flex justify-between text-green-700 font-bold">
+                                        <span>Discount ({{ activeVoucher?.code }})</span>
+                                        <span>-£{{ voucherDiscount.toFixed(2) }}</span>
+                                    </div>
                                 </div>
 
                                 <!-- Total -->
                                 <div class="mt-6 pt-4 border-t-2 border-copy/10 flex justify-between items-center">
                                     <span class="text-2xl font-extrabold text-copy">Order Total</span>
                                     <span class="text-4xl font-black text-primary">{{ formatCurrency(summary.total)
-                                        }}</span>
+                                    }}</span>
                                 </div>
 
                                 <!-- Order Review -->

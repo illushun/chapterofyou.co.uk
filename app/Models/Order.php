@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
 use App\Models\OrderItem;
 use App\Models\User;
 
@@ -25,6 +24,7 @@ class Order extends Model
         'email',
         'telephone',
         'cost_total',
+        'voucher_discount',
         'shipping_total',
         'tax_total',
         'grand_total',

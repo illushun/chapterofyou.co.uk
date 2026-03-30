@@ -16,17 +16,21 @@ use Stripe\Exception\ApiErrorException;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Voucher;
+use App\Services\VoucherService;
 
 class CheckoutController extends Controller
 {
     private $cartManager;
+    private $voucherService;
 
     /**
      * Inject the CartManager service.
      */
-    public function __construct(CartManager $cartManager)
+    public function __construct(CartManager $cartManager, VoucherService $voucherService)
     {
         $this->cartManager = $cartManager;
+        $this->voucherService = $voucherService;
         Stripe::setApiKey(env('STRIPE_SECRET'));
     }
 
@@ -38,20 +42,23 @@ class CheckoutController extends Controller
         if (!Auth::check()) {
             return redirect()->route('login');
         }
-        $user = Auth::user();
-        $shipping_addresses = $user->addresses()->where('type', 'shipping')->orderBy('is_default', 'desc')->get();
 
-        // user cart
-        $cart = $this->cartManager->getCurrentCart();
+        $user               = Auth::user();
+        $shipping_addresses = $user->addresses()->where('type', 'shipping')->orderBy('is_default', 'desc')->get();
+        $cart               = $this->cartManager->getCurrentCart();
+
         if ($cart->items->isEmpty()) {
             return redirect()->route('cart.view')->with('error', 'Your cart is empty.');
         }
-        $summary = $this->calculateFinalTotal($cart);
+
+        $summary        = $this->calculateFinalTotal($cart);
+        $appliedVoucher = $this->voucherService->getFromSession();
 
         return Inertia::render('checkout/View', [
-            'summary' => $summary,
-            'cartItems' => $cart->items->load('product'),
-            'addresses' => $shipping_addresses,
+            'summary'        => $summary,
+            'cartItems'      => $cart->items->load('product'),
+            'addresses'      => $shipping_addresses,
+            'appliedVoucher' => $appliedVoucher, // null or ['code', 'discount', 'type', 'value']
         ]);
     }
 
@@ -60,31 +67,27 @@ class CheckoutController extends Controller
      * * @param \App\Models\Cart $cart The current cart object.
      * @return array Calculated totals.
      */
-    public function calculateFinalTotal(Cart $cart)
+    public function calculateFinalTotal(Cart $cart, float $voucherDiscount = 0.0): array
     {
         $subtotal = 0;
         $shippingCost = 0.00;
-
         $has_per_items = false;
         $product_shipping_prices = [];
 
         foreach ($cart->items as $item) {
-            // Ensure product exists before accessing cost
             $productPrice = $item->product->cost ?? 0.00;
             $subtotal += $productPrice * $item->quantity;
 
             if ($item->product->courier->per_item == 'yes' && !$has_per_items) {
                 $has_per_items = true;
             }
-
             $product_shipping_prices[] = [
-                'cost' => $item->product->courier->courier->cost,
+                'cost'     => $item->product->courier->courier->cost,
                 'per_item' => $item->product->courier->per_item,
                 'quantity' => $item->quantity,
             ];
         }
 
-        // get the lowest shipping cost from the non per_item products
         if (!$has_per_items) {
             $lowestShipping = null;
             foreach ($product_shipping_prices as $psp) {
@@ -95,7 +98,6 @@ class CheckoutController extends Controller
             $shippingCost = $lowestShipping ?? 0.00;
         }
 
-        // if there are per_item shipping costs, calculate them
         if ($has_per_items) {
             foreach ($product_shipping_prices as $psp) {
                 if ($psp['per_item'] == 'yes') {
@@ -104,20 +106,22 @@ class CheckoutController extends Controller
             }
         }
 
-        // free shipping over £50
         if ($subtotal >= 50) {
             $shippingCost = 0.00;
         }
 
-        // tax
-        $tax = round($subtotal * 0.20, 2);
+        // Apply voucher discount to subtotal (never below zero)
+        $discountedSubtotal = max(0, $subtotal - $voucherDiscount);
 
-        $finalTotal = round($subtotal + $shippingCost + $tax, 2);
+        $tax        = round($discountedSubtotal * 0.20, 2);
+        $finalTotal = round($discountedSubtotal + $shippingCost + $tax, 2);
+
         return [
-            'subtotal' => round($subtotal, 2),
-            'tax' => $tax,
-            'shipping' => $shippingCost,
-            'total' => $finalTotal,
+            'subtotal'         => round($subtotal, 2),
+            'voucher_discount' => round($voucherDiscount, 2),
+            'tax'              => $tax,
+            'shipping'         => $shippingCost,
+            'total'            => $finalTotal,
         ];
     }
 
@@ -126,35 +130,37 @@ class CheckoutController extends Controller
      */
     public function getPaymentIntent()
     {
-        $cart = $this->cartManager->getCurrentCart();
+        $cart           = $this->cartManager->getCurrentCart();
+        $appliedVoucher = $this->voucherService->getFromSession();
+        $discount       = $appliedVoucher['discount'] ?? 0.0;
 
         if ($cart->items->isEmpty()) {
             return response()->json(['error' => 'Cannot create payment intent for empty cart.'], 400);
         }
 
-        $summary = $this->calculateFinalTotal($cart);
-        // Stripe requires amount in the smallest currency unit (e.g., cents/pence)
-        $finalTotalInPence = (int) ($summary['total'] * 100);
+        $summary            = $this->calculateFinalTotal($cart, $discount);
+        $finalTotalInPence  = (int) ($summary['total'] * 100);
 
         try {
             $paymentIntent = PaymentIntent::create([
-                'amount' => $finalTotalInPence,
-                'currency' => 'gbp',
+                'amount'                    => $finalTotalInPence,
+                'currency'                  => 'gbp',
                 'automatic_payment_methods' => ['enabled' => true],
-                'metadata' => [
-                    'cart_id' => $cart->id,
-                    'user_id' => Auth::id() ?? 'guest',
+                'metadata'                  => [
+                    'cart_id'        => $cart->id,
+                    'user_id'        => Auth::id() ?? 'guest',
+                    'voucher_code'   => $appliedVoucher['code'] ?? null,
                 ],
             ]);
 
             return response()->json([
-                'clientSecret' => $paymentIntent->client_secret,
+                'clientSecret'   => $paymentIntent->client_secret,
                 'paymentIntentId' => $paymentIntent->id,
             ]);
 
         } catch (ApiErrorException $e) {
             Log::error('Stripe PI Creation Error: ' . $e->getMessage());
-            return response()->json(['error' => 'Payment initialization failed. Check Stripe logs.'], 500);
+            return response()->json(['error' => 'Payment initialization failed.'], 500);
         }
     }
 
@@ -163,45 +169,57 @@ class CheckoutController extends Controller
      */
     public function processPayment(Request $request)
     {
-        // 1. Validation for customer and address data
         $request->validate([
             'paymentIntentId' => 'required|string',
-            'paymentType' => 'required|string',
-            'email' => 'required|email',
-            'fullName' => 'required|string',
-            'addressLine1' => 'required|string',
-            'city' => 'required|string',
-            'postcode' => 'required|string',
-            'telephone' => 'nullable|string',
-            'county' => 'nullable|string',
+            'paymentType'     => 'required|string',
+            'email'           => 'required|email',
+            'fullName'        => 'required|string',
+            'addressLine1'    => 'required|string',
+            'city'            => 'required|string',
+            'postcode'        => 'required|string',
+            'telephone'       => 'nullable|string',
+            'county'          => 'nullable|string',
         ]);
 
-        $cart = $this->cartManager->getCurrentCart();
-        $summary = $this->calculateFinalTotal($cart);
+        $cart           = $this->cartManager->getCurrentCart();
+        $appliedVoucher = $this->voucherService->getFromSession();
+        $discount       = $appliedVoucher['discount'] ?? 0.0;
+        $summary        = $this->calculateFinalTotal($cart, $discount);
+        $subtotalBefore = $summary['subtotal'] + $summary['shipping'] + ($summary['subtotal'] * 0.20);
         $finalTotalInPence = (int) ($summary['total'] * 100);
 
-        // 2. Perform Order Creation and Payment Confirmation within a Database Transaction
-        return DB::transaction(function () use ($request, $cart, $summary, $finalTotalInPence) {
+        return DB::transaction(function () use ($request, $cart, $summary, $finalTotalInPence, $appliedVoucher, $discount, $subtotalBefore) {
             try {
-                // Retrieve Payment Intent from Stripe
                 $paymentIntent = PaymentIntent::retrieve($request->paymentIntentId);
 
-                // Ensure Payment Intent is successful
                 if ($paymentIntent->status !== 'succeeded') {
-                    throw new \Exception("Payment failed or is not ready. Status: {$paymentIntent->status}");
+                    throw new \Exception("Payment failed. Status: {$paymentIntent->status}");
                 }
 
-                // Prevent amount tampering
                 if ($paymentIntent->amount !== $finalTotalInPence) {
-                    throw new \Exception('Payment amount mismatch. Potential tampering detected.');
+                    throw new \Exception('Payment amount mismatch detected.');
                 }
 
-                // Create Order & Clear Cart
                 $order = $this->createOrderAndClearCart($cart, $summary, $request->all(), $paymentIntent);
 
-                // Redirect to confirmation page with the new Order ID
-                return redirect()->route('order.confirmation', ['id' => $order->id, 'request' => $request, 'total' => $order->grand_total])
-                                 ->with('success', "Order #{$order->id} successfully placed.");
+                // Record voucher usage
+                if ($appliedVoucher && $discount > 0) {
+                    $voucher = Voucher::where('code', $appliedVoucher['code'])->first();
+                    if ($voucher) {
+                        $this->voucherService->recordUsage(
+                            voucher:      $voucher,
+                            order:        $order,
+                            discountApplied: $discount,
+                            totalBefore:  round($subtotalBefore, 2),
+                            totalAfter:   $summary['total'],
+                            ipAddress:    $request->ip(),
+                        );
+                    }
+                    $this->voucherService->clearFromSession();
+                }
+
+                return redirect()->route('order.confirmation', ['id' => $order->id])
+                    ->with('success', "Order #{$order->id} successfully placed.");
 
             } catch (\Exception $e) {
                 Log::error('[CheckoutController] Order Processing Error: ' . $e->getMessage());
@@ -231,6 +249,7 @@ class CheckoutController extends Controller
 
             'cost_total' => $summary['subtotal'],
             'shipping_total' => $summary['shipping'],
+            'voucher_discount' => $summary['voucher_discount'],
             'tax_total' => $summary['tax'],
             'grand_total' => $summary['total'],
 
