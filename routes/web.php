@@ -72,7 +72,7 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/voucher/remove', [VoucherController::class, 'remove'])->name('voucher.remove');
 });
 
-Route::get('/order/confirmation', [ConfirmationController::class, 'show'])
+Route::get('/order/confirmation/{id}', [ConfirmationController::class, 'show'])
     ->name('order.confirmation')
     ->middleware('auth');
 
