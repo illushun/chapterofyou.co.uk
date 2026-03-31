@@ -78,7 +78,7 @@ const formatCurrency = (amount: number | string): string => {
                         <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-4">
                             <div class="bg-background border-2 border-copy rounded-lg px-6 py-3">
                                 <p class="text-xs text-copy-light uppercase tracking-wider mb-1">Order ID</p>
-                                <p class="text-2xl font-black text-primary">#{{ order.id }}</p>
+                                <p class="text-2xl font-black text-primary">#COY-0000{{ order.id }}</p>
                             </div>
                             <div class="bg-background border-2 border-copy rounded-lg px-6 py-3">
                                 <p class="text-xs text-copy-light uppercase tracking-wider mb-1">Placed</p>
@@ -131,7 +131,7 @@ const formatCurrency = (amount: number | string): string => {
                             <div class="flex justify-between text-copy-light">
                                 <span>Shipping</span>
                                 <span>{{ Number(order.shipping) === 0 ? 'FREE' : formatCurrency(order.shipping)
-                                }}</span>
+                                    }}</span>
                             </div>
                             <div class="flex justify-between text-copy-light">
                                 <span>VAT (20%)</span>
