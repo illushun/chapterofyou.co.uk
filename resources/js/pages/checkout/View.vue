@@ -114,7 +114,7 @@ const activeVoucher = ref(props.appliedVoucher ?? null);
 const voucherDiscount = computed(() => activeVoucher.value?.discount ?? 0);
 
 const computedDiscountedSubtotal = computed(() => {
-    return Math.max(0, summary.subtotal - voucherDiscount.value);
+    return Math.max(0, props.summary.subtotal - voucherDiscount.value);
 });
 
 const computedTax = computed(() => {
@@ -122,7 +122,7 @@ const computedTax = computed(() => {
 });
 
 const computedTotal = computed(() => {
-    return Math.round((computedDiscountedSubtotal.value + computedTax.value + summary.shipping) * 100) / 100;
+    return Math.round((computedDiscountedSubtotal.value + computedTax.value + props.summary.shipping) * 100) / 100;
 });
 
 async function applyVoucher() {
@@ -835,7 +835,7 @@ onMounted(async () => {
                                 <div class="mt-6 pt-4 border-t-2 border-copy/10 flex justify-between items-center">
                                     <span class="text-2xl font-extrabold text-copy">Order Total</span>
                                     <span class="text-4xl font-black text-primary">{{ formatCurrency(computedTotal)
-                                    }}</span>
+                                        }}</span>
                                 </div>
 
                                 <!-- Order Review -->
