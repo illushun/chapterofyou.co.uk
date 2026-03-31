@@ -41,6 +41,20 @@
     }
     .print-btn:hover { background: #1d4ed8; }
 
+    .save-btn {
+        background: #16a34a;
+        color: #fff;
+        border: none;
+        padding: 8px 18px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .save-btn:hover { background: #15803d; }
+    .save-btn:disabled { background: #6b7280; cursor: wait; }
+
     .instructions {
         background: #fef9c3;
         border: 1px solid #ca8a04;
@@ -211,12 +225,14 @@
         .label { transform: none; position: static; }
     }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
 <div class="toolbar">
     <h1>CLP Label — {{ $label->product_name }}</h1>
     <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
+    <button class="save-btn" id="saveBtn" onclick="saveAsImage()">⬇ Save as Image</button>
 </div>
 
 <div class="instructions">
@@ -310,6 +326,49 @@
 </div>
 
 <script>
+    function saveAsImage() {
+        const btn = document.getElementById('saveBtn');
+        btn.disabled = true;
+        btn.textContent = 'Saving...';
+
+        const label = document.querySelector('.label');
+
+        // Temporarily remove the transform so html2canvas captures at true mm size
+        // then scale up for a high-res image
+        const scale = 4;
+        label.style.transform = 'none';
+        label.style.position = 'static';
+
+        html2canvas(label, {
+            scale: scale,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            width: label.offsetWidth,
+            height: label.offsetHeight,
+            logging: false,
+        }).then(function(canvas) {
+            // Restore the preview transform
+            label.style.transform = 'scale(3)';
+            label.style.position = 'absolute';
+
+            // Download as PNG
+            const link = document.createElement('a');
+            link.download = 'CLP-Label-{{ Str::slug($label->product_name) }}.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+
+            btn.disabled = false;
+            btn.textContent = '⬇ Save as Image';
+        }).catch(function(err) {
+            console.error(err);
+            label.style.transform = 'scale(3)';
+            label.style.position = 'absolute';
+            btn.disabled = false;
+            btn.textContent = '⬇ Save as Image';
+        });
+    }
+
     window.addEventListener('load', function () {
         setTimeout(function () { window.print(); }, 800);
     });
