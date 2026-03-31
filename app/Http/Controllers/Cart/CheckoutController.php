@@ -18,6 +18,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Voucher;
 use App\Services\VoucherService;
+use App\Mail\Order\Confirmation;
+use Illuminate\Support\Facades\Mail;
 
 class CheckoutController extends Controller
 {
@@ -220,7 +222,6 @@ class CheckoutController extends Controller
 
                 return redirect()->route('order.confirmation', ['id' => $order->id])
                     ->with('success', "Order #{$order->id} successfully placed.");
-
             } catch (\Exception $e) {
                 Log::error('[CheckoutController] Order Processing Error: ' . $e->getMessage());
                 return redirect()->back()->with('error', 'Payment confirmation failed. Please try again.')->withInput();
@@ -285,6 +286,8 @@ class CheckoutController extends Controller
         });
 
         $order->items()->saveMany($orderItems);
+        Mail::to($order->email)->send(new Confirmation($order));
+
         $this->cartManager->clearCart($cart);
 
         return $order;

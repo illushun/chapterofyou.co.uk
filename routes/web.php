@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminVoucherController;
 use App\Http\Controllers\Admin\Label\OilController;
 use App\Http\Controllers\Cart\VoucherController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Order\ConfirmationController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Cart\CartController;
@@ -71,9 +72,9 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
     Route::post('/voucher/remove', [VoucherController::class, 'remove'])->name('voucher.remove');
 });
 
-Route::get('/order/confirmation', function () {
-    return Inertia::render('order/Confirmation');
-})->name('order.confirmation');
+Route::get('/order/confirmation', [ConfirmationController::class, 'show'])
+    ->name('order.confirmation')
+    ->middleware('auth');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
