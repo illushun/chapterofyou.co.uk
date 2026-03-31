@@ -101,11 +101,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('reviews/{review}', [AdminReviewController::class, 'show'])->name('reviews.show');
     Route::put('reviews/update/{review}', [AdminReviewController::class, 'update'])->name('reviews.update');
 
-
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
-    // Example: update status
-    // Route::put('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.update_status');
+    Route::post('orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.status');
+    Route::post('orders/{order}/dispatch-email', [AdminOrderController::class, 'sendDispatchEmail'])->name('orders.dispatch-email');
+    Route::post('orders/{order}/resend-confirmation', [AdminOrderController::class, 'resendConfirmation'])->name('orders.resend-confirmation');
 
     Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('users/{user}', [AdminUserController::class, 'show'])->name('users.show');
