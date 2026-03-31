@@ -66,7 +66,7 @@ class CLPLabelController extends Controller
     * Route: GET /admin/clp-labels/{product}/pdf
     * Name:  admin.clp-labels.pdf
     */
-    public function pdf(Product $product, CLPCalculator $calculator)
+    public function print(Product $product, CLPCalculator $calculator)
     {
         $saved = $product->clpLabel;
 
@@ -93,7 +93,7 @@ class CLPLabelController extends Controller
             ];
         }
 
-        // Embed pictograms as base64
+        // Embed pictograms as base64 so they survive the browser render
         $pictogramMap = [
             'exclamation'   => 'GHS07',
             'health-hazard' => 'GHS08',
@@ -117,40 +117,12 @@ class CLPLabelController extends Controller
             }
         }
 
-        $html = view('admin.clp-label', [
+        // Return a plain blade view — no PDF library, the browser handles printing
+        return response()->view('admin.clp-label-print', [
             'label'           => $label,
             'hStatements'     => $hStatements,
             'pStatements'     => $pStatements,
             'pictogramImages' => $pictogramImages,
-        ])->render();
-
-        // format: [width, height] in mm — no orientation flag needed.
-        // 76mm wide x 50mm tall is exactly what we want.
-        $mpdf = new \Mpdf\Mpdf([
-            'format'            => [76, 50],
-            'margin_top'        => 0,
-            'margin_bottom'     => 0,
-            'margin_left'       => 0,
-            'margin_right'      => 0,
-            'margin_header'     => 0,
-            'margin_footer'     => 0,
-            'default_font_size' => 5,
-            'default_font'      => 'dejavusans',
-            'tempDir'           => sys_get_temp_dir() . '/mpdf',
         ]);
-
-        $mpdf->SetDisplayMode('real');
-        $mpdf->WriteHTML($html);
-
-        $filename = 'CLP-Label-' . str($product->name)->slug() . '.pdf';
-
-        return response(
-            $mpdf->Output($filename, \Mpdf\Output\Destination::STRING_RETURN),
-            200,
-            [
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-            ]
-        );
     }
 }

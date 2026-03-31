@@ -36,7 +36,7 @@ const pictogramMap: Record<string, string> = {
     corrosion: '/storage/images/Pictograms/GHS05.png',
     oxidizer: '/storage/images/Pictograms/GHS03.png',
     'gas-cylinder': '/storage/images/Pictograms/GHS04.png',
-    explosion: '/storage/images/Pictograms/GHS01.png',
+    explosion: '/images/Pictograms/GHS01.png',
 }
 
 async function onProductChange() {
@@ -137,18 +137,17 @@ const signalWordClass = (word: string | null) => {
                 No hazard statements triggered for this formulation.
             </div>
 
-            <!-- Download PDF -->
+            <!-- Print Label -->
             <div class="pt-4 border-t border-gray-100">
 
-                <a :href="`/admin/clp-labels/${selectedProductId}/pdf`" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg
+                <a :href="`/admin/clp-labels/${selectedProductId}/print`" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg
                 hover:opacity-80 transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round"
                             d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
                     </svg>
-                    Download PDF Label
+                    Print Label
                 </a>
-                <p class="text-xs text-gray-400 mt-1">76mm × 50mm · print at 100% scale</p>
 
             </div>
         </div>
