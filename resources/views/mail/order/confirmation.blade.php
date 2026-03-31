@@ -159,10 +159,38 @@
                 <td>{{ $item['name'] }} &times; {{ $item['quantity'] }}</td>
             </tr>
             @endforeach
+        </tbody>
+    </table>
+
+    {{-- ── Order cost breakdown ── --}}
+    <table class="items-table" style="margin-top: 8px;">
+        <tbody>
             <tr class="divider-row">
-                <td class="total-line">
-                    Total: <strong>£{{ number_format($total, 2) }}</strong>
+                <td style="text-align:left; color:#6b4f4f; font-size:16px;">Subtotal</td>
+                <td style="text-align:right; color:#6b4f4f; font-size:16px;">£{{ number_format($subtotal, 2) }}</td>
+            </tr>
+            @if($voucherDiscount > 0)
+            <tr>
+                <td style="text-align:left; color:#7a9a6a; font-size:16px;">Discount</td>
+                <td style="text-align:right; color:#7a9a6a; font-size:16px;">&minus;£{{ number_format($voucherDiscount, 2) }}</td>
+            </tr>
+            @endif
+            <tr>
+                <td style="text-align:left; color:#6b4f4f; font-size:16px;">VAT (20%)</td>
+                <td style="text-align:right; color:#6b4f4f; font-size:16px;">£{{ number_format($tax, 2) }}</td>
+            </tr>
+            <tr>
+                <td style="text-align:left; color:#6b4f4f; font-size:16px;">Shipping</td>
+                <td style="text-align:right; color:#6b4f4f; font-size:16px;">
+                    @if($shipping == 0) FREE @else £{{ number_format($shipping, 2) }} @endif
                 </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="border-top: 1px solid rgba(201,168,76,0.4); padding-top: 8px;"></td>
+            </tr>
+            <tr>
+                <td class="total-line" style="text-align:left;">Order Total</td>
+                <td class="total-line" style="text-align:right;">£{{ number_format($total, 2) }}</td>
             </tr>
         </tbody>
     </table>
@@ -179,22 +207,15 @@
     {{-- ── Handcrafted message ── --}}
     <p class="body-para">
         Please note all orders are made to order and are carefully handcrafted just for you, making every piece truly personal and unique.
-        <em>Because of this, please allow 2–3 working days <strong>for me to create your order before dispatch.</strong></em>
+        <em>Because of this, please allow 2–3 working days for me to create your order before dispatch.</em>
     </p>
 
     <hr class="gold-divider" />
 
     {{-- ── Appreciation ── --}}
     <p class="body-para">
-        I truly appreciate your patience, and I can't wait for you to experience your <em>signature scent</em>.
+        I truly appreciate your patience, and I can't wait for you to experience <em>your</em> <div class="tagline">signature scent</div>.
     </p>
-
-    @if($voucherDiscount > 0)
-    <hr class="gold-divider" />
-    <div class="order-detail">
-        <strong>Discount applied:</strong> &minus;£{{ number_format($voucherDiscount, 2) }}
-    </div>
-    @endif
 
     <hr class="gold-divider" />
 
@@ -202,7 +223,7 @@
     <div style="margin-top: 8px;">
         <div class="signoff-script" style="font-size:30px; color:#8a6a5a;">Love,</div>
         <div class="signoff-script">Chapter of You 🤍</div>
-        <div class="tagline">Your chapter, your self-care ✨</div>
+        <div class="tagline">Your chapter, your self-care</div>
     </div>
 
     {{-- ── Small print ── --}}
