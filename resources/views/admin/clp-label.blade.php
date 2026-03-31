@@ -12,6 +12,7 @@
     html, body {
         width: 76mm;
         height: 50mm;
+        max-height: 50mm;
         font-family: DejaVu Sans, Arial, sans-serif;
         font-size: 5pt;
         color: #000;
@@ -22,6 +23,7 @@
     .label {
         width: 76mm;
         height: 50mm;
+        max-height: 50mm;
         border: 0.4mm solid #000;
         padding: 1.5mm;
         overflow: hidden;
