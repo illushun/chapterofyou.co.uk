@@ -157,7 +157,7 @@ const donutSegments = computed(() => {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
             <!-- Bar chart -->
-            <div class="log:col-span-2 relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
+            <div class="lg:col-span-2 relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
                 <h3 class="text-base font-bold text-copy mb-4 border-b border-copy-light pb-2">
                     Revenue — Last 14 Days
                 </h3>
