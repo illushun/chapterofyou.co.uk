@@ -93,55 +93,21 @@ class CLPLabelController extends Controller
             ];
         }
 
-        // ── Allergens ──────────────────────────────────────────────────────────────
-        // Pull allergen names from the product's oil components.
-        // oil_components stores ingredients from the SDS Section 3.
-        // We surface anything marked as an allergen or with a CAS that appears
-        // on the EU allergen list (26 fragrance allergens under CLP/cosmetics regs).
-        // For now we read supplementary_info on the saved label if set,
-        // or pull directly from the product materials → oil components.
-        $allergens = [];
+        // ── Allergens ─────────────────────────────────────────────────────────────
+        // Use the calculator's allergen method which:
+        //   1. Iterates every oil in the blend
+        //   2. For each oil component (from Section 3 SDS data), calculates
+        //      final concentration = blend_% × (component_% / 100)
+        //   3. Sums contributions for allergens appearing in multiple oils
+        //   4. Keeps only allergens >= 0.1% threshold
+        //   5. Returns alphabetically sorted, capitalised list
+        $allergens = $calculator->calculateAllergens($product);
 
-        if ($saved && !empty($saved->supplementary_info)) {
-            // If the admin has manually entered allergens in supplementary_info, use those
-            // Expected format: "Contains: Linalool, Linalyl acetate" or just "Linalool, Linalyl acetate"
-            $raw = preg_replace('/^contains:\s*/i', '', $saved->supplementary_info);
-            $allergens = array_map('trim', explode(',', $raw));
-        } else {
-            // Auto-detect from oil components linked to this product via product_material
-            $product->loadMissing(['materials.oil.components']);
-
-            // EU 26 fragrance allergens by name (case-insensitive match)
-            $euAllergenNames = [
-                'linalool', 'linalyl acetate', 'limonene', 'citronellol', 'geraniol',
-                'citral', 'eugenol', 'coumarin', 'isoeugenol', 'benzyl alcohol',
-                'benzyl salicylate', 'benzyl benzoate', 'benzyl cinnamate', 'cinnamal',
-                'cinnamyl alcohol', 'hydroxycitronellal', 'alpha-isomethyl ionone',
-                'amyl cinnamal', 'amylcinnamyl alcohol', 'anise alcohol', 'benzaldehyde',
-                'butylphenyl methylpropional', 'evernia furfuracea', 'evernia prunastri',
-                'farnesol', 'hexyl cinnamal',
-            ];
-
-            $found = [];
-            foreach ($product->materials as $material) {
-                if (!$material->oil) {
-                    continue;
-                }
-                foreach ($material->oil->components as $component) {
-                    $componentName = strtolower(trim($component->name ?? ''));
-                    foreach ($euAllergenNames as $allergen) {
-                        if (str_contains($componentName, $allergen) && !in_array($component->name, $found)) {
-                            $found[] = $component->name;
-                        }
-                    }
-                }
-            }
-            $allergens = $found;
-        }
-
-        // ── Product meta line (size, type) ────────────────────────────────────────
+        // ── Product meta line ────────────────────────────────────────────────────
         $productMeta = null;
-        if ($label->nominal_quantity ?? null) {
+        if ($product->bottle_size_ml ?? null) {
+            $productMeta = 'Reed Diffuser, ' . $product->bottle_size_ml . 'ml';
+        } elseif ($label->nominal_quantity ?? null) {
             $productMeta = $label->nominal_quantity;
         }
 

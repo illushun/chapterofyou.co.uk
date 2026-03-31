@@ -702,4 +702,127 @@ class CLPCalculator
             'p_statement_sources' => $pReasons,
         ];
     }
+
+
+    // -------------------------------------------------------------------------
+    // Calculate allergens present in the final mixture above threshold
+    //
+    // EU Cosmetics Regulation (EC) No 1223/2009 Annex III requires declaration
+    // of 26 fragrance allergens when present above 0.01% in rinse-off or
+    // 0.001% in leave-on products. For CLP labelling on diffusers (leave-on)
+    // the threshold used here is 0.1% (the standard CLP label threshold).
+    //
+    // Algorithm:
+    //   FOR each oil in blend (at blend_pct %):
+    //     FOR each component in oil_components:
+    //       final_pct = blend_pct × (component.concentration_max / 100)
+    //       IF component name matches EU allergen list: accumulate to allergen totals
+    //   AFTER summing all contributions:
+    //     KEEP only allergens where total >= threshold (0.1%)
+    //     SORT alphabetically, capitalise first letter
+    // -------------------------------------------------------------------------
+    public function calculateAllergens(Product $product, float $threshold = 0.1): array
+    {
+        $product->loadMissing([
+            'materials',
+            'materials.oil',
+            'materials.oil.components',
+        ]);
+
+        // EU 26 fragrance allergens — official INCI/IUPAC names as they appear
+        // on Nikura SDS Section 3. Matching is case-insensitive and partial
+        // (e.g. "d-Limonene" matches "limonene").
+        $euAllergens = [
+            'amyl cinnamal',
+            'amylcinnamyl alcohol',
+            'anise alcohol',
+            'benzyl alcohol',
+            'benzyl benzoate',
+            'benzyl cinnamate',
+            'benzyl salicylate',
+            'butylphenyl methylpropional',
+            'cinnamal',
+            'cinnamyl alcohol',
+            'citral',
+            'citronellol',
+            'coumarin',
+            'eugenol',
+            'evernia furfuracea',
+            'evernia prunastri',
+            'farnesol',
+            'geraniol',
+            'hexyl cinnamal',
+            'hydroxycitronellal',
+            'isoeugenol',
+            'alpha-isomethyl ionone',
+            'isomethyl ionone',
+            'lilial',
+            'linalool',
+            'linalyl acetate',
+            'limonene',
+            'd-limonene',
+            'methyl 2-octynoate',
+            'oak moss',
+            'tree moss',
+        ];
+
+        // Accumulate: allergen name (normalised) => total % in final blend
+        $totals = [];
+
+        foreach ($product->materials as $material) {
+            $oil      = $material->oil;
+            $blendPct = (float) $material->percentage; // e.g. 10.0 for 10%
+
+            if (!$oil || $oil->components->isEmpty()) {
+                continue;
+            }
+
+            foreach ($oil->components as $component) {
+                $componentName = strtolower(trim($component->name ?? ''));
+
+                // Check if this component matches any EU allergen
+                $matchedAllergen = null;
+                foreach ($euAllergens as $allergen) {
+                    if (str_contains($componentName, $allergen) || str_contains($allergen, $componentName)) {
+                        $matchedAllergen = $allergen;
+                        break;
+                    }
+                }
+
+                if ($matchedAllergen === null) {
+                    continue;
+                }
+
+                // Use the midpoint of the concentration range from Section 3
+                // e.g. "5-<10%" → use max (10%) as conservative estimate
+                // concentration_max is stored as e.g. 10.0 meaning 10% of the oil
+                $componentPctInOil = (float) ($component->concentration_max ?? $component->concentration_min ?? 0);
+
+                if ($componentPctInOil <= 0) {
+                    continue;
+                }
+
+                // Final concentration in the diffuser blend:
+                // blend_pct% of the oil × component_pct% of the oil ÷ 100
+                $finalPct = $blendPct * ($componentPctInOil / 100.0);
+
+                // Accumulate by normalised allergen name
+                $key = $matchedAllergen;
+                $totals[$key] = ($totals[$key] ?? 0.0) + $finalPct;
+            }
+        }
+
+        // Filter by threshold, sort alphabetically, capitalise
+        $allergens = [];
+        foreach ($totals as $name => $totalPct) {
+            if ($totalPct >= $threshold) {
+                // Capitalise first letter, rest as-is
+                $allergens[] = ucfirst($name);
+            }
+        }
+
+        sort($allergens);
+
+        return $allergens;
+    }
 }
