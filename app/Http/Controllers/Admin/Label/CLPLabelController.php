@@ -71,9 +71,9 @@ class CLPLabelController extends Controller
         $saved = $product->clpLabel;
 
         if ($saved) {
-            $hStatements = $saved->hazard_statements ?? [];
+            $hStatements = $saved->hazard_statements        ?? [];
             $pStatements = $saved->precautionary_statements ?? [];
-            $pictograms  = $saved->required_pictograms ?? [];
+            $pictograms  = $saved->required_pictograms      ?? [];
             $label       = $saved;
         } else {
             $clp = $calculator->calculate($product);
@@ -93,7 +93,59 @@ class CLPLabelController extends Controller
             ];
         }
 
-        // Embed pictograms as base64 so they survive the browser render
+        // ── Allergens ──────────────────────────────────────────────────────────────
+        // Pull allergen names from the product's oil components.
+        // oil_components stores ingredients from the SDS Section 3.
+        // We surface anything marked as an allergen or with a CAS that appears
+        // on the EU allergen list (26 fragrance allergens under CLP/cosmetics regs).
+        // For now we read supplementary_info on the saved label if set,
+        // or pull directly from the product materials → oil components.
+        $allergens = [];
+
+        if ($saved && !empty($saved->supplementary_info)) {
+            // If the admin has manually entered allergens in supplementary_info, use those
+            // Expected format: "Contains: Linalool, Linalyl acetate" or just "Linalool, Linalyl acetate"
+            $raw = preg_replace('/^contains:\s*/i', '', $saved->supplementary_info);
+            $allergens = array_map('trim', explode(',', $raw));
+        } else {
+            // Auto-detect from oil components linked to this product via product_material
+            $product->loadMissing(['materials.oil.components']);
+
+            // EU 26 fragrance allergens by name (case-insensitive match)
+            $euAllergenNames = [
+                'linalool', 'linalyl acetate', 'limonene', 'citronellol', 'geraniol',
+                'citral', 'eugenol', 'coumarin', 'isoeugenol', 'benzyl alcohol',
+                'benzyl salicylate', 'benzyl benzoate', 'benzyl cinnamate', 'cinnamal',
+                'cinnamyl alcohol', 'hydroxycitronellal', 'alpha-isomethyl ionone',
+                'amyl cinnamal', 'amylcinnamyl alcohol', 'anise alcohol', 'benzaldehyde',
+                'butylphenyl methylpropional', 'evernia furfuracea', 'evernia prunastri',
+                'farnesol', 'hexyl cinnamal',
+            ];
+
+            $found = [];
+            foreach ($product->materials as $material) {
+                if (!$material->oil) {
+                    continue;
+                }
+                foreach ($material->oil->components as $component) {
+                    $componentName = strtolower(trim($component->name ?? ''));
+                    foreach ($euAllergenNames as $allergen) {
+                        if (str_contains($componentName, $allergen) && !in_array($component->name, $found)) {
+                            $found[] = $component->name;
+                        }
+                    }
+                }
+            }
+            $allergens = $found;
+        }
+
+        // ── Product meta line (size, type) ────────────────────────────────────────
+        $productMeta = null;
+        if ($label->nominal_quantity ?? null) {
+            $productMeta = $label->nominal_quantity;
+        }
+
+        // ── Pictogram images as base64 ────────────────────────────────────────────
         $pictogramMap = [
             'exclamation'   => 'GHS07',
             'health-hazard' => 'GHS08',
@@ -117,12 +169,14 @@ class CLPLabelController extends Controller
             }
         }
 
-        // Return a plain blade view — no PDF library, the browser handles printing
         return response()->view('admin.clp-label-print', [
             'label'           => $label,
             'hStatements'     => $hStatements,
             'pStatements'     => $pStatements,
             'pictogramImages' => $pictogramImages,
+            'allergens'       => $allergens,
+            'productMeta'     => $productMeta,
+            'supplierName'    => config('clp.supplier_name', ''),
         ]);
     }
 }

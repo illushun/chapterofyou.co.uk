@@ -1,13 +1,10 @@
 <?php
 
-namespace App\Services\CLP;
+namespace App\Services;
 
 use App\Models\Product;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 
-class CLPCalculator
+class ClpCalculatorService
 {
     // -------------------------------------------------------------------------
     // Main entry point
@@ -396,65 +393,50 @@ class CLPCalculator
     }
 
     // -------------------------------------------------------------------------
-    // P statement rules and text
-    // Maps H codes → relevant P codes, and P codes → official text
+    // P statement rules — consumer product minimal set
+    //
+    // Philosophy: reed diffusers are consumer products, not industrial ones.
+    // Workplace statements (P272, P261, P264, P280, P362+P364, P302+P352 etc.)
+    // are not required on consumer labels under CLP Annex IV Article 22(d).
+    // We include only the statements a consumer needs to act on.
+    //
+    // Always included:
+    //   P102 — keep out of reach of children (mandatory on all consumer products)
+    //   P501 — disposal (mandatory when hazardous)
+    //
+    // Conditional on hazard class:
+    //   H317 (skin sens)   → P333+P313 (rash: get medical advice)
+    //   H400/H410/H411     → P273 (avoid release to environment)
+    //   H412               → P273
+    //   H304 (aspiration)  → P301+P310, P331 (if swallowed: call doctor, don't induce vomiting)
+    //   H226 (flammable)   → P210 (keep away from heat/flames)
+    //   H360/H361 (repro)  → P308+P313 (if exposed: get medical advice)
     // -------------------------------------------------------------------------
     protected function pStatementRules(): array
     {
         return [
-            // P statement text
-            'P101'       => 'If medical advice is needed, have product container or label at hand.',
-            'P102'       => 'Keep out of reach of children.',
-            'P210'       => 'Keep away from heat, hot surfaces, sparks, open flames and other ignition sources. No smoking.',
-            'P233'       => 'Keep container tightly closed.',
-            'P260'       => 'Do not breathe vapours.',
-            'P261'       => 'Avoid breathing vapours.',
-            'P264'       => 'Wash hands thoroughly after handling.',
-            'P270'       => 'Do not eat, drink or smoke when using this product.',
-            'P271'       => 'Use only outdoors or in a well-ventilated area.',
-            'P272'       => 'Contaminated work clothing should not be allowed out of the workplace.',
-            'P273'       => 'Avoid release to the environment.',
-            'P280'       => 'Wear protective gloves and eye protection.',
-            'P301+P310'  => 'IF SWALLOWED: Immediately call a POISON CENTRE or doctor.',
-            'P301+P312'  => 'IF SWALLOWED: Call a POISON CENTRE or doctor if you feel unwell.',
-            'P302+P352'  => 'IF ON SKIN: Wash with plenty of water.',
-            'P303+P361+P353' => 'IF ON SKIN (or hair): Take off immediately all contaminated clothing. Rinse skin with water.',
-            'P304+P340'  => 'IF INHALED: Remove person to fresh air and keep comfortable for breathing.',
-            'P305+P351+P338' => 'IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses if present and easy to do. Continue rinsing.',
-            'P308+P313'  => 'IF exposed or concerned: Get medical advice.',
-            'P312'       => 'Call a POISON CENTRE or doctor if you feel unwell.',
-            'P321'       => 'Specific treatment (see supplementary information on this label).',
-            'P330'       => 'Rinse mouth.',
-            'P331'       => 'Do NOT induce vomiting.',
-            'P333+P313'  => 'If skin irritation or rash occurs: Get medical advice.',
-            'P337+P313'  => 'If eye irritation persists: Get medical advice.',
-            'P362+P364'  => 'Take off contaminated clothing and wash it before reuse.',
-            'P370+P378'  => 'In case of fire: Use dry sand, dry chemical or alcohol-resistant foam to extinguish.',
-            'P391'       => 'Collect spillage.',
-            'P403+P235'  => 'Store in a well-ventilated place. Keep cool.',
-            'P405'       => 'Store locked up.',
-            'P501'       => 'Dispose of contents and container in accordance with local regulations.',
+            // Statement text (consumer-appropriate wording)
+            'P102'      => 'Keep out of reach of children.',
+            'P210'      => 'Keep away from heat, sparks and open flames. No smoking.',
+            'P273'      => 'Avoid release to the environment.',
+            'P301+P310' => 'IF SWALLOWED: Immediately call a POISON CENTRE or doctor.',
+            'P308+P313' => 'IF exposed or concerned: Get medical advice.',
+            'P331'      => 'Do NOT induce vomiting.',
+            'P333+P313' => 'If skin irritation or rash occurs: Get medical advice.',
+            'P391'      => 'Collect spillage.',
+            'P501'      => 'Dispose of contents and container in accordance with local regulations.',
 
-            // H code → P code mapping
+            // H code → P code mapping (minimal consumer set only)
             'by_h_code' => [
-                'H224' => ['P210', 'P233', 'P303+P361+P353', 'P370+P378', 'P403+P235', 'P501'],
-                'H225' => ['P210', 'P233', 'P303+P361+P353', 'P370+P378', 'P403+P235', 'P501'],
-                'H226' => ['P210', 'P233', 'P370+P378', 'P403+P235', 'P501'],
-                'H302' => ['P270', 'P301+P312', 'P330', 'P501'],
-                'H304' => ['P301+P310', 'P331', 'P405', 'P501'],
-                'H312' => ['P280', 'P302+P352', 'P312', 'P501'],
-                'H314' => ['P260', 'P280', 'P301+P330+P331', 'P305+P351+P338', 'P308+P313', 'P501'],
-                'H315' => ['P264', 'P302+P352', 'P332+P313', 'P362+P364'],
-                'H317' => ['P261', 'P272', 'P302+P352', 'P333+P313', 'P362+P364', 'P501'],
-                'H318' => ['P280', 'P305+P351+P338', 'P310'],
-                'H319' => ['P264', 'P305+P351+P338', 'P337+P313'],
-                'H332' => ['P261', 'P271', 'P304+P340', 'P312'],
-                'H335' => ['P261', 'P271', 'P304+P340'],
-                'H336' => ['P261', 'P271', 'P304+P340'],
-                'H360' => ['P201', 'P308+P313', 'P405', 'P501'],
-                'H361' => ['P201', 'P308+P313', 'P405', 'P501'],
-                'H372' => ['P260', 'P270', 'P314'],
-                'H373' => ['P260', 'P314'],
+                'H226' => ['P210', 'P501'],
+                'H225' => ['P210', 'P501'],
+                'H224' => ['P210', 'P501'],
+                'H304' => ['P301+P310', 'P331', 'P501'],
+                'H315' => ['P501'],
+                'H317' => ['P333+P313', 'P501'],
+                'H319' => ['P501'],
+                'H360' => ['P308+P313', 'P501'],
+                'H361' => ['P308+P313', 'P501'],
                 'H400' => ['P273', 'P391', 'P501'],
                 'H410' => ['P273', 'P391', 'P501'],
                 'H411' => ['P273', 'P391', 'P501'],
