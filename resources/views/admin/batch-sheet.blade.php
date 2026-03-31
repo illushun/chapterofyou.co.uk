@@ -266,6 +266,8 @@
                     <span class="check-no">✗ No</span>
                 @endif
             </td>
+        </tr>
+        <tr>
             <td class="label">Max % Allowed</td>
             <td>{{ $sheet->max_percent_allowed ?: '—' }}</td>
         </tr>
