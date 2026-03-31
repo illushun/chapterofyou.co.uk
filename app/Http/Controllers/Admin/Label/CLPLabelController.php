@@ -71,7 +71,6 @@ class CLPLabelController extends Controller
         if ($saved) {
             $hStatements = $saved->hazard_statements ?? [];
             $pStatements = $saved->precautionary_statements ?? [];
-            $signalWord  = $saved->signal_word;
             $pictograms  = $saved->required_pictograms ?? [];
             $label       = $saved;
         } else {
@@ -79,7 +78,6 @@ class CLPLabelController extends Controller
 
             $hStatements = $clp['hazard_statements'];
             $pStatements = $clp['precautionary_statements'];
-            $signalWord  = $clp['signal_word'];
             $pictograms  = $clp['required_pictograms'];
 
             $label = (object) [
@@ -87,13 +85,13 @@ class CLPLabelController extends Controller
                 'supplier_name'      => config('clp.supplier_name', ''),
                 'supplier_address'   => config('clp.supplier_address', ''),
                 'supplier_phone'     => config('clp.supplier_phone', ''),
-                'signal_word'        => $signalWord,
+                'signal_word'        => $clp['signal_word'],
                 'nominal_quantity'   => null,
                 'supplementary_info' => null,
             ];
         }
 
-        // Embed pictograms as base64
+        // Embed pictograms as base64 data URIs
         $pictogramMap = [
             'exclamation'   => 'GHS07',
             'health-hazard' => 'GHS08',
@@ -117,29 +115,24 @@ class CLPLabelController extends Controller
             }
         }
 
-        // 76mm × 50mm in points (1mm = 2.8346pt)
-        // Pass as [x1, y1, x2, y2] — x2=width, y2=height in portrait.
-        // We want landscape 76×50, so portrait equivalent is 50×76:
-        //   50mm = 141.73pt (width in portrait = short side)
-        //   76mm = 215.43pt (height in portrait = long side)
-        // DomPDF rotates to landscape, giving us 76mm wide × 50mm tall.
-        $customPaper = [0, 0, 141.73, 215.43];
-
         $pdf = Pdf::loadView('admin.clp-label', [
             'label'           => $label,
             'hStatements'     => $hStatements,
             'pStatements'     => $pStatements,
             'pictogramImages' => $pictogramImages,
-        ])
-        ->setOptions([
-            'dpi'                    => 96,
-            'defaultFont'            => 'DejaVu Sans',
-            'isHtml5ParserEnabled'   => true,
-            'isRemoteEnabled'        => false,
+        ]);
+
+        $pdf->setOptions([
+            'dpi'                     => 96,
+            'defaultFont'             => 'DejaVu Sans',
+            'isHtml5ParserEnabled'    => true,
+            'isRemoteEnabled'         => false,
             'isFontSubsettingEnabled' => true,
-            'enable_css_float'       => true,
-        ])
-        ->setPaper($customPaper, 'landscape');
+        ]);
+
+        // A4 portrait — the label content is a fixed 76x50mm box inside it.
+        // Print at 100% / actual size from browser and cut to label dimensions.
+        $pdf->setPaper('A4', 'portrait');
 
         $filename = 'CLP-Label-' . str($product->name)->slug() . '.pdf';
 

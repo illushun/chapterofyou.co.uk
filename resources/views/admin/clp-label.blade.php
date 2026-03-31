@@ -3,198 +3,225 @@
 <head>
 <meta charset="UTF-8" />
 <style>
+    /*
+     * Strategy: render on A4, but constrain ALL content inside
+     * a fixed-size box. DomPDF will produce one A4 page with the
+     * label sitting in the top-left corner. Print at actual size
+     * and cut to 76x50mm.
+     *
+     * Do NOT set @page or body height — that is what causes the
+     * blank page overflow issue in DomPDF.
+     */
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    @page {
-        size: 76mm 50mm;
-        margin: 0mm;
-    }
-
-    html, body {
-        width: 76mm;
-        height: 50mm;
+    body {
         font-family: DejaVu Sans, Arial, sans-serif;
-        font-size: 5pt;
-        color: #000;
         background: #fff;
-        line-height: 1.3;
-        overflow: hidden;
+        color: #000;
     }
 
+    /* The label is a fixed-size box — nothing can escape it */
     .label {
         width: 76mm;
         height: 50mm;
-        border: 0.4mm solid #000;
+        border: 0.5mm solid #000;
         padding: 1.5mm;
         overflow: hidden;
+        display: block;
     }
 
-    /* Header */
-    .label-header {
+    /* ── Header ── */
+    .hdr {
+        width: 100%;
         border-bottom: 0.3mm solid #000;
-        padding-bottom: 0.8mm;
-        margin-bottom: 0.8mm;
+        margin-bottom: 1mm;
+        padding-bottom: 0.5mm;
     }
-    .header-row { display: table; width: 100%; table-layout: fixed; }
-    .product-name {
-        display: table-cell;
+    .hdr table { width: 100%; border-collapse: collapse; }
+    .hdr-name {
         font-size: 6.5pt;
         font-weight: bold;
         text-transform: uppercase;
         letter-spacing: 0.02em;
     }
-    .quantity {
-        display: table-cell;
+    .hdr-qty {
         font-size: 6pt;
         font-weight: bold;
         text-align: right;
-        width: 15mm;
         white-space: nowrap;
+        width: 14mm;
         vertical-align: bottom;
     }
 
-    /* Body columns */
-    .label-body { display: table; width: 100%; table-layout: fixed; }
+    /* ── Body: two columns via table ── */
+    .body-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
     .col-left {
-        display: table-cell;
         width: 18mm;
         vertical-align: top;
         padding-right: 1mm;
     }
-    .col-right { display: table-cell; vertical-align: top; overflow: hidden; }
+    .col-right {
+        vertical-align: top;
+    }
 
     /* Signal word */
-    .signal-word { font-size: 8pt; font-weight: bold; margin-bottom: 1mm; }
-    .signal-danger  { color: #cc0000; }
-    .signal-warning { color: #b85c00; }
+    .signal {
+        font-size: 8pt;
+        font-weight: bold;
+        margin-bottom: 1mm;
+        display: block;
+    }
+    .danger  { color: #cc0000; }
+    .warning { color: #b85c00; }
 
-    /* Pictogram */
-    .pictogram-wrap { margin-bottom: 1mm; }
-    .pictogram-table { width: 11mm; height: 11mm; border-collapse: collapse; }
-    .pic-corner { background: #fff; }
-    .pic-center { text-align: center; vertical-align: middle; background: #fff; }
-    .pic-center img { width: 6mm; height: 6mm; }
+    /* Pictogram diamond via nested table */
+    .pic-wrap { margin-bottom: 1mm; }
+    .pic-table {
+        width: 12mm;
+        border-collapse: collapse;
+    }
+    .pc { background: #fff; }
+    .pm { text-align: center; vertical-align: middle; background: #fff; }
+    .pm img { width: 6.5mm; height: 6.5mm; display: block; margin: auto; }
 
     /* Statements */
-    .section-label {
+    .sec {
         font-size: 4pt;
         font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
+        letter-spacing: 0.05em;
         color: #444;
-        border-bottom: 0.15mm solid #aaa;
+        border-bottom: 0.15mm solid #999;
         padding-bottom: 0.2mm;
         margin-bottom: 0.4mm;
-        margin-top: 0.8mm;
+        margin-top: 0.7mm;
+        display: block;
     }
-    .section-label.first { margin-top: 0; }
-    .statement-line { font-size: 4.5pt; line-height: 1.3; margin-bottom: 0.15mm; }
-    .stmt-code { font-weight: bold; }
+    .sec-first { margin-top: 0; }
+    .stmt {
+        font-size: 4.5pt;
+        line-height: 1.3;
+        margin-bottom: 0.2mm;
+        display: block;
+    }
+    .code { font-weight: bold; }
 
-    /* Footer */
-    .label-footer {
+    /* ── Footer ── */
+    .footer {
         border-top: 0.3mm solid #000;
-        padding-top: 0.6mm;
-        margin-top: 0.5mm;
-        display: table;
+        margin-top: 0.8mm;
+        padding-top: 0.5mm;
         width: 100%;
-        table-layout: fixed;
     }
-    .footer-supplier {
-        display: table-cell;
+    .footer table { width: 100%; border-collapse: collapse; }
+    .sup-info {
         font-size: 4pt;
-        line-height: 1.35;
+        line-height: 1.4;
         color: #111;
         vertical-align: bottom;
     }
-    .footer-supplier .supplier-name { font-weight: bold; }
-    .footer-supplementary {
-        display: table-cell;
+    .sup-name { font-weight: bold; }
+    .sup-extra {
         font-size: 3.5pt;
-        color: #444;
         font-style: italic;
+        color: #444;
         text-align: right;
         vertical-align: bottom;
-        width: 30mm;
+        width: 28mm;
         line-height: 1.3;
     }
 </style>
 </head>
 <body>
+
 <div class="label">
 
-    <div class="label-header">
-        <div class="header-row">
-            <div class="product-name">{{ $label->product_name }}</div>
+    {{-- Header --}}
+    <div class="hdr">
+        <table><tr>
+            <td class="hdr-name">{{ $label->product_name }}</td>
             @if($label->nominal_quantity)
-                <div class="quantity">{{ $label->nominal_quantity }}</div>
+                <td class="hdr-qty">{{ $label->nominal_quantity }}</td>
             @endif
-        </div>
+        </tr></table>
     </div>
 
-    <div class="label-body">
-        <div class="col-left">
+    {{-- Body --}}
+    <table class="body-table"><tr>
+
+        {{-- Left: signal + pictograms --}}
+        <td class="col-left">
             @if($label->signal_word)
-                <div class="signal-word {{ strtolower($label->signal_word) === 'danger' ? 'signal-danger' : 'signal-warning' }}">
+                <span class="signal {{ strtolower($label->signal_word) === 'danger' ? 'danger' : 'warning' }}">
                     {{ $label->signal_word }}
-                </div>
+                </span>
             @endif
 
-            @foreach($pictogramImages as $picKey => $picBase64)
-                <div class="pictogram-wrap">
-                    <table class="pictogram-table">
+            @foreach($pictogramImages as $picKey => $src)
+                <div class="pic-wrap">
+                    <table class="pic-table">
                         <tr>
-                            <td class="pic-corner" style="width:3.5mm;height:3mm;border-top:0.5mm solid #dd0000;border-left:0.5mm solid #dd0000;"></td>
-                            <td class="pic-corner" style="width:4mm;height:3mm;border-top:0.5mm solid #dd0000;"></td>
-                            <td class="pic-corner" style="width:3.5mm;height:3mm;border-top:0.5mm solid #dd0000;border-right:0.5mm solid #dd0000;"></td>
+                            <td class="pc" style="width:4mm;height:3mm;border-top:0.5mm solid #dd0000;border-left:0.5mm solid #dd0000;"></td>
+                            <td class="pc" style="height:3mm;border-top:0.5mm solid #dd0000;"></td>
+                            <td class="pc" style="width:4mm;height:3mm;border-top:0.5mm solid #dd0000;border-right:0.5mm solid #dd0000;"></td>
                         </tr>
                         <tr>
-                            <td class="pic-corner" style="width:3.5mm;border-left:0.5mm solid #dd0000;"></td>
-                            <td class="pic-center"><img src="{{ $picBase64 }}" /></td>
-                            <td class="pic-corner" style="width:3.5mm;border-right:0.5mm solid #dd0000;"></td>
+                            <td class="pc" style="border-left:0.5mm solid #dd0000;"></td>
+                            <td class="pm"><img src="{{ $src }}" /></td>
+                            <td class="pc" style="border-right:0.5mm solid #dd0000;"></td>
                         </tr>
                         <tr>
-                            <td class="pic-corner" style="width:3.5mm;height:3mm;border-bottom:0.5mm solid #dd0000;border-left:0.5mm solid #dd0000;"></td>
-                            <td class="pic-corner" style="height:3mm;border-bottom:0.5mm solid #dd0000;"></td>
-                            <td class="pic-corner" style="width:3.5mm;height:3mm;border-bottom:0.5mm solid #dd0000;border-right:0.5mm solid #dd0000;"></td>
+                            <td class="pc" style="width:4mm;height:3mm;border-bottom:0.5mm solid #dd0000;border-left:0.5mm solid #dd0000;"></td>
+                            <td class="pc" style="height:3mm;border-bottom:0.5mm solid #dd0000;"></td>
+                            <td class="pc" style="width:4mm;height:3mm;border-bottom:0.5mm solid #dd0000;border-right:0.5mm solid #dd0000;"></td>
                         </tr>
                     </table>
                 </div>
             @endforeach
-        </div>
+        </td>
 
-        <div class="col-right">
+        {{-- Right: H and P statements --}}
+        <td class="col-right">
             @if(!empty($hStatements))
-                <div class="section-label first">Hazard statements</div>
+                <span class="sec sec-first">Hazard statements</span>
                 @foreach($hStatements as $code => $text)
-                    <div class="statement-line"><span class="stmt-code">{{ $code }}</span> {{ $text }}</div>
+                    <span class="stmt"><span class="code">{{ $code }}</span> {{ $text }}</span>
                 @endforeach
             @endif
 
             @if(!empty($pStatements))
-                <div class="section-label">Precautionary statements</div>
+                <span class="sec">Precautionary statements</span>
                 @foreach($pStatements as $code => $text)
-                    <div class="statement-line"><span class="stmt-code">{{ $code }}</span> {{ $text }}</div>
+                    <span class="stmt"><span class="code">{{ $code }}</span> {{ $text }}</span>
                 @endforeach
             @endif
-        </div>
-    </div>
+        </td>
 
-    <div class="label-footer">
-        <div class="footer-supplier">
-            <span class="supplier-name">{{ $label->supplier_name }}</span>
-            @if($label->supplier_address)
-                &nbsp;{{ $label->supplier_address }}
+    </tr></table>
+
+    {{-- Footer --}}
+    <div class="footer">
+        <table><tr>
+            <td class="sup-info">
+                <span class="sup-name">{{ $label->supplier_name }}</span>
+                @if($label->supplier_address)
+                    &nbsp;{{ $label->supplier_address }}
+                @endif
+                @if($label->supplier_phone)
+                    &nbsp;T:{{ $label->supplier_phone }}
+                @endif
+            </td>
+            @if($label->supplementary_info)
+                <td class="sup-extra">{{ $label->supplementary_info }}</td>
             @endif
-            @if($label->supplier_phone)
-                &nbsp;T: {{ $label->supplier_phone }}
-            @endif
-        </div>
-        @if($label->supplementary_info)
-            <div class="footer-supplementary">{{ $label->supplementary_info }}</div>
-        @endif
+        </tr></table>
     </div>
 
 </div>
+
 </body>
 </html>
