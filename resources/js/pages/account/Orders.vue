@@ -1,64 +1,41 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
-
 import NavBar from '@/components/NavBar.vue';
-
-const IconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`;
-const IconBox = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"/><path d="M12 2v4"/><path d="M12 18v-4"/><path d="M3 10h18"/><path d="M3 14h18"/></svg>`;
 
 interface Order {
     id: number;
-    order_number: string;
     date: string;
     total: number;
-    status: 'Delivered' | 'Shipped' | 'Processing' | 'Cancelled';
+    status: string;
 }
 
-const props = defineProps<{
-    orders: Order[];
-}>();
+const props = defineProps<{ orders: Order[] }>();
 
-/**
- * Formats a raw number into a GBP currency string.
- */
-const formatCurrency = (amount: number): string => {
-    return new Intl.NumberFormat('en-GB', {
-        style: 'currency',
-        currency: 'GBP',
-    }).format(amount);
-};
+const hasOrders = computed(() => props.orders && props.orders.length > 0);
 
-/**
- * Determines the Tailwind classes for the status badge based on the status string.
- */
-const getStatusClasses = (status: Order['status']): string => {
-    switch (status) {
-        case 'Delivered':
-            return 'bg-green-100 text-green-700 border-green-400';
-        case 'Shipped':
-            return 'bg-blue-100 text-blue-700 border-blue-400';
-        case 'Processing':
-            return 'bg-yellow-100 text-yellow-700 border-yellow-400';
-        case 'Cancelled':
-            return 'bg-red-100 text-red-700 border-red-400';
-        default:
-            return 'bg-gray-100 text-gray-700 border-gray-400';
+const fmt = (v: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(Number(v) || 0);
+
+const fmtDate = (d: string) =>
+    new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+const statusStyle = (s: string): string => {
+    switch (s.toLowerCase()) {
+        case 'successful':
+        case 'delivered': return 'bg-green-100 text-green-700 border-green-300';
+        case 'shipped': return 'bg-blue-100 text-blue-700 border-blue-300';
+        case 'processing': return 'bg-amber-100 text-amber-700 border-amber-300';
+        case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
+        case 'cancelled':
+        case 'failed': return 'bg-red-100 text-red-700 border-red-300';
+        default: return 'bg-gray-100 text-gray-600 border-gray-300';
     }
 };
 
-/**
- * Mock data for demonstration purposes if the actual props.orders is empty.
- */
-const mockOrders: Order[] = [
-    { id: 101, order_number: 'CPL-78432', date: '2024-07-20', total: 124.99, status: 'Delivered' },
-    { id: 102, order_number: 'CPL-78433', date: '2024-08-01', total: 45.00, status: 'Shipped' },
-    { id: 103, order_number: 'CPL-78434', date: '2024-08-15', total: 205.50, status: 'Processing' },
-    { id: 104, order_number: 'CPL-78435', date: '2024-09-02', total: 60.00, status: 'Delivered' },
-];
-
-const currentOrders = computed(() => props.orders && props.orders.length > 0 ? props.orders : mockOrders);
-const hasOrders = computed(() => currentOrders.value.length > 0);
+const statusLabel = (s: string): string => {
+    if (s.toLowerCase() === 'successful') return 'Confirmed';
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+};
 </script>
 
 <template>
@@ -67,98 +44,88 @@ const hasOrders = computed(() => currentOrders.value.length > 0);
     <Head title="My Orders" />
 
     <section class="py-20">
+        <div class="min-h-[70vh] text-copy p-4 md:p-8 lg:p-12">
+            <div class="max-w-4xl mx-auto">
 
-        <div class="min-h-[70vh] bg-background text-copy p-4 md:p-8 lg:p-12">
-            <div class="max-w-6xl mx-auto">
-
-                <!-- Header and Back Link -->
+                <!-- Header -->
                 <div class="mb-8">
-                    <h1 class="text-5xl font-black text-copy mb-2">My Orders</h1>
                     <a href="/account"
-                        class="inline-flex items-center text-primary-content hover:text-primary transition font-semibold">
-                        <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
+                        class="inline-flex items-center gap-1.5 text-sm text-copy-light hover:text-copy transition mb-4">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m12 19-7-7 7-7M19 12H5" />
+                        </svg>
                         Back to Account
+                    </a>
+                    <h1 class="text-4xl font-black text-copy">My Orders</h1>
+                    <p class="text-copy-light mt-1">
+                        {{ hasOrders ? `${orders.length} order${orders.length !== 1 ? 's' : ''}` : 'No orders yet' }}
+                    </p>
+                </div>
+
+                <!-- Empty state -->
+                <div v-if="!hasOrders" class="rounded-xl border-2 border-dashed border-copy text-center py-20 px-8">
+                    <svg class="w-12 h-12 text-copy-light mx-auto mb-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 3H8l-2 4h12l-2-4z" />
+                    </svg>
+                    <h2 class="text-xl font-bold text-copy mb-2">No orders yet</h2>
+                    <p class="text-copy-light mb-6 max-w-sm mx-auto">
+                        You haven't placed any orders with us yet. Explore our collection and find your signature scent.
+                    </p>
+                    <a href="/products"
+                        class="inline-block rounded-lg border-2 border-copy px-6 py-2.5 font-bold text-sm transition"
+                        style="background-color: var(--primary); color: var(--primary-content);">
+                        Browse Products
                     </a>
                 </div>
 
-                <!-- Main Content Card -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
+                <!-- Orders list -->
+                <div v-else class="space-y-3">
+                    <a v-for="order in orders" :key="order.id" :href="`/account/orders/${order.id}`"
+                        class="block rounded-xl border-2 border-copy bg-[var(--primary-content)] hover:shadow-md transition group">
+                        <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
+                            <div class="flex flex-wrap items-center gap-4">
 
-                        <div v-if="!hasOrders" class="text-center py-12">
-                            <div class="text-copy-light mx-auto mb-4" v-html="IconBox"></div>
-                            <h2 class="text-2xl font-bold text-copy mb-2">No Orders Yet</h2>
-                            <p class="text-copy-lighter mb-6">
-                                It looks like you haven't placed any orders with us. Time to explore our products!
-                            </p>
-                            <a href="/products"
-                                class="inline-block px-6 py-3 border-2 border-copy rounded-lg text-lg font-bold text-secondary-content bg-secondary hover:bg-secondary-dark transition">
-                                Start Shopping
-                            </a>
-                        </div>
-
-                        <div v-else class="space-y-4">
-                            <!-- Table Header (Visible on medium screens and up) -->
-                            <div
-                                class="hidden md:grid md:grid-cols-5 gap-4 py-3 px-4 font-bold text-copy border-b-2 border-copy-light">
-                                <div class="col-span-1">Order #</div>
-                                <div class="col-span-1">Date</div>
-                                <div class="col-span-1 text-center">Total</div>
-                                <div class="col-span-1 text-center">Status</div>
-                                <div class="col-span-1 text-right">Details</div>
-                            </div>
-
-                            <!-- Order List Items -->
-                            <div v-for="order in currentOrders" :key="order.id"
-                                class="relative rounded-lg p-4 transition duration-200 ease-in-out hover:bg-background/50 border-2 border-transparent hover:border-copy-light cursor-pointer">
-
-                                <!-- Responsive Grid for Order Data -->
-                                <div class="grid grid-cols-2 md:grid-cols-5 gap-y-3 md:gap-4 items-center">
-
-                                    <!-- Order # -->
-                                    <div class="col-span-2 md:col-span-1 font-bold text-lg md:text-copy">
-                                        <span class="md:hidden text-copy-lighter text-sm block mb-0.5">Order
-                                            Number</span>
-                                        COY-0000{{ order.id }}
-                                    </div>
-
-                                    <!-- Date -->
-                                    <div class="col-span-1 md:col-span-1 text-copy-lighter text-sm">
-                                        <span class="md:hidden text-copy-lighter text-sm block mb-0.5">Date</span>
-                                        {{ order.date }}
-                                    </div>
-
-                                    <!-- Total -->
-                                    <div
-                                        class="col-span-1 md:col-span-1 text-right md:text-center font-extrabold text-primary-content">
-                                        <span class="md:hidden text-copy-lighter text-sm block mb-0.5">Total</span>
-                                        {{ formatCurrency(order.total) }}
-                                    </div>
-
-                                    <!-- Status Badge -->
-                                    <div class="col-span-2 md:col-span-1 flex justify-start md:justify-center">
-                                        <span :class="getStatusClasses(order.status)"
-                                            class="text-xs font-semibold px-3 py-1 rounded-full border">
-                                            {{ order.status }}
-                                        </span>
-                                    </div>
-
-                                    <!-- Detail Link/Button -->
-                                    <div class="col-span-2 md:col-span-1 text-right mt-3 md:mt-0">
-                                        <a :href="`/account/orders/${order.id}`"
-                                            class="text-primary-content text-sm font-semibold hover:text-primary transition">
-                                            View &rarr;
-                                        </a>
-                                    </div>
+                                <!-- Order number -->
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs text-copy-light uppercase tracking-wider mb-0.5">Order</p>
+                                    <p class="font-black text-copy text-lg leading-tight">
+                                        #COY-{{ String(order.id).padStart(5, '0') }}
+                                    </p>
+                                    <p class="text-xs text-copy-light mt-0.5">{{ fmtDate(order.date) }}</p>
                                 </div>
+
+                                <!-- Status -->
+                                <div class="flex-shrink-0">
+                                    <span
+                                        :class="['text-xs font-semibold px-3 py-1 rounded-full border', statusStyle(order.status)]">
+                                        {{ statusLabel(order.status) }}
+                                    </span>
+                                </div>
+
+                                <!-- Total -->
+                                <div class="text-right flex-shrink-0">
+                                    <p class="text-xs text-copy-light mb-0.5">Total</p>
+                                    <p class="font-black text-xl text-copy">{{ fmt(order.total) }}</p>
+                                </div>
+
+                                <!-- Arrow -->
+                                <div
+                                    class="flex-shrink-0 text-copy-light group-hover:text-copy group-hover:translate-x-1 transition-transform">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                                    </svg>
+                                </div>
+
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
             </div>
         </div>
-
     </section>
-
 </template>

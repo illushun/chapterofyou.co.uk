@@ -3,52 +3,41 @@
 namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
-
+use Inertia\Inertia;
 use App\Models\Order;
 
 class OrderController extends Controller
 {
-    /**
-     * Display a listing of the authenticated user's orders.
-     *
-     * @return \Inertia\Response
-     */
     public function index()
     {
         if (!Auth::check()) {
             return redirect()->route('login');
         }
-        $user = Auth::user();
 
-        $orders = $user->orders()
-            ->orderBy('created_at', 'desc')
+        $orders = Auth::user()
+            ->orders()
+            ->orderByDesc('created_at')
             ->get()
-            ->map(function (Order $order) {
-                return [
-                    'id' => $order->id,
-                    'order_id_display' => $order->payment_intent_id,
-                    'date' => $order->created_at->format('Y-m-d H:i'),
-                    'total' => (float) number_format($order->grand_total, 2, '.', ''),
-                    'status' => ucfirst($order->status),
-                ];
-            });
+            ->map(fn (Order $o) => [
+                'id'     => $o->id,
+                'date'   => $o->created_at->toISOString(),
+                'total'  => (float) $o->grand_total,
+                'status' => $o->status,
+            ]);
 
         return Inertia::render('account/Orders', [
             'orders' => $orders,
         ]);
     }
 
-    /**
-     * Display individual order detail
-     *
-     * @return \Inertia\Response
-     */
     public function show(Order $order)
     {
-        $order->load(['user:id,name,email', 'items.product:id,mpn,name,cost,stock_qty']);
+        if ($order->user_id !== Auth::id()) {
+            abort(403);
+        }
+
+        $order->load(['items.product:id,mpn,name,cost']);
 
         return Inertia::render('account/order/View', [
             'order' => $order,
