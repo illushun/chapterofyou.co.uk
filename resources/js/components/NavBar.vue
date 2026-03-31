@@ -9,6 +9,11 @@
                         <svg clip-rule="evenodd" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"
                             stroke-miterlimit="1.5" style="width:64px" version="1.1" viewBox="0 0 500 500"
                             xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:serif="http://www.serif.com/">
+                            <!-- SVG content unchanged -->
+                        </svg>
+                        <svg clip-rule="evenodd" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"
+                            stroke-miterlimit="1.5" style="width:64px" version="1.1" viewBox="0 0 500 500"
+                            xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:serif="http://www.serif.com/">
                             <g serif:id="Lighter Purple">
 
 
@@ -429,6 +434,7 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <!-- ── Cart icon with badge ── -->
                     <a href="/cart"
                         class="relative p-1 border-2 border-copy bg-foreground rounded-lg transition duration-300 hover:bg-primary-light hover:scale-[1.05]"
                         aria-label="Shopping Cart">
@@ -440,6 +446,14 @@
                                 </path>
                             </svg>
                         </div>
+                        <!-- Cart count badge -->
+                        <span v-if="cartCount > 0" class="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full
+                                   bg-primary border-2 border-copy
+                                   text-primary-content text-[10px] font-black
+                                   flex items-center justify-center leading-none
+                                   transition-all duration-200">
+                            {{ cartCount > 99 ? '99+' : cartCount }}
+                        </span>
                     </a>
 
                     <div class="hidden sm:block">
@@ -543,6 +557,24 @@
                     class="block px-3 py-2 rounded-md text-base font-bold text-copy border-2 border-transparent hover:border-copy hover:bg-secondary-light transition">
                     Contact
                 </a>
+
+                <!-- Mobile cart link with count -->
+                <a href="/cart"
+                    class="flex items-center justify-between px-3 py-2 rounded-md text-base font-bold text-copy border-2 border-transparent hover:border-copy hover:bg-secondary-light transition">
+                    <span>Cart</span>
+                    <span v-if="cartCount > 0" class="min-w-[22px] h-[22px] px-1 rounded-full bg-primary border-2 border-copy
+                                 text-primary-content text-[11px] font-black
+                                 flex items-center justify-center leading-none">
+                        {{ cartCount > 99 ? '99+' : cartCount }}
+                    </span>
+                </a>
+
+                <div v-if="$page.props.auth.user" class="pt-1 border-t border-copy-light/50">
+                    <Link :href="route('logout')" method="post" as="button" type="button"
+                        class="w-full text-left block px-3 py-2 rounded-md text-base font-bold text-error-content border-2 border-transparent hover:border-red-300 hover:bg-red-50/70 transition">
+                    Log Out
+                    </Link>
+                </div>
             </div>
         </div>
     </nav>
@@ -550,12 +582,11 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { login, register } from '@/routes';
-import { usePage, Link, router } from '@inertiajs/vue3';
+import { usePage, Link } from '@inertiajs/vue3';
 
 declare const route: (name: string) => string;
 
-const isOpen = ref(false); // for dropdown
+const isOpen = ref(false);
 const isMobileMenuOpen = ref(false);
 const page = usePage();
 
@@ -564,11 +595,16 @@ const toggleDropdown = () => {
 };
 
 const firstName = computed(() => {
-    const user = page.props.auth.user;
-    if (user && user.name) {
-        const namePart = user.name.split(' ')[0];
-        return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+    const user = (page.props as any).auth?.user;
+    if (user?.name) {
+        const part = user.name.split(' ')[0];
+        return part.charAt(0).toUpperCase() + part.slice(1);
     }
     return 'Account';
+});
+
+// Cart count — shared via Inertia HandleInertiaRequests
+const cartCount = computed<number>(() => {
+    return Number((page.props as any).cartCount) || 0;
 });
 </script>
