@@ -49,6 +49,13 @@ class CLPCalculator
 
         $reasoning = $this->buildReasoning($ingredients, $triggeredClasses, $hStatements, $pStatements, $signalWord);
 
+        // Verify total % accounts for base — warn if it doesn't add up to ~100
+        $uniqueIngredients = [];
+        foreach ($ingredients as $i) {
+            $uniqueIngredients[$i['name']] = $i['percentage'];
+        }
+        $totalPercent = array_sum($uniqueIngredients);
+
         return [
             'signal_word'              => $signalWord,
             'required_pictograms'      => $pictograms,
@@ -57,41 +64,47 @@ class CLPCalculator
             'triggered_classes'        => $triggeredClasses,
             'ingredients_used'         => $ingredients,
             'reasoning'                => $reasoning,
+            'total_percent'            => round($totalPercent, 2),
+            'percent_warning'          => ($totalPercent < 99 || $totalPercent > 101)
+                ? "WARNING: Ingredients total {$totalPercent}% — should be ~100%. Check that the base is included in product_material and percentages are correct."
+                : null,
         ];
     }
 
     // -------------------------------------------------------------------------
     // Step 1 + 2: Build the ingredient hazard list
     //
-    // Returns a flat list of every hazard contribution from every ingredient:
-    //
-    // [
-    //   [ 'name' => 'Lavender EO', 'percentage' => 15.0, 'code' => 'H317', 'is_base' => false ],
-    //   [ 'name' => 'Lavender EO', 'percentage' => 15.0, 'code' => 'H410', 'is_base' => false ],
-    //   [ 'name' => 'Ecobase',     'percentage' => 80.0, 'code' => null,   'is_base' => true  ],
-    // ]
-    //
+    // Returns a flat list of every hazard contribution from every ingredient.
     // One row per hazard code per ingredient. Ingredients with no hazards
     // still appear with code = null (important for % accounting).
+    //
+    // The base (EcoBase/carrier) may not be stored in product_material.
+    // We auto-calculate it as: base% = 100 - sum(oil percentages).
+    // This ensures the total always equals 100% and dilution is correct.
     // -------------------------------------------------------------------------
     protected function buildIngredientList(Product $product): array
     {
         $list = [];
+        $totalOilPercent = 0.0;
 
         foreach ($product->materials as $material) {
             $oil        = $material->oil;
             $percentage = (float) $material->percentage;
-            $isBase     = (bool)  ($material->is_base ?? false);
+            $isBase     = (bool) ($material->is_base ?? false);
             $name       = $oil?->name ?? 'Unknown';
 
             if ($oil === null) {
                 continue;
             }
 
+            // Track total oil % so we can derive base % below
+            if (!$isBase) {
+                $totalOilPercent += $percentage;
+            }
+
             $hazards = $oil->hazards;
 
             if ($hazards->isEmpty()) {
-                // Ingredient has no hazards — record it so % accounting is complete
                 $list[] = [
                     'name'       => $name,
                     'percentage' => $percentage,
@@ -111,6 +124,23 @@ class CLPCalculator
                     'is_base'    => $isBase,
                 ];
             }
+        }
+
+        // If the base is not stored in product_material, auto-add it
+        // as a non-hazardous ingredient so the total accounts for 100%.
+        // The base (EcoBase, Reed Diffuser Base etc.) is non-hazardous
+        // and does not contribute any hazard codes to the mixture.
+        $hasStoredBase = $product->materials->contains(fn ($m) => (bool) ($m->is_base ?? false));
+
+        if (!$hasStoredBase && $totalOilPercent < 100.0) {
+            $basePercent = round(100.0 - $totalOilPercent, 4);
+            $list[] = [
+                'name'       => 'Reed Diffuser Base (auto)',
+                'percentage' => $basePercent,
+                'code'       => null,
+                'signal'     => null,
+                'is_base'    => true,
+            ];
         }
 
         return $list;
@@ -479,6 +509,7 @@ class CLPCalculator
             'P102'      => 'Keep out of reach of children.',
             'P210'      => 'Keep away from heat, sparks and open flames. No smoking.',
             'P273'      => 'Avoid release to the environment.',
+            'P302+P352' => 'IF ON SKIN: Wash with plenty of water.',
             'P333+P313' => 'If skin irritation or rash occurs: Get medical advice.',
             'P501'      => 'Dispose of contents and container in accordance with local regulations.',
         ];
@@ -489,8 +520,8 @@ class CLPCalculator
             'H226' => ['P210', 'P501'],
             'H302' => ['P501'],
             'H304' => ['P501'],
-            'H315' => ['P501'],
-            'H317' => ['P333+P313', 'P501'],
+            'H315' => ['P302+P352', 'P501'],
+            'H317' => ['P302+P352', 'P333+P313', 'P501'],
             'H318' => ['P501'],
             'H319' => ['P501'],
             'H336' => ['P501'],
@@ -638,8 +669,8 @@ class CLPCalculator
         $pReasons = [];
         $byHCode = [
             'H224' => ['P210', 'P501'], 'H225' => ['P210', 'P501'], 'H226' => ['P210', 'P501'],
-            'H302' => ['P501'], 'H304' => ['P501'], 'H315' => ['P501'],
-            'H317' => ['P333+P313', 'P501'], 'H318' => ['P501'], 'H319' => ['P501'],
+            'H302' => ['P501'], 'H304' => ['P501'], 'H315' => ['P302+P352', 'P501'],
+            'H317' => ['P302+P352', 'P333+P313', 'P501'], 'H318' => ['P501'], 'H319' => ['P501'],
             'H336' => ['P501'], 'H360' => ['P501'], 'H361' => ['P501'],
             'H400' => ['P273', 'P501'], 'H410' => ['P273', 'P501'],
             'H411' => ['P273', 'P501'], 'H412' => ['P273', 'P501'],
@@ -665,5 +696,4 @@ class CLPCalculator
             'p_statement_sources' => $pReasons,
         ];
     }
-
 }
