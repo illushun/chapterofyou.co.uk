@@ -2,30 +2,28 @@
 
 namespace App\Services\CLP;
 
-use App\Models\Product;
-use App\Models\SDSDocument;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 use App\Models\Oil;
 use App\Models\OilHazard;
 use App\Models\OilComponent;
+use App\Models\SDSDocument;
+use Illuminate\Support\Facades\Storage;
 use Smalot\PdfParser\Parser;
 
 class SdsParser
 {
     public function parse(SDSDocument $document): bool
     {
-        $parser = new Parser();
-        $pdf    = $parser->parseFile(Storage::disk('local')->path($document->file_path));
-        $text   = $pdf->getText();
+        $filePath = Storage::disk('local')->path($document->file_path);
 
-        // Normalise line endings
-        $text = str_replace(["\r\n", "\r"], "\n", $text);
+        // Section 2 — use smalot/pdfparser (text extraction, regex-based)
+        $parser = new Parser();
+        $pdf    = $parser->parseFile($filePath);
+        $text   = str_replace(["\r\n", "\r"], "\n", $pdf->getText());
 
         $this->parseSection2($document->oil_id, $text);
-        $this->parseSection3($document->oil_id, $text);
+
+        // Section 3 — use pdfplumber via Python subprocess for reliable table extraction
+        $this->parseSection3WithPdfplumber($document->oil_id, $filePath);
 
         $document->update(['parsed' => true]);
 
@@ -33,52 +31,33 @@ class SdsParser
     }
 
     // -------------------------------------------------------------------------
-    // Extract Section 2 block only
+    // Section 2 → oil_hazards  (unchanged — smalot works fine for this)
     // -------------------------------------------------------------------------
     protected function extractSection2(string $text): string
     {
-        // Match from "Section 2" up to "Section 3"
-        // Nikura format uses "Section 2. Hazards identification"
-        if (preg_match(
-            '/Section\s+2[\.\s].*?(?=Section\s+3[\.\s])/si',
-            $text,
-            $match
-        )) {
+        if (preg_match('/Section\s+2[\.\s].*?(?=Section\s+3[\.\s])/si', $text, $match)) {
             return $match[0];
         }
-
         return '';
     }
 
-    // -------------------------------------------------------------------------
-    // Section 2 → oil_hazards
-    // -------------------------------------------------------------------------
     protected function parseSection2(int $oilId, string $text): void
     {
         OilHazard::where('oil_id', $oilId)->delete();
 
         $section2 = $this->extractSection2($text);
-
         if (empty($section2)) {
             logger()->warning("SDS Parser: Could not isolate Section 2 for oil_id={$oilId}");
             return;
         }
 
-        // --- Signal word ---
-        // Nikura format: "Signal word:          Danger"
         $signalWord = null;
         if (preg_match('/Signal\s+word\s*:\s*(Danger|Warning)/i', $section2, $m)) {
             $signalWord = ucfirst(strtolower($m[1]));
         }
 
-        // --- Hazard statements block ---
-        // Nikura format lists them under "Hazard statements:" like:
-        //   H304, May be fatal if swallowed and enters airways.
-        //   H315, Causes skin irritation.
-        // We extract only that block, stopping at the next labelled field.
         $hazardLines = $this->extractHazardStatementsBlock($section2);
 
-        // Parse each line: "H317, May cause an allergic skin reaction."
         foreach ($hazardLines as $line) {
             if (!preg_match('/\b(H\d{3}(?:\+H\d{3})*)\b/', $line, $m)) {
                 continue;
@@ -87,68 +66,34 @@ class SdsParser
             $code = $m[1];
             $meta = $this->hazardCodeMeta($code);
 
-            // Use signal word from Section 2; fall back to meta default
-            $resolvedSignal = $signalWord ?? ($meta['signal_word'] ?? null);
-
             OilHazard::create([
                 'oil_id'       => $oilId,
-                'hazard_class' => $meta['class'] ?? null,
-                'category'     => $meta['category'] ?? null,
+                'hazard_class' => $meta['class']        ?? null,
+                'category'     => $meta['category']     ?? null,
                 'hazard_code'  => $code,
-                'signal_word'  => $resolvedSignal,
-                'pictogram'    => $meta['pictogram'] ?? null,
+                'signal_word'  => $signalWord ?? ($meta['signal_word'] ?? null),
+                'pictogram'    => $meta['pictogram']    ?? null,
             ]);
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Extract H-code lines from Section 2 label elements (2.2)
-    //
-    // Handles two Nikura SDS formats:
-    //
-    // FORMAT A (e.g. Fresh Linen) — codes listed AFTER "Hazard statements:" label:
-    //   Signal word:         Danger
-    //   Hazard statements:   H304, May be fatal...
-    //                        H315, Causes skin irritation.
-    //   Supplemental...
-    //
-    // FORMAT B (e.g. Lemon v2) — codes listed BEFORE "Hazard statements:" label,
-    // immediately after the Signal word line:
-    //   Signal word:         Danger
-    //   H226, Flammable liquid and vapour.
-    //   H304, May be fatal...
-    //   Hazard statements:   (label appears again, codes repeat)
-    //   M factor:            None
-    //   Supplemental...
-    //
-    // Strategy: anchor on "Signal word:" and collect all H-code lines between
-    // there and the first non-hazard field (M factor / Supplemental / Precautionary).
-    // This captures both formats since the label element H-codes always follow
-    // the signal word in both cases, and we deduplicate before returning.
-    // -------------------------------------------------------------------------
     protected function extractHazardStatementsBlock(string $section2): array
     {
-        // Find the section 2.2 label elements block — anchor on Signal word
-        // Capture everything from Signal word up to Precautionary statements / Pictograms
         if (!preg_match(
             '/Signal\s+word\s*:.*?(?=(?:Precautionary\s+statements?|Pictograms?|2\.3|Other\s+hazards?|\Z))/si',
             $section2,
             $labelBlock
         )) {
-            // No Signal word found — fall back to any H-code line in section 2
             preg_match_all('/^\s*(H\d{3}[^\n]*)/m', $section2, $m);
             return array_values(array_unique($m[1] ?? []));
         }
 
         $block = $labelBlock[0];
-
-        // Collect every line containing an H-code
         $lines = array_filter(
             explode("\n", $block),
             fn ($line) => preg_match('/\bH\d{3}\b/', $line)
         );
 
-        // Deduplicate by H-code — keep first occurrence of each code
         $seen   = [];
         $unique = [];
         foreach ($lines as $line) {
@@ -164,116 +109,153 @@ class SdsParser
     }
 
     // -------------------------------------------------------------------------
-    // Extract Section 3 block only
-    // -------------------------------------------------------------------------
-    protected function extractSection3(string $text): string
-    {
-        // Match from "Section 3" up to "Section 4"
-        if (preg_match(
-            '/Section\s+3[\.\s].*?(?=Section\s+4[\.\s])/si',
-            $text,
-            $match
-        )) {
-            return $match[0];
-        }
-
-        return '';
-    }
-
-    // -------------------------------------------------------------------------
     // Section 3 → oil_components
     //
-    // Nikura table columns (from the actual PDF):
-    //   Name | CAS | EC | REACH Registration No. | % | Classification (CLP) | Specific Conc. Limits...
+    // Uses pdfplumber (Python) via a subprocess for reliable table extraction.
+    // pdfplumber correctly separates the "Name" column from the
+    // "Specific Conc. Limits, M-factors and ATEs" column, preventing
+    // ATE values ("mg/kg bw", "M = 1") from bleeding into ingredient names.
     //
-    // Concentration format: "20-<50%" or "10-<20%" or "0.1-<1%" or "1-<5%"
+    // Requires: pip install pdfplumber
     // -------------------------------------------------------------------------
-    protected function parseSection3(int $oilId, string $text): void
+    protected function parseSection3WithPdfplumber(int $oilId, string $pdfPath): void
     {
         OilComponent::where('oil_id', $oilId)->delete();
 
-        $section3 = $this->extractSection3($text);
+        // Inline Python script — extracts all tables, finds the Section 3
+        // ingredient table by looking for a "Name" column header, and
+        // outputs clean JSON rows.
+        $pythonScript = <<<'PYTHON'
+import sys, json, pdfplumber, re
 
-        if (empty($section3)) {
-            logger()->warning("SDS Parser: Could not isolate Section 3 for oil_id={$oilId}");
+pdf_path = sys.argv[1]
+rows = []
+
+with pdfplumber.open(pdf_path) as pdf:
+    for page in pdf.pages:
+        for table in page.extract_tables():
+            if not table or not table[0]:
+                continue
+            headers = [str(h or '').lower().strip() for h in table[0]]
+            # Find the Section 3 ingredient table — must have Name and CAS columns
+            if 'name' not in headers or 'cas' not in headers:
+                continue
+            name_idx = headers.index('name')
+            cas_idx  = headers.index('cas')
+            # Find % column (header contains %)
+            pct_idx = next((i for i, h in enumerate(headers) if '%' in h), None)
+            # Find CLP classification column
+            clp_idx = next((i for i, h in enumerate(headers) if 'classif' in h or 'clp' in h or '1272' in h), None)
+
+            for row in table[1:]:
+                if not row or not row[name_idx]:
+                    continue
+                name = str(row[name_idx] or '').replace('\n', ' ').strip()
+                cas  = str(row[cas_idx]  or '').replace('\n', ' ').strip()
+                pct  = str(row[pct_idx]  or '').replace('\n', ' ').strip() if pct_idx is not None else ''
+                clp  = str(row[clp_idx]  or '').replace('\n', ' ').strip() if clp_idx is not None else ''
+
+                # Skip header-like rows or empty names
+                if not name or name.lower() == 'name':
+                    continue
+                # Skip rows that look like they are ATE/transport table rows
+                if not cas or not re.search(r'\d{2,7}-\d{2}-\d', cas):
+                    continue
+
+                # Parse concentration range — e.g. "50-100%", "10-<20%", "5-<10%", "1-<5%"
+                conc_min, conc_max = None, None
+                pct_clean = pct.replace(' ', '').replace('%','')
+                m = re.match(r'(\d+\.?\d*)\s*-\s*[<>]?\s*(\d+\.?\d*)', pct_clean)
+                if m:
+                    conc_min = float(m.group(1))
+                    conc_max = float(m.group(2))
+
+                # Extract H-codes from CLP classification column
+                h_codes = re.findall(r'H\d{3}', clp)
+                clp_clean = ', '.join(dict.fromkeys(h_codes)) if h_codes else None
+
+                rows.append({
+                    'name': name,
+                    'cas':  cas.split(',')[0].strip(),  # use first CAS if multiple
+                    'concentration_min': conc_min,
+                    'concentration_max': conc_max,
+                    'clp_classification': clp_clean,
+                })
+
+print(json.dumps(rows))
+PYTHON;
+
+        // Write the script to a temp file
+        $scriptPath = sys_get_temp_dir() . '/sds_section3_parser.py';
+        file_put_contents($scriptPath, $pythonScript);
+
+        // Run it
+        $escapedPdf    = escapeshellarg($pdfPath);
+        $escapedScript = escapeshellarg($scriptPath);
+        $output        = shell_exec("python3 {$escapedScript} {$escapedPdf} 2>/dev/null");
+
+        if (empty($output)) {
+            logger()->warning("SDS Parser (pdfplumber): No output for oil_id={$oilId}. Falling back to regex.");
+            $this->parseSection3Fallback($oilId, $pdfPath);
             return;
         }
 
-        // Match ingredient rows. Nikura format has CAS numbers like:
-        //   1222-05-5, 5989-27-5, 475-20-7 (sometimes two CAS on one row)
-        // Concentration like: 20-<50%  10-<20%  5-<10%  1-<5%  0.1-<1%
-        //
-        // Pattern: capture NAME then CAS then optional EC then % range then H-codes
-        $pattern = '/
-            ([A-Za-z][A-Za-z0-9\s\-\(\),\.\/\']+?)   # ingredient name
-            \s+
-            (\d{2,7}-\d{2}-\d                          # primary CAS
-            (?:,\s*\d{2,7}-\d{2}-\d)?)                # optional second CAS
-            \s+
-            (?:\d{3}-\d{3}-\d\s+)?                    # optional EC number
-            (?:[0-9A-Z\/\-]+\s+)?                     # optional REACH reg no
-            (\d+\.?\d*)\s*-\s*[<>]?\s*(\d+\.?\d*)\s*% # concentration range
-            \s+
-            ((?:[A-Z][a-z]+[\.\s]+)*                  # CLP text (class names)
-            (?:H\d{3}[\-,\s]*)+)                      # H-codes in classification
-        /x';
+        $rows = json_decode($output, true);
 
-        preg_match_all($pattern, $section3, $matches, PREG_SET_ORDER);
+        if (json_last_error() !== JSON_ERROR_NONE || empty($rows)) {
+            logger()->warning("SDS Parser (pdfplumber): Invalid JSON for oil_id={$oilId}. Falling back.");
+            $this->parseSection3Fallback($oilId, $pdfPath);
+            return;
+        }
 
-        foreach ($matches as $match) {
-            $name    = trim($match[1]);
-            $cas     = trim(explode(',', $match[2])[0]); // use first CAS if two listed
-            $min     = (float) $match[3];
-            $max     = (float) $match[4];
-            $clpRaw  = $match[5];
-
-            // Extract just the H-codes from the classification column
-            preg_match_all('/H\d{3}/', $clpRaw, $hCodes);
-            $clp = !empty($hCodes[0]) ? implode(', ', array_unique($hCodes[0])) : null;
-
+        foreach ($rows as $row) {
             OilComponent::create([
                 'oil_id'             => $oilId,
-                'name'               => $name,
-                'cas'                => $cas,
-                'concentration_min'  => $min,
-                'concentration_max'  => $max,
-                'clp_classification' => $clp,
+                'name'               => $row['name'],
+                'cas'                => $row['cas'],
+                'concentration_min'  => $row['concentration_min'],
+                'concentration_max'  => $row['concentration_max'],
+                'clp_classification' => $row['clp_classification'],
             ]);
         }
 
-        // If the regex approach got nothing (PDF text extraction can be messy),
-        // fall back to a simpler CAS + percentage scan within Section 3 only
-        if (OilComponent::where('oil_id', $oilId)->count() === 0) {
-            $this->parseSection3Fallback($oilId, $section3);
-        }
+        logger()->info("SDS Parser: Section 3 parsed " . count($rows) . " components for oil_id={$oilId}");
     }
 
     // -------------------------------------------------------------------------
-    // Fallback Section 3 parser — less structured but more tolerant
+    // Fallback Section 3 parser — used if pdfplumber/Python is unavailable
+    // Uses regex on raw PDF text — less accurate but tolerant
     // -------------------------------------------------------------------------
-    protected function parseSection3Fallback(int $oilId, string $section3): void
+    protected function parseSection3Fallback(int $oilId, string $pdfPath): void
     {
-        // Find all CAS numbers in the section
+        $parser   = new Parser();
+        $pdf      = $parser->parseFile($pdfPath);
+        $text     = str_replace(["\r\n", "\r"], "\n", $pdf->getText());
+
+        // Extract section 3 block
+        if (!preg_match('/Section\s+3[\.\s].*?(?=Section\s+4[\.\s])/si', $text, $match)) {
+            return;
+        }
+        $section3 = $match[0];
+
         preg_match_all('/(\d{2,7}-\d{2}-\d)/', $section3, $casMatches, PREG_OFFSET_CAPTURE);
 
         foreach ($casMatches[1] as $casMatch) {
             $cas    = $casMatch[0];
             $offset = $casMatch[1];
-
-            // Grab the surrounding 300 chars to find % and H-codes
             $context = substr($section3, max(0, $offset - 100), 400);
 
-            // Find concentration range near this CAS
             if (!preg_match('/(\d+\.?\d*)\s*-\s*[<>]?\s*(\d+\.?\d*)\s*%/', $context, $concMatch)) {
                 continue;
             }
 
-            // Try to find the ingredient name (text before the CAS number)
             $before = substr($section3, max(0, $offset - 80), 80);
             preg_match('/([A-Za-z][A-Za-z0-9\s\-\(\)]+?)\s*$/', trim($before), $nameMatch);
             $name = isset($nameMatch[1]) ? trim($nameMatch[1]) : 'Unknown';
 
-            // H-codes in the context
+            // Clean up name — strip ATE column bleed
+            $name = $this->cleanIngredientName($name);
+
             preg_match_all('/H\d{3}/', $context, $hCodes);
             $clp = !empty($hCodes[0]) ? implode(', ', array_unique($hCodes[0])) : null;
 
@@ -289,48 +271,65 @@ class SdsParser
     }
 
     // -------------------------------------------------------------------------
-    // Hazard code metadata
-    // Maps H-code → class, category, default signal word, pictogram
-    // Extend this as you encounter new codes in your SDS sheets
+    // Clean ingredient name — strip ATE column bleed artefacts
+    //
+    // When the regex fallback is used, the "Specific Conc. Limits, M-factors
+    // and ATEs" column from the previous row can bleed into the ingredient name.
+    // This strips known patterns that should never appear in a chemical name.
+    // -------------------------------------------------------------------------
+    protected function cleanIngredientName(string $name): string
+    {
+        // Remove ATE suffixes/prefixes that bleed from the last column
+        $stripPatterns = [
+            '/\b(mg\/kg\s*bw|kg\s*bw|bw)\b/i',                    // "mg/kg bw", "kg bw", "bw"
+            '/\bM\s*=\s*\d+\b/i',                                   // "M = 1"
+            '/\b(dermal|oral|inhalation)\s*:\s*ATE\s*=.*$/i',      // "dermal: ATE = ..."
+            '/\bATE\s*=\s*[\d\.]+/i',                               // "ATE = 1610"
+            '/\bSpecific\s+Conc\..*$/i',                             // column header bleed
+            '/\bM-factors\s+and\s+ATEs\b/i',                        // column header bleed
+            '/\bland\s+ATEs\b/i',                                    // partial header bleed
+        ];
+
+        foreach ($stripPatterns as $pattern) {
+            $name = preg_replace($pattern, '', $name);
+        }
+
+        return trim($name);
+    }
+
+    // -------------------------------------------------------------------------
+    // Hazard code metadata (unchanged)
     // -------------------------------------------------------------------------
     protected function hazardCodeMeta(string $code): array
     {
         $map = [
-            // Skin/Eye
             'H315' => ['class' => 'Skin Irritation',           'category' => '2',  'signal_word' => 'Warning', 'pictogram' => 'exclamation'],
             'H317' => ['class' => 'Skin Sensitisation',        'category' => '1B', 'signal_word' => 'Warning', 'pictogram' => 'exclamation'],
             'H319' => ['class' => 'Eye Irritation',            'category' => '2',  'signal_word' => 'Warning', 'pictogram' => 'exclamation'],
             'H318' => ['class' => 'Eye Damage',                'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'corrosion'],
             'H314' => ['class' => 'Skin Corrosion',            'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'corrosion'],
-            // Aspiration / Acute Tox
             'H304' => ['class' => 'Aspiration Hazard',         'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'health-hazard'],
             'H302' => ['class' => 'Acute Toxicity Oral',       'category' => '4',  'signal_word' => 'Warning', 'pictogram' => 'exclamation'],
             'H312' => ['class' => 'Acute Toxicity Dermal',     'category' => '4',  'signal_word' => 'Warning', 'pictogram' => 'exclamation'],
             'H332' => ['class' => 'Acute Toxicity Inhalation', 'category' => '4',  'signal_word' => 'Warning', 'pictogram' => 'exclamation'],
-            // Flammable
             'H226' => ['class' => 'Flammable Liquid',          'category' => '3',  'signal_word' => 'Warning', 'pictogram' => 'flame'],
             'H225' => ['class' => 'Flammable Liquid',          'category' => '2',  'signal_word' => 'Danger',  'pictogram' => 'flame'],
             'H224' => ['class' => 'Flammable Liquid',          'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'flame'],
             'H227' => ['class' => 'Combustible Liquid',        'category' => '4',  'signal_word' => 'Warning', 'pictogram' => 'flame'],
-            // Skin/Eye (additional)
             'H316' => ['class' => 'Skin Irritation',           'category' => '3',  'signal_word' => null,      'pictogram' => null],
-            // Aquatic Acute
             'H400' => ['class' => 'Aquatic Acute',             'category' => '1',  'signal_word' => 'Warning', 'pictogram' => 'environment'],
             'H401' => ['class' => 'Aquatic Acute',             'category' => '2',  'signal_word' => null,      'pictogram' => null],
             'H402' => ['class' => 'Aquatic Acute',             'category' => '3',  'signal_word' => null,      'pictogram' => null],
-            // Aquatic Chronic
             'H410' => ['class' => 'Aquatic Chronic',           'category' => '1',  'signal_word' => 'Warning', 'pictogram' => 'environment'],
             'H411' => ['class' => 'Aquatic Chronic',           'category' => '2',  'signal_word' => null,      'pictogram' => 'environment'],
             'H412' => ['class' => 'Aquatic Chronic',           'category' => '3',  'signal_word' => null,      'pictogram' => null],
             'H413' => ['class' => 'Aquatic Chronic',           'category' => '4',  'signal_word' => null,      'pictogram' => null],
-            // Acute Toxicity (additional)
             'H300' => ['class' => 'Acute Toxicity Oral',       'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
             'H301' => ['class' => 'Acute Toxicity Oral',       'category' => '3',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
             'H310' => ['class' => 'Acute Toxicity Dermal',     'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
             'H311' => ['class' => 'Acute Toxicity Dermal',     'category' => '3',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
             'H330' => ['class' => 'Acute Toxicity Inhalation', 'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
             'H331' => ['class' => 'Acute Toxicity Inhalation', 'category' => '3',  'signal_word' => 'Danger',  'pictogram' => 'skull'],
-            // Reproductive / STOT
             'H361' => ['class' => 'Reproductive Toxicity',     'category' => '2',  'signal_word' => 'Warning', 'pictogram' => 'health-hazard'],
             'H360' => ['class' => 'Reproductive Toxicity',     'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'health-hazard'],
             'H362' => ['class' => 'Reproductive Toxicity',     'category' => null, 'signal_word' => null,      'pictogram' => null],
@@ -340,16 +339,13 @@ class SdsParser
             'H370' => ['class' => 'STOT Single Exposure',      'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'health-hazard'],
             'H373' => ['class' => 'STOT Repeated Exposure',    'category' => '2',  'signal_word' => 'Warning', 'pictogram' => 'health-hazard'],
             'H372' => ['class' => 'STOT Repeated Exposure',    'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'health-hazard'],
-            // Gasses / Pressure
             'H280' => ['class' => 'Gases Under Pressure',      'category' => null, 'signal_word' => 'Warning', 'pictogram' => 'gas-cylinder'],
             'H281' => ['class' => 'Gases Under Pressure',      'category' => null, 'signal_word' => 'Warning', 'pictogram' => 'gas-cylinder'],
-            // Explosive
             'H200' => ['class' => 'Unstable Explosive',        'category' => null, 'signal_word' => 'Danger',  'pictogram' => 'explosion'],
             'H201' => ['class' => 'Explosive',                 'category' => '1.1','signal_word' => 'Danger',  'pictogram' => 'explosion'],
             'H202' => ['class' => 'Explosive',                 'category' => '1.2','signal_word' => 'Danger',  'pictogram' => 'explosion'],
             'H203' => ['class' => 'Explosive',                 'category' => '1.3','signal_word' => 'Danger',  'pictogram' => 'explosion'],
             'H204' => ['class' => 'Explosive',                 'category' => '1.4','signal_word' => 'Warning', 'pictogram' => 'explosion'],
-            // Oxidising
             'H270' => ['class' => 'Oxidising Gas',             'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'oxidizer'],
             'H271' => ['class' => 'Oxidising Liquid',          'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'oxidizer'],
             'H272' => ['class' => 'Oxidising Liquid',          'category' => '3',  'signal_word' => 'Warning', 'pictogram' => 'oxidizer'],
