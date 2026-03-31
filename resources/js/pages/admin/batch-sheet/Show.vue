@@ -45,7 +45,7 @@ defineProps<{ sheet: Sheet }>();
             </div>
             <div class="flex gap-2">
                 <a :href="route('admin.batch-sheets.pdf', { batch_sheet: sheet.id })" target="_blank"
-                    class="rounded-lg border-2 border-copy px-4 py-2 text-sm font-bold transition hover:bg-secondary-light">⬇
+                    class="rounded-lg border-2 border-copy px-4 py-2 text-sm font-bold transition hover:bg-secondary-light">
                     Download PDF</a>
                 <a :href="route('admin.batch-sheets.edit', { batch_sheet: sheet.id })"
                     class="rounded-lg border-2 border-copy px-4 py-2 text-sm font-bold transition"
@@ -131,7 +131,7 @@ defineProps<{ sheet: Sheet }>();
                                     <td class="px-4 py-2 font-medium text-copy">{{ row.ingredient || '—' }}</td>
                                     <td class="px-4 py-2 text-copy-light">{{ row.supplier || '—' }}</td>
                                     <td class="px-4 py-2 font-mono text-xs text-copy-light">{{ row.lot_batch_no || '—'
-                                        }}</td>
+                                    }}</td>
                                     <td class="px-4 py-2 text-center text-copy">{{ row.percent_used || '—' }}</td>
                                     <td class="px-4 py-2 text-center text-copy">{{ row.weight_g || '—' }}</td>
                                     <td class="px-4 py-2 text-copy-light">{{ row.sds_ifra_ref || '—' }}</td>
