@@ -131,7 +131,6 @@
     }
     .allergens-label {
         font-weight: bold;
-        text-transform: uppercase;
         font-size: 6pt;
         letter-spacing: 0.04em;
     }
@@ -186,7 +185,7 @@
     }
     .sup-left {
         float: left;
-        font-size: 5pt;
+        font-size: 6pt;
         line-height: 1.4;
         color: #111;
         max-width: 50mm;
