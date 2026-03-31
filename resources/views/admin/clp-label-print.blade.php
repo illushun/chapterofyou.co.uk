@@ -78,14 +78,9 @@
         overflow: hidden;
     }
 
-    /* ═══════════════════════════════════════════
-       THE LABEL — all sizes in mm
-       76mm wide × 50mm tall
-    ═══════════════════════════════════════════ */
     .label {
         width: 76mm;
         height: 50mm;
-       /*border: 0.5mm solid #000;*/
         padding: 1.5mm;
         overflow: hidden;
         font-family: Arial, Helvetica, sans-serif;
@@ -129,7 +124,6 @@
     .allergens {
         font-size: 6.5pt;
         color: #111;
-        /*border-bottom: 0.2mm solid #ccc;*/
         padding-bottom: 0.4mm;
         margin-bottom: 0.5mm;
         text-align: center;
@@ -142,20 +136,16 @@
         letter-spacing: 0.04em;
     }
 
-    /* ── 3. Pictograms + Signal Word (centred row) ── */
+    /* ── 3. Pictograms + Signal Word ── */
     .hazard-row {
         text-align: center;
         margin-bottom: 0.5mm;
-        /*border-bottom: 0.2mm solid #ccc;*/
         padding-bottom: 0.5mm;
     }
-
-    /* Signal word sits to the right of pictograms inline */
     .hazard-inner {
         display: inline-block;
         vertical-align: middle;
     }
-
     .signal {
         font-size: 7pt;
         font-weight: bold;
@@ -165,9 +155,7 @@
     .danger  { color: #cc0000; }
     .warning { color: #b85c00; }
 
-    /* Pictograms in a horizontal row */
     .pics-row { text-align: center; }
-
     .pic-wrap {
         display: inline-block;
         margin: 0 0.4mm;
@@ -184,7 +172,7 @@
         line-height: 1.2;
         color: #000;
         text-align: justify;
-        margin-bottom: 5mm; /* leave room for footer */
+        margin-bottom: 5mm;
     }
 
     /* ── 5. Supplier footer — pinned to bottom ── */
@@ -193,7 +181,6 @@
         bottom: 1.5mm;
         left: 1.5mm;
         right: 1.5mm;
-        /*border-top: 0.3mm solid #000;*/
         padding-top: 0.4mm;
         overflow: hidden;
     }
@@ -260,15 +247,11 @@
 
     {{-- 3. Pictograms + Signal Word — centred --}}
     <div class="hazard-row">
-
-        {{-- Signal word above pictograms --}}
         @if($label->signal_word)
             <span class="signal {{ strtolower($label->signal_word) === 'danger' ? 'danger' : 'warning' }}">
                 {{ $label->signal_word }}
             </span>
         @endif
-
-        {{-- Pictograms in a single horizontal row --}}
         <div class="pics-row">
             @foreach($pictogramImages as $picKey => $src)
                 <div class="pic-wrap">
@@ -292,10 +275,9 @@
                 </div>
             @endforeach
         </div>
-
     </div>
 
-    {{-- 4. H & P Statements — single paragraph, no codes, no headers --}}
+    {{-- 4. H & P Statements --}}
     <div class="statements">
         @php
             $allStatements = array_merge(
@@ -333,39 +315,54 @@
 
         const label = document.querySelector('.label');
 
-        // Temporarily remove the transform so html2canvas captures at true mm size
-        // then scale up for a high-res image
-        const scale = 4;
+        // 76mm × 50mm at 96dpi — explicit pixel dimensions so the
+        // position:absolute footer is included in the captured area
+        const MM_TO_PX = 96 / 25.4;
+        const labelW = Math.round(76 * MM_TO_PX);  // ≈ 287px
+        const labelH = Math.round(50 * MM_TO_PX);  // ≈ 189px
+
+        // Remove transform, set fixed pixel size so html2canvas
+        // sees the full label including the pinned footer
         label.style.transform = 'none';
-        label.style.position = 'static';
+        label.style.position  = 'absolute';
+        label.style.top       = '0';
+        label.style.left      = '0';
+        label.style.width     = labelW + 'px';
+        label.style.height    = labelH + 'px';
+        label.style.overflow  = 'hidden';
 
         html2canvas(label, {
-            scale: scale,
+            scale: 4,           // 4× → ~1148×756px high-res output
             useCORS: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
-            width: label.offsetWidth,
-            height: label.offsetHeight,
+            width: labelW,
+            height: labelH,
+            windowWidth: labelW,
+            windowHeight: labelH,
             logging: false,
         }).then(function(canvas) {
-            // Restore the preview transform
+            // Restore original styles
             label.style.transform = 'scale(3)';
-            label.style.position = 'absolute';
+            label.style.position  = 'absolute';
+            label.style.width     = '';
+            label.style.height    = '';
 
-            // Download as PNG
             const link = document.createElement('a');
             link.download = 'CLP-Label-{{ Str::slug($label->product_name) }}.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
 
             btn.disabled = false;
-            btn.textContent = '⬇ Save as Image';
+            btn.textContent = 'Save as Image';
         }).catch(function(err) {
             console.error(err);
             label.style.transform = 'scale(3)';
-            label.style.position = 'absolute';
+            label.style.position  = 'absolute';
+            label.style.width     = '';
+            label.style.height    = '';
             btn.disabled = false;
-            btn.textContent = '⬇ Save as Image';
+            btn.textContent = 'Save as Image';
         });
     }
 
