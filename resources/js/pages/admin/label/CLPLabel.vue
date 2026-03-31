@@ -15,12 +15,40 @@ interface ClpResult {
     required_pictograms: string[]
     hazard_statements: Record<string, string>
     precautionary_statements: Record<string, string>
+    reasoning?: ClpReasoning
+}
+
+interface ClpReasoning {
+    ingredients: {
+        name: string
+        percentage: number
+        is_base: boolean
+        hazards: string[]
+    }[]
+    triggered_classes: {
+        class: string
+        h_code: string
+        h_text: string
+        category: string | null
+        signal: string | null
+        pictogram: string | null
+        threshold: string
+        sum: number | null
+        contributors: string[]
+    }[]
+    signal_word: string
+    p_statement_sources: {
+        code: string
+        text: string
+        triggered_by: string
+    }[]
 }
 
 const props = defineProps<{
     products: Product[];
 }>();
 
+const showReasoning = ref(false);
 const selectedProductId = ref<number | null>(null);
 const loading = ref(false);
 const clpResult = ref<ClpResult | null>(null);
@@ -59,6 +87,11 @@ const signalWordClass = (word: string | null) => {
     if (word === 'Warning') return 'text-amber-600 border-amber-400'
     return 'text-gray-500 border-gray-300'
 }
+
+watch(selectedProductId, () => {
+    clpResult.value = null
+    showReasoning.value = false
+})
 </script>
 
 <template>
@@ -135,6 +168,139 @@ const signalWordClass = (word: string | null) => {
             <div v-if="!clpResult.signal_word && !Object.keys(clpResult.hazard_statements).length"
                 class="text-sm text-gray-500 italic">
                 No hazard statements triggered for this formulation.
+            </div>
+
+            <!-- Reasoning Panel -->
+            <div v-if="clpResult?.reasoning" class="mt-6 rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-hidden">
+
+                    <!-- Header with toggle -->
+                    <button type="button" @click="showReasoning = !showReasoning"
+                        class="w-full flex items-center justify-between px-5 py-4 border-b border-copy-light hover:bg-secondary-light transition text-left">
+                        <div>
+                            <h3 class="text-base font-bold text-copy">How was this classification reached?</h3>
+                            <p class="text-xs text-copy-light mt-0.5">CLP mixture calculation audit trail</p>
+                        </div>
+                        <span class="text-copy-light text-lg">{{ showReasoning ? '▲' : '▼' }}</span>
+                    </button>
+
+                    <div v-if="showReasoning" class="p-5 space-y-6 text-sm">
+
+                        <!-- 1. Ingredients -->
+                        <div>
+                            <h4
+                                class="font-bold text-copy mb-2 text-xs uppercase tracking-wider border-b border-copy-light pb-1">
+                                Ingredients in this product
+                            </h4>
+                            <table class="w-full text-xs border-collapse">
+                                <thead>
+                                    <tr class="text-left text-copy-light border-b border-copy-light">
+                                        <th class="py-1 pr-3 font-medium">Ingredient</th>
+                                        <th class="py-1 pr-3 font-medium text-right">% in blend</th>
+                                        <th class="py-1 font-medium">Hazard codes</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="ing in clpResult.reasoning.ingredients" :key="ing.name"
+                                        class="border-b border-copy-light last:border-b-0">
+                                        <td class="py-1.5 pr-3 font-medium text-copy">
+                                            {{ ing.name }}
+                                            <span v-if="ing.is_base" class="ml-1 text-xs text-copy-light">(base)</span>
+                                        </td>
+                                        <td class="py-1.5 pr-3 text-right text-copy-light">{{ ing.percentage }}%</td>
+                                        <td class="py-1.5">
+                                            <span v-if="ing.hazards.length === 0"
+                                                class="text-copy-light italic">None</span>
+                                            <span v-for="code in ing.hazards" :key="code"
+                                                class="inline-block mr-1 px-1.5 py-0.5 rounded text-xs font-mono font-bold bg-amber-100 text-amber-800">{{
+                                                    code }}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- 2. Triggered hazard classes -->
+                        <div>
+                            <h4
+                                class="font-bold text-copy mb-2 text-xs uppercase tracking-wider border-b border-copy-light pb-1">
+                                Hazard classes triggered
+                            </h4>
+                            <div v-if="clpResult.reasoning.triggered_classes.length === 0"
+                                class="text-copy-light italic text-xs">
+                                No hazard classes triggered — product is not classified as hazardous.
+                            </div>
+                            <div v-for="cls in clpResult.reasoning.triggered_classes" :key="cls.h_code"
+                                class="mb-3 p-3 rounded-lg border border-copy-light bg-background">
+                                <div class="flex items-center justify-between mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-mono font-bold text-sm text-copy">{{ cls.h_code }}</span>
+                                        <span class="text-copy text-xs">{{ cls.h_text }}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span v-if="cls.signal" class="text-xs font-bold px-2 py-0.5 rounded-full"
+                                            :class="cls.signal === 'Danger'
+                                                ? 'bg-red-100 text-red-700'
+                                                : 'bg-amber-100 text-amber-700'">{{ cls.signal }}</span>
+                                        <span class="text-xs text-copy-light">Cat {{ cls.category }}</span>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-copy-light space-y-0.5">
+                                    <div><span class="font-medium">Threshold:</span> {{ cls.threshold }}</div>
+                                    <div v-if="cls.sum !== null">
+                                        <span class="font-medium">Calculated sum:</span>
+                                        <span class="font-mono">{{ cls.sum }}%</span>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium">Contributing ingredients:</span>
+                                        {{ cls.contributors.join(', ') || 'n/a' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Signal word -->
+                        <div>
+                            <h4
+                                class="font-bold text-copy mb-2 text-xs uppercase tracking-wider border-b border-copy-light pb-1">
+                                Signal word determination
+                            </h4>
+                            <p class="text-xs text-copy-light">{{ clpResult.reasoning.signal_word }}</p>
+                        </div>
+
+                        <!-- 4. P statement sources -->
+                        <div>
+                            <h4
+                                class="font-bold text-copy mb-2 text-xs uppercase tracking-wider border-b border-copy-light pb-1">
+                                Precautionary statements — why each was included
+                            </h4>
+                            <div v-if="clpResult.reasoning.p_statement_sources.length === 0"
+                                class="text-copy-light italic text-xs">
+                                No precautionary statements required.
+                            </div>
+                            <table v-else class="w-full text-xs border-collapse">
+                                <thead>
+                                    <tr class="text-left text-copy-light border-b border-copy-light">
+                                        <th class="py-1 pr-3 font-medium w-24">Code</th>
+                                        <th class="py-1 pr-3 font-medium">Statement</th>
+                                        <th class="py-1 font-medium">Triggered by</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="p in clpResult.reasoning.p_statement_sources" :key="p.code"
+                                        class="border-b border-copy-light last:border-b-0">
+                                        <td class="py-1.5 pr-3 font-mono font-bold text-copy">{{ p.code }}</td>
+                                        <td class="py-1.5 pr-3 text-copy-light">{{ p.text }}</td>
+                                        <td class="py-1.5">
+                                            <span class="font-mono text-xs text-copy-light">{{ p.triggered_by }}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
             </div>
 
             <!-- Print Label -->

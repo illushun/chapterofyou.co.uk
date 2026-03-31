@@ -47,13 +47,16 @@ class CLPCalculator
         $signalWord = $this->resolveSignalWord($triggeredClasses);
         $pictograms = $this->resolvePictograms($triggeredClasses);
 
+        $reasoning = $this->buildReasoning($ingredients, $triggeredClasses, $hStatements, $pStatements, $signalWord);
+
         return [
             'signal_word'              => $signalWord,
             'required_pictograms'      => $pictograms,
             'hazard_statements'        => $hStatements,
             'precautionary_statements' => $pStatements,
             'triggered_classes'        => $triggeredClasses,
-            'ingredients_used'         => $ingredients, // useful for debugging
+            'ingredients_used'         => $ingredients,
+            'reasoning'                => $reasoning,
         ];
     }
 
@@ -468,18 +471,16 @@ class CLPCalculator
             return [];
         }
 
+        // Consumer product minimal set — omit all workplace/professional statements.
+        // Removed: P271 (ventilation), P301+P310 (swallowed/poison centre),
+        //          P305+P351+P338 (eye rinse), P308+P313 (if exposed),
+        //          P331 (don't induce vomiting), P391 (collect spillage).
         $allStatements = [
-            'P102'           => 'Keep out of reach of children.',
-            'P210'           => 'Keep away from heat, sparks and open flames. No smoking.',
-            'P271'           => 'Use only outdoors or in a well-ventilated area.',
-            'P273'           => 'Avoid release to the environment.',
-            'P301+P310'      => 'IF SWALLOWED: Immediately call a POISON CENTRE or doctor.',
-            'P305+P351+P338' => 'IF IN EYES: Rinse cautiously with water for several minutes. Remove contact lenses if present and easy to do. Continue rinsing.',
-            'P308+P313'      => 'IF exposed or concerned: Get medical advice.',
-            'P331'           => 'Do NOT induce vomiting.',
-            'P333+P313'      => 'If skin irritation or rash occurs: Get medical advice.',
-            'P391'           => 'Collect spillage.',
-            'P501'           => 'Dispose of contents and container in accordance with local regulations.',
+            'P102'      => 'Keep out of reach of children.',
+            'P210'      => 'Keep away from heat, sparks and open flames. No smoking.',
+            'P273'      => 'Avoid release to the environment.',
+            'P333+P313' => 'If skin irritation or rash occurs: Get medical advice.',
+            'P501'      => 'Dispose of contents and container in accordance with local regulations.',
         ];
 
         $byHCode = [
@@ -487,17 +488,17 @@ class CLPCalculator
             'H225' => ['P210', 'P501'],
             'H226' => ['P210', 'P501'],
             'H302' => ['P501'],
-            'H304' => ['P301+P310', 'P331', 'P501'],
+            'H304' => ['P501'],
             'H315' => ['P501'],
             'H317' => ['P333+P313', 'P501'],
-            'H318' => ['P305+P351+P338', 'P501'],
-            'H319' => ['P305+P351+P338', 'P501'],
-            'H336' => ['P271', 'P501'],
-            'H360' => ['P308+P313', 'P501'],
-            'H361' => ['P308+P313', 'P501'],
-            'H400' => ['P273', 'P391', 'P501'],
-            'H410' => ['P273', 'P391', 'P501'],
-            'H411' => ['P273', 'P391', 'P501'],
+            'H318' => ['P501'],
+            'H319' => ['P501'],
+            'H336' => ['P501'],
+            'H360' => ['P501'],
+            'H361' => ['P501'],
+            'H400' => ['P273', 'P501'],
+            'H410' => ['P273', 'P501'],
+            'H411' => ['P273', 'P501'],
             'H412' => ['P273', 'P501'],
         ];
 
@@ -545,4 +546,124 @@ class CLPCalculator
             )
         );
     }
+
+    // -------------------------------------------------------------------------
+    // Build human-readable reasoning for the admin UI
+    // Shows how each H/P statement and signal word was derived
+    // -------------------------------------------------------------------------
+    public function buildReasoning(
+        array $ingredients,
+        array $triggeredClasses,
+        array $hStatements,
+        array $pStatements,
+        ?string $signalWord
+    ): array {
+        // 1. Ingredient summary — what went in and what hazards each brought
+        $ingredientSummary = [];
+        $seen = [];
+        foreach ($ingredients as $i) {
+            $key = $i['name'];
+            if (!isset($seen[$key])) {
+                $seen[$key] = [
+                    'name'       => $i['name'],
+                    'percentage' => $i['percentage'],
+                    'is_base'    => $i['is_base'],
+                    'hazards'    => [],
+                ];
+            }
+            if ($i['code']) {
+                $seen[$key]['hazards'][] = $i['code'];
+            }
+        }
+        foreach ($seen as $item) {
+            $item['hazards'] = array_unique($item['hazards']);
+            $ingredientSummary[] = $item;
+        }
+
+        // 2. Per-hazard class reasoning — what triggered it and why
+        $classReasons = [];
+        foreach ($triggeredClasses as $classKey => $data) {
+            $code = $data['h_code'];
+            $sum  = $data['sum'] ?? null;
+
+            // Find which ingredients contributed
+            $contributors = array_values(array_filter($ingredients, fn ($i) => $i['code'] === $code));
+            $contribText  = array_map(
+                fn ($i) => "{$i['name']} ({$i['percentage']}%)",
+                $contributors
+            );
+
+            $threshold = match($code) {
+                'H317'              => '≥ 0.1% (additive)',
+                'H315', 'H319',
+                'H318', 'H302'      => '≥ 10% (additive)',
+                'H304'              => '≥ 10% (single ingredient)',
+                'H224', 'H225',
+                'H226'              => '≥ 10% (additive)',
+                'H400'              => 'Σ(Ci × Mi)/25 ≥ 1',
+                'H410'              => 'Σ(Ci × Mi)/0.1 ≥ 1',
+                'H411'              => 'Σ Ci ≥ 1%',
+                'H412'              => 'Σ Ci ≥ 10%',
+                'H360'              => '≥ 0.3% (additive)',
+                'H361'              => '≥ 3% (additive)',
+                'H336'              => '≥ 20% (additive)',
+                default             => 'threshold met',
+            };
+
+            $classReasons[] = [
+                'class'        => $classKey,
+                'h_code'       => $code,
+                'h_text'       => $hStatements[$code] ?? $code,
+                'category'     => $data['category'] ?? null,
+                'signal'       => $data['signal'] ?? null,
+                'pictogram'    => $data['pictogram'] ?? null,
+                'threshold'    => $threshold,
+                'sum'          => $sum !== null ? round($sum, 4) : null,
+                'contributors' => $contribText,
+            ];
+        }
+
+        // 3. Signal word reasoning
+        $signalReasons = [];
+        foreach ($triggeredClasses as $classKey => $data) {
+            if (!empty($data['signal'])) {
+                $signalReasons[] = "{$data['h_code']} ({$data['signal']})";
+            }
+        }
+        $signalExplanation = empty($signalReasons)
+            ? 'No hazard classes triggered — no signal word required.'
+            : 'Signal word "' . $signalWord . '" from: ' . implode(', ', $signalReasons) . '. Danger takes priority over Warning.';
+
+        // 4. P statement reasoning — which H code triggered each P code
+        $pReasons = [];
+        $byHCode = [
+            'H224' => ['P210', 'P501'], 'H225' => ['P210', 'P501'], 'H226' => ['P210', 'P501'],
+            'H302' => ['P501'], 'H304' => ['P501'], 'H315' => ['P501'],
+            'H317' => ['P333+P313', 'P501'], 'H318' => ['P501'], 'H319' => ['P501'],
+            'H336' => ['P501'], 'H360' => ['P501'], 'H361' => ['P501'],
+            'H400' => ['P273', 'P501'], 'H410' => ['P273', 'P501'],
+            'H411' => ['P273', 'P501'], 'H412' => ['P273', 'P501'],
+        ];
+        $pSources = ['P102' => ['always — mandatory on all consumer products']];
+        foreach (array_keys($hStatements) as $hCode) {
+            foreach ($byHCode[$hCode] ?? [] as $pCode) {
+                $pSources[$pCode][] = $hCode;
+            }
+        }
+        foreach ($pStatements as $pCode => $pText) {
+            $pReasons[] = [
+                'code'       => $pCode,
+                'text'       => $pText,
+                'triggered_by' => implode(', ', $pSources[$pCode] ?? ['unknown']),
+            ];
+        }
+
+        return [
+            'ingredients'        => $ingredientSummary,
+            'triggered_classes'  => $classReasons,
+            'signal_word'        => $signalExplanation,
+            'p_statement_sources' => $pReasons,
+        ];
+    }
+
 }
