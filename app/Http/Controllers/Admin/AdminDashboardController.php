@@ -75,12 +75,12 @@ class AdminDashboardController extends Controller
             ->toArray();
 
         // ── Top selling products (last 30 days) ───────────────────────────────
-        $topProducts = DB::table('order_items')
-            ->join('order', 'order_items.order_id', '=', 'order.id')
-            ->join('product', 'order_items.product_id', '=', 'product.id')
+        $topProducts = DB::table('order_item')
+            ->join('order', 'order_item.order_id', '=', 'order.id')
+            ->join('product', 'order_item.product_id', '=', 'product.id')
             ->where('order.status', 'successful')
             ->where('order.created_at', '>=', $start30)
-            ->selectRaw('product.id, product.name, product.mpn, SUM(order_items.quantity) as units_sold, SUM(order_items.product_total) as revenue')
+            ->selectRaw('product.id, product.name, product.mpn, SUM(order_item.quantity) as units_sold, SUM(order_item.product_total) as revenue')
             ->groupBy('product.id', 'product.name', 'product.mpn')
             ->orderByDesc('units_sold')
             ->limit(5)
