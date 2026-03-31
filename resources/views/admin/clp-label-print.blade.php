@@ -113,7 +113,7 @@
 
     /* ── 2. Allergens ── */
     .allergens {
-        font-size: 3.8pt;
+        font-size: 5pt;
         color: #111;
         border-bottom: 0.2mm solid #ccc;
         padding-bottom: 0.4mm;
@@ -124,7 +124,7 @@
     .allergens-label {
         font-weight: bold;
         text-transform: uppercase;
-        font-size: 3.5pt;
+        font-size: 4.5pt;
         letter-spacing: 0.04em;
     }
 
@@ -166,7 +166,7 @@
 
     /* ── 4. Statements paragraph ── */
     .statements {
-        font-size: 3.8pt;
+        font-size: 5pt;
         line-height: 1.35;
         color: #000;
         text-align: justify;
@@ -185,7 +185,7 @@
     }
     .sup-left {
         float: left;
-        font-size: 3.5pt;
+        font-size: 5pt;
         line-height: 1.4;
         color: #111;
         max-width: 50mm;
@@ -293,12 +293,12 @@
     {{-- 5. Supplier Contact Details --}}
     <div class="footer cf">
         <div class="sup-left">
-            <span class="sup-name">{{ $label->supplier_name }}</span>
+            <span class="sup-name">{{ $label->supplier_name }}</span>,
             @if($label->supplier_address)
-                &nbsp;{{ $label->supplier_address }}
+                &nbsp;{{ $label->supplier_address }},
             @endif
             @if($label->supplier_phone)
-                &nbsp;T:{{ $label->supplier_phone }}
+                &nbsp;{{ $label->supplier_phone }}
             @endif
         </div>
         @if(!empty($label->supplementary_info))
