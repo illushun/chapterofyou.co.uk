@@ -9,8 +9,10 @@ use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use App\Models\Product;
 use App\Models\Label\CLP as CLPLabel;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
+use Mpdf\Mpdf;
+use Mpdf\Config\ConfigVariables;
+use Mpdf\Config\FontVariables;
 
 class CLPLabelController extends Controller
 {
@@ -91,7 +93,7 @@ class CLPLabelController extends Controller
             ];
         }
 
-        // Embed pictograms as base64 data URIs
+        // Embed pictograms as base64
         $pictogramMap = [
             'exclamation'   => 'GHS07',
             'health-hazard' => 'GHS08',
@@ -115,27 +117,42 @@ class CLPLabelController extends Controller
             }
         }
 
-        $pdf = Pdf::loadView('admin.clp-label', [
+        // Render the blade to an HTML string
+        $html = view('admin.clp-label', [
             'label'           => $label,
             'hStatements'     => $hStatements,
             'pStatements'     => $pStatements,
             'pictogramImages' => $pictogramImages,
+        ])->render();
+
+        // mPDF: custom paper size in mm — exactly 76×50mm landscape
+        $mpdf = new \Mpdf\Mpdf([
+            'format'              => [76, 50],   // width × height in mm
+            'orientation'         => 'L',        // L = landscape (so 76mm wide, 50mm tall)
+            'margin_top'          => 0,
+            'margin_bottom'       => 0,
+            'margin_left'         => 0,
+            'margin_right'        => 0,
+            'margin_header'       => 0,
+            'margin_footer'       => 0,
+            'default_font_size'   => 5,
+            'default_font'        => 'dejavusans',
+            'tempDir'             => storage_path('app/mpdf-temp'),
         ]);
 
-        $pdf->setOptions([
-            'dpi'                     => 96,
-            'defaultFont'             => 'DejaVu Sans',
-            'isHtml5ParserEnabled'    => true,
-            'isRemoteEnabled'         => false,
-            'isFontSubsettingEnabled' => true,
-        ]);
-
-        // A4 portrait — the label content is a fixed 76x50mm box inside it.
-        // Print at 100% / actual size from browser and cut to label dimensions.
-        $pdf->setPaper('A4', 'portrait');
+        $mpdf->SetDisplayMode('real');        // opens at 100% / actual size
+        $mpdf->WriteHTML($html);
 
         $filename = 'CLP-Label-' . str($product->name)->slug() . '.pdf';
 
-        return $pdf->download($filename);
+        // Output as a download
+        return response(
+            $mpdf->Output($filename, \Mpdf\Output\Destination::STRING_RETURN),
+            200,
+            [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]
+        );
     }
 }
