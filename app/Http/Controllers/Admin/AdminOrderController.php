@@ -59,7 +59,8 @@ class AdminOrderController extends Controller
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
-            'status' => ['required', 'in:' . implode(',', array_keys(self::STATUSES))],
+            'status'       => ['required', 'in:' . implode(',', array_keys(self::STATUSES))],
+            'tracking_url' => ['nullable', 'url'],
         ]);
 
         $previousStatus = $order->status;
@@ -71,9 +72,15 @@ class AdminOrderController extends Controller
     /**
      * Manually send the dispatch notification email.
      */
-    public function sendDispatchEmail(Order $order)
+    public function sendDispatchEmail(Request $request, Order $order)
     {
-        Mail::to($order->email)->send(new Dispatched($order));
+        $request->validate([
+            'tracking_url' => ['nullable', 'url'],
+        ]);
+
+        Mail::to($order->email)->send(
+            new Dispatched($order, $request->tracking_url)
+        );
 
         return back()->with('success', "Dispatch email sent to {$order->email}.");
     }

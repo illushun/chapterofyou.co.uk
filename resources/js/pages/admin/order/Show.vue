@@ -33,6 +33,7 @@ const selectedStatus = ref(props.order.status);
 const updatingStatus = ref(false);
 const sendingDispatch = ref(false);
 const sendingConfirmation = ref(false);
+const trackingUrl = ref('');
 
 const fmt = (v: number | string | null | undefined) =>
     `£${(Number(v) || 0).toFixed(2)}`;
@@ -58,6 +59,7 @@ function updateStatus() {
     updatingStatus.value = true;
     router.post(route('admin.orders.status', props.order.id), {
         status: selectedStatus.value,
+        tracking_url: trackingUrl.value || null,
     }, {
         preserveScroll: true,
         onFinish: () => { updatingStatus.value = false; },
@@ -67,7 +69,9 @@ function updateStatus() {
 function sendDispatch() {
     if (!confirm(`Send dispatch email to ${props.order.email}?`)) return;
     sendingDispatch.value = true;
-    router.post(route('admin.orders.dispatch-email', props.order.id), {}, {
+    router.post(route('admin.orders.dispatch-email', props.order.id), {
+        tracking_url: trackingUrl.value || null,
+    }, {
         preserveScroll: true,
         onFinish: () => { sendingDispatch.value = false; },
     });
@@ -97,7 +101,7 @@ function resendConfirmation() {
         <!-- Page header -->
         <div class="mb-6 flex flex-wrap items-start justify-between gap-3 border-b-2 border-copy pb-3">
             <div>
-                <h2 class="text-3xl font-black">Order #COY-{{ String(order.id).padStart(5, '0') }}</h2>
+                <h2 class="text-3xl font-black">Order #COY-{{ String(order.id).padStart(6, '0') }}</h2>
                 <p class="text-copy-light text-sm mt-0.5">Placed {{ fmtDate(order.created_at) }}</p>
             </div>
             <span :class="['px-3 py-1 rounded-full text-sm font-bold uppercase border', statusClass(order.status)]">
@@ -273,13 +277,21 @@ function resendConfirmation() {
                     <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
                         <h3 class="text-lg font-bold text-copy mb-3 border-b border-copy-light pb-2">Email Customer</h3>
                         <div class="space-y-2">
+                            <div>
+                                <label class="block text-xs text-copy-light font-medium mb-1">
+                                    Tracking URL <span class="text-copy-light">(optional)</span>
+                                </label>
+                                <input v-model="trackingUrl" type="url" placeholder="https://track.royalmail.com/..."
+                                    class="w-full rounded-lg border border-copy-light bg-foreground px-3 py-1.5 text-xs text-copy focus:outline-none focus:border-copy mb-1" />
+                                <p class="text-xs text-copy-light">Used in both dispatch email and status update.</p>
+                            </div>
                             <button @click="sendDispatch" :disabled="sendingDispatch"
                                 class="w-full rounded-lg border-2 border-copy py-2 text-sm font-bold transition hover:bg-secondary-light disabled:opacity-40">
                                 {{ sendingDispatch ? 'Sending…' : 'Send Dispatch Email' }}
                             </button>
                             <button @click="resendConfirmation" :disabled="sendingConfirmation"
                                 class="w-full rounded-lg border-2 border-copy py-2 text-sm font-medium text-copy-light hover:text-copy hover:bg-secondary-light transition disabled:opacity-40">
-                                {{ sendingConfirmation ? 'Sending…' : '↩ Resend Confirmation' }}
+                                {{ sendingConfirmation ? 'Sending…' : 'Resend Confirmation' }}
                             </button>
                         </div>
                     </div>

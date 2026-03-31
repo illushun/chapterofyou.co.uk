@@ -1,3 +1,4 @@
+
 <?php
 
 namespace App\Mail\Order;
@@ -14,9 +15,10 @@ class Dispatched extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public readonly Order $order)
-    {
-        //
+    public function __construct(
+        public readonly Order $order,
+        public readonly ?string $trackingUrl = null,
+    ) {
     }
 
     public function envelope(): Envelope
@@ -40,18 +42,11 @@ class Dispatched extends Mailable
         return new Content(
             view: 'mail.order.dispatched',
             with: [
-                'orderId'    => $order->id,
-                'firstName'  => $order->first_name,
-                'items'      => $items,
-                'total'      => $order->grand_total,
-                'shippingAddress' => [
-                    'name'    => "{$order->first_name} {$order->last_name}",
-                    'line1'   => $order->shipping_line_1,
-                    'line2'   => $order->shipping_line_2,
-                    'city'    => $order->shipping_city,
-                    'zip'     => $order->shipping_postcode,
-                    'country' => $order->shipping_country,
-                ],
+                'orderId'     => $order->id,
+                'firstName'   => $order->first_name,
+                'items'       => $items,
+                'total'       => $order->grand_total,
+                'trackingUrl' => $this->trackingUrl,
             ],
         );
     }
