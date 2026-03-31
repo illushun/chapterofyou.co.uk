@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\CartManager;
 use App\Services\VoucherService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class VoucherController extends Controller
 {
@@ -17,7 +18,6 @@ class VoucherController extends Controller
 
     /**
      * POST /checkout/voucher/apply
-     * Validates and stores the voucher in the session.
      */
     public function apply(Request $request)
     {
@@ -25,31 +25,46 @@ class VoucherController extends Controller
             'code' => ['required', 'string', 'max:50'],
         ]);
 
-        $cart = $this->cartManager->getCurrentCart();
+        try {
+            $cart = $this->cartManager->getCurrentCart();
 
-        // Need subtotal to check minimum order value
-        $subtotal = $cart->items->sum(fn ($item) => ($item->product->cost ?? 0) * $item->quantity);
+            // Explicitly reload to guarantee product is always available
+            $cart->load('items.product');
 
-        $result = $this->voucherService->validate($request->code, $cart, $subtotal);
+            $subtotal = $cart->items->sum(
+                fn ($item) => ($item->product->cost ?? 0) * $item->quantity
+            );
 
-        if (!$result['valid']) {
-            return response()->json(['error' => $result['message']], 422);
+            $result = $this->voucherService->validate($request->code, $cart, $subtotal);
+
+            if (!$result['valid']) {
+                return response()->json(['error' => $result['message']], 422);
+            }
+
+            $this->voucherService->applyToSession($result['voucher'], $result['discount']);
+
+            return response()->json([
+                'code'     => $result['voucher']->code,
+                'discount' => $result['discount'],
+                'type'     => $result['voucher']->type,
+                'value'    => (float) $result['voucher']->value,
+                'message'  => 'Voucher applied! You save £' . number_format($result['discount'], 2) . '.',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('[VoucherController] Apply error: ' . $e->getMessage(), [
+                'code'  => $request->code,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'error' => 'An unexpected error occurred. Please try again.',
+            ], 500);
         }
-
-        $this->voucherService->applyToSession($result['voucher'], $result['discount']);
-
-        return response()->json([
-            'code'     => $result['voucher']->code,
-            'discount' => $result['discount'],
-            'type'     => $result['voucher']->type,
-            'value'    => $result['voucher']->value,
-            'message'  => 'Voucher applied! You save £' . number_format($result['discount'], 2) . '.',
-        ]);
     }
 
     /**
      * POST /checkout/voucher/remove
-     * Clears the voucher from the session.
      */
     public function remove()
     {

@@ -129,9 +129,17 @@ async function applyVoucher() {
 
         // Re-fetch payment intent with new total
         await initializeStripe();
-
     } catch (err: any) {
-        voucherError.value = err.response?.data?.error ?? 'Failed to apply voucher.';
+        const response = err.response;
+        if (response?.data?.error) {
+            voucherError.value = response.data.error;
+        } else if (response?.data?.errors?.code) {
+            voucherError.value = response.data.errors.code[0];
+        } else if (response?.data?.message) {
+            voucherError.value = response.data.message;
+        } else {
+            voucherError.value = `Server error (${response?.status ?? 'unknown'}). Please try again.`;
+        }
     } finally {
         voucherLoading.value = false;
     }
