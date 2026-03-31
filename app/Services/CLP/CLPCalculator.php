@@ -432,6 +432,12 @@ class CLPCalculator
             ];
         }
 
+        // CLP Annex I 3.4.3.3 note: if skin sensitisation (H317) is triggered,
+        // skin irritation (H315) is subsumed — drop H315 to avoid redundancy.
+        if (isset($triggered['skin_sensitisation']) && isset($triggered['skin_irritation'])) {
+            unset($triggered['skin_irritation']);
+        }
+
         return $triggered;
     }
 
