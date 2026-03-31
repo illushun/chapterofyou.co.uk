@@ -63,13 +63,11 @@ Route::get('/sl/{provider}/callback', [SocialiteController::class, 'handleProvid
 
 Route::get('/account/addresses/lookup', [AccountController::class, 'lookupAddress'])->name('address.lookup');
 
-Route::prefix('checkout')->group(function () {
-    Route::get('/', [CheckoutController::class, 'index'])->name('checkout.index');
-
-    Route::post('/payment-intent', [CheckoutController::class, 'getPaymentIntent'])->name('checkout.payment_intent');
-    Route::post('/process-payment', [CheckoutController::class, 'processPayment'])->name('checkout.process_payment');
-
-    Route::post('/voucher/apply', [VoucherController::class, 'apply']) ->name('voucher.apply');
+Route::prefix('checkout')->name('checkout.')->group(function () {
+    Route::get('/', [CheckoutController::class, 'index'])->name('index');
+    Route::post('/payment-intent', [CheckoutController::class, 'getPaymentIntent'])->name('payment_intent');
+    Route::post('/process-payment', [CheckoutController::class, 'processPayment'])->name('process_payment');
+    Route::post('/voucher/apply', [VoucherController::class, 'apply'])->name('voucher.apply');
     Route::post('/voucher/remove', [VoucherController::class, 'remove'])->name('voucher.remove');
 });
 
