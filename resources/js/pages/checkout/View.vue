@@ -113,6 +113,18 @@ const activeVoucher = ref(props.appliedVoucher ?? null);
 // Computed: show discount line in summary when a voucher is active
 const voucherDiscount = computed(() => activeVoucher.value?.discount ?? 0);
 
+const computedDiscountedSubtotal = computed(() => {
+    return Math.max(0, summary.subtotal - voucherDiscount.value);
+});
+
+const computedTax = computed(() => {
+    return Math.round(computedDiscountedSubtotal.value * 0.20 * 100) / 100;
+});
+
+const computedTotal = computed(() => {
+    return Math.round((computedDiscountedSubtotal.value + computedTax.value + summary.shipping) * 100) / 100;
+});
+
 async function applyVoucher() {
     if (!voucherCode.value.trim()) return;
     voucherLoading.value = true;
@@ -736,7 +748,7 @@ onMounted(async () => {
                                         'cursor-not-allowed opacity-40': !hasClientSecret || !!paymentError || isLoadingInitialData
                                     }">
                                     <span v-if="isProcessing">Processing Payment...</span>
-                                    <span v-else>Pay {{ formatCurrency(summary.total) }} Now</span>
+                                    <span v-else>Pay {{ formatCurrency(computedTotal) }} Now</span>
                                 </button>
 
                                 <p class="text-xs text-center text-copy-lighter pt-3">
@@ -765,7 +777,7 @@ onMounted(async () => {
                                     </div>
                                     <div class="flex justify-between">
                                         <span>VAT (20%)</span>
-                                        <span class="font-bold">{{ formatCurrency(summary.tax) }}</span>
+                                        <span class="font-bold">{{ formatCurrency(computedTax) }}</span>
                                     </div>
                                     <div class="flex justify-between">
                                         <span>Shipping</span>
@@ -822,7 +834,7 @@ onMounted(async () => {
                                 <!-- Total -->
                                 <div class="mt-6 pt-4 border-t-2 border-copy/10 flex justify-between items-center">
                                     <span class="text-2xl font-extrabold text-copy">Order Total</span>
-                                    <span class="text-4xl font-black text-primary">{{ formatCurrency(summary.total)
+                                    <span class="text-4xl font-black text-primary">{{ formatCurrency(computedTotal)
                                     }}</span>
                                 </div>
 
