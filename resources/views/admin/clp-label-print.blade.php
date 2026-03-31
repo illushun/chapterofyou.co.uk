@@ -131,6 +131,7 @@
     }
     .allergens-label {
         font-weight: bold;
+        text-transform: uppercase;
         font-size: 6pt;
         letter-spacing: 0.04em;
     }
@@ -157,13 +158,14 @@
     .pics-row { text-align: center; }
     .pic-wrap {
         display: inline-block;
-        margin: 0 0.4mm;
+        margin: 0 0.8mm;
         vertical-align: middle;
     }
-    .pic-table { width: 10mm; border-collapse: collapse; }
-    .pc { background: #fff; }
-    .pm { text-align: center; vertical-align: middle; background: #fff; }
-    .pm img { width: 5mm; height: 5mm; display: block; margin: auto; }
+    .pic-img {
+        width: 10mm;
+        height: 10mm;
+        display: block;
+    }
 
     /* ── 4. Statements paragraph ── */
     .statements {
@@ -185,7 +187,7 @@
     }
     .sup-left {
         float: left;
-        font-size: 6pt;
+        font-size: 5pt;
         line-height: 1.4;
         color: #111;
         max-width: 50mm;
@@ -254,23 +256,7 @@
         <div class="pics-row">
             @foreach($pictogramImages as $picKey => $src)
                 <div class="pic-wrap">
-                    <table class="pic-table">
-                        <tr>
-                            <td class="pc" style="width:3mm;height:2mm;border-top:0.4mm solid #dd0000;border-left:0.4mm solid #dd0000;"></td>
-                            <td class="pc" style="height:2mm;border-top:0.4mm solid #dd0000;"></td>
-                            <td class="pc" style="width:3mm;height:2mm;border-top:0.4mm solid #dd0000;border-right:0.4mm solid #dd0000;"></td>
-                        </tr>
-                        <tr>
-                            <td class="pc" style="border-left:0.4mm solid #dd0000;"></td>
-                            <td class="pm"><img src="{{ $src }}" /></td>
-                            <td class="pc" style="border-right:0.4mm solid #dd0000;"></td>
-                        </tr>
-                        <tr>
-                            <td class="pc" style="width:3mm;height:2mm;border-bottom:0.4mm solid #dd0000;border-left:0.4mm solid #dd0000;"></td>
-                            <td class="pc" style="height:2mm;border-bottom:0.4mm solid #dd0000;"></td>
-                            <td class="pc" style="width:3mm;height:2mm;border-bottom:0.4mm solid #dd0000;border-right:0.4mm solid #dd0000;"></td>
-                        </tr>
-                    </table>
+                    <img src="{{ $src }}" class="pic-img" />
                 </div>
             @endforeach
         </div>
