@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Product;
 
+use App\Models\Wishlist;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -64,9 +65,14 @@ class ProductController extends Controller
             ->get();
 
         return Inertia::render('product/View', [
-            'products' => $products,
-            'categories' => $categories,
-            'filters' => $filters,
+            'products'      => $products,
+            'categories'    => $categories,
+            'filters'       => $filters,
+            'wishlistedIds' => Auth::check()
+                ? Wishlist::where('user_id', Auth::id())
+                    ->pluck('product_id')
+                    ->toArray()
+                : [],
         ]);
     }
 
@@ -150,10 +156,19 @@ class ProductController extends Controller
         }
 
         return Inertia::render('product/Show', [
-            'product' => $product->loadMissing('seo'),
-            'parent' => $parentProduct,
-            'related' => $relatedProducts,
-            'canReview' => $canReview,
+            'product'     => $product->loadMissing('seo'),
+            'parent'      => $parentProduct,
+            'related'     => $relatedProducts,
+            'canReview'   => $canReview,
+            'wishlisted'  => Auth::check()
+                ? Wishlist::where('user_id', Auth::id())->where('product_id', $product->id)->exists()
+                : false,
+            'wishlistedIds' => Auth::check()
+                ? Wishlist::where('user_id', Auth::id())
+                    ->whereIn('product_id', $relatedProducts->pluck('id'))
+                    ->pluck('product_id')
+                    ->toArray()
+                : [],
         ]);
     }
 

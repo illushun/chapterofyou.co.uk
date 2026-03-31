@@ -474,6 +474,10 @@
                                     class="block px-4 py-2 text-sm text-copy hover:bg-secondary-light transition font-semibold">
                                 Orders
                                 </Link>
+                                <Link href="/account/wishlist"
+                                    class="block px-4 py-2 text-sm text-copy hover:bg-secondary-light transition font-semibold">
+                                Wishlist
+                                </Link>
 
                                 <div class="border-t border-copy-light/50"></div>
 

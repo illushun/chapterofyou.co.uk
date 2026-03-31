@@ -2,6 +2,7 @@
 import NavBar from '@/components/NavBar.vue';
 import { Head, usePage, router, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import axios from 'axios';
 
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
@@ -9,6 +10,7 @@ import ModalImageViewer from '@/components/ui/coy/ModalImageViewer.vue';
 import StarRating from '@/components/ui/coy/StarRating.vue';
 
 const IconStar = `<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.152A1.5 1.5 0 0113.951 2.152l1.621 3.436a1.5 1.5 0 001.194.887l3.778.548a1.5 1.5 0 01.832 2.578l-2.73 2.66a1.5 1.5 0 00-.435 1.334l.643 3.766a1.5 1.5 0 01-2.175 1.583l-3.38-1.777a1.5 1.5 0 00-1.396 0l-3.38 1.777a1.5 1.5 0 01-2.175-1.583l.643-3.766a1.5 1.5 0 00-.435-1.334l-2.73-2.66a1.5 1.5 0 01.832-2.578l3.778-.548a1.5 1.5 0 001.194-.887l1.621-3.436z" /></svg>`;
+const IconStarFilled = `<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="currentColor"><path d="M11.049 2.152a1.5 1.5 0 011.902 0l1.621 3.436a1.5 1.5 0 001.194.887l3.778.548a1.5 1.5 0 01.832 2.578l-2.73 2.66a1.5 1.5 0 00-.435 1.334l.643 3.766a1.5 1.5 0 01-2.175 1.583l-3.38-1.777a1.5 1.5 0 00-1.396 0l-3.38 1.777a1.5 1.5 0 01-2.175-1.583l.643-3.766a1.5 1.5 0 00-.435-1.334l-2.73-2.66a1.5 1.5 0 01.832-2.578l3.778-.548a1.5 1.5 0 001.194-.887l1.621-3.436z"/></svg>`;
 const IconCart = `<svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`;
 const IconMinus = `<svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" /></svg>`;
 const IconPlus = `<svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m-8-8h16" /></svg>`;
@@ -60,6 +62,8 @@ interface ProductProps {
     parent?: ProductDetailData | null;
     related: ProductDetailData[];
     canReview: boolean;
+    wishlisted: boolean;
+    wishlistedIds: number[];
 }
 
 const props = defineProps<ProductProps>();
@@ -67,6 +71,8 @@ const page = usePage();
 const auth = computed(() => page.props.auth as any);
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 const isModalOpen = ref(false);
+const isWishlisted = ref(props.wishlisted ?? false);
+const wishlistedIds = ref<number[]>(props.wishlistedIds ?? []);
 
 const quantity = ref(1);
 const increaseQuantity = () => {
@@ -227,13 +233,38 @@ const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
     );
 };
 
-const handleFavourite = () => {
-    const itemToFavourite = currentVariation.value;
-    console.log(`Toggling favourite for product ${itemToFavourite.id}...`);
-    // router.post(`/products/${itemToFavourite.id}/favourite`);
+const handleFavourite = async (productArg?: any) => {
+    // productArg is passed when clicking from a related product card
+    const targetId = (productArg && typeof productArg === 'object' ? productArg.id : null) ?? props.product.id;
+    const isRelated = targetId !== props.product.id;
 
-    if (successToastRef.value) {
-        successToastRef.value.show(`${props.product.name} added to your wishlist!`, 'favourite');
+    if (isRelated) {
+        const idx = wishlistedIds.value.indexOf(targetId);
+        idx === -1 ? wishlistedIds.value.push(targetId) : wishlistedIds.value.splice(idx, 1);
+    } else {
+        isWishlisted.value = !isWishlisted.value;
+    }
+
+    try {
+        const { data } = await axios.post(route('wishlist.toggle'), {
+            product_id: targetId,
+        });
+
+        if (successToastRef.value) {
+            successToastRef.value.show(data.message, data.wishlisted ? 'favourite' : 'trash');
+        }
+    } catch (err: any) {
+        // Revert on failure
+        if (isRelated) {
+            const idx = wishlistedIds.value.indexOf(targetId);
+            idx === -1 ? wishlistedIds.value.push(targetId) : wishlistedIds.value.splice(idx, 1);
+        } else {
+            isWishlisted.value = !isWishlisted.value;
+        }
+
+        if (err.response?.status === 401) {
+            window.location.href = route('login');
+        }
     }
 };
 
@@ -383,9 +414,15 @@ const formattedCost = computed(() => {
                         </div>
 
                         <button @click="handleFavourite()"
-                            class="rounded-lg border-2 border-copy p-3 text-copy-light transition hover:bg-error-light hover:text-error-content w-fit lg:flex-shrink-0 flex items-center justify-center"
-                            aria-label="Add to favourites">
-                            <div v-html="IconStar" class="size-6 flex items-center justify-center"></div>
+                            class="rounded-lg border-2 border-copy p-3 transition w-fit lg:flex-shrink-0 flex items-center justify-center"
+                            :class="isWishlisted
+                                ? 'bg-error text-error-content hover:bg-error-dark'
+                                : 'text-copy-light hover:bg-error-light hover:text-error-content'"
+                            :aria-label="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'"
+                            :title="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'">
+                            <div v-if="isWishlisted" v-html="IconStarFilled"
+                                class="size-6 flex items-center justify-center"></div>
+                            <div v-else v-html="IconStar" class="size-6 flex items-center justify-center"></div>
                         </button>
 
                     </div>
@@ -501,8 +538,8 @@ const formattedCost = computed(() => {
 
             <ul class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
                 <li v-for="product in props.related" :key="product.id">
-                    <ProductSpringCard :product="product" @add-to-cart="handleAddToCart(product)"
-                        @favourite="handleFavourite(product)" />
+                    <ProductSpringCard :product="product" :wishlisted="wishlistedIds.includes(product.id)"
+                        @add-to-cart="handleAddToCart(product)" @favourite="handleFavourite(product)" />
                 </li>
             </ul>
         </div>

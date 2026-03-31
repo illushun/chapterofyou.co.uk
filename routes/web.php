@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminCartController;
 use App\Http\Controllers\Admin\Label\CLPLabelController;
 use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -57,6 +58,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/product/{product}/review', [ProductController::class, 'storeReview'])->name('products.review.store');
     Route::delete('/product/{review}/review', [ProductController::class, 'destroyReview'])->name('products.review.destroy');
+
+    Route::get('/account/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
+    Route::delete('/wishlist/{id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
 });
 
 Route::get('sl/{provider}', [SocialiteController::class, 'redirectToProvider'])->name('socialite.redirect');

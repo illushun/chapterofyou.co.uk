@@ -11,6 +11,7 @@ use App\Models\Address;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Support\Facades\DB;
+use App\Models\Wishlist;
 
 class User extends Authenticatable
 {
@@ -84,5 +85,15 @@ class User extends Authenticatable
                 $query->where('product_id', $productId);
             })
             ->exists();
+    }
+
+    public function wishlist()
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    public function hasWishlisted(int $productId): bool
+    {
+        return $this->wishlist()->where('product_id', $productId)->exists();
     }
 }
