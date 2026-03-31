@@ -22,7 +22,7 @@ class Confirmation extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Order Confirmation #{$this->order->id} — Chapter of You",
+            subject: "Your scents are being prepared ✨ — #{$this->order->id}",
         );
     }
 

@@ -287,10 +287,7 @@ class CheckoutController extends Controller
 
         $order->items()->saveMany($orderItems);
 
-        \Log::info("Order #{$order->id} created with " . $orderItems->count() . " items.");
         Mail::to($order->email)->send(new Confirmation($order));
-        \Log::info("Order confirmation email sent for Order #{$order->id} to {$order->email}.");
-
         $this->cartManager->clearCart($cart);
 
         return $order;

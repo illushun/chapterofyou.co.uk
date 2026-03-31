@@ -214,7 +214,7 @@
 
     {{-- ── Appreciation ── --}}
     <p class="body-para">
-        I truly appreciate your patience, and I can't wait for you to experience <em>your</em> <div class="signoff-script" style="font-size: 30px;">signature scent</div>
+        I truly appreciate your patience, and I can't wait for you to experience <em>your</em> <div style="font-family: 'Great Vibes', cursive;">signature scent</div>
     </p>
 
     <hr class="gold-divider" />
