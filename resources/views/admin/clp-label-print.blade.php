@@ -85,7 +85,7 @@
     .label {
         width: 76mm;
         height: 50mm;
-        border: 0.5mm solid #000;
+       /*border: 0.5mm solid #000;*/
         padding: 1.5mm;
         overflow: hidden;
         font-family: Arial, Helvetica, sans-serif;
@@ -127,18 +127,18 @@
 
     /* ── 2. Allergens ── */
     .allergens {
-        font-size: 5pt;
+        font-size: 6.5pt;
         color: #111;
         /*border-bottom: 0.2mm solid #ccc;*/
         padding-bottom: 0.4mm;
         margin-bottom: 0.5mm;
         text-align: center;
-        line-height: 1.3;
+        line-height: 1.2;
     }
     .allergens-label {
         font-weight: bold;
         text-transform: uppercase;
-        font-size: 4.5pt;
+        font-size: 6pt;
         letter-spacing: 0.04em;
     }
 
@@ -180,8 +180,8 @@
 
     /* ── 4. Statements paragraph ── */
     .statements {
-        font-size: 5pt;
-        line-height: 1.35;
+        font-size: 6.5pt;
+        line-height: 1.2;
         color: #000;
         text-align: justify;
         margin-bottom: 5mm; /* leave room for footer */
@@ -231,8 +231,8 @@
 
 <div class="toolbar">
     <h1>CLP Label — {{ $label->product_name }}</h1>
-    <button class="print-btn" onclick="window.print()">🖨 Print / Save PDF</button>
-    <button class="save-btn" id="saveBtn" onclick="saveAsImage()">⬇ Save as Image</button>
+    <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+    <button class="save-btn" id="saveBtn" onclick="saveAsImage()">Save as Image</button>
 </div>
 
 <div class="instructions">
