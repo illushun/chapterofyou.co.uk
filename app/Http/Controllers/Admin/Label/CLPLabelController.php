@@ -138,7 +138,8 @@ class CLPLabelController extends Controller
         ]);
 
         // Set paper to custom 76mm × 50mm landscape
-        $pdf->setPaper([0, 0, 215.43, 141.73], 'landscape'); // points: 76mm × 50mm
+        $pdf->setPaper([0, 0, 141.73, 215.43], 'landscape');
+        $pdf->setOptions(['dpi' => 150, 'defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true]);
 
         $filename = 'CLP-Label-' . str($product->name)->slug() . '.pdf';
 
