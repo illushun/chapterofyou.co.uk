@@ -4,13 +4,12 @@ namespace App\Mail\Order;
 
 use App\Models\Order;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class Confirmation extends Mailable implements ShouldQueue
+class Confirmation extends Mailable
 {
     use Queueable;
     use SerializesModels;
@@ -23,14 +22,12 @@ class Confirmation extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Order Confirmation #{$this->order->id}",
+            subject: "Order Confirmation #{$this->order->id} — Chapter of You",
         );
     }
 
     public function content(): Content
     {
-        \Log::info("Generating order confirmation email for Order #{$this->order->id}");
-
         $order = $this->order->load('items.product');
 
         $items = $order->items->map(fn ($item) => [
@@ -41,7 +38,7 @@ class Confirmation extends Mailable implements ShouldQueue
         ])->toArray();
 
         return new Content(
-            markdown: 'mail.order.confirmation',
+            view: 'mail.order.confirmation',
             with: [
                 'orderId'         => $order->id,
                 'firstName'       => $order->first_name,
