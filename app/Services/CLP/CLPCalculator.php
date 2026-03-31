@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\CLP;
 
 use App\Models\Product;
 
-class ClpCalculatorService
+class CLPCalculator
 {
     // -------------------------------------------------------------------------
     // Main entry point
