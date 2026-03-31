@@ -315,19 +315,56 @@ class AdminProductController extends Controller
 
     public function relationshipIndex()
     {
-        $products = Product::select('id', 'name', 'parent_product_id')
+        $products = Product::select('id', 'name', 'mpn', 'status', 'stock_qty', 'parent_product_id')
             ->get()
-            ->map(function ($product) {
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'parent_id' => $product->parent_product_id,
-                ];
-            });
+            ->map(fn ($p) => [
+                'id'         => $p->id,
+                'name'       => $p->name,
+                'mpn'        => $p->mpn,
+                'status'     => $p->status,
+                'stock_qty'  => $p->stock_qty,
+                'parent_id'  => $p->parent_product_id,
+            ]);
 
         return Inertia::render('admin/product/Relationships', [
             'productsData' => $products,
         ]);
+    }
+
+    public function assignRelationship(Request $request)
+    {
+        $request->validate([
+            'parent_id' => ['required', 'exists:product,id'],
+            'child_id'  => ['required', 'exists:product,id', 'different:parent_id'],
+        ]);
+
+        // Prevent circular reference — child cannot be an ancestor of the parent
+        $parentId = $request->parent_id;
+        $childId  = $request->child_id;
+
+        // Walk up the parent chain to check for cycles
+        $current = Product::find($parentId);
+        while ($current && $current->parent_product_id) {
+            if ($current->parent_product_id == $childId) {
+                return back()->withErrors(['child_id' => 'This would create a circular relationship.']);
+            }
+            $current = Product::find($current->parent_product_id);
+        }
+
+        Product::where('id', $childId)->update(['parent_product_id' => $parentId]);
+
+        return back()->with('success', 'Relationship assigned.');
+    }
+
+    public function removeRelationship(Request $request)
+    {
+        $request->validate([
+            'product_id' => ['required', 'exists:product,id'],
+        ]);
+
+        Product::where('id', $request->product_id)->update(['parent_product_id' => null]);
+
+        return back()->with('success', 'Product removed from parent.');
     }
 
 }

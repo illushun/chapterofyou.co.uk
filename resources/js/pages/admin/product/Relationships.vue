@@ -1,232 +1,125 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { computed, onMounted, ref } from 'vue';
-import * as d3 from 'd3';
+import { Head, router, Link } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
-// 1. Typescript Declaration for route helper
-import type { Route } from 'ziggy-js';
-declare const route: Route;
+declare const route: any;
 
-// 2. Define Props
 interface ProductNode {
     id: number;
     name: string;
-    // Matches the property name used in the AdminProductController's relationshipIndex() map
-    parent_product_id: number | null;
+    parent_id: number | null;
+    mpn?: string;
+    status?: string;
+    stock_qty?: number;
+}
+
+interface TreeNode extends ProductNode {
+    children: TreeNode[];
+    collapsed: ref<boolean>;
 }
 
 const props = defineProps<{
     productsData: ProductNode[];
 }>();
 
-// 3. State Management
-const graphContainer = ref<HTMLElement | null>(null);
-const isLoading = ref(true);
+// ── Form state ─────────────────────────────────────────────────────────────
+const parentId = ref<number | null>(null);
+const childId = ref<number | null>(null);
+const submitting = ref(false);
+const searchQuery = ref('');
+const flash = ref<string | null>(null);
 
-// New state for form inputs
-const parentProductId = ref<number | null>(null);
-const childProductId = ref<number | null>(null);
+// ── Build tree ─────────────────────────────────────────────────────────────
+const collapsed = ref<Record<number, boolean>>({});
 
-// D3 Node calculation
-const nodes = computed(() => {
-    return props.productsData.map(p => ({
-        ...p,
-        // D3 requires mutable x/y positions
-        x: 0,
-        y: 0,
-        // Determine if this is a root product
-        is_root: p.parent_product_id === null,
-        group: p.parent_product_id === null ? 1 : 2, // 1: Root (Blue), 2: Child (Orange)
-        parent_id: p.parent_product_id // D3 Link function relies on this being the parent ID
-    }));
-});
+const toggleCollapse = (id: number) => {
+    collapsed.value[id] = !collapsed.value[id];
+};
 
-// D3 Link calculation (Parent-Child relationships)
-const links = computed(() => {
-    // 1. Get the raw links (source ID, target ID)
-    const linkSet = props.productsData
-        .filter(p => p.parent_product_id !== null)
-        .map(p => ({
-            source: p.parent_product_id,
-            target: p.id,
-        }));
+const buildTree = (items: ProductNode[]): TreeNode[] => {
+    const map: Record<number, TreeNode> = {};
+    const roots: TreeNode[] = [];
 
-    // 2. Map IDs to node objects for D3 simulation
-    const nodeMap = new Map(nodes.value.map(n => [n.id, n]));
+    items.forEach(item => {
+        map[item.id] = { ...item, children: [], collapsed: false } as any;
+    });
 
-    return linkSet.map(link => ({
-        source: nodeMap.get(link.source as number),
-        target: nodeMap.get(link.target),
-    })).filter(link => link.source && link.target);
-});
-
-// 4. Form Submission Logic
-const assignRelationship = () => {
-    // Use a basic check/log since we can't use alert() or confirm()
-    if (parentProductId.value === null || childProductId.value === null) {
-        console.error("Please select both a Parent and a Child product.");
-        return;
-    }
-
-    if (parentProductId.value === childProductId.value) {
-        console.error("A product cannot be its own parent.");
-        return;
-    }
-
-    // This is the Inertia POST request to update the relationship
-    // NOTE: Replace 'admin.products.assign-relationship' with your actual route name
-    router.post(route('admin.products.assign-relationship'), {
-        parent_id: parentProductId.value,
-        child_id: childProductId.value,
-    }, {
-        // Clear the form and trigger re-render on success
-        onSuccess: () => {
-            parentProductId.value = null;
-            childProductId.value = null;
-            // The Inertia page reload will automatically re-run the D3 graph initialization
-        },
-        onError: (errors) => {
-            console.error("Error assigning relationship:", errors);
+    items.forEach(item => {
+        if (item.parent_id && map[item.parent_id]) {
+            map[item.parent_id].children.push(map[item.id]);
+        } else if (!item.parent_id) {
+            roots.push(map[item.id]);
         }
     });
+
+    return roots;
 };
 
+const filteredTree = computed(() => {
+    if (!searchQuery.value.trim()) return buildTree(props.productsData);
+    const q = searchQuery.value.toLowerCase();
+    const matchingIds = new Set<number>();
+    const ancestorIds = new Set<number>();
 
-// 5. D3 Visualization Logic
-const initializeGraph = () => {
-    if (!graphContainer.value) return;
+    // Find matching products
+    props.productsData.forEach(p => {
+        if (p.name.toLowerCase().includes(q) || String(p.id).includes(q)) {
+            matchingIds.add(p.id);
+            // Include ancestors
+            let current = p;
+            while (current.parent_id) {
+                ancestorIds.add(current.parent_id);
+                const parent = props.productsData.find(x => x.id === current.parent_id);
+                if (!parent) break;
+                current = parent;
+            }
+        }
+    });
 
-    isLoading.value = true;
-
-    const container = graphContainer.value;
-
-    // Clear any previous SVG instance
-    d3.select(container).selectAll("svg").remove();
-
-    // Use container size for responsiveness
-    const width = container.clientWidth;
-    const height = Math.max(container.clientHeight, 600); // Set minimum height
-
-    const svg = d3.select(container)
-        .append("svg")
-        .attr("viewBox", `0 0 ${width} ${height}`)
-        .style("width", "100%")
-        .style("height", "100%")
-        .attr("class", "bg-foreground rounded-xl"); // Styling moved to container class
-
-    // Group element for transformation (pan/zoom)
-    const g = svg.append("g");
-
-    // Pan and zoom behavior
-    const zoom = d3.zoom()
-        .scaleExtent([0.1, 4])
-        .on("zoom", (event) => {
-            g.attr("transform", event.transform);
-        });
-
-    svg.call(zoom as any);
-
-    // D3 Force Simulation setup
-    const simulation = d3.forceSimulation(nodes.value as d3.SimulationNodeDatum[])
-        .force("link", d3.forceLink(links.value as d3.SimulationLinkDatum<d3.SimulationNodeDatum>[])
-            .id((d: any) => d.id)
-            .distance(150) // Distance between nodes
-        )
-        .force("charge", d3.forceManyBody().strength(-300)) // Repel nodes
-        .force("center", d3.forceCenter(width / 2, height / 2))
-        .on("tick", ticked);
-
-    // Color scale
-    // Group 1 is blue (Root), Group 2 is orange (Child)
-    const color = d3.scaleOrdinal(d3.schemeCategory10);
-
-    // 5.1. Links (Lines)
-    const link = g.append("g")
-        .attr("stroke", "currentColor")
-        .attr("stroke-opacity", 0.6)
-        .attr("class", "text-copy-light")
-        .selectAll("line")
-        .data(links.value)
-        .join("line")
-        .attr("stroke-width", 2);
-
-    // 5.2. Nodes (Circles)
-    const node = g.append("g")
-        .attr("stroke", "#fff")
-        .attr("stroke-width", 1.5)
-        .selectAll("circle")
-        .data(nodes.value)
-        .join("circle")
-        .attr("r", (d: any) => d.is_root ? 12 : 8) // Larger circle for root products
-        .attr("fill", (d: any) => color(d.group))
-        .attr("class", "cursor-pointer transition-all duration-150 ease-in-out hover:stroke-4")
-        .on("click", (event, d: any) => {
-            // Navigate to product edit page on click
-            router.get(route('admin.products.edit', d.id));
-        })
-        .call(d3.drag<any, any>()
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended));
-
-    // 5.3. Labels (Text)
-    const label = g.append("g")
-        .attr("class", "text-sm font-semibold text-copy pointer-events-none select-none")
-        .selectAll("text")
-        .data(nodes.value)
-        .join("text")
-        .attr("x", (d: any) => d.is_root ? 18 : 12) // Offset based on circle size
-        .attr("y", 5)
-        .text((d: any) => d.name)
-        .attr("font-family", "Inter, sans-serif")
-        .attr("font-size", 12);
-
-    // 5.4. Tick Function (Updates position on each simulation tick)
-    function ticked() {
-        link
-            .attr("x1", (d: any) => d.source.x)
-            .attr("y1", (d: any) => d.source.y)
-            .attr("x2", (d: any) => d.target.x)
-            .attr("y2", (d: any) => d.target.y);
-
-        node
-            .attr("cx", (d: any) => d.x)
-            .attr("cy", (d: any) => d.y);
-
-        label
-            .attr("transform", (d: any) => `translate(${d.x}, ${d.y})`);
-    }
-
-    // 5.5. Drag Handlers
-    function dragstarted(event: any) {
-        if (!event.active) simulation.alphaTarget(0.3).restart();
-        event.subject.fx = event.subject.x;
-        event.subject.fy = event.subject.y;
-    }
-
-    function dragged(event: any) {
-        event.subject.fx = event.x;
-        event.subject.fy = event.y;
-    }
-
-    function dragended(event: any) {
-        if (!event.active) simulation.alphaTarget(0);
-        event.subject.fx = null;
-        event.subject.fy = null;
-    }
-
-    // Set loading false after initial rendering
-    setTimeout(() => isLoading.value = false, 500);
-};
-
-// 6. Lifecycle Hooks
-onMounted(() => {
-    initializeGraph();
-    // Re-initialize graph on window resize to make it responsive
-    window.addEventListener('resize', initializeGraph);
+    const filtered = props.productsData.filter(p =>
+        matchingIds.has(p.id) || ancestorIds.has(p.id)
+    );
+    return buildTree(filtered);
 });
 
+// Stats
+const totalProducts = computed(() => props.productsData.length);
+const parentProducts = computed(() => props.productsData.filter(p => !p.parent_id).length);
+const childProducts = computed(() => props.productsData.filter(p => p.parent_id).length);
+const orphans = computed(() => {
+    const parentIds = new Set(props.productsData.filter(p => !p.parent_id).map(p => p.id));
+    return props.productsData.filter(p => p.parent_id && !parentIds.has(p.parent_id)).length;
+});
+
+// Child options (exclude self and current parent's ancestors to prevent cycles)
+const childOptions = computed(() =>
+    props.productsData.filter(p => p.id !== parentId.value)
+);
+
+function assignRelationship() {
+    if (!parentId.value || !childId.value) return;
+    submitting.value = true;
+    router.post(route('admin.products.assign-relationship'), {
+        parent_id: parentId.value,
+        child_id: childId.value,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            flash.value = 'Relationship assigned successfully.';
+            parentId.value = null;
+            childId.value = null;
+            setTimeout(() => { flash.value = null; }, 3000);
+        },
+        onFinish: () => { submitting.value = false; },
+    });
+}
+
+function removeRelationship(productId: number) {
+    router.post(route('admin.products.remove-relationship'), {
+        product_id: productId,
+    }, { preserveScroll: true });
+}
 </script>
 
 <template>
@@ -234,89 +127,287 @@ onMounted(() => {
 
         <Head title="Product Relationships" />
 
-        <!-- Consistent Header Style -->
-        <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">Product Relationship Visualiser</h2>
+        <!-- Header -->
+        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 border-b-2 border-copy pb-2">
+            <div>
+                <h2 class="text-3xl font-black">Product Relationships</h2>
+                <p class="text-copy-light text-sm mt-0.5">Manage parent–child product hierarchies</p>
+            </div>
             <Link :href="route('admin.products.index')"
-                class="text-sm font-semibold text-blue-500 hover:text-blue-700 transition">
-            &larr; Back to Products
+                class="text-sm font-medium text-copy-light hover:text-copy transition">
+            ← Back to Products
             </Link>
         </div>
 
-        <!-- Controls and Visualization Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Flash -->
+        <div v-if="flash"
+            class="mb-4 rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
+            ✓ {{ flash }}
+        </div>
 
-            <!-- Mass Assignment Panel (Styled as a Card) -->
-            <div class="lg:col-span-1 p-6 rounded-lg border-2 border-copy bg-foreground h-full">
-                <h2 class="text-xl font-bold mb-4 text-copy">Assign Relationship</h2>
-                <p class="text-copy-light mb-6 text-sm">
-                    Select two products to establish a parent-child relationship.
-                </p>
-
-                <form @submit.prevent="assignRelationship" class="space-y-4">
-                    <!-- Parent Product Select -->
-                    <div>
-                        <label for="parent_select" class="block text-sm font-medium text-copy mb-1">Parent
-                            Product</label>
-                        <select id="parent_select" v-model="parentProductId"
-                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-secondary-light text-copy focus:ring-primary focus:border-primary transition">
-                            <option :value="null" disabled>Select Parent Product</option>
-                            <option v-for="p in props.productsData" :key="p.id" :value="p.id">{{ p.name }} (ID: {{ p.id
-                            }})</option>
-                        </select>
-                    </div>
-
-                    <!-- Child Product Select -->
-                    <div>
-                        <label for="child_select" class="block text-sm font-medium text-copy mb-1">Child Product</label>
-                        <select id="child_select" v-model="childProductId"
-                            class="w-full px-3 py-2 border border-copy-light/50 rounded-lg bg-secondary-light text-copy focus:ring-primary focus:border-primary transition">
-                            <option :value="null" disabled>Select Child Product</option>
-                            <!-- Prevent a product from being a child of itself -->
-                            <option v-for="p in props.productsData.filter(p => p.id !== parentProductId)" :key="p.id"
-                                :value="p.id">{{ p.name }} (ID: {{ p.id }})</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" :disabled="!parentProductId || !childProductId"
-                        class="w-full px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                        Assign Relationship
-                    </button>
-                </form>
-
-                <div class="mt-8 pt-4 border-t border-copy-light/50">
-                    <h3 class="font-semibold text-copy mb-2">Legend</h3>
-                    <ul class="text-sm text-copy-light space-y-1">
-                        <li class="flex items-center"><span class="w-3 h-3 rounded-full mr-2 flex-shrink-0"
-                                style="background-color: #1f77b4;"></span>Root Product (No Parent) - Larger node</li>
-                        <li class="flex items-center"><span class="w-3 h-3 rounded-full mr-2 flex-shrink-0"
-                                style="background-color: #ff7f0e;"></span>Child Product - Smaller node</li>
-                        <li class="flex items-center mt-3 text-xs">
-                            <svg class="w-4 h-4 mr-2 text-copy-light" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                            </svg>
-                            Click node to edit product.
-                        </li>
-                    </ul>
+        <!-- Stats row -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 text-center">
+                    <p class="text-2xl font-black text-copy">{{ totalProducts }}</p>
+                    <p class="text-xs text-copy-light mt-0.5">Total Products</p>
                 </div>
             </div>
+            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 text-center">
+                    <p class="text-2xl font-black text-primary">{{ parentProducts }}</p>
+                    <p class="text-xs text-copy-light mt-0.5">Parent Products</p>
+                </div>
+            </div>
+            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 text-center">
+                    <p class="text-2xl font-black text-copy">{{ childProducts }}</p>
+                    <p class="text-xs text-copy-light mt-0.5">Child Products</p>
+                </div>
+            </div>
+            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 text-center">
+                    <p class="text-2xl font-black" :class="orphans > 0 ? 'text-amber-600' : 'text-green-600'">
+                        {{ orphans }}
+                    </p>
+                    <p class="text-xs text-copy-light mt-0.5">Orphaned</p>
+                </div>
+            </div>
+        </div>
 
-            <!-- Visualization Panel (Styled as a Card) -->
-            <div class="lg:col-span-2 relative min-h-[600px] rounded-lg border-2 border-copy bg-foreground">
-                <div v-if="isLoading"
-                    class="absolute inset-0 flex flex-col items-center justify-center rounded-lg z-10 bg-foreground/90">
-                    <span class="loading loading-spinner loading-lg text-primary"></span>
-                    <p class="ml-3 text-lg text-copy mt-2">Building Network Graph...</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- ── Left panel: assign + legend ── -->
+            <div class="space-y-5">
+
+                <!-- Assign relationship -->
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
+                        <h3 class="text-base font-bold text-copy mb-1">Assign Relationship</h3>
+                        <p class="text-xs text-copy-light mb-4">Link a child product to a parent product.</p>
+
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-medium text-copy-light mb-1 uppercase tracking-wider">
+                                    Parent Product
+                                </label>
+                                <select v-model="parentId"
+                                    class="w-full rounded-lg border-2 border-copy bg-foreground px-3 py-2 text-sm text-copy focus:outline-none">
+                                    <option :value="null">— Select parent —</option>
+                                    <option v-for="p in productsData" :key="p.id" :value="p.id">
+                                        {{ p.name }}
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-medium text-copy-light mb-1 uppercase tracking-wider">
+                                    Child Product
+                                </label>
+                                <select v-model="childId"
+                                    class="w-full rounded-lg border-2 border-copy bg-foreground px-3 py-2 text-sm text-copy focus:outline-none">
+                                    <option :value="null">— Select child —</option>
+                                    <option v-for="p in childOptions" :key="p.id" :value="p.id">
+                                        {{ p.name }}
+                                        <template v-if="p.parent_id"> (currently child)</template>
+                                    </option>
+                                </select>
+                            </div>
+
+                            <button @click="assignRelationship" :disabled="!parentId || !childId || submitting"
+                                class="w-full rounded-lg border-2 border-copy py-2 text-sm font-bold transition disabled:opacity-40"
+                                style="background-color: var(--primary); color: var(--primary-content);">
+                                {{ submitting ? 'Saving…' : 'Assign Relationship' }}
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div ref="graphContainer" class="w-full h-full min-h-[600px] overflow-hidden">
-                    <!-- D3 SVG will be rendered here -->
+                <!-- Legend -->
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
+                        <h3 class="text-base font-bold text-copy mb-3">Legend</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-primary flex-shrink-0"></span>
+                                <span class="text-copy-light">Root / Parent product</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="w-3 h-3 rounded-full bg-secondary-light border border-copy flex-shrink-0"></span>
+                                <span class="text-copy-light">Child product (variant)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-amber-400 flex-shrink-0"></span>
+                                <span class="text-copy-light">Orphaned (parent missing)</span>
+                            </div>
+                            <div class="pt-2 border-t border-copy-light text-xs text-copy-light space-y-1">
+                                <p>▶ / ▼ — expand / collapse children</p>
+                                <p>Click product name to edit</p>
+                                <p>✕ — remove from parent</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ── Right panel: tree ── -->
+            <div class="lg:col-span-2">
+                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
+                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-hidden">
+
+                        <!-- Search bar -->
+                        <div class="px-5 py-3 border-b border-copy-light flex items-center gap-3">
+                            <svg class="w-4 h-4 text-copy-light flex-shrink-0" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input v-model="searchQuery" type="text" placeholder="Search products…"
+                                class="flex-1 bg-transparent text-sm text-copy placeholder-copy-light focus:outline-none" />
+                            <button v-if="searchQuery" @click="searchQuery = ''"
+                                class="text-xs text-copy-light hover:text-copy">✕</button>
+                        </div>
+
+                        <!-- Tree -->
+                        <div class="p-5 overflow-auto max-h-[70vh]">
+                            <div v-if="filteredTree.length === 0"
+                                class="text-center py-12 text-copy-light italic text-sm">
+                                {{ searchQuery ? 'No products match your search.' : 'No products found.' }}
+                            </div>
+
+                            <!-- Recursive tree component -->
+                            <div v-for="root in filteredTree" :key="root.id" class="mb-2">
+                                <TreeNodeRow :node="root" :depth="0" :collapsed-map="collapsed" @toggle="toggleCollapse"
+                                    @edit="id => router.get(route('admin.products.edit', id))"
+                                    @remove="removeRelationship" />
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
             </div>
 
         </div>
-
     </AdminLayout>
 </template>
+
+<!-- Recursive sub-component defined in the same file -->
+<script lang="ts">
+import { defineComponent, h, PropType } from 'vue';
+
+interface TreeNodeDef {
+    id: number;
+    name: string;
+    parent_id: number | null;
+    mpn?: string;
+    status?: string;
+    stock_qty?: number;
+    children: TreeNodeDef[];
+}
+
+const TreeNodeRow = defineComponent({
+    name: 'TreeNodeRow',
+    props: {
+        node: { type: Object as PropType<TreeNodeDef>, required: true },
+        depth: { type: Number, default: 0 },
+        collapsedMap: { type: Object as PropType<Record<number, boolean>>, required: true },
+    },
+    emits: ['toggle', 'edit', 'remove'],
+    setup(props, { emit }) {
+        return () => {
+            const node = props.node;
+            const isRoot = !node.parent_id;
+            const hasChildren = node.children.length > 0;
+            const isCollapsed = props.collapsedMap[node.id];
+            const indent = props.depth * 20;
+
+            return h('div', { class: 'select-none' }, [
+                // Row
+                h('div', {
+                    class: [
+                        'flex items-center gap-2 px-3 py-2 rounded-lg mb-0.5 group transition',
+                        'hover:bg-secondary-light',
+                        props.depth === 0 ? 'border border-copy-light/50' : '',
+                    ],
+                    style: { marginLeft: `${indent}px` },
+                }, [
+                    // Expand/collapse toggle
+                    h('button', {
+                        class: 'w-5 h-5 flex items-center justify-center text-xs text-copy-light flex-shrink-0',
+                        onClick: () => hasChildren && emit('toggle', node.id),
+                    }, hasChildren ? (isCollapsed ? '▶' : '▼') : '·'),
+
+                    // Colour dot
+                    h('span', {
+                        class: [
+                            'w-2.5 h-2.5 rounded-full flex-shrink-0',
+                            isRoot ? 'bg-[var(--primary)]'
+                                : node.children.length > 0 ? 'bg-blue-400'
+                                    : 'bg-secondary-light border border-copy',
+                        ],
+                    }),
+
+                    // Product name (clickable to edit)
+                    h('button', {
+                        class: [
+                            'text-sm font-medium text-left flex-1 truncate',
+                            isRoot ? 'font-bold text-copy' : 'text-copy',
+                            'hover:text-primary transition',
+                        ],
+                        onClick: () => emit('edit', node.id),
+                        title: `Edit: ${node.name}`,
+                    }, node.name),
+
+                    // Child count badge
+                    hasChildren && h('span', {
+                        class: 'text-xs text-copy-light bg-secondary-light px-1.5 py-0.5 rounded-full flex-shrink-0',
+                    }, `${node.children.length}`),
+
+                    // Status badge
+                    node.status && h('span', {
+                        class: [
+                            'text-xs px-1.5 py-0.5 rounded-full flex-shrink-0',
+                            node.status === 'enabled' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600',
+                        ],
+                    }, node.status === 'enabled' ? '●' : '○'),
+
+                    // Remove from parent (only for child products)
+                    !isRoot && h('button', {
+                        class: 'opacity-0 group-hover:opacity-100 text-xs text-copy-light hover:text-error transition flex-shrink-0',
+                        title: 'Remove from parent',
+                        onClick: (e: Event) => { e.stopPropagation(); emit('remove', node.id); },
+                    }, '✕'),
+                ]),
+
+                // Connector line + children
+                !isCollapsed && hasChildren && h('div', {
+                    class: 'relative',
+                    style: { marginLeft: `${indent + 10}px` },
+                }, [
+                    // Vertical line
+                    h('div', {
+                        class: 'absolute left-0 top-0 bottom-2 w-px bg-copy-light/30',
+                        style: { marginLeft: '12px' },
+                    }),
+                    // Recurse
+                    ...node.children.map(child =>
+                        h(TreeNodeRow, {
+                            key: child.id,
+                            node: child,
+                            depth: props.depth + 1,
+                            collapsedMap: props.collapsedMap,
+                            onToggle: (id: number) => emit('toggle', id),
+                            onEdit: (id: number) => emit('edit', id),
+                            onRemove: (id: number) => emit('remove', id),
+                        })
+                    ),
+                ]),
+            ]);
+        };
+    },
+});
+
+export default { components: { TreeNodeRow } };
+</script>

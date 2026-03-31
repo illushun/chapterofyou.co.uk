@@ -92,7 +92,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('categories', AdminCategoryController::class)->except(['show']);
     Route::resource('couriers', AdminCourierController::class)->except(['show']);
 
-    Route::get('/products/relationships', [AdminProductController::class, 'relationshipIndex'])->name('products.relationships');
+    Route::get('products/relationships', [AdminProductController::class, 'relationshipIndex'])->name('products.relationships');
+    Route::post('products/assign-relationship', [AdminProductController::class, 'assignRelationship'])->name('products.assign-relationship');
+    Route::post('products/remove-relationship', [AdminProductController::class, 'removeRelationship'])->name('products.remove-relationship');
 
     Route::get('messages', [AdminMessageController::class, 'index'])->name('messages.index');
     Route::get('messages/{message}', [AdminMessageController::class, 'show'])->name('messages.show');
