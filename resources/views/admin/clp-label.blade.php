@@ -9,194 +9,161 @@
         box-sizing: border-box;
     }
 
-    @page {
-        /* 76mm × 50mm landscape */
-        size: 76mm 50mm;
-        margin: 0;
-    }
-
     html, body {
         width: 76mm;
         height: 50mm;
         font-family: DejaVu Sans, Arial, sans-serif;
-        font-size: 5.5pt;
+        font-size: 5pt;
         color: #000;
         background: #fff;
+        line-height: 1.3;
     }
 
     .label {
         width: 76mm;
         height: 50mm;
-        padding: 2mm;
-        display: block;
-        position: relative;
-        border: 0.3mm solid #000;
+        border: 0.4mm solid #000;
+        padding: 1.5mm;
+        overflow: hidden;
     }
 
-    /* ── Top bar: product name + quantity ── */
     .label-header {
         border-bottom: 0.3mm solid #000;
-        padding-bottom: 1mm;
-        margin-bottom: 1mm;
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
+        padding-bottom: 0.8mm;
+        margin-bottom: 0.8mm;
     }
 
-    .product-name {
-        font-size: 7pt;
-        font-weight: bold;
-        letter-spacing: 0.02em;
-        text-transform: uppercase;
-        flex: 1;
-    }
-
-    .quantity {
-        font-size: 6pt;
-        font-weight: bold;
-        margin-left: 2mm;
-        white-space: nowrap;
-    }
-
-    /* ── Main body: two columns ── */
-    .label-body {
+    .header-row {
         display: table;
         width: 100%;
         table-layout: fixed;
     }
 
+    .product-name {
+        display: table-cell;
+        font-size: 6.5pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .quantity {
+        display: table-cell;
+        font-size: 6pt;
+        font-weight: bold;
+        text-align: right;
+        width: 15mm;
+        white-space: nowrap;
+        vertical-align: bottom;
+    }
+
+    .label-body {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+        height: 34mm;
+    }
+
     .col-left {
         display: table-cell;
-        width: 20mm;
+        width: 18mm;
         vertical-align: top;
-        padding-right: 1.5mm;
+        padding-right: 1mm;
     }
 
     .col-right {
         display: table-cell;
         vertical-align: top;
+        overflow: hidden;
     }
 
-    /* ── Signal word ── */
     .signal-word {
-        font-size: 7.5pt;
+        font-size: 8pt;
         font-weight: bold;
         margin-bottom: 1mm;
-        letter-spacing: 0.03em;
+        letter-spacing: 0.02em;
     }
-
-    .signal-danger  { color: #c00; }
+    .signal-danger  { color: #cc0000; }
     .signal-warning { color: #b85c00; }
 
-    /* ── Pictograms ── */
-    .pictograms {
-        display: block;
+    .pictogram-wrap {
+        margin-bottom: 1mm;
     }
 
-    .pictogram-row {
-        display: block;
-        margin-bottom: 0.5mm;
+    .pictogram-table {
+        width: 11mm;
+        height: 11mm;
+        border-collapse: collapse;
     }
 
-    /*
-     * Each pictogram: 10mm × 10mm diamond
-     * DomPDF doesn't support CSS transforms well,
-     * so we use a table-based diamond approach
-     */
-    .pictogram {
-        display: inline-block;
-        width: 10mm;
-        height: 10mm;
-        margin-right: 0.5mm;
-        margin-bottom: 0.5mm;
-        position: relative;
-    }
-
-    .pictogram-outer {
-        width: 10mm;
-        height: 10mm;
-        border: 0.5mm solid #e00;
+    .pic-corner {
         background: #fff;
-        transform: rotate(45deg);
-        position: absolute;
-        top: 0;
-        left: 0;
+    }
+    .pic-center {
+        text-align: center;
+        vertical-align: middle;
+        background: #fff;
+    }
+    .pic-center img {
+        width: 6mm;
+        height: 6mm;
     }
 
-    .pictogram-inner {
-        position: absolute;
-        top: 1.5mm;
-        left: 1.5mm;
-        width: 7mm;
-        height: 7mm;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .pictogram img {
-        width: 7mm;
-        height: 7mm;
-        display: block;
-        /* Images are embedded as base64 — no rotation needed */
-    }
-
-    /* ── Statements ── */
     .section-label {
-        font-size: 4.5pt;
+        font-size: 4pt;
         font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #555;
-        margin-bottom: 0.5mm;
-        margin-top: 1mm;
-        border-bottom: 0.2mm solid #ccc;
-        padding-bottom: 0.3mm;
+        letter-spacing: 0.06em;
+        color: #444;
+        border-bottom: 0.15mm solid #aaa;
+        padding-bottom: 0.2mm;
+        margin-bottom: 0.4mm;
+        margin-top: 0.8mm;
     }
 
-    .section-label:first-child {
+    .section-label.first {
         margin-top: 0;
     }
 
     .statement-line {
-        font-size: 5pt;
-        line-height: 1.35;
-        margin-bottom: 0.2mm;
-    }
-
-    .statement-code {
-        font-weight: bold;
-    }
-
-    /* ── Footer: supplier details ── */
-    .label-footer {
-        position: absolute;
-        bottom: 2mm;
-        left: 2mm;
-        right: 2mm;
-        border-top: 0.3mm solid #000;
-        padding-top: 0.8mm;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-    }
-
-    .supplier-info {
         font-size: 4.5pt;
         line-height: 1.3;
-        color: #222;
+        margin-bottom: 0.15mm;
     }
 
-    .supplier-name {
+    .stmt-code {
         font-weight: bold;
     }
 
-    .supplementary {
+    .label-footer {
+        border-top: 0.3mm solid #000;
+        padding-top: 0.6mm;
+        margin-top: 0.5mm;
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+    }
+
+    .footer-supplier {
+        display: table-cell;
         font-size: 4pt;
+        line-height: 1.35;
+        color: #111;
+        vertical-align: bottom;
+    }
+
+    .footer-supplier .supplier-name {
+        font-weight: bold;
+    }
+
+    .footer-supplementary {
+        display: table-cell;
+        font-size: 3.5pt;
         color: #444;
         font-style: italic;
-        max-width: 35mm;
         text-align: right;
+        vertical-align: bottom;
+        width: 30mm;
         line-height: 1.3;
     }
 </style>
@@ -204,62 +171,58 @@
 <body>
 <div class="label">
 
-    {{-- ── Header ── --}}
     <div class="label-header">
-        <div class="product-name">{{ $label->product_name }}</div>
-        @if($label->nominal_quantity)
-            <div class="quantity">{{ $label->nominal_quantity }}</div>
-        @endif
+        <div class="header-row">
+            <div class="product-name">{{ $label->product_name }}</div>
+            @if($label->nominal_quantity)
+                <div class="quantity">{{ $label->nominal_quantity }}</div>
+            @endif
+        </div>
     </div>
 
-    {{-- ── Body (two columns) ── --}}
     <div class="label-body">
 
-        {{-- Left column: signal word + pictograms --}}
         <div class="col-left">
+
             @if($label->signal_word)
                 <div class="signal-word {{ strtolower($label->signal_word) === 'danger' ? 'signal-danger' : 'signal-warning' }}">
                     {{ $label->signal_word }}
                 </div>
             @endif
 
-            {{-- Pictograms --}}
-            <div class="pictograms">
-                @foreach($pictogramImages as $picKey => $picBase64)
-                    <div class="pictogram-row">
-                        {{-- Diamond wrapper using nested divs (DomPDF compatible) --}}
-                        <table style="width:10mm; height:10mm; border-collapse:collapse; display:inline-table;">
-                            <tr>
-                                <td style="width:3.5mm; height:3.5mm; border-top:0.5mm solid #e00; border-left:0.5mm solid #e00; background:#fff;"></td>
-                                <td style="width:3mm; height:3.5mm; border-top:0.5mm solid #e00; background:#fff;"></td>
-                                <td style="width:3.5mm; height:3.5mm; border-top:0.5mm solid #e00; border-right:0.5mm solid #e00; background:#fff;"></td>
-                            </tr>
-                            <tr>
-                                <td style="border-left:0.5mm solid #e00; background:#fff;"></td>
-                                <td style="text-align:center; vertical-align:middle; background:#fff;">
-                                    <img src="{{ $picBase64 }}" style="width:5.5mm; height:5.5mm;" />
-                                </td>
-                                <td style="border-right:0.5mm solid #e00; background:#fff;"></td>
-                            </tr>
-                            <tr>
-                                <td style="width:3.5mm; height:3.5mm; border-bottom:0.5mm solid #e00; border-left:0.5mm solid #e00; background:#fff;"></td>
-                                <td style="width:3mm; height:3.5mm; border-bottom:0.5mm solid #e00; background:#fff;"></td>
-                                <td style="width:3.5mm; height:3.5mm; border-bottom:0.5mm solid #e00; border-right:0.5mm solid #e00; background:#fff;"></td>
-                            </tr>
-                        </table>
-                    </div>
-                @endforeach
-            </div>
+            @foreach($pictogramImages as $picKey => $picBase64)
+                <div class="pictogram-wrap">
+                    <table class="pictogram-table">
+                        <tr>
+                            <td class="pic-corner" style="width:3.5mm;height:3mm;border-top:0.5mm solid #dd0000;border-left:0.5mm solid #dd0000;"></td>
+                            <td class="pic-corner" style="width:4mm;height:3mm;border-top:0.5mm solid #dd0000;"></td>
+                            <td class="pic-corner" style="width:3.5mm;height:3mm;border-top:0.5mm solid #dd0000;border-right:0.5mm solid #dd0000;"></td>
+                        </tr>
+                        <tr>
+                            <td class="pic-corner" style="width:3.5mm;border-left:0.5mm solid #dd0000;"></td>
+                            <td class="pic-center">
+                                <img src="{{ $picBase64 }}" />
+                            </td>
+                            <td class="pic-corner" style="width:3.5mm;border-right:0.5mm solid #dd0000;"></td>
+                        </tr>
+                        <tr>
+                            <td class="pic-corner" style="width:3.5mm;height:3mm;border-bottom:0.5mm solid #dd0000;border-left:0.5mm solid #dd0000;"></td>
+                            <td class="pic-corner" style="height:3mm;border-bottom:0.5mm solid #dd0000;"></td>
+                            <td class="pic-corner" style="width:3.5mm;height:3mm;border-bottom:0.5mm solid #dd0000;border-right:0.5mm solid #dd0000;"></td>
+                        </tr>
+                    </table>
+                </div>
+            @endforeach
+
         </div>
 
-        {{-- Right column: H and P statements --}}
         <div class="col-right">
 
             @if(!empty($hStatements))
-                <div class="section-label">Hazard statements</div>
+                <div class="section-label first">Hazard statements</div>
                 @foreach($hStatements as $code => $text)
                     <div class="statement-line">
-                        <span class="statement-code">{{ $code }}</span> {{ $text }}
+                        <span class="stmt-code">{{ $code }}</span> {{ $text }}
                     </div>
                 @endforeach
             @endif
@@ -268,7 +231,7 @@
                 <div class="section-label">Precautionary statements</div>
                 @foreach($pStatements as $code => $text)
                     <div class="statement-line">
-                        <span class="statement-code">{{ $code }}</span> {{ $text }}
+                        <span class="stmt-code">{{ $code }}</span> {{ $text }}
                     </div>
                 @endforeach
             @endif
@@ -276,20 +239,19 @@
         </div>
     </div>
 
-    {{-- ── Footer: supplier + supplementary ── --}}
     <div class="label-footer">
-        <div class="supplier-info">
-            <div class="supplier-name">{{ $label->supplier_name }}</div>
+        <div class="footer-supplier">
+            <span class="supplier-name">{{ $label->supplier_name }}</span>
             @if($label->supplier_address)
-                <div>{{ $label->supplier_address }}</div>
+                &nbsp;{{ $label->supplier_address }}
             @endif
             @if($label->supplier_phone)
-                <div>T: {{ $label->supplier_phone }}</div>
+                &nbsp;T: {{ $label->supplier_phone }}
             @endif
         </div>
 
         @if($label->supplementary_info)
-            <div class="supplementary">{{ $label->supplementary_info }}</div>
+            <div class="footer-supplementary">{{ $label->supplementary_info }}</div>
         @endif
     </div>
 
