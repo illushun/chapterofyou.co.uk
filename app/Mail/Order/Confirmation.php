@@ -29,6 +29,8 @@ class Confirmation extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
+        \Log::info("Generating order confirmation email for Order #{$this->order->id}");
+
         $order = $this->order->load('items.product');
 
         $items = $order->items->map(fn ($item) => [
