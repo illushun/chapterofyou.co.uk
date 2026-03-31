@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBatchSheetController;
 use App\Http\Controllers\Admin\AdminCourierController;
 use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AdminReviewController;
@@ -136,6 +137,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
     Route::get('/wishlists', [AdminWishlistController::class, 'index'])->name('wishlists.index');
     Route::get('/wishlists/{user}', [AdminWishlistController::class, 'show'])->name('wishlists.show');
+
+    Route::get('/batch-sheets', [AdminBatchSheetController::class, 'index'])  ->name('batch-sheets.index');
+    Route::get('/batch-sheets/create', [AdminBatchSheetController::class, 'create']) ->name('batch-sheets.create');
+    Route::post('/batch-sheets', [AdminBatchSheetController::class, 'store'])  ->name('batch-sheets.store');
+    Route::get('/batch-sheets/{batch_sheet}', [AdminBatchSheetController::class, 'show'])   ->name('batch-sheets.show');
+    Route::get('/batch-sheets/{batch_sheet}/edit', [AdminBatchSheetController::class, 'edit'])   ->name('batch-sheets.edit');
+    Route::put('/batch-sheets/{batch_sheet}', [AdminBatchSheetController::class, 'update']) ->name('batch-sheets.update');
+    Route::delete('/batch-sheets/{batch_sheet}', [AdminBatchSheetController::class, 'destroy'])->name('batch-sheets.destroy');
+    Route::get('/batch-sheets/{batch_sheet}/pdf', [AdminBatchSheetController::class, 'pdf'])    ->name('batch-sheets.pdf');
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
