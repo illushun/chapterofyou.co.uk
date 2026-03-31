@@ -115,7 +115,7 @@
     .allergens {
         font-size: 5pt;
         color: #111;
-        border-bottom: 0.2mm solid #ccc;
+        /*border-bottom: 0.2mm solid #ccc;*/
         padding-bottom: 0.4mm;
         margin-bottom: 0.5mm;
         text-align: center;
@@ -132,7 +132,7 @@
     .hazard-row {
         text-align: center;
         margin-bottom: 0.5mm;
-        border-bottom: 0.2mm solid #ccc;
+        /*border-bottom: 0.2mm solid #ccc;*/
         padding-bottom: 0.5mm;
     }
 
@@ -179,7 +179,7 @@
         bottom: 1.5mm;
         left: 1.5mm;
         right: 1.5mm;
-        border-top: 0.3mm solid #000;
+        /*border-top: 0.3mm solid #000;*/
         padding-top: 0.4mm;
         overflow: hidden;
     }
