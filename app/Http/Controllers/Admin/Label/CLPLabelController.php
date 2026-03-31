@@ -127,8 +127,8 @@ class CLPLabelController extends Controller
 
         // mPDF: custom paper size in mm — exactly 76×50mm landscape
         $mpdf = new \Mpdf\Mpdf([
-            'format'              => [76, 50],   // width × height in mm
-            'orientation'         => 'L',        // L = landscape (so 76mm wide, 50mm tall)
+            'format'              => [76, 50],
+            'orientation'         => 'L',
             'margin_top'          => 0,
             'margin_bottom'       => 0,
             'margin_left'         => 0,
@@ -137,7 +137,7 @@ class CLPLabelController extends Controller
             'margin_footer'       => 0,
             'default_font_size'   => 5,
             'default_font'        => 'dejavusans',
-            'tempDir'             => storage_path('app/mpdf-temp'),
+            'tempDir'             => sys_get_temp_dir() . '/mpdf',
         ]);
 
         $mpdf->SetDisplayMode('real');        // opens at 100% / actual size
