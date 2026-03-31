@@ -117,7 +117,6 @@ class CLPLabelController extends Controller
             }
         }
 
-        // Render the blade to an HTML string
         $html = view('admin.clp-label', [
             'label'           => $label,
             'hStatements'     => $hStatements,
@@ -125,27 +124,26 @@ class CLPLabelController extends Controller
             'pictogramImages' => $pictogramImages,
         ])->render();
 
-        // mPDF: custom paper size in mm — exactly 76×50mm landscape
+        // format: [width, height] in mm — no orientation flag needed.
+        // 76mm wide x 50mm tall is exactly what we want.
         $mpdf = new \Mpdf\Mpdf([
-            'format'              => [76, 50],
-            'orientation'         => 'L',
-            'margin_top'          => 0,
-            'margin_bottom'       => 0,
-            'margin_left'         => 0,
-            'margin_right'        => 0,
-            'margin_header'       => 0,
-            'margin_footer'       => 0,
-            'default_font_size'   => 5,
-            'default_font'        => 'dejavusans',
-            'tempDir'             => sys_get_temp_dir() . '/mpdf',
+            'format'            => [76, 50],
+            'margin_top'        => 0,
+            'margin_bottom'     => 0,
+            'margin_left'       => 0,
+            'margin_right'      => 0,
+            'margin_header'     => 0,
+            'margin_footer'     => 0,
+            'default_font_size' => 5,
+            'default_font'      => 'dejavusans',
+            'tempDir'           => sys_get_temp_dir() . '/mpdf',
         ]);
 
-        $mpdf->SetDisplayMode('real');        // opens at 100% / actual size
+        $mpdf->SetDisplayMode('real');
         $mpdf->WriteHTML($html);
 
         $filename = 'CLP-Label-' . str($product->name)->slug() . '.pdf';
 
-        // Output as a download
         return response(
             $mpdf->Output($filename, \Mpdf\Output\Destination::STRING_RETURN),
             200,
