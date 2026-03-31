@@ -66,7 +66,6 @@ class CLPLabelController extends Controller
     */
     public function pdf(Product $product, CLPCalculator $calculator)
     {
-        // Use saved label if it exists, otherwise calculate live
         $saved = $product->clpLabel;
 
         if ($saved) {
@@ -74,35 +73,27 @@ class CLPLabelController extends Controller
             $pStatements = $saved->precautionary_statements ?? [];
             $signalWord  = $saved->signal_word;
             $pictograms  = $saved->required_pictograms ?? [];
-            $suppInfo    = $saved->supplementary_info;
-
-            // Build a simple object the blade template can use
-            $label = $saved;
+            $label       = $saved;
         } else {
-            // Calculate on the fly
             $clp = $calculator->calculate($product);
 
             $hStatements = $clp['hazard_statements'];
             $pStatements = $clp['precautionary_statements'];
             $signalWord  = $clp['signal_word'];
             $pictograms  = $clp['required_pictograms'];
-            $suppInfo    = null;
 
-            // Build a temporary stdClass to pass to the view
             $label = (object) [
-                'product_name'      => $product->name,
-                'supplier_name'     => config('clp.supplier_name', ''),
-                'supplier_address'  => config('clp.supplier_address', ''),
-                'supplier_phone'    => config('clp.supplier_phone', ''),
-                'signal_word'       => $signalWord,
-                'nominal_quantity'  => null,
+                'product_name'       => $product->name,
+                'supplier_name'      => config('clp.supplier_name', ''),
+                'supplier_address'   => config('clp.supplier_address', ''),
+                'supplier_phone'     => config('clp.supplier_phone', ''),
+                'signal_word'        => $signalWord,
+                'nominal_quantity'   => null,
                 'supplementary_info' => null,
             ];
         }
 
-        // Resolve pictogram images as base64 data URIs
-        // Store your GHS SVG/PNG files in public/images/clp/
-        // e.g. public/images/clp/GHS07.png
+        // Embed pictograms as base64
         $pictogramMap = [
             'exclamation'   => 'GHS07',
             'health-hazard' => 'GHS08',
@@ -120,26 +111,35 @@ class CLPLabelController extends Controller
             if (!isset($pictogramMap[$picKey])) {
                 continue;
             }
-
-            $filename = $pictogramMap[$picKey] . '.png';
-            $path     = public_path("storage/images/Pictograms/{$filename}");
-
+            $path = public_path("storage/images/Pictograms/{$pictogramMap[$picKey]}.png");
             if (file_exists($path)) {
-                $imageData = base64_encode(file_get_contents($path));
-                $pictogramImages[$picKey] = "data:image/png;base64,{$imageData}";
+                $pictogramImages[$picKey] = 'data:image/png;base64,' . base64_encode(file_get_contents($path));
             }
         }
+
+        // 76mm × 50mm in points (1mm = 2.8346pt)
+        // Pass as [x1, y1, x2, y2] — x2=width, y2=height in portrait.
+        // We want landscape 76×50, so portrait equivalent is 50×76:
+        //   50mm = 141.73pt (width in portrait = short side)
+        //   76mm = 215.43pt (height in portrait = long side)
+        // DomPDF rotates to landscape, giving us 76mm wide × 50mm tall.
+        $customPaper = [0, 0, 141.73, 215.43];
 
         $pdf = Pdf::loadView('admin.clp-label', [
             'label'           => $label,
             'hStatements'     => $hStatements,
             'pStatements'     => $pStatements,
             'pictogramImages' => $pictogramImages,
-        ]);
-
-        // Set paper to custom 76mm × 50mm landscape
-        $pdf->setPaper([0, 0, 141.73, 215.43], 'landscape');
-        $pdf->setOptions(['dpi' => 150, 'defaultFont' => 'DejaVu Sans', 'isHtml5ParserEnabled' => true]);
+        ])
+        ->setOptions([
+            'dpi'                    => 96,
+            'defaultFont'            => 'DejaVu Sans',
+            'isHtml5ParserEnabled'   => true,
+            'isRemoteEnabled'        => false,
+            'isFontSubsettingEnabled' => true,
+            'enable_css_float'       => true,
+        ])
+        ->setPaper($customPaper, 'landscape');
 
         $filename = 'CLP-Label-' . str($product->name)->slug() . '.pdf';
 
