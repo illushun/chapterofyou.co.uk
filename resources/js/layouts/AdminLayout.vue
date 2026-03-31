@@ -30,6 +30,7 @@ const navLinks = [
     { name: 'Reviews', route: 'admin.reviews.index', icon: ReviewsIcon },
     { name: 'Messages', route: 'admin.messages.index', icon: MessagesIcon },
     { name: 'Orders', route: 'admin.orders.index', icon: OrdersIcon },
+    { name: 'Wishlists', route: 'admin.wishlists.index', icon: OrdersIcon },
     { name: 'Vouchers', route: 'admin.vouchers.index', icon: OrdersIcon },
     { name: 'Couriers', route: 'admin.couriers.index', icon: CouriersIcon },
     { name: 'Users', route: 'admin.users.index', icon: UsersIcon },
@@ -103,7 +104,7 @@ const getTitle = computed(() => {
 
                     <div class="flex items-center gap-3">
                         <span class="text-sm font-medium text-copy-light hidden sm:inline-block">Welcome, {{ user?.name
-                        }}</span>
+                            }}</span>
                         <Link :href="route('logout')" method="post" as="button"
                             class="relative rounded-lg -m-0.5 px-3 py-1 text-sm font-medium text-error-content transition border-2 border-copy bg-error-light hover:bg-error-dark">
                         Logout
