@@ -24,11 +24,13 @@ interface Stats {
 const props = defineProps<{ stats: Stats }>();
 
 // ── Helpers ────────────────────────────────────────────────────────────────
-const fmt = (v: number) => `£${v.toFixed(2)}`;
-const fmtK = (v: number) => v >= 1000 ? `£${(v / 1000).toFixed(1)}k` : fmt(v);
+// Laravel serialises decimal DB columns as strings — always cast via Number()
+const n = (v: unknown): number => Number(v) || 0;
+const fmt = (v: unknown) => `£${n(v).toFixed(2)}`;
+const fmtK = (v: unknown) => n(v) >= 1000 ? `£${(n(v) / 1000).toFixed(1)}k` : fmt(v);
 
-const pctClass = (v: number) => v >= 0 ? 'text-green-600' : 'text-red-500';
-const pctLabel = (v: number) => `${v >= 0 ? '▲' : '▼'} ${Math.abs(v)}% vs prev 30d`;
+const pctClass = (v: unknown) => n(v) >= 0 ? 'text-green-600' : 'text-red-500';
+const pctLabel = (v: unknown) => `${n(v) >= 0 ? '▲' : '▼'} ${Math.abs(n(v))}% vs prev 30d`;
 
 const statusColour: Record<string, string> = {
     successful: 'bg-green-100 text-green-700',
@@ -51,35 +53,34 @@ function sparklinePath(points: number[], w = 200, h = 50): string {
 
 // Revenue sparkline (last 30 days)
 const revenueLine = computed(() =>
-    sparklinePath(props.stats.trend.map(t => t.revenue))
+    sparklinePath(props.stats.trend.map(t => Number(t.revenue) || 0))
 );
 
 // ── Bar chart for revenue trend (last 30 days) ─────────────────────────────
 const barChart = computed(() => {
     const data = props.stats.trend;
-    const maxRev = Math.max(...data.map(d => d.revenue), 1);
     // Show last 14 for readability
     const slice = data.slice(-14);
-    const maxSlice = Math.max(...slice.map(d => d.revenue), 1);
+    const maxSlice = Math.max(...slice.map(d => Number(d.revenue) || 0), 1);
     return slice.map(d => ({
         label: d.label,
-        revenue: d.revenue,
-        height: Math.round((d.revenue / maxSlice) * 100),
-        orders: d.orders,
+        revenue: Number(d.revenue) || 0,
+        height: Math.round(((Number(d.revenue) || 0) / maxSlice) * 100),
+        orders: Number(d.orders) || 0,
     }));
 });
 
 // ── Donut chart for order status ───────────────────────────────────────────
 const donutSegments = computed(() => {
     const breakdown = props.stats.status_breakdown;
-    const total = Object.values(breakdown).reduce((a, b) => a + b, 0) || 1;
+    const total = Object.values(breakdown).reduce((a, b) => Number(a) + Number(b), 0) || 1;
     const colours: Record<string, string> = {
         successful: '#22c55e', shipped: '#10b981', processing: '#3b82f6',
         pending: '#eab308', cancelled: '#ef4444', failed: '#f97316',
     };
     let offset = 0;
     return Object.entries(breakdown).map(([status, count]) => {
-        const pct = (count / total) * 100;
+        const pct = (Number(count) / total) * 100;
         const seg = { status, count, pct: Math.round(pct), offset: Math.round(offset), colour: colours[status] ?? '#9ca3af' };
         offset += pct;
         return seg;
