@@ -57,7 +57,7 @@
     /* ── Section heading ── */
     .section-heading {
         font-family: 'Great Vibes', cursive;
-        font-size: 34px;
+        font-size: 38px;
         color: #b85050;
         margin-bottom: 14px;
     }
@@ -214,7 +214,7 @@
 
     {{-- ── Appreciation ── --}}
     <p class="body-para">
-        I truly appreciate your patience, and I can't wait for you to experience <em>your</em> <div class="tagline">signature scent</div>.
+        I truly appreciate your patience, and I can't wait for you to experience <em>your</em> <div class="signoff-script" style="font-size: 30px;">signature scent</div>
     </p>
 
     <hr class="gold-divider" />
