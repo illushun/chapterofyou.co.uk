@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AdminCourierController;
 use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AdminReviewController;
 use App\Http\Controllers\Admin\AdminVoucherController;
+use App\Http\Controllers\Admin\AdminWishlistController;
 use App\Http\Controllers\Admin\Label\OilController;
 use App\Http\Controllers\Cart\VoucherController;
 use App\Http\Controllers\HomeController;
@@ -132,6 +133,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('/vouchers/{voucher}', [AdminVoucherController::class, 'destroy'])     ->name('vouchers.destroy');
     Route::get('/vouchers/{voucher}/usage', [AdminVoucherController::class, 'usage'])       ->name('vouchers.usage');
     Route::get('/vouchers/generate-code', [AdminVoucherController::class, 'generateCode'])->name('vouchers.generate-code');
+
+    Route::get('/wishlists', [AdminWishlistController::class, 'index'])->name('wishlists.index');
+    Route::get('/wishlists/{user}', [AdminWishlistController::class, 'show'])->name('wishlists.show');
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
