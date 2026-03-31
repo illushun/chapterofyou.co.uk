@@ -104,59 +104,51 @@ const donutSegments = computed(() => {
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
             <!-- Revenue -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
-                    <p class="text-xs font-medium text-copy-light uppercase tracking-wider mb-1">Revenue</p>
-                    <p class="text-2xl font-black text-copy">{{ fmtK(stats.current_period.revenue) }}</p>
-                    <p class="text-xs mt-1" :class="pctClass(stats.pct_change.revenue)">
-                        {{ pctLabel(stats.pct_change.revenue) }}
-                    </p>
-                    <!-- Sparkline -->
-                    <svg viewBox="0 0 200 50" class="w-full h-8 mt-2 opacity-60" fill="none">
-                        <path :d="revenueLine" stroke="currentColor" stroke-width="1.5" class="text-primary"
-                            stroke-linejoin="round" />
-                    </svg>
-                </div>
+            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
+                <p class="text-xs font-medium text-copy-light uppercase tracking-wider mb-1">Revenue</p>
+                <p class="text-2xl font-black text-copy">{{ fmtK(stats.current_period.revenue) }}</p>
+                <p class="text-xs mt-1" :class="pctClass(stats.pct_change.revenue)">
+                    {{ pctLabel(stats.pct_change.revenue) }}
+                </p>
+                <!-- Sparkline -->
+                <svg viewBox="0 0 200 50" class="w-full h-8 mt-2 opacity-60" fill="none">
+                    <path :d="revenueLine" stroke="currentColor" stroke-width="1.5" class="text-primary"
+                        stroke-linejoin="round" />
+                </svg>
             </div>
 
             <!-- Orders -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
-                    <p class="text-xs font-medium text-copy-light uppercase tracking-wider mb-1">Orders</p>
-                    <p class="text-2xl font-black text-copy">{{ stats.current_period.orders }}</p>
-                    <p class="text-xs mt-1" :class="pctClass(stats.pct_change.orders)">
-                        {{ pctLabel(stats.pct_change.orders) }}
-                    </p>
-                    <p class="text-xs text-copy-light mt-2">
-                        Avg: {{ fmt(stats.current_period.avg_order) }}
-                    </p>
-                </div>
+            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
+                <p class="text-xs font-medium text-copy-light uppercase tracking-wider mb-1">Orders</p>
+                <p class="text-2xl font-black text-copy">{{ stats.current_period.orders }}</p>
+                <p class="text-xs mt-1" :class="pctClass(stats.pct_change.orders)">
+                    {{ pctLabel(stats.pct_change.orders) }}
+                </p>
+                <p class="text-xs text-copy-light mt-2">
+                    Avg: {{ fmt(stats.current_period.avg_order) }}
+                </p>
             </div>
 
             <!-- Awaiting dispatch -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
-                    <p class="text-xs font-medium text-copy-light uppercase tracking-wider mb-1">Awaiting Dispatch</p>
-                    <p class="text-2xl font-black"
-                        :class="stats.awaiting_dispatch > 0 ? 'text-amber-600' : 'text-green-600'">
-                        {{ stats.awaiting_dispatch }}
-                    </p>
-                    <p class="text-xs text-copy-light mt-1">Successful + Processing</p>
-                    <Link :href="route('admin.orders.index', { status: 'successful' })"
-                        class="text-xs text-primary hover:underline mt-2 block">
-                    View orders →
-                    </Link>
-                </div>
+            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
+                <p class="text-xs font-medium text-copy-light uppercase tracking-wider mb-1">Awaiting Dispatch</p>
+                <p class="text-2xl font-black"
+                    :class="stats.awaiting_dispatch > 0 ? 'text-amber-600' : 'text-green-600'">
+                    {{ stats.awaiting_dispatch }}
+                </p>
+                <p class="text-xs text-copy-light mt-1">Successful + Processing</p>
+                <Link :href="route('admin.orders.index', { status: 'successful' })"
+                    class="text-xs text-primary hover:underline mt-2 block">
+                View orders →
+                </Link>
             </div>
 
             <!-- New customers -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
-                    <p class="text-xs font-medium text-copy-light uppercase tracking-wider mb-1">New Customers</p>
-                    <p class="text-2xl font-black text-copy">{{ stats.customers.new_30 }}</p>
-                    <p class="text-xs text-copy-light mt-1">{{ stats.customers.new_7 }} this week</p>
-                    <p class="text-xs text-copy-light">{{ stats.customers.total }} total</p>
-                </div>
+            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4">
+                <p class="text-xs font-medium text-copy-light uppercase tracking-wider mb-1">New Customers</p>
+                <p class="text-2xl font-black text-copy">{{ stats.customers.new_30 }}</p>
+                <p class="text-xs text-copy-light mt-1">{{ stats.customers.new_7 }} this week</p>
+                <p class="text-xs text-copy-light">{{ stats.customers.total }} total</p>
             </div>
 
         </div>
@@ -165,81 +157,76 @@ const donutSegments = computed(() => {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
             <!-- Bar chart -->
-            <div class="lg:col-span-2 rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                    <h3 class="text-base font-bold text-copy mb-4 border-b border-copy-light pb-2">
-                        Revenue — Last 14 Days
-                    </h3>
-                    <div class="flex items-end gap-1 h-40">
-                        <div v-for="bar in barChart" :key="bar.label"
-                            class="flex-1 flex flex-col items-center gap-1 group relative">
-                            <!-- Tooltip -->
-                            <div
-                                class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2
-                                        opacity-0 group-hover:opacity-100 transition
-                                        bg-copy text-foreground text-xs rounded px-2 py-1 whitespace-nowrap z-10 pointer-events-none">
-                                {{ bar.label }}<br />{{ fmt(bar.revenue) }}<br />{{ bar.orders }} order{{ bar.orders !==
+            <div class="log:col-span-2 relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
+                <h3 class="text-base font-bold text-copy mb-4 border-b border-copy-light pb-2">
+                    Revenue — Last 14 Days
+                </h3>
+                <div class="flex items-end gap-1 h-40">
+                    <div v-for="bar in barChart" :key="bar.label"
+                        class="flex-1 flex flex-col items-center gap-1 group relative">
+                        <!-- Tooltip -->
+                        <div
+                            class="absolute bottom-full mb-1 left-1/2 -translate-x-1/2
+                                    opacity-0 group-hover:opacity-100 transition
+                                    bg-copy text-foreground text-xs rounded px-2 py-1 whitespace-nowrap z-10 pointer-events-none">
+                            {{ bar.label }}<br />{{ fmt(bar.revenue) }}<br />{{ bar.orders }} order{{ bar.orders !==
                                 1 ? 's' : '' }}
-                            </div>
-                            <div class="w-full rounded-t transition-all duration-300" :style="{
-                                height: bar.height + '%',
-                                minHeight: bar.revenue > 0 ? '4px' : '2px',
-                                backgroundColor: bar.revenue > 0 ? 'var(--primary)' : 'var(--border)',
-                                opacity: bar.revenue > 0 ? 1 : 0.3,
-                            }">
-                            </div>
-                            <span class="text-[9px] text-copy-light leading-none rotate-45 origin-left translate-x-1">
-                                {{ bar.label.split(' ')[0] }}
-                            </span>
                         </div>
+                        <div class="w-full rounded-t transition-all duration-300" :style="{
+                            height: bar.height + '%',
+                            minHeight: bar.revenue > 0 ? '4px' : '2px',
+                            backgroundColor: bar.revenue > 0 ? 'var(--primary)' : 'var(--border)',
+                            opacity: bar.revenue > 0 ? 1 : 0.3,
+                        }">
+                        </div>
+                        <span class="text-[9px] text-copy-light leading-none rotate-45 origin-left translate-x-1">
+                            {{ bar.label.split(' ')[0] }}
+                        </span>
                     </div>
-                    <p v-if="stats.current_period.revenue === 0"
-                        class="text-center text-copy-light text-sm mt-4 italic">
-                        No revenue data for this period yet.
-                    </p>
                 </div>
+                <p v-if="stats.current_period.revenue === 0" class="text-center text-copy-light text-sm mt-4 italic">
+                    No revenue data for this period yet.
+                </p>
             </div>
 
             <!-- Order status donut -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                    <h3 class="text-base font-bold text-copy mb-4 border-b border-copy-light pb-2">
-                        Orders by Status <span class="font-normal text-copy-light text-xs">(30d)</span>
-                    </h3>
+            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
+                <h3 class="text-base font-bold text-copy mb-4 border-b border-copy-light pb-2">
+                    Orders by Status <span class="font-normal text-copy-light text-xs">(30d)</span>
+                </h3>
 
-                    <!-- SVG donut -->
-                    <div class="flex justify-center mb-4">
-                        <svg viewBox="0 0 42 42" class="w-28 h-28">
-                            <circle cx="21" cy="21" r="15.915" fill="none" stroke="#e5e7eb" stroke-width="5" />
-                            <circle v-for="seg in donutSegments" :key="seg.status" cx="21" cy="21" r="15.915"
-                                fill="none" :stroke="seg.colour" stroke-width="5"
-                                :stroke-dasharray="`${seg.pct} ${100 - seg.pct}`" :stroke-dashoffset="100 - seg.offset"
-                                stroke-linecap="butt" style="transform: rotate(-90deg); transform-origin: 50% 50%;" />
-                            <!-- Centre total -->
-                            <text x="21" y="21" text-anchor="middle" dominant-baseline="middle" class="fill-current"
-                                style="font-size: 5px; font-weight: 700;">
-                                {{Object.values(stats.status_breakdown).reduce((a, b) => a + b, 0)}}
-                            </text>
-                            <text x="21" y="26" text-anchor="middle" dominant-baseline="middle"
-                                style="font-size: 3px; fill: #9ca3af;">orders</text>
-                        </svg>
-                    </div>
+                <!-- SVG donut -->
+                <div class="flex justify-center mb-4">
+                    <svg viewBox="0 0 42 42" class="w-28 h-28">
+                        <circle cx="21" cy="21" r="15.915" fill="none" stroke="#e5e7eb" stroke-width="5" />
+                        <circle v-for="seg in donutSegments" :key="seg.status" cx="21" cy="21" r="15.915" fill="none"
+                            :stroke="seg.colour" stroke-width="5" :stroke-dasharray="`${seg.pct} ${100 - seg.pct}`"
+                            :stroke-dashoffset="100 - seg.offset" stroke-linecap="butt"
+                            style="transform: rotate(-90deg); transform-origin: 50% 50%;" />
+                        <!-- Centre total -->
+                        <text x="21" y="21" text-anchor="middle" dominant-baseline="middle" class="fill-current"
+                            style="font-size: 5px; font-weight: 700;">
+                            {{Object.values(stats.status_breakdown).reduce((a, b) => a + b, 0)}}
+                        </text>
+                        <text x="21" y="26" text-anchor="middle" dominant-baseline="middle"
+                            style="font-size: 3px; fill: #9ca3af;">orders</text>
+                    </svg>
+                </div>
 
-                    <!-- Legend -->
-                    <div class="space-y-1.5">
-                        <div v-for="seg in donutSegments" :key="seg.status"
-                            class="flex items-center justify-between text-xs">
-                            <div class="flex items-center gap-1.5">
-                                <span class="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                                    :style="{ backgroundColor: seg.colour }"></span>
-                                <span class="capitalize text-copy">{{ seg.status }}</span>
-                            </div>
-                            <span class="font-bold text-copy">{{ seg.count }}</span>
+                <!-- Legend -->
+                <div class="space-y-1.5">
+                    <div v-for="seg in donutSegments" :key="seg.status"
+                        class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-1.5">
+                            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                :style="{ backgroundColor: seg.colour }"></span>
+                            <span class="capitalize text-copy">{{ seg.status }}</span>
                         </div>
-                        <p v-if="!donutSegments.length" class="text-copy-light text-xs italic text-center">
-                            No orders yet.
-                        </p>
+                        <span class="font-bold text-copy">{{ seg.count }}</span>
                     </div>
+                    <p v-if="!donutSegments.length" class="text-copy-light text-xs italic text-center">
+                        No orders yet.
+                    </p>
                 </div>
             </div>
 
@@ -249,125 +236,118 @@ const donutSegments = computed(() => {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <!-- Top products -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-hidden">
-                    <div class="px-5 py-4 border-b border-copy-light flex items-center justify-between">
-                        <h3 class="text-base font-bold text-copy">Top Products</h3>
-                        <span class="text-xs text-copy-light">by units sold (30d)</span>
+            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-hidden">
+                <div class="px-5 py-4 border-b border-copy-light flex items-center justify-between">
+                    <h3 class="text-base font-bold text-copy">Top Products</h3>
+                    <span class="text-xs text-copy-light">by units sold (30d)</span>
+                </div>
+                <div class="divide-y divide-copy-light">
+                    <div v-if="!stats.top_products.length" class="px-5 py-6 text-center text-copy-light text-sm italic">
+                        No sales data yet.
                     </div>
-                    <div class="divide-y divide-copy-light">
-                        <div v-if="!stats.top_products.length"
-                            class="px-5 py-6 text-center text-copy-light text-sm italic">
-                            No sales data yet.
+                    <div v-for="(p, i) in stats.top_products" :key="p.id"
+                        class="flex items-center gap-3 px-4 py-3 hover:bg-secondary-light transition">
+                        <span
+                            class="w-5 h-5 rounded-full text-xs font-black flex items-center justify-center flex-shrink-0"
+                            :class="i === 0 ? 'bg-amber-100 text-amber-700' : i === 1 ? 'bg-gray-100 text-gray-600' : i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-secondary-light text-copy-light'">
+                            {{ i + 1 }}
+                        </span>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-medium text-copy truncate">{{ p.name }}</p>
+                            <p class="text-xs text-copy-light font-mono">{{ p.mpn }}</p>
                         </div>
-                        <div v-for="(p, i) in stats.top_products" :key="p.id"
-                            class="flex items-center gap-3 px-4 py-3 hover:bg-secondary-light transition">
-                            <span
-                                class="w-5 h-5 rounded-full text-xs font-black flex items-center justify-center flex-shrink-0"
-                                :class="i === 0 ? 'bg-amber-100 text-amber-700' : i === 1 ? 'bg-gray-100 text-gray-600' : i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-secondary-light text-copy-light'">
-                                {{ i + 1 }}
-                            </span>
-                            <div class="min-w-0 flex-1">
-                                <p class="text-sm font-medium text-copy truncate">{{ p.name }}</p>
-                                <p class="text-xs text-copy-light font-mono">{{ p.mpn }}</p>
-                            </div>
-                            <div class="text-right flex-shrink-0">
-                                <p class="text-sm font-bold text-copy">{{ p.units_sold }} sold</p>
-                                <p class="text-xs text-copy-light">{{ fmt(p.revenue) }}</p>
-                            </div>
+                        <div class="text-right flex-shrink-0">
+                            <p class="text-sm font-bold text-copy">{{ p.units_sold }} sold</p>
+                            <p class="text-xs text-copy-light">{{ fmt(p.revenue) }}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Recent orders -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-hidden">
-                    <div class="px-5 py-4 border-b border-copy-light flex items-center justify-between">
-                        <h3 class="text-base font-bold text-copy">Recent Orders</h3>
-                        <Link :href="route('admin.orders.index')" class="text-xs text-primary hover:underline">
-                        View all →
-                        </Link>
+            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-hidden">
+                <div class="px-5 py-4 border-b border-copy-light flex items-center justify-between">
+                    <h3 class="text-base font-bold text-copy">Recent Orders</h3>
+                    <Link :href="route('admin.orders.index')" class="text-xs text-primary hover:underline">
+                    View all →
+                    </Link>
+                </div>
+                <div class="divide-y divide-copy-light">
+                    <div v-if="!stats.recent_orders.length"
+                        class="px-5 py-6 text-center text-copy-light text-sm italic">
+                        No orders yet.
                     </div>
-                    <div class="divide-y divide-copy-light">
-                        <div v-if="!stats.recent_orders.length"
-                            class="px-5 py-6 text-center text-copy-light text-sm italic">
-                            No orders yet.
-                        </div>
-                        <Link v-for="order in stats.recent_orders" :key="order.id"
-                            :href="route('admin.orders.show', order.id)"
-                            class="flex items-center gap-3 px-4 py-3 hover:bg-secondary-light transition block">
-                        <div class="min-w-0 flex-1">
-                            <p class="text-sm font-medium text-copy truncate">{{ order.name }}</p>
-                            <p class="text-xs text-copy-light">{{ order.created_at }}</p>
-                        </div>
-                        <div class="text-right flex-shrink-0">
-                            <p class="text-sm font-bold text-copy">{{ fmt(order.total) }}</p>
-                            <span class="text-xs px-1.5 py-0.5 rounded-full font-medium"
-                                :class="statusColour[order.status] ?? 'bg-gray-100 text-gray-600'">
-                                {{ order.status }}
-                            </span>
-                        </div>
-                        </Link>
+                    <Link v-for="order in stats.recent_orders" :key="order.id"
+                        :href="route('admin.orders.show', order.id)"
+                        class="flex items-center gap-3 px-4 py-3 hover:bg-secondary-light transition block">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-medium text-copy truncate">{{ order.name }}</p>
+                        <p class="text-xs text-copy-light">{{ order.created_at }}</p>
                     </div>
+                    <div class="text-right flex-shrink-0">
+                        <p class="text-sm font-bold text-copy">{{ fmt(order.total) }}</p>
+                        <span class="text-xs px-1.5 py-0.5 rounded-full font-medium"
+                            :class="statusColour[order.status] ?? 'bg-gray-100 text-gray-600'">
+                            {{ order.status }}
+                        </span>
+                    </div>
+                    </Link>
                 </div>
             </div>
 
             <!-- Product health -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                    <h3 class="text-base font-bold text-copy mb-4 border-b border-copy-light pb-2">Product Health</h3>
+            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
+                <h3 class="text-base font-bold text-copy mb-4 border-b border-copy-light pb-2">Product Health</h3>
 
-                    <div class="space-y-3 mb-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-copy">In Stock</span>
-                            <span class="font-bold text-green-600">{{ stats.products.in_stock }}</span>
-                        </div>
-                        <!-- Stock bar -->
-                        <div class="h-2 rounded-full bg-secondary-light overflow-hidden">
-                            <div class="h-full rounded-full bg-green-500 transition-all"
-                                :style="{ width: stats.products.total > 0 ? (stats.products.in_stock / stats.products.total * 100) + '%' : '0%' }">
-                            </div>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-copy">Out of Stock</span>
-                            <span class="font-bold text-amber-600">{{ stats.products.out_of_stock }}</span>
-                        </div>
-                        <div class="h-2 rounded-full bg-secondary-light overflow-hidden">
-                            <div class="h-full rounded-full bg-amber-500 transition-all"
-                                :style="{ width: stats.products.total > 0 ? (stats.products.out_of_stock / stats.products.total * 100) + '%' : '0%' }">
-                            </div>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-copy">Low Stock <span
-                                    class="text-xs text-copy-light">(≤5)</span></span>
-                            <span class="font-bold text-orange-500">{{ stats.products.low_stock }}</span>
-                        </div>
-
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-copy">Disabled / Draft</span>
-                            <span class="font-bold text-red-500">{{ stats.products.disabled }}</span>
-                        </div>
-
-                        <div class="pt-3 border-t border-copy-light flex justify-between items-center">
-                            <span class="text-sm font-bold text-copy">Total Products</span>
-                            <span class="font-black text-copy text-lg">{{ stats.products.total }}</span>
+                <div class="space-y-3 mb-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-copy">In Stock</span>
+                        <span class="font-bold text-green-600">{{ stats.products.in_stock }}</span>
+                    </div>
+                    <!-- Stock bar -->
+                    <div class="h-2 rounded-full bg-secondary-light overflow-hidden">
+                        <div class="h-full rounded-full bg-green-500 transition-all"
+                            :style="{ width: stats.products.total > 0 ? (stats.products.in_stock / stats.products.total * 100) + '%' : '0%' }">
                         </div>
                     </div>
 
-                    <div class="space-y-2">
-                        <Link :href="route('admin.products.index')"
-                            class="block w-full text-center py-2 rounded-lg border-2 border-copy text-sm font-bold hover:bg-secondary-light transition">
-                        Manage Products
-                        </Link>
-                        <Link :href="route('admin.products.index', { filter: 'out_of_stock' })"
-                            v-if="stats.products.out_of_stock > 0"
-                            class="block w-full text-center py-1.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-700 text-xs font-medium hover:bg-amber-100 transition">
-                        ⚠ {{ stats.products.out_of_stock }} out of stock
-                        </Link>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-copy">Out of Stock</span>
+                        <span class="font-bold text-amber-600">{{ stats.products.out_of_stock }}</span>
                     </div>
+                    <div class="h-2 rounded-full bg-secondary-light overflow-hidden">
+                        <div class="h-full rounded-full bg-amber-500 transition-all"
+                            :style="{ width: stats.products.total > 0 ? (stats.products.out_of_stock / stats.products.total * 100) + '%' : '0%' }">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-copy">Low Stock <span
+                                class="text-xs text-copy-light">(≤5)</span></span>
+                        <span class="font-bold text-orange-500">{{ stats.products.low_stock }}</span>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-copy">Disabled / Draft</span>
+                        <span class="font-bold text-red-500">{{ stats.products.disabled }}</span>
+                    </div>
+
+                    <div class="pt-3 border-t border-copy-light flex justify-between items-center">
+                        <span class="text-sm font-bold text-copy">Total Products</span>
+                        <span class="font-black text-copy text-lg">{{ stats.products.total }}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <Link :href="route('admin.products.index')"
+                        class="block w-full text-center py-2 rounded-lg border-2 border-copy text-sm font-bold hover:bg-secondary-light transition">
+                    Manage Products
+                    </Link>
+                    <Link :href="route('admin.products.index', { filter: 'out_of_stock' })"
+                        v-if="stats.products.out_of_stock > 0"
+                        class="block w-full text-center py-1.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-700 text-xs font-medium hover:bg-amber-100 transition">
+                    ⚠ {{ stats.products.out_of_stock }} out of stock
+                    </Link>
                 </div>
             </div>
 
