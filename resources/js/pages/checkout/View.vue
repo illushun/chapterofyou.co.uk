@@ -787,6 +787,11 @@ onMounted(async () => {
                                             {{ summary.shipping === 0 ? 'FREE' : formatCurrency(summary.shipping) }}
                                         </span>
                                     </div>
+                                    <div v-if="voucherDiscount > 0"
+                                        class="flex justify-between text-green-700 font-bold">
+                                        <span>Discount ({{ activeVoucher?.code }})</span>
+                                        <span>-£{{ voucherDiscount.toFixed(2) }}</span>
+                                    </div>
 
                                     <!-- Voucher input -->
                                     <div class="mt-4 border-t border-copy/10 pt-4">
@@ -823,12 +828,6 @@ onMounted(async () => {
                                             voucherSuccess }}</p>
                                         <p v-if="voucherError" class="text-xs text-error font-medium mt-1">{{
                                             voucherError }}</p>
-                                    </div>
-
-                                    <div v-if="voucherDiscount > 0"
-                                        class="flex justify-between text-green-700 font-bold">
-                                        <span>Discount ({{ activeVoucher?.code }})</span>
-                                        <span>-£{{ voucherDiscount.toFixed(2) }}</span>
                                     </div>
                                 </div>
 
