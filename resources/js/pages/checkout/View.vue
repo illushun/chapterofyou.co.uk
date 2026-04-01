@@ -2,87 +2,42 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { onMounted, ref, computed, nextTick } from 'vue';
 import axios from 'axios';
-
 import NavBar from '@/components/NavBar.vue';
 
-const IconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`;
-const IconPlus = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
-
-// --- Global Declarations ---
 declare const Stripe: any;
 declare const route: any;
 
-// Helper to reliably access Ziggy's route function.
 const getRoute = (name: string, params: any = {}, absolute: boolean = true) => {
-    if (typeof window.route === 'function') {
-        return window.route(name, params, absolute);
-    }
-    console.error(`Ziggy route function is not available for: ${name}`);
+    if (typeof window.route === 'function') return window.route(name, params, absolute);
     return `/${name}`;
-}
-
-/**
- * Loads the Stripe.js script and returns a Promise that resolves when it's ready.
- */
-const loadStripeScript = (): Promise<void> => {
-    return new Promise((resolve) => {
-        if (typeof Stripe !== 'undefined') {
-            return resolve();
-        }
-
-        const scriptId = 'stripe-script';
-        let script = document.getElementById(scriptId) as HTMLScriptElement;
-
-        if (script) {
-            script.onload = () => resolve();
-        } else {
-            script = document.createElement('script');
-            script.src = 'https://js.stripe.com/v3/';
-            script.id = scriptId;
-            script.onload = () => resolve();
-            document.head.appendChild(script);
-        }
-    });
 };
 
-// Utility to introduce a delay.
+const loadStripeScript = (): Promise<void> => new Promise((resolve) => {
+    if (typeof Stripe !== 'undefined') return resolve();
+    const scriptId = 'stripe-script';
+    let script = document.getElementById(scriptId) as HTMLScriptElement;
+    if (script) { script.onload = () => resolve(); }
+    else {
+        script = document.createElement('script');
+        script.src = 'https://js.stripe.com/v3/';
+        script.id = scriptId;
+        script.onload = () => resolve();
+        document.head.appendChild(script);
+    }
+});
+
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// --- TYPES ---
-
 interface CartItem {
-    id: number;
-    product_id: number;
-    product: {
-        name: string;
-        cost: number;
-        image_url: string;
-    }
+    id: number; product_id: number;
+    product: { name: string; cost: number; image_url: string; }
     quantity: number;
 }
-
-interface Summary {
-    subtotal: number;
-    tax: number;
-    shipping: number;
-    total: number;
-    voucher_discount: number;
-}
-
+interface Summary { subtotal: number; tax: number; shipping: number; total: number; voucher_discount: number; }
 interface Address {
-    id: number;
-    user_id: number;
-    type: string;
-    is_default: boolean;
-    line_1: string;
-    line_2: string;
-    city: string;
-    county: string;
-    postcode: string;
-    country: string;
+    id: number; user_id: number; type: string; is_default: boolean;
+    line_1: string; line_2: string; city: string; county: string; postcode: string; country: string;
 }
-
-// --- PROPS ---
 
 const props = defineProps<{
     cartItems: CartItem[];
@@ -91,17 +46,11 @@ const props = defineProps<{
     appliedVoucher: { code: string; discount: number; type: string; value: number } | null;
 }>();
 
-// --- STATE ---
-
 const isProcessing = ref(false);
 const paymentError = ref<string | null>(null);
-// New state for controlling when the container is rendered
 const hasClientSecret = ref(false);
-// State for the initial loading spinner (fetching secret and waiting for Stripe to load)
 const isLoadingInitialData = ref(true);
-// State to track the currently selected saved address
 const selectedAddressId = ref<number | null>(null);
-// New state: controls visibility of address inputs when NO saved address is selected
 const isManualAddressVisible = ref(false);
 
 const voucherCode = ref('');
@@ -110,161 +59,71 @@ const voucherError = ref<string | null>(null);
 const voucherSuccess = ref<string | null>(null);
 const activeVoucher = ref(props.appliedVoucher ?? null);
 
-// Computed: show discount line in summary when a voucher is active
 const voucherDiscount = computed(() => activeVoucher.value?.discount ?? 0);
-
-const computedDiscountedSubtotal = computed(() => {
-    return Math.max(0, Number(props.summary.subtotal) - voucherDiscount.value);
-});
-
-const computedTax = computed(() => {
-    return Math.round(computedDiscountedSubtotal.value * 0.20 * 100) / 100;
-});
-
-const computedTotal = computed(() => {
-    const shipping = Number(props.summary.shipping) || 0;
-    return Math.round((computedDiscountedSubtotal.value + computedTax.value + shipping) * 100) / 100;
-});
+const computedDiscountedSubtotal = computed(() => Math.max(0, Number(props.summary.subtotal) - voucherDiscount.value));
+const computedTax = computed(() => Math.round(computedDiscountedSubtotal.value * 0.20 * 100) / 100);
+const computedTotal = computed(() => Math.round((computedDiscountedSubtotal.value + computedTax.value + (Number(props.summary.shipping) || 0)) * 100) / 100);
 
 async function applyVoucher() {
     if (!voucherCode.value.trim()) return;
-    voucherLoading.value = true;
-    voucherError.value = null;
-    voucherSuccess.value = null;
-
+    voucherLoading.value = true; voucherError.value = null; voucherSuccess.value = null;
     try {
-        const { data } = await axios.post(route('checkout.voucher.apply'), {
-            code: voucherCode.value.trim(),
-        });
-        activeVoucher.value = data;
-        voucherSuccess.value = data.message;
-        voucherCode.value = '';
-
-        // Re-fetch payment intent with new total
+        const { data } = await axios.post(route('checkout.voucher.apply'), { code: voucherCode.value.trim() });
+        activeVoucher.value = data; voucherSuccess.value = data.message; voucherCode.value = '';
         await initializeStripe();
     } catch (err: any) {
-        const response = err.response;
-        if (response?.data?.error) {
-            voucherError.value = response.data.error;
-        } else if (response?.data?.errors?.code) {
-            voucherError.value = response.data.errors.code[0];
-        } else if (response?.data?.message) {
-            voucherError.value = response.data.message;
-        } else {
-            voucherError.value = `Server error (${response?.status ?? 'unknown'}). Please try again.`;
-        }
-    } finally {
-        voucherLoading.value = false;
-    }
+        const r = err.response;
+        voucherError.value = r?.data?.error || r?.data?.errors?.code?.[0] || r?.data?.message || `Server error (${r?.status ?? 'unknown'}).`;
+    } finally { voucherLoading.value = false; }
 }
 
 async function removeVoucher() {
     await axios.post(route('checkout.voucher.remove'));
-    activeVoucher.value = null;
-    voucherSuccess.value = null;
-    voucherError.value = null;
-    // Re-fetch payment intent without discount
+    activeVoucher.value = null; voucherSuccess.value = null; voucherError.value = null;
     await initializeStripe();
 }
 
-// Template Ref for direct DOM access (Crucial)
 const paymentContainer = ref<HTMLElement | null>(null);
-
-// Stripe objects
 const stripe = ref<any>(null);
 const elements = ref<any>(null);
 const paymentElement = ref<any>(null);
 const clientSecret = ref('');
 const paymentIntentId = ref('');
 
-// Form for shipping and billing details
 const addressForm = useForm({
-    email: '',
-    fullName: '',
-    telephone: '',
-    addressLine1: '',
-    addressLine2: '', // Optional
-    city: '',
-    county: '', // Optional
-    postcode: '',
-    country: 'United Kingdom',
+    email: '', fullName: '', telephone: '',
+    addressLine1: '', addressLine2: '',
+    city: '', county: '', postcode: '', country: 'United Kingdom',
     saveInfo: false,
 });
 
-const formatAddress = (address: Address): string[] => {
-    const lines = [address.line_1];
-    if (address.line_2) lines.push(address.line_2);
-    lines.push(address.city);
-    if (address.county) lines.push(address.county);
-    lines.push(address.postcode);
-    lines.push(address.country);
-    return lines.filter(line => line);
-}
-
-// --- COMPUTED & METHODS ---
+const formatAddress = (address: Address): string[] =>
+    [address.line_1, address.line_2, address.city, address.county, address.postcode, address.country].filter(Boolean);
 
 const hasItems = computed(() => props.cartItems.length > 0);
+const isShippingAddressVisible = computed(() => selectedAddressId.value !== null || isManualAddressVisible.value);
 
-// Computed property to control the visibility of the detailed address input section
-const isShippingAddressVisible = computed(() => {
-    // Show if an address is selected (populates form automatically)
-    if (selectedAddressId.value !== null) {
-        return true;
-    }
-    // Show if the user has manually toggled the input fields
-    return isManualAddressVisible.value;
-});
-
-
-/**
- * Formats a number as currency (GBP).
- */
-const formatCurrency = (amount: number | string): string => {
-    const numAmount = Number(amount);
-    if (isNaN(numAmount)) {
-        return '£0.00';
-    }
-    return `£${numAmount.toFixed(2)}`;
+const fmt = (amount: number | string): string => {
+    const n = Number(amount);
+    return isNaN(n) ? '£0.00' : `£${n.toFixed(2)}`;
 };
 
-/**
- * Applies a saved address to the form.
- */
 const selectAddress = (address: Address) => {
     selectedAddressId.value = address.id;
-    addressForm.email = ''; // Clear contact info if needed, or leave it to be filled by the user's profile info
-    addressForm.fullName = '';
-    addressForm.telephone = '';
-    addressForm.addressLine1 = address.line_1;
-    addressForm.addressLine2 = address.line_2;
-    addressForm.city = address.city;
-    addressForm.county = address.county;
-    addressForm.postcode = address.postcode;
-    addressForm.country = address.country;
-    // Always show inputs when an address is selected
+    addressForm.addressLine1 = address.line_1; addressForm.addressLine2 = address.line_2;
+    addressForm.city = address.city; addressForm.county = address.county;
+    addressForm.postcode = address.postcode; addressForm.country = address.country;
     isManualAddressVisible.value = true;
 };
 
-/**
- * Clears the form fields back to empty state.
- */
 const clearAddressSelection = () => {
     selectedAddressId.value = null;
-    // Reset all address fields but keep contact fields if they were entered
-    addressForm.addressLine1 = '';
-    addressForm.addressLine2 = '';
-    addressForm.city = '';
-    addressForm.county = '';
-    addressForm.postcode = '';
-    addressForm.country = 'United Kingdom';
-    // Hide the address inputs again
+    addressForm.addressLine1 = ''; addressForm.addressLine2 = '';
+    addressForm.city = ''; addressForm.county = '';
+    addressForm.postcode = ''; addressForm.country = 'United Kingdom';
     isManualAddressVisible.value = false;
-}
+};
 
-
-/**
- * Fetches a Payment Intent from the server to get the client secret.
- */
 const fetchPaymentIntent = async () => {
     try {
         const response = await fetch(getRoute('checkout.payment_intent'), {
@@ -275,209 +134,79 @@ const fetchPaymentIntent = async () => {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
             },
         });
-
         const data = await response.json();
-
-        if (!response.ok || data.error) {
-            throw new Error(data.error || 'Failed to fetch payment intent.');
-        }
-
+        if (!response.ok || data.error) throw new Error(data.error || 'Failed to fetch payment intent.');
         clientSecret.value = data.clientSecret;
         paymentIntentId.value = data.paymentIntentId;
-
     } catch (error: any) {
-        console.error("Error fetching payment intent:", error.message);
-        paymentError.value = "Could not initialise payment: " + error.message;
+        paymentError.value = 'Could not initialise payment: ' + error.message;
     }
 };
 
-/**
- * Initializes Stripe SDK and mounts the Payment Element.
- */
 const initializeStripe = async () => {
-
-    // 1. Get the client secret from the backend
     await fetchPaymentIntent();
-
-    if (!clientSecret.value || paymentError.value) {
-        isLoadingInitialData.value = false;
-        return;
-    }
-
-    // 2. Client secret is ready. Set flag to true to render the container via v-if.
+    if (!clientSecret.value || paymentError.value) { isLoadingInitialData.value = false; return; }
     hasClientSecret.value = true;
-
-    // 3. Wait for the next DOM update cycle (guarantees v-if has run)
     await nextTick();
-
-    // 4. Initialise Stripe and Elements
     stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
     elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
-
-    const appearance = {
-        theme: 'stripe',
-        variables: {
-            // Ensure Stripe elements match the primary color
-            colorPrimary: 'var(--primary)',
-            colorText: 'var(--copy)',
-            colorBackground: 'var(--foreground)',
-        },
-    };
-
-    // 5. Create the Payment Element
     paymentElement.value = elements.value.create('payment', {
         layout: 'tabs',
-        appearance: appearance,
+        appearance: { theme: 'stripe', variables: { colorPrimary: '#8c4a50', colorText: '#2d1a1a', colorBackground: '#fffafa' } },
     });
-
-    // 6. CRITICAL FIX: Robust Mounting using Template Ref and Polling
-    const maxRetries = 10;
-    const retryDelayMs = 50;
-    let attempts = 0;
-    let mountedSuccessfully = false;
-
-    // Use polling on the Template Ref's value which should now exist
-    while (attempts < maxRetries && !mountedSuccessfully) {
+    const maxRetries = 10; let attempts = 0; let mounted = false;
+    while (attempts < maxRetries && !mounted) {
         const container = paymentContainer.value;
-
         if (container) {
-            try {
-                // Call mount() only when the container ref is confirmed to exist
-                paymentElement.value.mount(container);
-                mountedSuccessfully = true;
-            } catch (e) {
-                // Catch internal Stripe mount errors and retry
-                console.error(`Stripe mount failed internally on attempt ${attempts + 1}:`, e);
-                await delay(retryDelayMs);
-            }
-        } else {
-            // Should not happen often now, but we wait just in case of slow DOM updates
-            await delay(retryDelayMs);
-        }
+            try { paymentElement.value.mount(container); mounted = true; }
+            catch (e) { await delay(50); }
+        } else { await delay(50); }
         attempts++;
     }
-
-    if (!mountedSuccessfully) {
-        paymentError.value = "Payment system failed to load. The required element was not found in time.";
-    }
-
-    // 7. Hide the initial loading spinner
+    if (!mounted) paymentError.value = 'Payment system failed to load.';
     isLoadingInitialData.value = false;
 };
 
-/**
- * Handles form submission and confirms payment using the Stripe Payment Element.
- */
 const handleCardPayment = async () => {
-    // Perform front-end validation
-    if (addressForm.hasErrors || !addressForm.email || !addressForm.addressLine1 || !addressForm.postcode || !addressForm.fullName) {
-        paymentError.value = "Please complete all required shipping and contact details.";
-        addressForm.validate();
-        return;
+    if (!addressForm.email || !addressForm.addressLine1 || !addressForm.postcode || !addressForm.fullName) {
+        paymentError.value = 'Please complete all required fields.'; return;
     }
-
-    isProcessing.value = true;
-    paymentError.value = null;
-
+    isProcessing.value = true; paymentError.value = null;
     if (!stripe.value || !paymentElement.value) {
-        paymentError.value = "Payment system is not fully loaded. Please wait a moment.";
-        isProcessing.value = false;
-        return;
+        paymentError.value = 'Payment system not loaded.'; isProcessing.value = false; return;
     }
-
-    const paymentMethodType = 'card';
-
-    // Confirm payment on the client side
     const { error: stripeError, paymentIntent } = await stripe.value.confirmPayment({
         elements: elements.value,
         confirmParams: {
             return_url: window.location.origin + getRoute('checkout.index', {}, false),
             payment_method_data: {
                 billing_details: {
-                    name: addressForm.fullName,
-                    email: addressForm.email,
+                    name: addressForm.fullName, email: addressForm.email,
                     phone: addressForm.telephone || undefined,
-                    address: {
-                        line1: addressForm.addressLine1,
-                        line2: addressForm.addressLine2 || undefined,
-                        city: addressForm.city,
-                        state: addressForm.county || undefined,
-                        postal_code: addressForm.postcode,
-                        country: addressForm.country,
-                    }
+                    address: { line1: addressForm.addressLine1, line2: addressForm.addressLine2 || undefined, city: addressForm.city, state: addressForm.county || undefined, postal_code: addressForm.postcode, country: 'GB' }
                 }
             }
         },
         redirect: 'if_required',
     });
-
-
-    if (stripeError) {
-        paymentError.value = stripeError.message || "An error occurred with your payment details.";
-        isProcessing.value = false;
-        return;
-    }
-
-    if (paymentIntent && paymentIntent.status === 'succeeded') {
-        finalizeOrder(paymentIntent.id, paymentMethodType);
-    } else if (paymentIntent && paymentIntent.status === 'requires_action') {
-        paymentError.value = "Payment requires external authentication. Please complete the redirect process.";
-        isProcessing.value = false;
+    if (stripeError) { paymentError.value = stripeError.message || 'An error occurred.'; isProcessing.value = false; return; }
+    if (paymentIntent?.status === 'succeeded') {
+        router.post(getRoute('checkout.process_payment'), { ...addressForm.data(), paymentIntentId: paymentIntent.id, paymentType: 'card' }, {
+            onError: (errors) => { paymentError.value = Object.values(errors)[0] as string || 'Order failed.'; },
+            onFinish: () => { isProcessing.value = false; }
+        });
     } else {
-        paymentError.value = "Payment pending or requires further review. Status: " + paymentIntent?.status;
+        paymentError.value = 'Payment status: ' + paymentIntent?.status;
         isProcessing.value = false;
     }
 };
 
-/**
- * Sends the final order confirmation to the server.
- */
-const finalizeOrder = (piId: string, type: string) => {
-    router.post(getRoute('checkout.process_payment'),
-        {
-            ...addressForm.data(),
-            paymentIntentId: piId,
-            paymentType: type,
-        },
-        {
-            onSuccess: () => {
-                // Controller handles the final redirect
-            },
-            onError: (errors) => {
-                const errorKey = Object.keys(errors)[0];
-                paymentError.value = errors[errorKey] || "Order finalisation failed on the server. Please contact support.";
-            },
-            onFinish: () => {
-                isProcessing.value = false;
-            }
-        }
-    );
-}
-
-// --- LIFECYCLE HOOK ---
-
 onMounted(async () => {
-    // 1. Check for default address and select it automatically for a faster checkout
     const defaultAddress = props.addresses.find(a => a.is_default);
-    if (defaultAddress) {
-        // Use nextTick to ensure form is fully ready before populating
-        await nextTick();
-        selectAddress(defaultAddress);
-        // Note: selectAddress sets isManualAddressVisible = true
-    } else if (props.addresses.length === 0) {
-        // If there are no saved addresses at all, automatically open the manual address form
-        isManualAddressVisible.value = true;
-    }
-
-
-    if (hasItems.value) {
-        // 2. AWAIT script loading first
-        await loadStripeScript();
-        // 3. Then, initialize Stripe elements
-        await initializeStripe();
-    } else {
-        isLoadingInitialData.value = false;
-    }
+    if (defaultAddress) { await nextTick(); selectAddress(defaultAddress); }
+    else if (props.addresses.length === 0) { isManualAddressVisible.value = true; }
+    if (hasItems.value) { await loadStripeScript(); await initializeStripe(); }
+    else { isLoadingInitialData.value = false; }
 });
 </script>
 
@@ -486,380 +215,1060 @@ onMounted(async () => {
 
     <Head title="Checkout" />
 
-    <!-- Utility styles for Tailwind variables -->
-    <!-- Defining the same color variables as your cart page -->
-    <section class="py-20">
+    <component :is="'link'"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
+        rel="stylesheet" />
 
-        <div class="min-h-screen text-copy p-4 md:p-8 lg:p-12">
-            <div class="max-w-6xl mx-auto">
+    <main class="co">
+        <div class="co-wrap">
 
-                <div class="mb-8">
-                    <h1 class="text-5xl font-black text-copy mb-2">Checkout</h1>
-                    <a :href="getRoute('cart.view')"
-                        class="inline-flex items-center text-primary hover:text-primary-dark transition font-semibold">
-                        <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
-                        Return to Cart
-                    </a>
-                </div>
+            <!-- Header -->
+            <header class="co-header">
+                <h1 class="co-title">Checkout</h1>
+                <a :href="getRoute('cart.view')" class="co-back">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                    Back to cart
+                </a>
+            </header>
 
-                <div v-if="!hasItems"
-                    class="text-center p-12 border-4 border-dashed border-copy-lighter rounded-2xl bg-foreground/50">
-                    <p class="text-2xl font-semibold text-copy mb-4">You have no items in your cart to checkout.</p>
-                    <a :href="getRoute('products.index')"
-                        class="text-primary hover:text-primary-dark transition font-bold underline">
-                        Browse Products and Start Shopping
-                    </a>
-                </div>
+            <!-- Empty cart -->
+            <div v-if="!hasItems" class="co-empty">
+                <p>No items in your cart.</p>
+                <a :href="getRoute('products.index')" class="btn-rose">Browse Products</a>
+            </div>
 
-                <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div v-else class="co-grid">
 
-                    <!-- Left Column: Shipping Details & Payment -->
-                    <div class="lg:col-span-2 space-y-8">
+                <!-- ── Left column ── -->
+                <div class="co-left">
 
-                        <!-- Shipping/Contact Details Form -->
-                        <!-- Applying the Cart's Double Border Style (Outer) -->
-                        <div class="rounded-xl border-2 border-copy">
-                            <!-- Saved Addresses -->
-                            <div v-if="addresses.length > 0" class="p-4 space-y-3 border-b-2 border-copy/10">
-                                <h2 class="text-2xl font-bold text-copy">Saved Addresses</h2>
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div v-for="address in addresses" :key="address.id" @click="selectAddress(address)"
-                                        class="relative p-4 border-2 rounded-xl transition cursor-pointer" :class="{
-                                            'border-primary ring-4 ring-primary/30 bg-primary/5 hover:border-primary-dark shadow-lg': selectedAddressId === address.id,
-                                            'border-copy/30 hover:border-copy/70 bg-background/50': selectedAddressId !== address.id
-                                        }">
-                                        <div class="text-sm font-bold uppercase mb-1 flex justify-between items-center">
-                                            <span
-                                                :class="selectedAddressId === address.id ? 'text-primary-dark' : 'text-copy-lighter'">
-                                                {{ address.type }} Address
-                                            </span>
-                                            <span v-if="address.is_default"
-                                                class="text-xs text-primary bg-primary/20 px-2 py-0.5 rounded-full font-extrabold">DEFAULT</span>
-                                        </div>
-
-                                        <p v-for="line in formatAddress(address)" :key="line"
-                                            class="text-copy text-base">
-                                            {{ line }}
-                                        </p>
-                                    </div>
+                    <!-- Saved addresses -->
+                    <section v-if="addresses.length > 0" class="co-card">
+                        <h2 class="co-card-title">Saved Addresses</h2>
+                        <div class="co-address-grid">
+                            <div v-for="address in addresses" :key="address.id" @click="selectAddress(address)"
+                                class="co-address-card"
+                                :class="{ 'co-address-card--selected': selectedAddressId === address.id }">
+                                <div class="co-address-card-head">
+                                    <span class="co-address-type">{{ address.type }}</span>
+                                    <span v-if="address.is_default" class="co-address-default">Default</span>
                                 </div>
-                                <button v-if="selectedAddressId !== null" @click="clearAddressSelection" type="button"
-                                    class="text-sm text-red-600 hover:text-red-800 transition font-semibold pt-2">
-                                    Clear Selection & Enter Manually
+                                <div class="co-address-lines">
+                                    <span v-for="line in formatAddress(address)" :key="line">{{ line }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button v-if="selectedAddressId !== null" @click="clearAddressSelection" type="button"
+                            class="co-clear-btn">
+                            Clear &amp; enter manually
+                        </button>
+                    </section>
+
+                    <!-- Contact & shipping form -->
+                    <section class="co-card">
+                        <h2 class="co-card-title">
+                            <span class="co-step">1</span>
+                            Contact &amp; Shipping
+                        </h2>
+
+                        <form @submit.prevent="handleCardPayment" class="co-form">
+
+                            <!-- Contact fields -->
+                            <div class="co-field-row">
+                                <div class="field">
+                                    <label for="email" class="field-label">
+                                        Email <span class="field-required">*</span>
+                                    </label>
+                                    <input id="email" type="email" v-model="addressForm.email" required
+                                        class="field-input" :class="{ 'field-input--error': addressForm.errors.email }"
+                                        placeholder="you@example.com" />
+                                    <p v-if="addressForm.errors.email" class="field-error">{{ addressForm.errors.email
+                                        }}</p>
+                                </div>
+                                <div class="field">
+                                    <label for="fullName" class="field-label">
+                                        Full Name <span class="field-required">*</span>
+                                    </label>
+                                    <input id="fullName" type="text" v-model="addressForm.fullName" required
+                                        class="field-input"
+                                        :class="{ 'field-input--error': addressForm.errors.fullName }"
+                                        placeholder="Jane Smith" />
+                                    <p v-if="addressForm.errors.fullName" class="field-error">{{
+                                        addressForm.errors.fullName }}</p>
+                                </div>
+                            </div>
+
+                            <div class="field" style="max-width: 280px;">
+                                <label for="telephone" class="field-label">
+                                    Phone <span class="field-optional">(optional)</span>
+                                </label>
+                                <input id="telephone" type="tel" v-model="addressForm.telephone" class="field-input"
+                                    placeholder="07700 900000" />
+                            </div>
+
+                            <!-- Add address toggle -->
+                            <div v-if="!isShippingAddressVisible" class="co-add-address-btn-wrap">
+                                <button type="button" @click="isManualAddressVisible = true" class="co-add-address-btn">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 5v14M5 12h14" />
+                                    </svg>
+                                    Add Shipping Address
                                 </button>
                             </div>
 
+                            <!-- Shipping address fields -->
+                            <div v-if="isShippingAddressVisible" class="co-address-fields">
+                                <h3 class="co-address-fields-title">Shipping Address</h3>
 
-                            <!-- Inner Border (Form is now wrapped) -->
-                            <form @submit.prevent="handleCardPayment"
-                                class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6 space-y-6">
+                                <div class="field">
+                                    <label for="addressLine1" class="field-label">
+                                        Address Line 1 <span class="field-required">*</span>
+                                    </label>
+                                    <input id="addressLine1" type="text" v-model="addressForm.addressLine1" required
+                                        class="field-input"
+                                        :class="{ 'field-input--error': addressForm.errors.addressLine1 }"
+                                        placeholder="123 Example Street" />
+                                    <p v-if="addressForm.errors.addressLine1" class="field-error">{{
+                                        addressForm.errors.addressLine1 }}</p>
+                                </div>
 
-                                <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">
-                                    1. Contact & Shipping Details
-                                </h2>
+                                <div class="field">
+                                    <label for="addressLine2" class="field-label">
+                                        Address Line 2 <span class="field-optional">(optional)</span>
+                                    </label>
+                                    <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
+                                        class="field-input" placeholder="Apartment, suite, etc." />
+                                </div>
 
-                                <!-- Contact Fields (ALWAYS VISIBLE) -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <!-- Email -->
-                                    <div>
-                                        <label for="email" class="block text-sm font-bold text-copy mb-1">
-                                            Email Address <span class="text-error">*</span>
+                                <div class="co-field-row co-field-row--3">
+                                    <div class="field">
+                                        <label for="city" class="field-label">City <span
+                                                class="field-required">*</span></label>
+                                        <input id="city" type="text" v-model="addressForm.city" required
+                                            class="field-input"
+                                            :class="{ 'field-input--error': addressForm.errors.city }"
+                                            placeholder="London" />
+                                        <p v-if="addressForm.errors.city" class="field-error">{{ addressForm.errors.city
+                                            }}</p>
+                                    </div>
+                                    <div class="field">
+                                        <label for="postcode" class="field-label">Postcode <span
+                                                class="field-required">*</span></label>
+                                        <input id="postcode" type="text" v-model="addressForm.postcode" required
+                                            class="field-input"
+                                            :class="{ 'field-input--error': addressForm.errors.postcode }"
+                                            placeholder="SW1A 0AA" />
+                                        <p v-if="addressForm.errors.postcode" class="field-error">{{
+                                            addressForm.errors.postcode }}</p>
+                                    </div>
+                                    <div class="field">
+                                        <label for="county" class="field-label">
+                                            County <span class="field-optional">(optional)</span>
                                         </label>
-                                        <input id="email" type="email" v-model="addressForm.email" required
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', { 'border-error': addressForm.errors.email }]"
-                                            placeholder="your@email.com">
-                                        <p v-if="addressForm.errors.email" class="text-sm text-error mt-1">{{
-                                            addressForm.errors.email }}</p>
-                                    </div>
-
-                                    <!-- Full Name -->
-                                    <div>
-                                        <label for="fullName" class="block text-sm font-bold text-copy mb-1">
-                                            Full Name <span class="text-error">*</span>
-                                        </label>
-                                        <input id="fullName" type="text" v-model="addressForm.fullName" required
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', { 'border-error': addressForm.errors.fullName }]"
-                                            placeholder="Jane Doe">
-                                        <p v-if="addressForm.errors.fullName" class="text-sm text-error mt-1">{{
-                                            addressForm.errors.fullName }}</p>
-                                    </div>
-
-                                    <!-- Telephone -->
-                                    <div>
-                                        <label for="telephone" class="block text-sm font-bold text-copy mb-1">Telephone
-                                            (Optional)</label>
-                                        <input id="telephone" type="tel" v-model="addressForm.telephone"
-                                            :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', { 'border-error': addressForm.errors.telephone }]"
-                                            placeholder="07700 900000">
-                                        <p v-if="addressForm.errors.telephone" class="text-sm text-error mt-1">{{
-                                            addressForm.errors.telephone }}</p>
+                                        <input id="county" type="text" v-model="addressForm.county" class="field-input"
+                                            placeholder="Greater London" />
                                     </div>
                                 </div>
 
-                                <!-- Shipping Address Toggle/Inputs -->
-                                <div v-if="!isShippingAddressVisible" class="pt-4 pb-2">
-                                    <button type="button" @click="isManualAddressVisible = true"
-                                        class="w-full py-3 bg-primary/10 text-primary font-bold rounded-lg border border-primary/50 hover:bg-primary/20 transition-colors flex items-center justify-center shadow-md">
-                                        <div v-html="IconPlus" class="size-5 mr-2"></div>
-                                        Add Shipping Address
-                                    </button>
+                                <div class="field" style="max-width: 200px;">
+                                    <label for="country" class="field-label">Country</label>
+                                    <input id="country" type="text" v-model="addressForm.country" readonly
+                                        class="field-input field-input--readonly" />
                                 </div>
+                            </div>
 
+                            <!-- Save info -->
+                            <label class="co-save-label">
+                                <input type="checkbox" v-model="addressForm.saveInfo" class="co-save-check" />
+                                <span>Save my details for faster checkout next time</span>
+                            </label>
 
-                                <!-- SHIPPING ADDRESS FIELDS (Conditional Block) -->
-                                <div v-if="isShippingAddressVisible" class="space-y-6 pt-4 border-t border-copy/10">
-                                    <h3 class="text-xl font-bold text-copy">Shipping Address</h3>
+                        </form>
+                    </section>
 
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <!-- Address Line 1 -->
-                                        <div class="md:col-span-2">
-                                            <label for="addressLine1" class="block text-sm font-bold text-copy mb-1">
-                                                Address Line 1 <span class="text-error">*</span>
-                                            </label>
-                                            <input id="addressLine1" type="text" v-model="addressForm.addressLine1"
-                                                required
-                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', { 'border-error': addressForm.errors.addressLine1 }]"
-                                                placeholder="123 Example Street">
-                                            <p v-if="addressForm.errors.addressLine1" class="text-sm text-error mt-1">{{
-                                                addressForm.errors.addressLine1 }}</p>
-                                        </div>
+                    <!-- Payment section -->
+                    <section class="co-card">
+                        <h2 class="co-card-title">
+                            <span class="co-step">2</span>
+                            Payment
+                        </h2>
 
-                                        <!-- Address Line 2 (Optional) -->
-                                        <div class="md:col-span-2">
-                                            <label for="addressLine2"
-                                                class="block text-sm font-bold text-copy mb-1">Address Line 2
-                                                (Optional)</label>
-                                            <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
-                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', { 'border-error': addressForm.errors.addressLine2 }]"
-                                                placeholder="Apartment, suite, etc.">
-                                        </div>
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <!-- City -->
-                                        <div>
-                                            <label for="city" class="block text-sm font-bold text-copy mb-1">
-                                                City <span class="text-error">*</span>
-                                            </label>
-                                            <input id="city" type="text" v-model="addressForm.city" required
-                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', { 'border-error': addressForm.errors.city }]"
-                                                placeholder="London">
-                                            <p v-if="addressForm.errors.city" class="text-sm text-error mt-1">{{
-                                                addressForm.errors.city }}</p>
-                                        </div>
-
-                                        <!-- County (Optional) -->
-                                        <div>
-                                            <label for="county" class="block text-sm font-bold text-copy mb-1">County
-                                                (Optional)</label>
-                                            <input id="county" type="text" v-model="addressForm.county"
-                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', { 'border-error': addressForm.errors.county }]"
-                                                placeholder="Greater London">
-                                            <p v-if="addressForm.errors.county" class="text-sm text-error mt-1">{{
-                                                addressForm.errors.county }}</p>
-                                        </div>
-
-                                        <!-- Postcode -->
-                                        <div>
-                                            <label for="postcode" class="block text-sm font-bold text-copy mb-1">
-                                                Postcode <span class="text-error">*</span>
-                                            </label>
-                                            <input id="postcode" type="text" v-model="addressForm.postcode" required
-                                                :class="['w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary', { 'border-error': addressForm.errors.postcode }]"
-                                                placeholder="SW1A 0AA">
-                                            <p v-if="addressForm.errors.postcode" class="text-sm text-error mt-1">{{
-                                                addressForm.errors.postcode }}</p>
-                                        </div>
-
-                                        <!-- Country -->
-                                        <div>
-                                            <label for="country"
-                                                class="block text-sm font-bold text-copy mb-1">Country</label>
-                                            <input id="country" type="text" v-model="addressForm.country" readonly
-                                                class="w-full p-3 rounded-lg border-2 border-copy/30 bg-background text-copy focus:ring-primary focus:border-primary opacity-70"
-                                                placeholder="United Kingdom">
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- END SHIPPING ADDRESS FIELDS -->
-
-
-                                <!-- Save Info Checkbox -->
-                                <div class="flex items-center pt-4">
-                                    <input id="saveInfo" type="checkbox" v-model="addressForm.saveInfo"
-                                        class="w-4 h-4 text-primary bg-background border-copy/30 rounded focus:ring-primary">
-                                    <label for="saveInfo" class="ml-2 text-sm text-copy">Save my information for a
-                                        faster checkout</label>
-                                </div>
-
-                            </form>
+                        <!-- Loading -->
+                        <div v-if="isLoadingInitialData" class="co-payment-loading">
+                            <svg class="co-spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="#e5c9c7" stroke-width="3" />
+                                <path d="M12 2a10 10 0 0 1 10 10" stroke="#8c4a50" stroke-width="3"
+                                    stroke-linecap="round" />
+                            </svg>
+                            <p>Connecting to payment gateway...</p>
                         </div>
 
+                        <!-- Stripe element -->
+                        <div v-if="hasClientSecret" ref="paymentContainer" class="co-stripe-container"></div>
 
-                        <!-- Payment Section -->
-                        <!-- Applying the Cart's Double Border Style (Outer) -->
-                        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                            <!-- Inner Border -->
-                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6 space-y-6">
-                                <h2 class="text-3xl font-extrabold text-copy border-b-2 border-copy/10 pb-3">2. Payment
-                                </h2>
+                        <!-- Payment error -->
+                        <div v-if="paymentError" class="co-payment-error">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 8v4M12 16h.01" />
+                            </svg>
+                            {{ paymentError }}
+                        </div>
 
-                                <!-- Initial Loading State (Fetching Client Secret/Loading Stripe) -->
-                                <div v-if="isLoadingInitialData"
-                                    class="p-3 relative min-h-24 bg-background/80 flex items-center justify-center rounded-lg z-10">
-                                    <div class="text-center p-8">
-                                        <!-- Simple Spinner/Loader -->
-                                        <svg class="animate-spin h-8 w-8 text-primary mx-auto mb-3"
-                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                                stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                            </path>
-                                        </svg>
-                                        <p class="text-lg font-semibold text-copy-lighter">
-                                            Connecting to payment gateway...
-                                        </p>
-                                    </div>
-                                </div>
+                        <!-- Submit -->
+                        <button @click.prevent="handleCardPayment"
+                            :disabled="isProcessing || isLoadingInitialData || !hasClientSecret || !!paymentError"
+                            class="btn-rose btn-rose--full co-pay-btn"
+                            :class="{ 'btn-rose--disabled': isProcessing || isLoadingInitialData || !hasClientSecret || !!paymentError }">
+                            <svg v-if="isProcessing" class="co-spinner co-spinner--sm" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+                                <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3"
+                                    stroke-linecap="round" />
+                            </svg>
+                            {{ isProcessing ? 'Processing...' : `Pay ${fmt(computedTotal)}` }}
+                        </button>
 
-                                <!-- Payment Element Container (Only renders when we have the client secret) -->
-                                <div v-if="hasClientSecret" ref="paymentContainer" id="payment-element-container"
-                                    class="p-3 min-h-24">
-                                    <!-- Stripe iframe will be mounted here -->
-                                </div>
+                        <p class="co-secure-note">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            All transactions are secured and encrypted via Stripe
+                        </p>
+                    </section>
 
+                </div>
 
-                                <!-- Error Message Display -->
-                                <div v-if="paymentError"
-                                    class="mt-4 p-3 bg-red-100 border border-error rounded-lg text-error text-sm font-semibold">
-                                    **Payment Error:** {{ paymentError }}
-                                </div>
+                <!-- ── Right column: order summary ── -->
+                <aside class="co-summary">
+                    <div class="co-summary-card">
+                        <h2 class="co-summary-title">Order Summary</h2>
 
-                                <!-- Submit Button (disabled if loading, no client secret, or has error) -->
-                                <button @click.prevent="handleCardPayment"
-                                    :disabled="isProcessing || addressForm.processing || isLoadingInitialData || !hasClientSecret || !!paymentError"
-                                    class="mt-6 w-full py-4 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg"
-                                    :style="{
-                                        'background-color': 'var(--primary)',
-                                        'color': 'var(--primary-content)'
-                                    }" :class="{
-                                        'hover:bg-primary-dark': !isProcessing && hasClientSecret && !paymentError && !isLoadingInitialData,
-                                        'opacity-50 cursor-wait': isProcessing,
-                                        'cursor-not-allowed opacity-40': !hasClientSecret || !!paymentError || isLoadingInitialData
-                                    }">
-                                    <span v-if="isProcessing">Processing Payment...</span>
-                                    <span v-else>Pay {{ formatCurrency(computedTotal) }} Now</span>
-                                </button>
-
-                                <p class="text-xs text-center text-copy-lighter pt-3">
-                                    All transactions are secured and encrypted.
-                                </p>
-
+                        <!-- Cost breakdown -->
+                        <div class="co-summary-rows">
+                            <div class="co-summary-row">
+                                <span>Subtotal</span>
+                                <span>{{ fmt(summary.subtotal) }}</span>
+                            </div>
+                            <div class="co-summary-row">
+                                <span>VAT (20%)</span>
+                                <span>{{ fmt(computedTax) }}</span>
+                            </div>
+                            <div class="co-summary-row">
+                                <span>Shipping</span>
+                                <span :class="summary.shipping === 0 ? 'co-free-shipping' : ''">
+                                    {{ summary.shipping === 0 ? 'FREE' : fmt(summary.shipping) }}
+                                </span>
+                            </div>
+                            <div v-if="voucherDiscount > 0" class="co-summary-row co-summary-row--discount">
+                                <span>Discount ({{ activeVoucher?.code }})</span>
+                                <span>-{{ fmt(voucherDiscount) }}</span>
                             </div>
                         </div>
-                    </div>
 
+                        <!-- Voucher -->
+                        <div class="co-voucher-section">
+                            <p class="co-voucher-label">Discount Code</p>
 
-                    <!-- Right Column: Order Summary & Review -->
-                    <div class="lg:col-span-1">
-                        <!-- Applying the Cart's Double Border Style (Outer) -->
-                        <div class="sticky top-8 rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                            <!-- Inner Border -->
-                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                                <h2 class="text-2xl font-black text-copy mb-4 border-b-2 border-copy/10 pb-3">Order
-                                    Summary</h2>
-
-                                <!-- Breakdown -->
-                                <div class="space-y-3 text-copy text-lg">
-                                    <div class="flex justify-between">
-                                        <span>Subtotal ({{ cartItems.length }} items)</span>
-                                        <span class="font-bold">{{ formatCurrency(summary.subtotal) }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>VAT (20%)</span>
-                                        <span class="font-bold">{{ formatCurrency(computedTax) }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Shipping</span>
-                                        <span
-                                            :class="['font-bold', summary.shipping === 0 ? 'text-green-600' : 'text-copy']">
-                                            {{ summary.shipping === 0 ? 'FREE' : formatCurrency(summary.shipping) }}
-                                        </span>
-                                    </div>
-                                    <div v-if="voucherDiscount > 0"
-                                        class="flex justify-between text-green-700 font-bold">
-                                        <span>Discount ({{ activeVoucher?.code }})</span>
-                                        <span>-£{{ voucherDiscount.toFixed(2) }}</span>
-                                    </div>
-
-                                    <!-- Voucher input -->
-                                    <div class="mt-4 border-t border-copy/10 pt-4">
-                                        <p class="text-sm font-bold text-copy mb-2">Discount Code</p>
-
-                                        <!-- Active voucher -->
-                                        <div v-if="activeVoucher"
-                                            class="flex items-center justify-between rounded-lg border border-green-300 bg-green-50 px-3 py-2 mb-2">
-                                            <div>
-                                                <span class="font-mono font-bold text-green-800 text-sm">{{
-                                                    activeVoucher.code }}</span>
-                                                <p class="text-xs text-green-700">
-                                                    -£{{ activeVoucher.discount.toFixed(2) }} off
-                                                </p>
-                                            </div>
-                                            <button type="button" @click="removeVoucher"
-                                                class="text-xs text-red-600 hover:text-red-800 font-semibold transition">Remove</button>
-                                        </div>
-
-                                        <!-- Input -->
-                                        <div v-else class="flex gap-2">
-                                            <input type="text" v-model="voucherCode" placeholder="Enter code…"
-                                                class="flex-1 rounded-lg border-2 border-copy/30 bg-background p-2 text-copy text-sm font-mono uppercase focus:border-primary focus:ring-primary"
-                                                @keyup.enter="applyVoucher" />
-                                            <button type="button" @click="applyVoucher"
-                                                :disabled="voucherLoading || !voucherCode.trim()"
-                                                class="rounded-lg border-2 border-copy px-3 py-2 text-sm font-bold transition disabled:opacity-50"
-                                                style="background-color: var(--primary); color: var(--primary-content);">
-                                                {{ voucherLoading ? '...' : 'Apply' }}
-                                            </button>
-                                        </div>
-
-                                        <p v-if="voucherSuccess" class="text-xs text-green-700 font-medium mt-1">{{
-                                            voucherSuccess }}</p>
-                                        <p v-if="voucherError" class="text-xs text-error font-medium mt-1">{{
-                                            voucherError }}</p>
-                                    </div>
+                            <div v-if="activeVoucher" class="co-voucher-active">
+                                <div>
+                                    <p class="co-voucher-code">{{ activeVoucher.code }}</p>
+                                    <p class="co-voucher-saved">Saving {{ fmt(activeVoucher.discount) }}</p>
                                 </div>
+                                <button @click="removeVoucher" class="co-voucher-remove">Remove</button>
+                            </div>
 
-                                <!-- Total -->
-                                <div class="mt-6 pt-4 border-t-2 border-copy/10 flex justify-between items-center">
-                                    <span class="text-2xl font-extrabold text-copy">Order Total</span>
-                                    <span class="text-4xl font-black text-primary">{{ formatCurrency(computedTotal)
-                                    }}</span>
-                                </div>
+                            <div v-else class="co-voucher-input">
+                                <input type="text" v-model="voucherCode" placeholder="Enter code..."
+                                    class="co-voucher-field" @keyup.enter="applyVoucher" />
+                                <button @click="applyVoucher" :disabled="voucherLoading || !voucherCode.trim()"
+                                    class="btn-rose btn-rose--sm co-voucher-btn">
+                                    {{ voucherLoading ? '...' : 'Apply' }}
+                                </button>
+                            </div>
 
-                                <!-- Order Review -->
-                                <h3 class="text-xl font-bold text-copy mt-6 pt-4 border-t-2 border-copy/10 pb-2">Items
-                                    in Order</h3>
-                                <div class="space-y-3 max-h-60 overflow-y-auto">
-                                    <div v-for="item in cartItems" :key="item.id"
-                                        class="flex justify-between items-center text-sm border-b border-copy/10 last:border-b-0 py-1">
-                                        <div class="truncate pr-2">
-                                            {{ item.product.name }}
-                                            <span class="text-copy-lighter font-medium"> (x{{ item.quantity }})</span>
-                                        </div>
-                                        <span class="font-bold text-copy flex-shrink-0">{{
-                                            formatCurrency(item.product.cost * item.quantity) }}</span>
-                                    </div>
+                            <p v-if="voucherSuccess" class="co-voucher-msg co-voucher-msg--success">{{ voucherSuccess }}
+                            </p>
+                            <p v-if="voucherError" class="co-voucher-msg co-voucher-msg--error">{{ voucherError }}</p>
+                        </div>
+
+                        <!-- Grand total -->
+                        <div class="co-total-row">
+                            <span class="co-total-label">Total</span>
+                            <span class="co-total-val">{{ fmt(computedTotal) }}</span>
+                        </div>
+
+                        <!-- Items in order -->
+                        <div class="co-items-section">
+                            <h3 class="co-items-title">Items in your order</h3>
+                            <div class="co-items-list">
+                                <div v-for="item in cartItems" :key="item.id" class="co-item-row">
+                                    <span class="co-item-name">
+                                        {{ item.product.name }}
+                                        <span class="co-item-qty">&times;{{ item.quantity }}</span>
+                                    </span>
+                                    <span class="co-item-price">{{ fmt(item.product.cost * item.quantity) }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </aside>
 
-                </div>
             </div>
         </div>
-
-    </section>
-
+    </main>
 </template>
+
+<style scoped>
+/* ── Page ── */
+.co {
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    padding-top: 64px;
+    background: #fdf4f3;
+    color: #2d1a1a;
+}
+
+.co-wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem 1.25rem 5rem;
+}
+
+/* ── Header ── */
+.co-header {
+    margin-bottom: 2rem;
+}
+
+.co-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    font-style: italic;
+    font-weight: 400;
+    color: #2d1a1a;
+    margin-bottom: 0.4rem;
+}
+
+.co-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.88rem;
+    color: #6b4f4f;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.co-back:hover {
+    color: #8c4a50;
+}
+
+/* ── Empty ── */
+.co-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    border: 1.5px dashed #e5c9c7;
+    border-radius: 20px;
+    background: #fffafa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.co-empty p {
+    font-size: 0.95rem;
+    color: #6b4f4f;
+    font-style: italic;
+}
+
+/* ── Grid ── */
+.co-grid {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 860px) {
+    .co-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.co-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* ── Cards ── */
+.co-card {
+    border: 1px solid #e5c9c7;
+    border-radius: 20px;
+    background: #fffafa;
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.co-card::before {
+    content: '✿';
+    position: absolute;
+    bottom: -6px;
+    right: 8px;
+    font-size: 3.5rem;
+    color: #c9a4a4;
+    opacity: 0.1;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.co-card::after {
+    content: '✿';
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    font-size: 0.85rem;
+    color: #c9a4a4;
+    opacity: 0.22;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.co-card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-style: italic;
+    font-weight: 400;
+    color: #2d1a1a;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid #e5c9c7;
+}
+
+.co-step {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c47078, #a85058);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-style: normal;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ── Saved addresses ── */
+.co-address-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+@media (max-width: 540px) {
+    .co-address-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.co-address-card {
+    border: 1px solid #e5c9c7;
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    background: #fdf4f3;
+    position: relative;
+    overflow: hidden;
+}
+
+.co-address-card:hover {
+    border-color: #c9a4a4;
+    background: #faeaea;
+}
+
+.co-address-card--selected {
+    border-color: #8c4a50;
+    background: #fff5f5;
+    box-shadow: 0 0 0 2px rgba(140, 74, 80, 0.12);
+}
+
+.co-address-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+}
+
+.co-address-type {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8c4a50;
+}
+
+.co-address-default {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(140, 74, 80, 0.1);
+    color: #8c4a50;
+    border: 1px solid rgba(140, 74, 80, 0.2);
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
+}
+
+.co-address-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    font-size: 0.85rem;
+    color: #2d1a1a;
+    line-height: 1.45;
+}
+
+.co-clear-btn {
+    font-size: 0.8rem;
+    color: #8c4a50;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: color 0.2s;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.co-clear-btn:hover {
+    color: #6a3038;
+}
+
+/* ── Form ── */
+.co-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.co-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.co-field-row--3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 540px) {
+
+    .co-field-row,
+    .co-field-row--3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.field-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b4f4f;
+}
+
+.field-required {
+    color: #8c4a50;
+}
+
+.field-optional {
+    font-weight: 400;
+    text-transform: none;
+    font-style: italic;
+    color: #9a7070;
+}
+
+.field-input {
+    padding: 0.65rem 0.9rem;
+    border: 1px solid #e5c9c7;
+    border-radius: 10px;
+    background: #fdf4f3;
+    color: #2d1a1a;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field-input:focus {
+    border-color: #8c4a50;
+    box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1);
+}
+
+.field-input--error {
+    border-color: #c84040;
+}
+
+.field-input--readonly {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.field-error {
+    font-size: 0.78rem;
+    color: #b54040;
+}
+
+.co-add-address-btn-wrap {
+    padding-top: 0.25rem;
+}
+
+.co-add-address-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 999px;
+    border: 1px dashed #c9a4a4;
+    background: transparent;
+    color: #8c4a50;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.co-add-address-btn:hover {
+    background: #faeaea;
+    border-color: #8c4a50;
+}
+
+.co-address-fields {
+    border-top: 1px solid #e5c9c7;
+    padding-top: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.co-address-fields-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #8c4a50;
+    margin-bottom: 0.25rem;
+}
+
+.co-save-label {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    color: #6b4f4f;
+    cursor: pointer;
+    padding-top: 0.25rem;
+}
+
+.co-save-check {
+    width: 15px;
+    height: 15px;
+    accent-color: #8c4a50;
+    cursor: pointer;
+}
+
+/* ── Payment section ── */
+.co-payment-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2.5rem 1rem;
+    color: #6b4f4f;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.co-spinner {
+    width: 36px;
+    height: 36px;
+    animation: co-spin 0.9s linear infinite;
+}
+
+.co-spinner--sm {
+    width: 16px;
+    height: 16px;
+}
+
+@keyframes co-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.co-stripe-container {
+    padding: 0.25rem 0;
+    min-height: 100px;
+}
+
+.co-payment-error {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    background: #fff5f5;
+    border: 1px solid #e8a8a8;
+    color: #8c2a2a;
+    font-size: 0.88rem;
+    margin-top: 0.75rem;
+}
+
+.co-pay-btn {
+    margin-top: 1rem;
+}
+
+.co-secure-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: #9a7070;
+    font-style: italic;
+    margin-top: 0.75rem;
+    text-align: center;
+}
+
+/* ── Summary sidebar ── */
+.co-summary {
+    position: sticky;
+    top: 88px;
+}
+
+.co-summary-card {
+    border: 1px solid #e5c9c7;
+    border-radius: 20px;
+    background: #fffafa;
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.co-summary-card::before {
+    content: '✿';
+    position: absolute;
+    bottom: -6px;
+    right: 8px;
+    font-size: 3.5rem;
+    color: #c9a4a4;
+    opacity: 0.1;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.co-summary-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-style: italic;
+    font-weight: 400;
+    color: #2d1a1a;
+    margin-bottom: 1.1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5c9c7;
+}
+
+.co-summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.co-summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    color: #6b4f4f;
+}
+
+.co-summary-row span:last-child {
+    font-weight: 600;
+    color: #2d1a1a;
+}
+
+.co-summary-row--discount {
+    color: #2d7a3a;
+}
+
+.co-summary-row--discount span:last-child {
+    color: #2d7a3a;
+}
+
+.co-free-shipping {
+    color: #2d7a3a;
+    font-weight: 600;
+}
+
+/* ── Voucher ── */
+.co-voucher-section {
+    border-top: 1px dashed #e5c9c7;
+    padding-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.co-voucher-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #8c4a50;
+    margin-bottom: 0.6rem;
+}
+
+.co-voucher-active {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.85rem;
+    border-radius: 10px;
+    background: #f0faf0;
+    border: 1px solid #a8d8b0;
+}
+
+.co-voucher-code {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #2d7a3a;
+    font-family: monospace;
+    letter-spacing: 0.05em;
+}
+
+.co-voucher-saved {
+    font-size: 0.75rem;
+    color: #2d7a3a;
+    margin-top: 0.1rem;
+}
+
+.co-voucher-remove {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #8c2a2a;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: color 0.2s;
+    text-decoration: underline;
+}
+
+.co-voucher-remove:hover {
+    color: #6a1a1a;
+}
+
+.co-voucher-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.co-voucher-field {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5c9c7;
+    border-radius: 10px;
+    background: #fdf4f3;
+    color: #2d1a1a;
+    font-family: monospace;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.co-voucher-field:focus {
+    border-color: #8c4a50;
+}
+
+.co-voucher-btn {
+    flex-shrink: 0;
+}
+
+.co-voucher-msg {
+    font-size: 0.78rem;
+    margin-top: 0.4rem;
+    font-style: italic;
+}
+
+.co-voucher-msg--success {
+    color: #2d7a3a;
+}
+
+.co-voucher-msg--error {
+    color: #b54040;
+}
+
+/* ── Grand total ── */
+.co-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.85rem 0;
+    border-top: 1px solid #e5c9c7;
+    border-bottom: 1px solid #e5c9c7;
+    margin-bottom: 1rem;
+}
+
+.co-total-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: #2d1a1a;
+}
+
+.co-total-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: #8c4a50;
+}
+
+/* ── Items ── */
+.co-items-section {}
+
+.co-items-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #8c4a50;
+    margin-bottom: 0.65rem;
+}
+
+.co-items-list {
+    max-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.co-items-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+.co-items-list::-webkit-scrollbar-thumb {
+    background: #e5c9c7;
+    border-radius: 999px;
+}
+
+.co-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #f0dcd8;
+}
+
+.co-item-row:last-child {
+    border-bottom: none;
+}
+
+.co-item-name {
+    color: #2d1a1a;
+    flex: 1;
+    min-width: 0;
+}
+
+.co-item-qty {
+    color: #6b4f4f;
+    font-size: 0.78rem;
+    margin-left: 0.3rem;
+}
+
+.co-item-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #8c4a50;
+    flex-shrink: 0;
+}
+
+/* ── Buttons ── */
+.btn-rose {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.72rem 1.5rem;
+    border-radius: 999px;
+    border: 1px solid #a85058;
+    background: linear-gradient(135deg, #c47078, #a85058);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+}
+
+.btn-rose:hover:not(:disabled):not(.btn-rose--disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 18px rgba(168, 80, 88, 0.28);
+}
+
+.btn-rose--disabled,
+.btn-rose:disabled {
+    background: #f0dcd8;
+    border-color: #e5c9c7;
+    color: #9a7070;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-rose--full {
+    width: 100%;
+}
+
+.btn-rose--sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+</style>
