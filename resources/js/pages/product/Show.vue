@@ -308,35 +308,72 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
 
                 <!-- Write a review -->
                 <div v-if="canReview" class="pd-review-form-card">
-                    <h3 class="pd-review-form-title">Write a Review</h3>
-                    <form @submit.prevent="submitReview" class="pd-review-form">
-                        <div class="field">
-                            <label class="field-label">Your Rating</label>
-                            <StarRating :rating="reviewForm.rating" :editable="true"
-                                @update:rating="reviewForm.rating = $event" :size="28" class="text-secondary-content" />
-                            <p v-if="reviewForm.errors.rating" class="field-error">{{ reviewForm.errors.rating }}</p>
+
+                    <!-- Rating picker -->
+                    <div class="pd-rf-rating-section">
+                        <p class="pd-rf-rating-prompt">How would you rate this product?</p>
+                        <div class="pd-rf-stars">
+                            <button v-for="star in 5" :key="star" type="button" class="pd-rf-star"
+                                :class="{ 'pd-rf-star--filled': star <= reviewForm.rating }"
+                                @click="reviewForm.rating = star"
+                                :aria-label="`Rate ${star} star${star !== 1 ? 's' : ''}`">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                </svg>
+                            </button>
                         </div>
+                        <p class="pd-rf-rating-label" v-if="reviewForm.rating > 0">
+                            {{ ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][reviewForm.rating] }}
+                        </p>
+                        <p v-if="reviewForm.errors.rating" class="field-error">{{ reviewForm.errors.rating }}</p>
+                    </div>
+
+                    <form @submit.prevent="submitReview" class="pd-review-form">
                         <div class="field">
                             <label for="review_message" class="field-label">Your Review</label>
                             <textarea id="review_message" v-model="reviewForm.message" rows="4"
+                                placeholder="Share your experience with this product..."
                                 class="field-input field-textarea"
                                 :class="{ 'field-input--error': reviewForm.errors.message }"></textarea>
                             <p v-if="reviewForm.errors.message" class="field-error">{{ reviewForm.errors.message }}</p>
                         </div>
+
                         <div class="field">
                             <label for="review_images" class="field-label">
-                                Photos <span class="field-optional">(up to 3)</span>
+                                Add Photos <span class="field-optional">(optional, up to 3)</span>
+                            </label>
+                            <label for="review_images" class="pd-file-label">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="17 8 12 3 7 8" />
+                                    <line x1="12" y1="3" x2="12" y2="15" />
+                                </svg>
+                                {{ reviewForm.images.length > 0 ? `${reviewForm.images.length}
+                                photo${reviewForm.images.length !== 1
+                                ? 's' : ''} selected` : 'Choose photos' }}
                             </label>
                             <input type="file" id="review_images" multiple accept="image/*" @change="handleImageUpload"
-                                class="pd-file-input" />
+                                class="pd-file-hidden" />
                             <p v-if="reviewForm.errors['images'] || reviewForm.errors['images.0']" class="field-error">
                                 {{ reviewForm.errors['images'] || reviewForm.errors['images.0'] }}
                             </p>
                         </div>
-                        <button type="submit" :disabled="reviewForm.processing || reviewForm.rating === 0"
-                            class="btn-rose" :class="{ 'btn-rose--disabled': reviewForm.rating === 0 }">
-                            Submit Review
-                        </button>
+
+                        <div class="pd-rf-footer">
+                            <button type="submit" :disabled="reviewForm.processing || reviewForm.rating === 0"
+                                class="btn-rose" :class="{ 'btn-rose--disabled': reviewForm.rating === 0 }">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 2 11 13" />
+                                    <path d="M22 2 15 22 11 13 2 9l20-7z" />
+                                </svg>
+                                {{ reviewForm.processing ? 'Submitting...' : 'Submit Review' }}
+                            </button>
+                            <p v-if="reviewForm.rating === 0" class="pd-rf-no-rating-hint">Please select a star rating
+                                above</p>
+                        </div>
                     </form>
                 </div>
 
@@ -433,9 +470,13 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
 }
 
 /* ── Images ── */
-.pd-images {
-    position: sticky;
-    top: 88px;
+.pd-images {}
+
+@media (min-width: 860px) {
+    .pd-images {
+        position: sticky;
+        top: 88px;
+    }
 }
 
 .pd-main-img-btn {
@@ -864,15 +905,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     font-style: italic;
 }
 
-/* Review form card */
-.pd-review-form-card {
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    background: #fffafa;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.3);
-    padding: 1.5rem;
-    margin-bottom: 2rem;
-}
 
 .pd-review-form-title {
     font-family: 'Cormorant Garamond', serif;
@@ -885,11 +917,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     border-bottom: 1px solid #e5c9c7;
 }
 
-.pd-review-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-}
 
 /* Shared field styles */
 .field {
@@ -943,29 +970,7 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     color: #b54040;
 }
 
-.pd-file-input {
-    font-size: 0.85rem;
-    color: #6b4f4f;
-    font-family: 'Nunito', sans-serif;
-}
 
-.pd-file-input::file-selector-button {
-    padding: 0.35rem 0.9rem;
-    border-radius: 999px;
-    border: 1px solid #e5c9c7;
-    background: #fdf4f3;
-    color: #8c4a50;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    margin-right: 0.75rem;
-    transition: background 0.2s;
-}
-
-.pd-file-input::file-selector-button:hover {
-    background: #faeaea;
-}
 
 /* Notices */
 .pd-notice {
@@ -1127,6 +1132,135 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     .pd-related-grid {
         grid-template-columns: 1fr 1fr;
     }
+}
+
+/* ── Review form extras ── */
+.pd-rf-rating-section {
+    padding: 1.5rem 1.5rem 1.25rem;
+    background: linear-gradient(135deg, #fdf4f3, #fff8f7);
+    border-bottom: 1px solid #e5c9c7;
+    text-align: center;
+    border-radius: 20px 20px 0 0;
+}
+
+.pd-rf-rating-prompt {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: #2d1a1a;
+    margin-bottom: 1rem;
+}
+
+.pd-rf-stars {
+    display: flex;
+    justify-content: center;
+    gap: 0.35rem;
+    margin-bottom: 0.6rem;
+}
+
+.pd-rf-star {
+    background: none;
+    border: none;
+    padding: 0.1rem;
+    cursor: pointer;
+    color: #e5c9c7;
+    transition: color 0.15s, transform 0.15s;
+    line-height: 1;
+}
+
+.pd-rf-star:hover {
+    transform: scale(1.15);
+}
+
+.pd-rf-star--filled {
+    color: #c9747a;
+}
+
+.pd-rf-stars:hover .pd-rf-star {
+    color: #e5c9c7;
+}
+
+.pd-rf-stars:hover .pd-rf-star:hover,
+.pd-rf-stars:hover .pd-rf-star:hover~.pd-rf-star {
+    color: #e5c9c7;
+}
+
+.pd-rf-stars .pd-rf-star:hover,
+.pd-rf-stars .pd-rf-star:hover~.pd-rf-star-sibling {
+    color: #c9747a;
+}
+
+.pd-rf-rating-label {
+    font-size: 0.82rem;
+    font-style: italic;
+    color: #8c4a50;
+    font-weight: 600;
+    min-height: 1.2rem;
+}
+
+.pd-review-form {
+    padding: 1.25rem 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.pd-file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid #e5c9c7;
+    background: #fdf4f3;
+    color: #8c4a50;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    width: fit-content;
+}
+
+.pd-file-label:hover {
+    background: #faeaea;
+    border-color: #c9a4a4;
+}
+
+.pd-file-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.pd-rf-footer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid #f0dcd8;
+    flex-wrap: wrap;
+}
+
+.pd-rf-no-rating-hint {
+    font-size: 0.8rem;
+    color: #9a7070;
+    font-style: italic;
+}
+
+/* Remove old form card padding since rating section now has its own */
+.pd-review-form-card {
+    border: 1px solid #e5c9c7;
+    border-radius: 20px;
+    background: #fffafa;
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.3);
+    padding: 0;
+    margin-bottom: 2rem;
+    overflow: hidden;
 }
 
 /* ── Buttons ── */
