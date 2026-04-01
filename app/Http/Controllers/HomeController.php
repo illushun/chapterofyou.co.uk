@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ContactMessage;
+use App\Models\Product;
 
 class HomeController extends Controller
 {
@@ -27,14 +27,45 @@ class HomeController extends Controller
 
         $user = Auth::user();
 
-        if ($user->is_admin) {
-            logger()->channel('load_website')->info("[{$clientIp}] Admin user. Loading landing page.");
-            return Inertia::render('home/LandingPage');
+        if (!$user->is_admin) {
+            logger()->channel('load_website')->info("[{$clientIp}] Regular user. Showing waitlist.");
+            return Inertia::render('Welcome', [
+                'siteName' => 'Chapter of You',
+            ]);
         }
 
-        logger()->channel('load_website')->info("[{$clientIp}] Regular user. Showing waitlist.");
-        return Inertia::render('Welcome', [
-            'siteName' => 'Chapter of You',
+        logger()->channel('load_website')->info("[{$clientIp}] Admin user. Loading landing page.");
+
+        // Fetch the 4 most-viewed enabled products for the "Hottest Products" section.
+        $featuredProducts = Product::query()
+            ->select('product.id', 'product.name', 'product.mpn', 'product.cost')
+            ->selectRaw('COALESCE(SUM(pv.views), 0) as views')
+            ->leftJoin('product_view as pv', 'pv.product_id', '=', 'product.id')
+            ->where('product.status', 'enabled')
+            ->where('product.stock_qty', '>', 0)
+            ->whereNull('product.parent_product_id')
+            ->groupBy('product.id', 'product.name', 'product.mpn', 'product.cost')
+            ->orderByDesc('views')
+            ->orderByDesc('product.id')
+            ->limit(4)
+            ->get()
+            ->map(function (Product $product) {
+                return [
+                    'id'    => $product->id,
+                    'name'  => $product->name,
+                    'mpn'   => $product->mpn,
+                    'cost'  => (float) $product->cost,
+                    'image' => $product->images()
+                                ->where('status', 'enabled')
+                                ->orderBy('id')
+                                ->value('image'),
+                    'slug'  => $product->seo?->slug,
+                    'views' => (int) $product->views,
+                ];
+            });
+
+        return Inertia::render('home/LandingPage', [
+            'featuredProducts' => $featuredProducts,
         ]);
     }
 
@@ -44,14 +75,10 @@ class HomeController extends Controller
     public function about(Request $request): \Inertia\Response
     {
         if (!Auth::check() || !Auth::user()->is_admin) {
-            return Inertia::render('Welcome', [
-                'siteName' => 'Chapter of You',
-            ]);
+            return Inertia::render('Welcome', ['siteName' => 'Chapter of You']);
         }
 
-        return Inertia::render('About', [
-            'siteName' => 'Chapter of You',
-        ]);
+        return Inertia::render('About', ['siteName' => 'Chapter of You']);
     }
 
     /**
@@ -60,14 +87,10 @@ class HomeController extends Controller
     public function contact(Request $request): \Inertia\Response
     {
         if (!Auth::check() || !Auth::user()->is_admin) {
-            return Inertia::render('Welcome', [
-                'siteName' => 'Chapter of You',
-            ]);
+            return Inertia::render('Welcome', ['siteName' => 'Chapter of You']);
         }
 
-        return Inertia::render('Contact', [
-            'siteName' => 'Chapter of You',
-        ]);
+        return Inertia::render('Contact', ['siteName' => 'Chapter of You']);
     }
 
     /**

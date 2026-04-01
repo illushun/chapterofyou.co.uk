@@ -1,6 +1,20 @@
 <script setup lang="ts">
 import NavBar from '@/components/NavBar.vue';
 import { Head } from '@inertiajs/vue3';
+
+interface FeaturedProduct {
+    id: number;
+    name: string;
+    mpn: string;
+    cost: number;
+    image: string | null;
+    slug: string | null;
+    views: number;
+}
+
+defineProps<{
+    featuredProducts?: FeaturedProduct[];
+}>();
 </script>
 
 <template>
@@ -181,70 +195,55 @@ import { Head } from '@inertiajs/vue3';
             </div>
         </section>
 
-        <!-- ── Testimonials ── -->
-        <section class="lp-testimonials">
-            <div class="lp-testimonials-inner">
-                <div class="lp-section-header">
-                    <p class="lp-section-eyebrow">Kind words</p>
-                    <h2 class="lp-section-title">What our customers <em>are saying</em></h2>
-                </div>
-                <div class="lp-review-grid">
-
-                    <figure class="lp-review-card">
-                        <div class="lp-review-stars" aria-label="5 out of 5 stars">
-                            <span v-for="i in 5" :key="i" aria-hidden="true">★</span>
-                        </div>
-                        <blockquote class="lp-review-body">
-                            "The most beautiful diffuser I've ever owned. The scent is subtle and long-lasting — it
-                            transformed my living room completely. I've already ordered three more as gifts."
-                        </blockquote>
-                        <figcaption class="lp-review-author">
-                            <span class="lp-review-name">Sarah M.</span>
-                            <span class="lp-review-location">Manchester</span>
-                        </figcaption>
-                    </figure>
-
-                    <figure class="lp-review-card lp-review-card--featured">
-                        <div class="lp-review-quote-mark" aria-hidden="true">"</div>
-                        <div class="lp-review-stars" aria-label="5 out of 5 stars">
-                            <span v-for="i in 5" :key="i" aria-hidden="true">★</span>
-                        </div>
-                        <blockquote class="lp-review-body">
-                            "I was skeptical at first but the quality blew me away. You can genuinely tell every single
-                            bottle has been made with care. This isn't mass-produced — it feels personal."
-                        </blockquote>
-                        <figcaption class="lp-review-author">
-                            <span class="lp-review-name">Emma R.</span>
-                            <span class="lp-review-location">London</span>
-                        </figcaption>
-                    </figure>
-
-                    <figure class="lp-review-card">
-                        <div class="lp-review-stars" aria-label="5 out of 5 stars">
-                            <span v-for="i in 5" :key="i" aria-hidden="true">★</span>
-                        </div>
-                        <blockquote class="lp-review-body">
-                            "Ordered as a treat for myself and I have no regrets. The packaging was gorgeous, the scent
-                            is divine, and it arrived beautifully wrapped. Will 100% be ordering again."
-                        </blockquote>
-                        <figcaption class="lp-review-author">
-                            <span class="lp-review-name">Jade T.</span>
-                            <span class="lp-review-location">Birmingham</span>
-                        </figcaption>
-                    </figure>
-
-                </div>
-
-                <!-- Star summary bar -->
-                <div class="lp-rating-bar">
-                    <div class="lp-rating-stars" aria-label="5 star average">
-                        <span v-for="i in 5" :key="i" aria-hidden="true">★</span>
+        <!-- ── Hottest products ── -->
+        <section v-if="featuredProducts?.length" class="lp-hot">
+            <div class="lp-hot-inner">
+                <div class="lp-hot-header">
+                    <div>
+                        <p class="lp-section-eyebrow">Most loved</p>
+                        <h2 class="lp-section-title">Our <em>bestsellers</em></h2>
                     </div>
-                    <p class="lp-rating-text">
-                        <strong>5.0</strong> average from our verified customers
-                    </p>
+                    <a href="/products" class="lp-hot-see-all">
+                        View all
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </a>
                 </div>
 
+                <div class="lp-hot-grid">
+                    <a v-for="product in featuredProducts" :key="product.id"
+                        :href="product.slug ? `/product/${product.slug}` : `/product/${product.id}`"
+                        class="lp-hot-card">
+
+                        <!-- Badge -->
+                        <span v-if="product.views > 100" class="lp-hot-badge">Popular</span>
+
+                        <!-- Image -->
+                        <div class="lp-hot-img-wrap">
+                            <img :src="product.image ?? '/images/placeholder.jpg'" :alt="product.name"
+                                class="lp-hot-img" />
+                        </div>
+
+                        <!-- Body -->
+                        <div class="lp-hot-body">
+                            <p class="lp-hot-mpn">{{ product.mpn }}</p>
+                            <p class="lp-hot-name">{{ product.name }}</p>
+                            <div class="lp-hot-footer">
+                                <span class="lp-hot-price">£{{ Number(product.cost).toFixed(2) }}</span>
+                                <span class="lp-hot-cta">
+                                    View
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14M12 5l7 7-7 7" />
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+
+                    </a>
+                </div>
             </div>
         </section>
 
@@ -680,151 +679,204 @@ import { Head } from '@inertiajs/vue3';
     color: #6b4f4f;
 }
 
-/* ── Testimonials ── */
-.lp-testimonials {
+/* ── Hottest products ── */
+.lp-hot {
     background: #fffafa;
     border-top: 1px solid #e5c9c7;
     border-bottom: 1px solid #e5c9c7;
     padding: 5rem 1.5rem;
 }
 
-.lp-testimonials-inner {
+.lp-hot-inner {
     max-width: 1100px;
     margin: 0 auto;
 }
 
-.lp-review-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
+.lp-hot-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
     margin-bottom: 2.5rem;
+    flex-wrap: wrap;
 }
 
-@media (max-width: 860px) {
-    .lp-review-grid {
-        grid-template-columns: 1fr;
+.lp-hot-see-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #8c4a50;
+    text-decoration: none;
+    border-bottom: 1px solid #e5c9c7;
+    padding-bottom: 0.1rem;
+    transition: border-color 0.2s, color 0.2s;
+    white-space: nowrap;
+}
+
+.lp-hot-see-all:hover {
+    color: #6a3038;
+    border-color: #8c4a50;
+}
+
+.lp-hot-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.1rem;
+}
+
+@media (max-width: 1000px) {
+    .lp-hot-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
-.lp-review-card {
+@media (max-width: 480px) {
+    .lp-hot-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.lp-hot-card {
     border: 1px solid #e5c9c7;
     border-radius: 20px;
-    background: #fdf4f3;
-    padding: 1.75rem;
+    background: #fffafa;
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
+    text-decoration: none;
     position: relative;
-    overflow: hidden;
-    margin: 0;
     transition: box-shadow 0.25s, transform 0.25s;
 }
 
-.lp-review-card:hover {
-    box-shadow: 0 6px 24px rgba(229, 201, 199, 0.5);
-    transform: translateY(-3px);
+.lp-hot-card:hover {
+    box-shadow: 0 8px 32px rgba(201, 164, 164, 0.45);
+    transform: translateY(-4px);
 }
 
-.lp-review-card::before {
+.lp-hot-card::before {
     content: '✿';
     position: absolute;
     bottom: -5px;
-    right: 8px;
+    right: 7px;
     font-size: 3rem;
     color: #c9a4a4;
     opacity: 0.12;
     pointer-events: none;
     user-select: none;
     line-height: 1;
+    z-index: 0;
 }
 
-/* Featured middle card */
-.lp-review-card--featured {
-    background: linear-gradient(160deg, #fff8f7, #fdf4f3);
-    border-color: #c9a4a4;
-    box-shadow: 0 4px 24px rgba(229, 201, 199, 0.4);
-}
-
-.lp-review-quote-mark {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 5rem;
-    line-height: 0.6;
-    color: #e5c9c7;
+.lp-hot-card::after {
+    content: '✿';
+    position: absolute;
+    top: 5px;
+    left: 9px;
+    font-size: 0.8rem;
+    color: #c9a4a4;
+    opacity: 0.22;
+    pointer-events: none;
     user-select: none;
-    margin-bottom: 0.25rem;
+    line-height: 1;
+    z-index: 0;
 }
 
-.lp-review-stars {
+.lp-hot-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    background: #8c4a50;
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.18rem 0.6rem;
+}
+
+.lp-hot-img-wrap {
+    height: 185px;
+    overflow: hidden;
+    background: #fdf4f3;
+    border-bottom: 1px solid #f0dcd8;
+    flex-shrink: 0;
+}
+
+.lp-hot-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.45s ease;
+}
+
+.lp-hot-card:hover .lp-hot-img {
+    transform: scale(1.05);
+}
+
+.lp-hot-body {
+    padding: 0.85rem 1rem 0.95rem;
+    background: #fffafa;
+    position: relative;
+    z-index: 1;
     display: flex;
-    gap: 0.15rem;
-    font-size: 0.95rem;
-    color: #c9747a;
-    letter-spacing: 0.05em;
-}
-
-.lp-review-body {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.05rem;
-    font-style: italic;
-    font-weight: 400;
-    line-height: 1.65;
-    color: #2d1a1a;
-    margin: 0;
+    flex-direction: column;
+    gap: 0.2rem;
     flex: 1;
 }
 
-.lp-review-author {
-    display: flex;
-    flex-direction: column;
-    gap: 0.1rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid #f0dcd8;
-}
-
-.lp-review-name {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #2d1a1a;
-}
-
-.lp-review-location {
-    font-size: 0.75rem;
-    color: #9a7070;
-    font-style: italic;
-}
-
-/* Rating summary bar */
-.lp-rating-bar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1.25rem 1.5rem;
-    border: 1px solid #e5c9c7;
-    border-radius: 14px;
-    background: #fdf4f3;
-    max-width: 340px;
-    margin: 0 auto;
-    text-align: center;
-}
-
-.lp-rating-stars {
-    display: flex;
-    gap: 0.2rem;
-    font-size: 1.25rem;
-    color: #c9747a;
+.lp-hot-mpn {
+    font-size: 0.68rem;
+    font-family: monospace;
     letter-spacing: 0.05em;
+    color: #a08080;
 }
 
-.lp-rating-text {
-    font-size: 0.85rem;
-    color: #6b4f4f;
-    font-style: italic;
-}
-
-.lp-rating-text strong {
+.lp-hot-name {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 500;
     color: #2d1a1a;
-    font-style: normal;
+    line-height: 1.25;
+    margin-bottom: 0.35rem;
+}
+
+.lp-hot-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.6rem;
+    border-top: 1px solid #f0dcd8;
+    margin-top: auto;
+}
+
+.lp-hot-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    font-weight: 500;
+    color: #8c4a50;
+}
+
+.lp-hot-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #8c4a50;
+    transition: gap 0.2s;
+}
+
+.lp-hot-card:hover .lp-hot-cta {
+    gap: 0.45rem;
 }
 
 /* ── CTA section ── */
