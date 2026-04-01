@@ -1,13 +1,13 @@
 <template>
-    <nav
-        class="fixed top-0 left-0 w-full z-20 transition duration-300 border-b-2 border-copy bg-primary-light shadow-xl">
-        <div class="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+    <nav class="nav">
+        <div class="nav-inner">
+            <div class="nav-row">
 
-                <div class="flex-shrink-0">
-                    <a href="/" class="text-3xl font-black text-copy transition hover:text-primary-content">
+                <!-- Logo -->
+                <div class="nav-logo">
+                    <a href="/" aria-label="Chapter of You — Home">
                         <svg clip-rule="evenodd" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"
-                            stroke-miterlimit="1.5" style="width:64px" version="1.1" viewBox="0 0 500 500"
+                            stroke-miterlimit="1.5" style="width:52px" version="1.1" viewBox="0 0 500 500"
                             xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:serif="http://www.serif.com/">
                             <g serif:id="Lighter Purple">
 
@@ -400,127 +400,79 @@
                     </a>
                 </div>
 
-                <div class="hidden sm:ml-6 sm:flex sm:items-center sm:space-x-1">
-                    <a href="/"
-                        class="relative text-copy-light px-3 py-2 text-sm font-bold transition duration-150 group hover:text-copy"
-                        aria-current="page">
-                        <span
-                            class="absolute rounded-lg inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
-                        <span class="relative z-10">Home</span>
-                    </a>
-                    <a href="/products"
-                        class="relative text-copy-light px-3 py-2 text-sm font-bold transition duration-150 group hover:text-copy">
-                        <span
-                            class="absolute rounded-lg inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
-                        <span class="relative z-10">Products</span>
-                    </a>
-                    <a href="/about-us"
-                        class="relative text-copy-light px-3 py-2 text-sm font-bold transition duration-150 group hover:text-copy">
-                        <span
-                            class="absolute rounded-lg inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
-                        <span class="relative z-10">About Us</span>
-                    </a>
-                    <a href="/contact"
-                        class="relative text-copy-light px-3 py-2 text-sm font-bold transition duration-150 group hover:text-copy">
-                        <span
-                            class="absolute rounded-lg inset-0 bg-secondary-light/0 border-2 border-transparent group-hover:bg-secondary-light group-hover:border-copy group-hover:shadow-md transition duration-150"></span>
-                        <span class="relative z-10">Contact</span>
-                    </a>
+                <!-- Desktop nav links -->
+                <div class="nav-links">
+                    <a href="/" class="nav-link">Home</a>
+                    <a href="/products" class="nav-link">Products</a>
+                    <a href="/about-us" class="nav-link">About Us</a>
+                    <a href="/contact" class="nav-link">Contact</a>
                 </div>
 
-                <div class="flex items-center gap-3">
-                    <!-- ── Cart icon with badge ── -->
-                    <a href="/cart"
-                        class="relative p-1 border-2 border-copy bg-foreground rounded-lg transition duration-300 hover:bg-primary-light hover:scale-[1.05]"
-                        aria-label="Shopping Cart">
-                        <div class="p-1 rounded-lg">
-                            <svg class="size-6 text-copy" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
-                                </path>
-                            </svg>
-                        </div>
-                        <!-- Cart count badge -->
-                        <span v-if="cartCount > 0" class="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full
-                                   bg-primary border-2 border-copy
-                                   text-primary-content text-[10px] font-black
-                                   flex items-center justify-center leading-none
-                                   transition-all duration-200">
+                <!-- Right side -->
+                <div class="nav-actions">
+
+                    <!-- Cart -->
+                    <a href="/cart" class="nav-cart" aria-label="Shopping Cart">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span v-if="cartCount > 0" class="nav-badge">
                             {{ cartCount > 99 ? '99+' : cartCount }}
                         </span>
                     </a>
 
-                    <div class="hidden sm:block">
-                        <div v-if="$page.props.auth.user" class="relative">
+                    <!-- Account — desktop only -->
+                    <div class="nav-account-wrap">
 
-                            <button @click="toggleDropdown"
-                                class="relative inline-flex items-center text-sm font-bold transition duration-150 group z-20 focus:outline-none"
-                                :aria-expanded="isOpen ? 'true' : 'false'" aria-haspopup="true">
-                                <div class="border-2 border-copy bg-primary-content rounded-lg">
-                                    <span
-                                        class="block relative -m-0.5 px-4 py-2 rounded-lg border-2 border-copy text-foreground bg-primary transition duration-150 group-hover:translate-x-[-4px] group-hover:translate-y-[-4px]">
-                                        <svg class="size-5 mr-1.5 inline-block align-middle" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                                            </path>
-                                        </svg>
-                                        {{ firstName }}
-                                    </span>
-                                </div>
+                        <!-- Logged in -->
+                        <div v-if="$page.props.auth.user" class="relative">
+                            <button @click="toggleDropdown" class="nav-account-btn" :aria-expanded="isOpen"
+                                aria-haspopup="true">
+                                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                {{ firstName }}
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                                    :style="{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
                             </button>
 
-                            <div v-if="isOpen"
-                                class="absolute right-0 mt-2 w-48 rounded-lg shadow-xl bg-white dark:bg-gray-800 border-2 border-copy z-30 origin-top-right animate-in fade-in zoom-in-95 duration-150 ease-out"
-                                @click="isOpen = false" v-click-outside="() => isOpen = false">
-                                <Link href="/account"
-                                    class="block px-4 py-2 text-sm text-copy hover:bg-secondary-light transition rounded-t-lg font-semibold">
-                                Account
-                                </Link>
-                                <Link href="/account/orders"
-                                    class="block px-4 py-2 text-sm text-copy hover:bg-secondary-light transition font-semibold">
-                                Orders
-                                </Link>
-                                <Link href="/account/wishlist"
-                                    class="block px-4 py-2 text-sm text-copy hover:bg-secondary-light transition font-semibold">
-                                Wishlist
-                                </Link>
-
-                                <div class="border-t border-copy-light/50"></div>
-
-                                <Link :href="route('logout')" method="post" as="button" type="button"
-                                    class="w-full text-left block px-4 py-2 text-sm text-error-content hover:bg-red-50/70 dark:hover:bg-red-900/50 transition rounded-b-lg font-semibold">
-                                Log Out
-                                </Link>
-                            </div>
+                            <Transition name="dd">
+                                <div v-if="isOpen" class="nav-dropdown" @click="isOpen = false"
+                                    v-click-outside="() => isOpen = false">
+                                    <Link href="/account" class="nav-dd-item">Account</Link>
+                                    <Link href="/account/orders" class="nav-dd-item">My Orders</Link>
+                                    <Link href="/account/wishlist" class="nav-dd-item">Wishlist</Link>
+                                    <div class="nav-dd-divider"></div>
+                                    <Link :href="route('logout')" method="post" as="button" type="button"
+                                        class="nav-dd-item nav-dd-item--danger">
+                                    Log Out
+                                    </Link>
+                                </div>
+                            </Transition>
                         </div>
 
-                        <a v-else href="/login"
-                            class="relative inline-flex items-center text-sm font-bold shadow-sm transition duration-150 group">
-                            <div class="border-2 border-copy bg-copy-light rounded-lg">
-                                <span
-                                    class="block relative -m-0.5 px-4 py-2 rounded-lg border-2 border-copy text-copy bg-foreground transition duration-150 group-hover:translate-x-[-4px] group-hover:translate-y-[-4px]">
-                                    Log In
-                                </span>
-                            </div>
-                        </a>
+                        <!-- Logged out -->
+                        <a v-else href="/login" class="nav-login-btn">Sign in</a>
+
                     </div>
 
-                    <button @click="isMobileMenuOpen = !isMobileMenuOpen" type="button"
-                        class="ml-3 inline-flex items-center justify-center p-2 rounded-md border-2 border-copy bg-foreground hover:bg-primary-light transition duration-150 sm:hidden"
-                        aria-expanded="false">
-                        <span class="sr-only">Open main menu</span>
-                        <svg v-if="!isMobileMenuOpen" class="block size-6 text-copy" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16" />
+                    <!-- Hamburger -->
+                    <button @click="isMobileMenuOpen = !isMobileMenuOpen" type="button" class="nav-hamburger"
+                        :aria-expanded="isMobileMenuOpen" aria-label="Toggle menu">
+                        <svg v-if="!isMobileMenuOpen" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M4 6h16M4 12h16M4 18h16" />
                         </svg>
-                        <svg v-else class="block size-6 text-copy transform rotate-90 transition duration-300"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
+                        <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round">
+                            <path d="M18 6 6 18M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
@@ -528,50 +480,40 @@
             </div>
         </div>
 
-        <div :class="{ 'block': isMobileMenuOpen, 'hidden': !isMobileMenuOpen }"
-            class="sm:hidden border-t-2 border-copy bg-foreground">
-            <div class="px-2 pt-2 pb-3 space-y-1">
-                <a v-if="$page.props.auth.user" href="/account"
-                    class="block px-3 py-2 rounded-md text-base font-bold text-primary-content border-2 border-copy bg-primary-light hover:bg-secondary-light transition">
-                    Account: {{ firstName }}
-                </a>
-                <a v-else href="/register"
-                    class="block px-3 py-2 rounded-md text-base font-bold text-copy border-2 border-copy-light bg-foreground hover:bg-secondary-light transition">
-                    Log In / Register
-                </a>
+        <!-- Mobile menu -->
+        <Transition name="mobile">
+            <div v-if="isMobileMenuOpen" class="nav-mobile">
+                <div class="nav-mobile-inner">
 
-                <a href="/products"
-                    class="block px-3 py-2 rounded-md text-base font-bold text-copy border-2 border-transparent hover:border-copy hover:bg-secondary-light transition">
-                    Products
-                </a>
-                <a href="/about-us"
-                    class="block px-3 py-2 rounded-md text-base font-bold text-copy border-2 border-transparent hover:border-copy hover:bg-secondary-light transition">
-                    About Us
-                </a>
-                <a href="/contact"
-                    class="block px-3 py-2 rounded-md text-base font-bold text-copy border-2 border-transparent hover:border-copy hover:bg-secondary-light transition">
-                    Contact
-                </a>
+                    <a v-if="$page.props.auth.user" href="/account" class="nav-mobile-account">
+                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        {{ firstName }}
+                    </a>
+                    <a v-else href="/login" class="nav-mobile-account">Sign in / Register</a>
 
-                <!-- Mobile cart link with count -->
-                <a href="/cart"
-                    class="flex items-center justify-between px-3 py-2 rounded-md text-base font-bold text-copy border-2 border-transparent hover:border-copy hover:bg-secondary-light transition">
-                    <span>Cart</span>
-                    <span v-if="cartCount > 0" class="min-w-[22px] h-[22px] px-1 rounded-full bg-primary border-2 border-copy
-                                 text-primary-content text-[11px] font-black
-                                 flex items-center justify-center leading-none">
-                        {{ cartCount > 99 ? '99+' : cartCount }}
-                    </span>
-                </a>
+                    <a href="/products" class="nav-mobile-link">Products</a>
+                    <a href="/about-us" class="nav-mobile-link">About Us</a>
+                    <a href="/contact" class="nav-mobile-link">Contact</a>
 
-                <div v-if="$page.props.auth.user" class="pt-1 border-t border-copy-light/50">
-                    <Link :href="route('logout')" method="post" as="button" type="button"
-                        class="w-full text-left block px-3 py-2 rounded-md text-base font-bold text-error-content border-2 border-transparent hover:border-red-300 hover:bg-red-50/70 transition">
-                    Log Out
-                    </Link>
+                    <a href="/cart" class="nav-mobile-link nav-mobile-cart">
+                        <span>Cart</span>
+                        <span v-if="cartCount > 0" class="nav-badge nav-badge--inline">
+                            {{ cartCount > 99 ? '99+' : cartCount }}
+                        </span>
+                    </a>
+
+                    <div v-if="$page.props.auth.user" class="nav-mobile-footer">
+                        <Link :href="route('logout')" method="post" as="button" type="button" class="nav-mobile-logout">
+                        Log Out
+                        </Link>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Transition>
     </nav>
 </template>
 
@@ -585,9 +527,7 @@ const isOpen = ref(false);
 const isMobileMenuOpen = ref(false);
 const page = usePage();
 
-const toggleDropdown = () => {
-    isOpen.value = !isOpen.value;
-};
+const toggleDropdown = () => { isOpen.value = !isOpen.value; };
 
 const firstName = computed(() => {
     const user = (page.props as any).auth?.user;
@@ -598,8 +538,374 @@ const firstName = computed(() => {
     return 'Account';
 });
 
-// Cart count — shared via Inertia HandleInertiaRequests
-const cartCount = computed<number>(() => {
-    return Number((page.props as any).cartCount) || 0;
-});
+const cartCount = computed<number>(() => Number((page.props as any).cartCount) || 0);
 </script>
+
+<style scoped>
+/* ── Shell ── */
+.nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: #fffafa;
+    border-bottom: 1px solid #e5c9c7;
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.28);
+    font-family: 'Nunito', sans-serif;
+}
+
+.nav-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.25rem;
+}
+
+.nav-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    gap: 1.5rem;
+}
+
+/* ── Logo ── */
+.nav-logo a {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    opacity: 1;
+    transition: opacity 0.2s;
+}
+
+.nav-logo a:hover {
+    opacity: 0.72;
+}
+
+/* ── Desktop links ── */
+.nav-links {
+    display: none;
+    align-items: center;
+    gap: 0.15rem;
+    flex: 1;
+    justify-content: center;
+}
+
+@media (min-width: 640px) {
+    .nav-links {
+        display: flex;
+    }
+}
+
+.nav-link {
+    position: relative;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b4f4f;
+    text-decoration: none;
+    border-radius: 999px;
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+}
+
+.nav-link:hover {
+    color: #2d1a1a;
+    background: #fdf4f3;
+}
+
+/* ── Actions ── */
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* ── Cart ── */
+.nav-cart {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid #e5c9c7;
+    background: #fdf4f3;
+    color: #6b4f4f;
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.nav-cart:hover {
+    background: #faeaea;
+    border-color: #c9a4a4;
+    color: #8c4a50;
+}
+
+/* ── Cart badge ── */
+.nav-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #c47078, #a85058);
+    border: 1.5px solid #fffafa;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.nav-badge--inline {
+    position: static;
+    border-color: #e5c9c7;
+    font-size: 10px;
+}
+
+/* ── Account wrapper ── */
+.nav-account-wrap {
+    position: relative;
+    display: none;
+}
+
+@media (min-width: 640px) {
+    .nav-account-wrap {
+        display: block;
+    }
+}
+
+/* ── Account button ── */
+.nav-account-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.42rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid #e5c9c7;
+    background: #fdf4f3;
+    color: #2d1a1a;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.nav-account-btn:hover {
+    background: #faeaea;
+    border-color: #c9a4a4;
+}
+
+/* ── Dropdown ── */
+.nav-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    width: 175px;
+    border: 1px solid #e5c9c7;
+    border-radius: 16px;
+    background: #fffafa;
+    box-shadow: 0 8px 32px rgba(229, 201, 199, 0.55);
+    overflow: hidden;
+    z-index: 30;
+}
+
+.nav-dd-item {
+    display: block;
+    padding: 0.6rem 1rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #2d1a1a;
+    text-decoration: none;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.nav-dd-item:hover {
+    background: #fdf4f3;
+    color: #8c4a50;
+}
+
+.nav-dd-item--danger {
+    color: #8c2a2a;
+}
+
+.nav-dd-item--danger:hover {
+    background: #fff5f5;
+    color: #6a1a1a;
+}
+
+.nav-dd-divider {
+    height: 1px;
+    background: #f0dcd8;
+}
+
+/* Dropdown transition */
+.dd-enter-active,
+.dd-leave-active {
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.dd-enter-from,
+.dd-leave-to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+}
+
+/* ── Sign in button ── */
+.nav-login-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.42rem 1.1rem;
+    border-radius: 999px;
+    border: 1px solid #a85058;
+    background: linear-gradient(135deg, #c47078, #a85058);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(168, 80, 88, 0.18);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.nav-login-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(168, 80, 88, 0.26);
+}
+
+/* ── Hamburger — hidden on desktop ── */
+.nav-hamburger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid #e5c9c7;
+    background: #fdf4f3;
+    color: #6b4f4f;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.nav-hamburger:hover {
+    background: #faeaea;
+    border-color: #c9a4a4;
+}
+
+@media (min-width: 640px) {
+    .nav-hamburger {
+        display: none;
+    }
+}
+
+/* ── Mobile panel ── */
+.nav-mobile {
+    border-top: 1px solid #e5c9c7;
+    background: #fffafa;
+}
+
+.nav-mobile-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0.75rem 1.25rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.nav-mobile-account {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid #e5c9c7;
+    background: #fdf4f3;
+    color: #2d1a1a;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    width: fit-content;
+    margin-bottom: 0.25rem;
+    transition: background 0.2s;
+}
+
+.nav-mobile-account:hover {
+    background: #faeaea;
+}
+
+.nav-mobile-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0.75rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #6b4f4f;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+.nav-mobile-link:hover {
+    background: #fdf4f3;
+    color: #2d1a1a;
+}
+
+.nav-mobile-footer {
+    border-top: 1px solid #f0dcd8;
+    padding-top: 0.35rem;
+    margin-top: 0.25rem;
+}
+
+.nav-mobile-logout {
+    display: block;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #8c2a2a;
+    background: none;
+    border: none;
+    text-align: left;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: background 0.15s;
+}
+
+.nav-mobile-logout:hover {
+    background: #fff5f5;
+}
+
+/* Mobile panel transition */
+.mobile-enter-active,
+.mobile-leave-active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.mobile-enter-from,
+.mobile-leave-to {
+    opacity: 0;
+    transform: translateY(-8px);
+}
+</style>
