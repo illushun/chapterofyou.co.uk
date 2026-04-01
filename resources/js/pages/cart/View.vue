@@ -1,13 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
-
+import { computed, ref } from 'vue';
 import NavBar from '@/components/NavBar.vue';
-
-const IconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`;
-const IconPlus = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>`;
-const IconMinus = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>`;
-const IconTrash = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>`;
 
 interface CartItem {
     id: number;
@@ -26,221 +20,749 @@ const props = defineProps<{
 }>();
 
 const hasItems = computed(() => props.cartItems.length > 0);
-const taxRate = 0.20;
+const itemCount = computed(() => props.cartItems.reduce((s, i) => s + Number(i.quantity), 0));
+const n = (v: unknown) => Number(v) || 0;
+const fmt = (v: unknown) => `£${n(v).toFixed(2)}`;
 
-const vat = computed(() => roundToTwo(props.cartTotal * taxRate));
-const finalTotal = computed(() => roundToTwo(props.cartTotal + vat.value));
+const TAX = 0.20;
+const vat = computed(() => Math.round(n(props.cartTotal) * TAX * 100) / 100);
+const finalTotal = computed(() => Math.round((n(props.cartTotal) + vat.value) * 100) / 100);
+const remaining = computed(() => Math.max(0, 50 - n(props.cartTotal)));
+const freeShip = computed(() => n(props.cartTotal) >= 50);
+const progress = computed(() => Math.min(100, (n(props.cartTotal) / 50) * 100));
 
-function roundToTwo(num: number): number {
-    return Math.round(num * 100) / 100;
-}
+const pending = ref<Record<number, boolean>>({});
+const removing = ref<Record<number, boolean>>({});
 
-const updateQuantity = (productId: number, newQuantity: number) => {
+const updateQty = (productId: number, qty: number) => {
     const item = props.cartItems.find(i => i.product_id === productId);
     if (!item) return;
-
-    // Client-side validation
-    if (newQuantity < 1) {
-        removeProduct(productId);
-        return;
-    }
-    if (newQuantity > item.stock_qty) {
-        console.warn(`Cannot set quantity above stock limit (${item.stock_qty})`);
-        newQuantity = item.stock_qty;
-    }
-    router.put(
-        `/cart/update/${productId}`,
-        { quantity: newQuantity },
-        {
-            preserveScroll: true,
-            preserveState: true,
-            replace: true,
-        }
-    );
+    if (qty < 1) { remove(productId); return; }
+    qty = Math.min(qty, item.stock_qty);
+    pending.value[productId] = true;
+    router.put(`/cart/update/${productId}`, { quantity: qty }, {
+        preserveScroll: true, preserveState: true, replace: true,
+        onFinish: () => delete pending.value[productId],
+    });
 };
 
-const removeProduct = (productId: number) => {
-    if (confirm("Are you sure you want to remove this item?")) {
-        router.delete(`/cart/remove/${productId}`);
-    }
-};
-
-/**
- * Formats a number as currency (GBP).
- * FIX: Coerces input to a Number to ensure .toFixed() is always called on a number.
- */
-const formatCurrency = (amount: number | string): string => {
-    // Ensure the amount is treated as a number
-    const numAmount = Number(amount);
-    if (isNaN(numAmount)) {
-        // Fallback for non-numeric values
-        return '£0.00';
-    }
-    return `£${numAmount.toFixed(2)}`;
-};
-
-/**
- * Calculates the running total of all items as quantity changes are reflected
- * (Used for visual consistency before server response updates full total)
- */
-const calculateItemSubtotal = (item: CartItem): string => {
-    // Ensure cost and quantity are numbers before calculation, just in case
-    const cost = Number(item.cost);
-    const quantity = Number(item.quantity);
-
-    return formatCurrency(roundToTwo(cost * quantity));
+const remove = (productId: number) => {
+    removing.value[productId] = true;
+    router.delete(`/cart/remove/${productId}`, {
+        preserveScroll: true,
+        onFinish: () => delete removing.value[productId],
+    });
 };
 </script>
 
 <template>
     <NavBar />
 
-    <Head title="Shopping Cart" />
+    <Head title="Your Cart" />
 
-    <section class="py-20">
+    <component :is="'link'"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap"
+        rel="stylesheet" />
 
-        <div class="min-h-screen bg-background text-copy p-4 md:p-8 lg:p-12">
-            <div class="max-w-6xl mx-auto">
+    <main class="cp">
 
-                <div class="mb-8">
-                    <h1 class="text-5xl font-black text-copy mb-2">Your Shopping Cart</h1>
-                    <a href="/products"
-                        class="inline-flex items-center text-primary-content hover:text-primary transition font-semibold">
-                        <div v-html="IconArrowLeft" class="size-5 mr-2"></div>
-                        Continue Shopping
-                    </a>
+        <div class="cp-wrap">
+
+            <!-- ── Header ── -->
+            <header class="cp-head">
+                <div class="cp-head-left">
+
+                    <div>
+                        <h1 class="cp-title">
+                            Your Basket
+                            <span v-if="hasItems" class="item-badge">{{ itemCount }} {{ itemCount === 1 ? 'item' :
+                                'items' }}</span>
+                        </h1>
+                        <a href="/products" class="cp-back">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m15 18-6-6 6-6" />
+                            </svg>
+                            Continue shopping
+                        </a>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div v-if="hasItems" class="ship-nudge">
+                    <p class="ship-text">
+                        <span v-if="freeShip">Free shipping unlocked!</span>
+                        <span v-else>Add <em>{{ fmt(remaining) }}</em> more for free shipping</span>
+                    </p>
+                    <div class="ship-track">
+                        <div class="ship-fill" :style="{ width: progress + '%' }">
 
-                    <div class="lg:col-span-2">
-                        <div v-if="hasItems" class="flex flex-col gap-6">
-
-                            <div v-for="item in props.cartItems" :key="item.id"
-                                class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                                <div
-                                    class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-4 flex flex-col sm:flex-row items-start gap-4">
-
-                                    <!-- Product Image -->
-                                    <div
-                                        class="w-24 h-24 flex-shrink-0 border border-border rounded-lg overflow-hidden flex items-center justify-center">
-                                        <img :src="item.image_url" :alt="item.name"
-                                            class="w-full h-full object-contain p-2" />
-                                    </div>
-
-                                    <!-- Product Details and Actions -->
-                                    <div class="flex-grow w-full">
-
-                                        <div class="flex justify-between items-start mb-2">
-                                            <div class="flex-grow pr-4">
-                                                <h2 class="text-xl font-bold text-copy">{{ item.name }}</h2>
-                                                <p class="text-sm text-copy-lighter mt-1">Unit Price: {{
-                                                    formatCurrency(item.cost) }}</p>
-                                            </div>
-
-                                            <button @click="removeProduct(item.product_id)"
-                                                class="p-2 rounded-lg text-error-content hover:bg-error transition border-2 border-copy flex-shrink-0 w-fit"
-                                                aria-label="Remove item">
-                                                <div v-html="IconTrash"></div>
-                                            </button>
-                                        </div>
-
-                                        <div
-                                            class="flex justify-between items-center pt-3 mt-3 border-t border-copy-light/50">
-
-                                            <!-- Quantity Selector -->
-                                            <div
-                                                class="flex items-center rounded-lg border-2 border-copy bg-background flex-shrink-0">
-                                                <button @click="updateQuantity(item.product_id, item.quantity - 1)"
-                                                    :disabled="item.quantity <= 1"
-                                                    class="p-2 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    aria-label="Decrease quantity">
-                                                    <div v-html="IconMinus"></div>
-                                                </button>
-
-                                                <span class="w-10 text-center text-lg font-bold text-copy">{{
-                                                    item.quantity }}</span>
-
-                                                <button @click="updateQuantity(item.product_id, item.quantity + 1)"
-                                                    :disabled="item.quantity >= item.stock_qty"
-                                                    class="p-2 text-copy-light transition hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    aria-label="Increase quantity">
-                                                    <div v-html="IconPlus"></div>
-                                                </button>
-                                            </div>
-
-                                            <div class="text-right">
-                                                <p class="text-sm font-semibold text-copy-lighter hidden sm:block">Item
-                                                    Subtotal:</p>
-                                                <p class="text-2xl font-black text-primary-content">{{
-                                                    calculateItemSubtotal(item) }}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <!-- Empty Cart State -->
-                        <div v-else
-                            class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-foreground/50">
-                            <p class="text-2xl font-semibold text-copy mb-4">Your cart is currently empty.</p>
-                            <a href="/products"
-                                class="text-primary-content hover:text-primary transition font-bold underline">
-                                Browse Products and Start Shopping
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="lg:col-span-1">
-                        <div class="sticky top-8 rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                                <h2 class="text-2xl font-black text-copy mb-4 border-b-2 border-copy-light pb-3">Order
-                                    Summary</h2>
-
-                                <!-- Breakdown -->
-                                <div class="space-y-3 text-copy text-lg">
-                                    <div class="flex justify-between">
-                                        <span>Subtotal ({{ props.cartItems.length }} items)</span>
-                                        <span class="font-bold">{{ formatCurrency(props.cartTotal) }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>VAT ({{ taxRate * 100 }}%)</span>
-                                        <span class="font-bold">{{ formatCurrency(vat) }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Shipping</span>
-                                        <span class="text-copy text-sm flex items-center italic">
-                                            Calculated at checkout
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <!-- Total -->
-                                <div
-                                    class="mt-6 mb-4 pt-4 border-t-2 border-copy-light flex justify-between items-center">
-                                    <span class="text-2xl font-extrabold text-copy">Order Total</span>
-                                    <span class="text-4xl font-black text-primary-content">{{ formatCurrency(finalTotal)
-                                        }}</span>
-                                </div>
-
-                                <a href="/checkout" :disabled="!hasItems"
-                                    class="w-full flex justify-center items-center py-4 px-2 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 hover:bg-primary-dark rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                                    style="background-color: var(--primary); color: var(--primary-content);">
-                                    Proceed to Checkout
-                                </a>
-
-                                <p v-if="props.cartTotal < 50" class="text-center text-sm text-copy-lighter mt-6">
-                                    Add {{ formatCurrency(50 - props.cartTotal) }} more for FREE shipping!
-                                </p>
-                            </div>
                         </div>
                     </div>
                 </div>
+            </header>
+
+            <!-- ── Grid ── -->
+            <div class="cp-grid">
+
+                <!-- Items column -->
+                <section class="cp-items">
+
+                    <!-- Empty state -->
+                    <div v-if="!hasItems" class="cp-empty">
+
+                        <h2>Your basket is empty</h2>
+                        <p>Nothing here yet — let's find you something lovely.</p>
+                        <a href="/products" class="btn-rose">Browse the collection</a>
+                    </div>
+
+                    <TransitionGroup v-else name="card" tag="div" class="card-list">
+                        <div v-for="item in cartItems" :key="item.product_id" class="item-card"
+                            :class="{ 'item-card--out': removing[item.product_id] }">
+
+
+
+                            <div class="ci-img">
+                                <img :src="item.image_url" :alt="item.name" />
+                            </div>
+
+                            <div class="ci-body">
+                                <div class="ci-top">
+                                    <div>
+                                        <h2 class="ci-name">{{ item.name }}</h2>
+                                        <p class="ci-unit">{{ fmt(item.cost) }} each</p>
+                                    </div>
+                                    <button @click="remove(item.product_id)" :disabled="removing[item.product_id]"
+                                        class="ci-remove" :aria-label="`Remove ${item.name}`">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                            <path d="M18 6 6 18M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <div class="ci-bottom">
+                                    <div class="qty-wrap" :class="{ 'qty-wrap--busy': pending[item.product_id] }">
+                                        <button class="qty-btn" @click="updateQty(item.product_id, item.quantity - 1)"
+                                            :disabled="item.quantity <= 1 || !!pending[item.product_id]"
+                                            aria-label="Decrease">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                                                <path d="M5 12h14" />
+                                            </svg>
+                                        </button>
+                                        <span class="qty-num">{{ item.quantity }}</span>
+                                        <button class="qty-btn" @click="updateQty(item.product_id, item.quantity + 1)"
+                                            :disabled="item.quantity >= item.stock_qty || !!pending[item.product_id]"
+                                            aria-label="Increase">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                                                <path d="M5 12h14" />
+                                                <path d="M12 5v14" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <p class="ci-line-total">{{ fmt(n(item.cost) * n(item.quantity)) }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </TransitionGroup>
+                </section>
+
+                <!-- Summary sidebar -->
+                <aside v-if="hasItems" class="cp-summary">
+                    <div class="sum-card">
+
+                        <div class="sum-floral" aria-hidden="true">
+                            <svg viewBox="0 0 200 36" xmlns="http://www.w3.org/2000/svg" fill="none">
+                                <circle cx="100" cy="18" r="5" fill="#a85058" opacity=".4" />
+                                <circle cx="80" cy="18" r="3" fill="#a85058" opacity=".25" />
+                                <circle cx="120" cy="18" r="3" fill="#a85058" opacity=".25" />
+                                <circle cx="62" cy="18" r="2" fill="#a85058" opacity=".18" />
+                                <circle cx="138" cy="18" r="2" fill="#a85058" opacity=".18" />
+                                <line x1="0" y1="18" x2="56" y2="18" stroke="#a85058" stroke-width="0.8" opacity=".3" />
+                                <line x1="144" y1="18" x2="200" y2="18" stroke="#a85058" stroke-width="0.8"
+                                    opacity=".3" />
+                            </svg>
+                        </div>
+
+                        <h2 class="sum-title">Order Summary</h2>
+
+                        <div class="sum-rows">
+                            <div class="sum-row">
+                                <span>Subtotal</span>
+                                <span>{{ fmt(cartTotal) }}</span>
+                            </div>
+                            <div class="sum-row">
+                                <span>VAT (20%)</span>
+                                <span>{{ fmt(vat) }}</span>
+                            </div>
+                            <div class="sum-row">
+                                <span>Shipping</span>
+                                <span class="sum-ship-note">
+                                    {{ freeShip ? 'Free!' : 'At checkout' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="sum-dash" aria-hidden="true"></div>
+
+                        <div class="sum-total-row">
+                            <span class="sum-total-label">Total</span>
+                            <span class="sum-total-val">{{ fmt(finalTotal) }}</span>
+                        </div>
+
+                        <a href="/checkout" class="btn-checkout">
+                            Checkout
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round">
+                                <path d="M5 12h14" />
+                                <path d="m12 5 7 7-7 7" />
+                            </svg>
+                        </a>
+
+                        <p class="sum-secure">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            Secure checkout · Stripe
+                        </p>
+                    </div>
+                </aside>
+
             </div>
         </div>
 
-    </section>
-
+    </main>
 </template>
+
+<style scoped>
+.cp {
+    font-family: 'Nunito', sans-serif;
+    min-height: 100vh;
+    padding-top: 64px;
+    background: #fdf4f3;
+    color: #2d1a1a;
+}
+
+
+.cp-wrap {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 5rem;
+}
+
+/* Header */
+.cp-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.cp-head-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cp-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(1.9rem, 5vw, 2.8rem);
+    font-weight: 400;
+    font-style: italic;
+    color: #2d1a1a;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    line-height: 1.1;
+    margin-bottom: 0.3rem;
+}
+
+.item-badge {
+    font-family: 'Nunito', sans-serif;
+    font-style: normal;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #8c4a50;
+    background: #faeaea;
+    border: 1px solid #e8c0c0;
+    border-radius: 999px;
+    padding: 0.2rem 0.7rem;
+    vertical-align: middle;
+}
+
+.cp-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.82rem;
+    color: #6b4f4f;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.cp-back:hover {
+    color: #8c4a50;
+}
+
+/* Shipping nudge */
+.ship-nudge {
+    min-width: 200px;
+    max-width: 280px;
+}
+
+.ship-text {
+    font-size: 0.82rem;
+    color: #6b4f4f;
+    margin-bottom: 0.45rem;
+    line-height: 1.4;
+}
+
+.ship-text em {
+    font-style: normal;
+    font-weight: 600;
+    color: #8c4a50;
+}
+
+.ship-track {
+    height: 5px;
+    background: #eedcda;
+    border-radius: 999px;
+    overflow: visible;
+    position: relative;
+}
+
+.ship-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #e8a4a8, #c9747a);
+    border-radius: 999px;
+    transition: width 0.6s cubic-bezier(.34, 1.56, .64, 1);
+    position: relative;
+}
+
+/* Grid */
+.cp-grid {
+    display: grid;
+    grid-template-columns: 1fr 316px;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 820px) {
+    .cp-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ship-nudge {
+        max-width: 100%;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .cp-head {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* Empty */
+.cp-empty {
+    text-align: center;
+    padding: 5rem 2rem;
+    border: 1.5px dashed #c9a8a4;
+    border-radius: 24px;
+    background: #fffafa;
+}
+
+.cp-empty h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.7rem;
+    font-style: italic;
+    font-weight: 400;
+    color: #2d1a1a;
+    margin-bottom: 0.5rem;
+}
+
+.cp-empty p {
+    font-size: 0.92rem;
+    color: #6b4f4f;
+    margin-bottom: 1.75rem;
+    line-height: 1.6;
+}
+
+/* Card list */
+.card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Item card */
+.item-card {
+    display: flex;
+    gap: 1.1rem;
+    padding: 1.2rem 1.3rem;
+    border-radius: 20px;
+    border: 1px solid #e5c9c7;
+    background: #fffafa;
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
+    position: relative;
+    transition: box-shadow 0.25s, transform 0.25s, opacity 0.3s;
+    overflow: hidden;
+}
+
+.item-card::before {
+    content: '✿';
+    position: absolute;
+    bottom: -6px;
+    right: 8px;
+    font-size: 3.5rem;
+    color: #c9a4a4;
+    opacity: 0.12;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.item-card::after {
+    content: '✿';
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    font-size: 0.9rem;
+    color: #c9a4a4;
+    opacity: 0.22;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.item-card:hover {
+    box-shadow: 0 6px 28px rgba(229, 201, 199, 0.5);
+    transform: translateY(-2px);
+}
+
+.item-card--out {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+
+.ci-img {
+    width: 82px;
+    height: 82px;
+    flex-shrink: 0;
+    border-radius: 14px;
+    border: 1px solid #e5c9c7;
+    overflow: hidden;
+    background: #fdf4f3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ci-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 6px;
+}
+
+.ci-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.ci-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.ci-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2d1a1a;
+    line-height: 1.3;
+    margin-bottom: 0.15rem;
+}
+
+.ci-unit {
+    font-size: 0.78rem;
+    color: #6b4f4f;
+    font-style: italic;
+}
+
+.ci-remove {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1px solid #d4aaa8;
+    background: transparent;
+    color: #6b4f4f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.ci-remove:hover {
+    background: #faeaea;
+    color: #8c4a50;
+    border-color: #6b4f4f;
+}
+
+.ci-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Qty stepper */
+.qty-wrap {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #d4aaa8;
+    border-radius: 999px;
+    background: #fdf4f3;
+    overflow: hidden;
+    transition: opacity 0.2s;
+}
+
+.qty-wrap--busy {
+    opacity: 0.22;
+    pointer-events: none;
+}
+
+.qty-btn {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #8c4a50;
+    transition: background 0.15s;
+}
+
+.qty-btn:hover:not(:disabled) {
+    background: #faeaea;
+}
+
+.qty-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.qty-num {
+    min-width: 28px;
+    text-align: center;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #2d1a1a;
+    border-left: 1px solid #e5c9c7;
+    border-right: 1px solid #e5c9c7;
+    line-height: 30px;
+    padding: 0 2px;
+}
+
+.ci-line-total {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #8c4a50;
+}
+
+/* Summary card */
+.cp-summary {
+    position: sticky;
+    top: 88px;
+}
+
+.sum-card {
+    border: 1px solid #e5c9c7;
+    border-radius: 24px;
+    background: #fffafa;
+    box-shadow: 0 4px 24px rgba(229, 201, 199, 0.4);
+    padding: 1.75rem 1.5rem;
+    text-align: center;
+}
+
+.sum-floral {
+    color: #8c4a50;
+    margin-bottom: 0.75rem;
+}
+
+.sum-floral svg {
+    width: 140px;
+    height: auto;
+    display: inline-block;
+}
+
+.sum-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.45rem;
+    font-style: italic;
+    font-weight: 400;
+    color: #2d1a1a;
+    margin-bottom: 1.25rem;
+}
+
+.sum-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    text-align: left;
+    margin-bottom: 1rem;
+}
+
+.sum-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    color: #6b4f4f;
+}
+
+.sum-row span:last-child {
+    font-weight: 600;
+    color: #2d1a1a;
+}
+
+.sum-ship-note {
+    font-style: italic;
+    font-weight: 400 !important;
+    color: #8c4a50 !important;
+    font-size: 0.82rem;
+}
+
+.sum-dash {
+    border-top: 1px dashed #c9a8a4;
+    margin: 1rem 0;
+}
+
+.sum-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 1.4rem;
+}
+
+.sum-total-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: #2d1a1a;
+}
+
+.sum-total-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    font-weight: 500;
+    color: #8c4a50;
+}
+
+.btn-checkout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.85rem 1.5rem;
+    border-radius: 999px;
+    border: 1px solid #a85058;
+    background: linear-gradient(135deg, #c47078, #a85058);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    box-shadow: 0 4px 18px rgba(168, 80, 88, 0.22);
+    transition: box-shadow 0.25s, transform 0.25s;
+}
+
+.btn-checkout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(168, 80, 88, 0.32);
+}
+
+.btn-rose {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.6rem;
+    border-radius: 999px;
+    border: 1px solid #a85058;
+    background: linear-gradient(135deg, #c47078, #a85058);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 3px 14px rgba(168, 80, 88, 0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-rose:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(168, 80, 88, 0.28);
+}
+
+.sum-secure {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    font-size: 0.74rem;
+    color: #6b4f4f;
+    margin-top: 0.85rem;
+    font-style: italic;
+}
+
+/* Transitions */
+.card-enter-active {
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.card-leave-active {
+    transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.card-enter-from {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.card-leave-to {
+    opacity: 0;
+    transform: translateX(-12px);
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .item-card {
+        flex-direction: column;
+    }
+
+    .ci-img {
+        width: 100%;
+        height: 120px;
+    }
+}
+</style>

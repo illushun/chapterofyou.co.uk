@@ -30,7 +30,7 @@ onMounted(() => {
     <component :is="'link'" rel="preconnect" href="https://fonts.googleapis.com" />
     <component :is="'link'" rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
     <component :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,700&family=Nunito:wght@300;400;500;600&display=swap"
         rel="stylesheet" />
 
     <main class="about-page">
@@ -61,7 +61,7 @@ onMounted(() => {
                 </svg>
             </div>
             <div class="hero-content">
-                <p class="hero-eyebrow">Handcrafted with love ✦</p>
+                <p class="hero-eyebrow">Handcrafted with love</p>
                 <h1 class="hero-title">
                     <em>Chapter</em><br />of You
                 </h1>
@@ -102,17 +102,17 @@ onMounted(() => {
             </div>
             <div class="story-aside reveal" :ref="addReveal">
                 <div class="aside-card">
-                    <div class="aside-icon" aria-hidden="true">🕯️</div>
+                    <div class="aside-icon" aria-hidden="true"></div>
                     <p class="aside-stat">100%</p>
                     <p class="aside-label">Hand-poured &amp;<br />blended by me</p>
                 </div>
                 <div class="aside-card">
-                    <div class="aside-icon" aria-hidden="true">🌿</div>
+                    <div class="aside-icon" aria-hidden="true"></div>
                     <p class="aside-stat">Premium</p>
                     <p class="aside-label">Ingredients<br />only</p>
                 </div>
                 <div class="aside-card">
-                    <div class="aside-icon" aria-hidden="true">💌</div>
+                    <div class="aside-icon" aria-hidden="true"></div>
                     <p class="aside-stat">Made</p>
                     <p class="aside-label">To order,<br />just for you</p>
                 </div>
@@ -136,7 +136,7 @@ onMounted(() => {
                 <div class="feature-cards">
                     <div v-for="(card, i) in featureCards" :key="i" class="feature-card reveal" :ref="addReveal"
                         :style="{ animationDelay: `${i * 0.1}s` }">
-                        <div class="feature-card-icon" aria-hidden="true">{{ card.icon }}</div>
+                        <div class="feature-card-accent" aria-hidden="true">✦</div>
                         <h3>{{ card.title }}</h3>
                         <p>{{ card.body }}</p>
                     </div>
@@ -154,7 +154,7 @@ onMounted(() => {
         <!-- ── 2026 teaser ── -->
         <section class="container teaser-section">
             <div class="teaser reveal" :ref="addReveal">
-                <span class="teaser-badge">Coming 2026 ✨</span>
+                <span class="teaser-badge">Coming 2026</span>
                 <h2>Something beautiful<br /><em>is on its way</em></h2>
                 <p>
                     My mission to support your self-care journey is growing.
@@ -195,17 +195,17 @@ export default {
         return {
             featureCards: [
                 {
-                    icon: '🌸',
+                    icon: '✿',
                     title: 'Meticulously blended',
                     body: 'Every scent is carefully crafted from premium fragrance oils, balanced by hand to fill your home with a gentle, lasting aroma.',
                 },
                 {
-                    icon: '🫙',
+                    icon: '✦',
                     title: 'Poured with intention',
                     body: 'Each diffuser is hand-finished individually — never rushed, never mass-produced. Your order is made to order, just for you.',
                 },
                 {
-                    icon: '🌿',
+                    icon: '◇',
                     title: 'Quality ingredients',
                     body: 'Only the highest quality reed diffuser base and fragrance oils make it into my products. Nothing unnecessary, nothing cheap.',
                 },
@@ -216,12 +216,12 @@ export default {
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,700&family=Nunito:wght@300;400;500;600&display=swap');
 
 /* ── Base ── */
 .about-page {
-    font-family: 'Lora', Georgia, serif;
-    color: var(--copy);
+    font-family: 'Nunito', sans-serif;
+    color: #2d1a1a;
     overflow-x: hidden;
     padding-top: 64px;
     /* navbar height */
@@ -254,27 +254,27 @@ export default {
     justify-content: center;
     text-align: center;
     overflow: hidden;
-    background: var(--background, #fdf8f5);
+    background: #fdf4f3;
 }
 
 .hero-bg {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    color: var(--primary, #b85050);
+    color: #8c4a50;
 }
 
 .blob {
     position: absolute;
     border-radius: 50%;
     filter: blur(70px);
-    opacity: 0.18;
+    opacity: 0.55;
 }
 
 .blob-1 {
     width: 500px;
     height: 500px;
-    background: var(--primary, #b85050);
+    background: #e5c9c7;
     top: -100px;
     left: -120px;
 }
@@ -282,7 +282,7 @@ export default {
 .blob-2 {
     width: 400px;
     height: 400px;
-    background: var(--secondary, #e8b4b8);
+    background: #e5c9c7;
     bottom: -80px;
     right: -100px;
 }
@@ -290,11 +290,11 @@ export default {
 .blob-3 {
     width: 300px;
     height: 300px;
-    background: var(--primary, #b85050);
+    background: #e5c9c7;
     top: 50%;
     left: 55%;
     transform: translate(-50%, -50%);
-    opacity: 0.08;
+    opacity: 0.25;
 }
 
 .petal-scatter {
@@ -312,35 +312,35 @@ export default {
 }
 
 .hero-eyebrow {
-    font-family: 'Lora', serif;
+    font-family: 'Nunito', sans-serif;
     font-size: 0.95rem;
     font-style: italic;
     letter-spacing: 0.12em;
-    color: var(--primary, #b85050);
+    color: #8c4a50;
     margin-bottom: 1.2rem;
     animation: fadeUp 0.9s ease both;
 }
 
 .hero-title {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: clamp(4rem, 12vw, 9rem);
     font-weight: 900;
     line-height: 0.92;
-    color: var(--copy);
+    color: #2d1a1a;
     margin-bottom: 1.5rem;
     animation: fadeUp 0.9s 0.15s ease both;
 }
 
 .hero-title em {
     font-style: italic;
-    color: var(--primary, #b85050);
+    color: #8c4a50;
 }
 
 .hero-tagline {
-    font-family: 'Lora', serif;
+    font-family: 'Nunito', sans-serif;
     font-style: italic;
     font-size: 1.25rem;
-    color: var(--copy-light, #6b4f4f);
+    color: #6b4f4f;
     margin-bottom: 2.5rem;
     animation: fadeUp 0.9s 0.3s ease both;
 }
@@ -357,12 +357,12 @@ export default {
     display: block;
     width: 80px;
     height: 1.5px;
-    background: var(--primary, #b85050);
+    background: #e5c9c7;
     opacity: 0.4;
 }
 
 .hero-divider .dot {
-    color: var(--primary, #b85050);
+    color: #8c4a50;
     font-size: 1rem;
 }
 
@@ -383,7 +383,7 @@ export default {
     transform: translateX(-50%);
     width: 60px;
     height: 2px;
-    background: var(--primary, #b85050);
+    background: #e5c9c7;
     opacity: 0.3;
 }
 
@@ -397,22 +397,22 @@ export default {
 
 .quote-mark {
     display: block;
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', serif;
     font-size: 6rem;
     line-height: 0.6;
-    color: var(--primary, #b85050);
+    color: #8c4a50;
     opacity: 0.25;
     margin-bottom: 0.5rem;
     user-select: none;
 }
 
 blockquote {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: clamp(1.3rem, 3vw, 1.75rem);
     font-style: italic;
     font-weight: 400;
     line-height: 1.55;
-    color: var(--copy);
+    color: #2d1a1a;
     margin: 0;
 }
 
@@ -435,12 +435,12 @@ blockquote {
 
 .section-label {
     display: inline-block;
-    font-family: 'Lora', serif;
+    font-family: 'Nunito', sans-serif;
     font-size: 0.78rem;
     font-style: italic;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--primary, #b85050);
+    color: #8c4a50;
     margin-bottom: 1rem;
 }
 
@@ -449,23 +449,23 @@ blockquote {
 }
 
 .story-text h2 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', serif;
     font-size: clamp(2rem, 4vw, 2.8rem);
     font-weight: 700;
     line-height: 1.2;
-    color: var(--copy);
+    color: #2d1a1a;
     margin-bottom: 1.5rem;
 }
 
 .story-text h2 em {
     font-style: italic;
-    color: var(--primary, #b85050);
+    color: #8c4a50;
 }
 
 .story-text p {
     font-size: 1.05rem;
     line-height: 1.8;
-    color: var(--copy-light, #6b4f4f);
+    color: #6b4f4f;
     margin-bottom: 1rem;
 }
 
@@ -480,31 +480,26 @@ blockquote {
 }
 
 .aside-card {
-    background: var(--foreground, #fff);
-    border: 2px solid var(--copy);
+    background: #fffafa;
+    border: 1px solid #e5c9c7;
     border-radius: 16px;
     padding: 1.75rem 1.25rem;
     text-align: center;
     position: relative;
-    box-shadow: 4px 4px 0 var(--copy);
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .aside-card:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 var(--copy);
-}
-
-.aside-icon {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 24px rgba(229, 201, 199, 0.5);
 }
 
 .aside-stat {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', serif;
     font-size: 2rem;
     font-weight: 900;
-    color: var(--primary, #b85050);
+    color: #8c4a50;
     line-height: 1;
     margin-bottom: 0.25rem;
 }
@@ -512,13 +507,13 @@ blockquote {
 .aside-label {
     font-size: 0.85rem;
     font-style: italic;
-    color: var(--copy-light, #6b4f4f);
+    color: #6b4f4f;
     line-height: 1.4;
 }
 
 /* ── Wave divider ── */
 .wave-divider {
-    color: var(--primary, #b85050);
+    color: #8c4a50;
     opacity: 0.12;
     line-height: 0;
     margin-bottom: -1px;
@@ -538,7 +533,7 @@ blockquote {
 
 /* ── Feature section ── */
 .feature-section {
-    background: var(--primary, #b85050);
+    background: #e5c9c7;
     padding: 5rem 0;
     margin: 0;
 }
@@ -549,7 +544,7 @@ blockquote {
 }
 
 .feature-header h2 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', serif;
     font-size: clamp(2rem, 4vw, 2.8rem);
     font-weight: 700;
     color: #fff;
@@ -587,13 +582,8 @@ blockquote {
     transform: translateY(-4px);
 }
 
-.feature-card-icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-}
-
 .feature-card h3 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', serif;
     font-size: 1.2rem;
     font-weight: 700;
     color: #fff;
@@ -615,9 +605,9 @@ blockquote {
 
 .teaser-badge {
     display: inline-block;
-    background: var(--primary, #b85050);
+    background: #e5c9c7;
     color: #fff;
-    font-family: 'Lora', serif;
+    font-family: 'Nunito', sans-serif;
     font-style: italic;
     font-size: 0.9rem;
     padding: 0.35rem 1.1rem;
@@ -627,23 +617,23 @@ blockquote {
 }
 
 .teaser h2 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', serif;
     font-size: clamp(2rem, 4vw, 2.8rem);
     font-weight: 700;
     line-height: 1.2;
-    color: var(--copy);
+    color: #2d1a1a;
     margin-bottom: 1.5rem;
 }
 
 .teaser h2 em {
     font-style: italic;
-    color: var(--primary, #b85050);
+    color: #8c4a50;
 }
 
 .teaser p {
     font-size: 1.05rem;
     line-height: 1.8;
-    color: var(--copy-light, #6b4f4f);
+    color: #6b4f4f;
     margin-bottom: 1rem;
 }
 
@@ -654,12 +644,12 @@ blockquote {
 
 .cta-card {
     text-align: center;
-    border: 2px solid var(--copy);
+    border: 1px solid #e5c9c7;
     border-radius: 24px;
     padding: 4rem 2.5rem;
     position: relative;
-    background: var(--foreground, #fff);
-    box-shadow: 6px 6px 0 var(--copy);
+    background: #fffafa;
+    box-shadow: 0 6px 24px rgba(229, 201, 199, 0.5);
     overflow: hidden;
 }
 
@@ -668,24 +658,24 @@ blockquote {
     justify-content: center;
     gap: 1.5rem;
     font-size: 1.5rem;
-    color: var(--primary, #b85050);
+    color: #8c4a50;
     opacity: 0.3;
     margin-bottom: 1.5rem;
     letter-spacing: 0.5rem;
 }
 
 .cta-card h2 {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', serif;
     font-size: clamp(1.8rem, 3.5vw, 2.5rem);
     font-weight: 700;
-    color: var(--copy);
+    color: #2d1a1a;
     margin-bottom: 1rem;
 }
 
 .cta-card p {
     font-size: 1.05rem;
     line-height: 1.8;
-    color: var(--copy-light, #6b4f4f);
+    color: #6b4f4f;
     max-width: 560px;
     margin: 0 auto 2rem;
 }
@@ -694,21 +684,21 @@ blockquote {
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;
-    background: var(--primary, #b85050);
+    background: #e5c9c7;
     color: #fff;
-    font-family: 'Lora', serif;
+    font-family: 'Nunito', sans-serif;
     font-size: 1rem;
     font-weight: 500;
     padding: 0.85rem 2.25rem;
     border-radius: 999px;
-    border: 2px solid var(--copy);
+    border: 1px solid #e5c9c7;
     box-shadow: 3px 3px 0 var(--copy);
     text-decoration: none;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .cta-btn:hover {
-    transform: translate(-2px, -2px);
+    transform: translateY(-3px);
     box-shadow: 5px 5px 0 var(--copy);
 }
 

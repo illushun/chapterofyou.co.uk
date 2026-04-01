@@ -1,11 +1,6 @@
 <script setup lang="ts">
-import { twMerge } from 'tailwind-merge';
 import { computed, ref } from 'vue';
 import { useMotion } from '@vueuse/motion';
-
-const IconStarFilled = `<svg xmlns="http://www.w3.org/2000/svg" class="size-5" viewBox="0 0 24 24" fill="currentColor"><path d="M11.049 2.152a1.5 1.5 0 011.902 0l1.621 3.436a1.5 1.5 0 001.194.887l3.778.548a1.5 1.5 0 01.832 2.578l-2.73 2.66a1.5 1.5 0 00-.435 1.334l.643 3.766a1.5 1.5 0 01-2.175 1.583l-3.38-1.777a1.5 1.5 0 00-1.396 0l-3.38 1.777a1.5 1.5 0 01-2.175-1.583l.643-3.766a1.5 1.5 0 00-.435-1.334l-2.73-2.66a1.5 1.5 0 01.832-2.578l3.778-.548a1.5 1.5 0 001.194-.887l1.621-3.436z"/></svg>`;
-const IconStarOutline = `<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.152A1.5 1.5 0 0113.951 2.152l1.621 3.436a1.5 1.5 0 001.194.887l3.778.548a1.5 1.5 0 01.832 2.578l-2.73 2.66a1.5 1.5 0 00-.435 1.334l.643 3.766a1.5 1.5 0 01-2.175 1.583l-3.38-1.777a1.5 1.5 0 00-1.396 0l-3.38 1.777a1.5 1.5 0 01-2.175-1.583l.643-3.766a1.5 1.5 0 00-.435-1.334l-2.73-2.66a1.5 1.5 0 01.832-2.578l3.778-.548a1.5 1.5 0 001.194-.887l1.621-3.436z" /></svg>`;
-const IconCart = `<svg xmlns="http://www.w3.org/2000/svg" class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>`;
 
 interface ProductCardData {
     id: number;
@@ -18,43 +13,36 @@ interface ProductCardData {
     seo?: { slug: string };
 }
 
-interface ProductCardProps {
+const props = defineProps<{
     product: ProductCardData;
     className?: string;
-    wishlisted?: boolean; // passed in from parent
-}
+    wishlisted?: boolean;
+}>();
 
-const props = defineProps<ProductCardProps>();
 const emit = defineEmits(['addToCart', 'favourite']);
 
 const isWishlisted = ref(props.wishlisted ?? false);
-
 const isPopular = computed(() => (props.product.total_unique_views || 0) > 100);
-const imageUrl = computed(() => props.product.images?.[0]?.image || 'https://via.placeholder.com/300?text=No+Image');
+const imageUrl = computed(() => props.product.images?.[0]?.image || '/images/placeholder.jpg');
 const isTapped = ref(false);
 
-const springTransition = { type: 'spring', stiffness: 200, damping: 10, mass: 1 };
+// Spring animation — gentler values to feel soft not mechanical
+const springTransition = { type: 'spring', stiffness: 180, damping: 18, mass: 1 };
 const cardRef = ref<HTMLElement | null>(null);
-const innerRef = ref<HTMLElement | null>(null);
 
-const motionCard = useMotion(cardRef, { initial: { x: 0, y: 0 }, hovered: { x: -6, y: -6 } }, { transition: springTransition });
-const motionInner = useMotion(innerRef, { initial: { x: 0, y: 0 }, hovered: { x: -6, y: -6 } }, { transition: springTransition });
-
-const baseCardClass = "group w-full rounded-lg border-2 border-copy";
-const innerCardClass = "relative rounded-lg -m-0.5 border-2 border-copy bg-foreground flex flex-col justify-between overflow-hidden";
-const accentColor = 'bg-primary-light';
-
-const mergedBaseClass = computed(() => twMerge(baseCardClass, props.className));
-const mergedInnerClass = computed(() => twMerge(innerCardClass, accentColor));
+const motionCard = useMotion(cardRef, {
+    initial: { y: 0, scale: 1 },
+    hovered: { y: -5, scale: 1.01 },
+}, { transition: springTransition });
 
 const truncatedName = computed(() => {
-    const maxLen = 25;
-    return props.product.name.length > maxLen
-        ? props.product.name.substring(0, maxLen).trim() + '...'
+    const max = 30;
+    return props.product.name.length > max
+        ? props.product.name.substring(0, max).trim() + '…'
         : props.product.name;
 });
 
-const formattedCost = computed(() => {
+const fmt = computed(() => {
     const n = Number(props.product.cost);
     return isNaN(n) ? 'N/A' : `£${n.toFixed(2)}`;
 });
@@ -74,7 +62,6 @@ const handleTouchStart = () => {
     if (!isTapped.value) {
         isTapped.value = true;
         motionCard.apply('hovered');
-        motionInner.apply('hovered');
         document.addEventListener('touchstart', handleTouchEnd, { once: true, capture: true });
     }
 };
@@ -84,12 +71,10 @@ const handleTouchEnd = (event: Event) => {
     if (cardRef.value && !cardRef.value.contains(target)) {
         isTapped.value = false;
         motionCard.apply('initial');
-        motionInner.apply('initial');
     } else if (isTapped.value) {
         setTimeout(() => {
             isTapped.value = false;
             motionCard.apply('initial');
-            motionInner.apply('initial');
         }, 300);
     }
     document.removeEventListener('touchstart', handleTouchEnd, { capture: true });
@@ -97,83 +82,289 @@ const handleTouchEnd = (event: Event) => {
 </script>
 
 <template>
-    <div ref="cardRef" @mouseenter="motionCard.apply('hovered')" @mouseleave="motionCard.apply('initial')"
-        @touchstart.stop="handleTouchStart" :class="[mergedBaseClass, { 'group-hovered': isTapped }]"
-        style="background-color: var(--primary-content);">
+    <div ref="cardRef" class="psc" @mouseenter="motionCard.apply('hovered')" @mouseleave="motionCard.apply('initial')"
+        @touchstart.stop="handleTouchStart">
 
-        <div ref="innerRef" @mouseenter="motionInner.apply('hovered')" @mouseleave="motionInner.apply('initial')"
-            :class="mergedInnerClass">
+        <!-- Popular badge -->
+        <span v-if="isPopular" class="psc-badge">Popular</span>
 
-            <span v-if="isPopular"
-                class="absolute top-3 left-3 z-10 inline-flex items-center rounded-full bg-error px-3 py-0.5 text-xs font-bold text-error-content shadow-lg ring-1 ring-inset ring-error-content/50">
-                🔥 POPULAR
-            </span>
+        <!-- Invisible full-card link -->
+        <a :href="productLink" class="psc-link" :aria-label="`View ${product.name}`">
+            <span class="sr-only">View product: {{ product.name }}</span>
+        </a>
 
-            <a :href="productLink" class="absolute inset-0 z-[1] block">
-                <span class="sr-only">View product: {{ product.name }}</span>
-            </a>
+        <!-- Wishlist button -->
+        <button class="psc-wish" :class="{ 'psc-wish--active': isWishlisted }"
+            :aria-label="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'"
+            @click.stop.prevent="handleFavourite">
+            <!-- Filled heart -->
+            <svg v-if="isWishlisted" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+                fill="currentColor">
+                <path
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            <!-- Outline heart -->
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path
+                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+        </button>
 
-            <button class="absolute top-3 right-3 z-20 p-2 rounded-full border transition-colors shadow-md" :class="isWishlisted
-                ? 'bg-error text-error-content border-error hover:bg-error-dark'
-                : 'bg-foreground border-border hover:bg-error-light hover:text-error-content'"
-                :aria-label="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'"
-                :title="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'"
-                @click.stop.prevent="handleFavourite">
-                <div v-if="isWishlisted" v-html="IconStarFilled" class="size-5"></div>
-                <div v-else v-html="IconStarOutline" class="size-5"></div>
-            </button>
-
-            <div class="h-48 overflow-hidden bg-foreground flex items-center justify-center">
-                <img :src="imageUrl" :alt="'Image of ' + product.name"
-                    class="w-full h-full object-cover transition duration-500 group-hover:scale-105" />
+        <!-- Product image -->
+        <div class="psc-img-wrap">
+            <img :src="imageUrl" :alt="product.name" class="psc-img" />
+            <div v-if="product.stock_qty <= 0" class="psc-oos">
+                <span>Out of Stock</span>
             </div>
-
-            <div class="p-4 border-t-2 border-copy bg-foreground">
-                <div class="block">
-                    <p class="text-xs font-medium uppercase tracking-wider text-copy-lighter">{{ product.mpn }}</p>
-                    <p class="flex items-center text-xl font-bold text-copy transition truncate mt-1">
-                        <span class="mr-2">{{ truncatedName }}</span>
-                    </p>
-                </div>
-
-                <div class="mt-4 flex justify-between items-end">
-                    <p class="text-3xl font-black text-primary-content">{{ formattedCost }}</p>
-
-                    <button
-                        class="z-20 p-2 border-2 border-copy text-primary-content rounded-lg transition-colors duration-300 ease-in-out hover:bg-primary-dark hover:text-foreground shadow-md"
-                        aria-label="Add product to cart" @click.stop="$emit('addToCart', product.id)"
-                        style="background-color: var(--primary);">
-                        <div v-html="IconCart"></div>
-                    </button>
-                </div>
-            </div>
-
         </div>
+
+        <!-- Card body -->
+        <div class="psc-body">
+            <p class="psc-mpn">{{ product.mpn }}</p>
+            <p class="psc-name">{{ truncatedName }}</p>
+
+            <div class="psc-footer">
+                <span class="psc-price">{{ fmt }}</span>
+                <button class="psc-cart" :disabled="product.stock_qty <= 0" aria-label="Add to cart"
+                    @click.stop="$emit('addToCart', product.id)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+
     </div>
 </template>
 
 <style scoped>
-.group-hovered .group-hover\:scale-105 {
+/* ── Card ── */
+.psc {
+    width: 100%;
+    border-radius: 20px;
+    border: 1px solid #e5c9c7;
+    background: #fffafa;
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: box-shadow 0.3s ease;
+}
+
+/* Deepen shadow on hover (spring handles lift) */
+.psc:hover {
+    box-shadow: 0 8px 32px rgba(201, 164, 164, 0.45);
+}
+
+/* Petal watermarks */
+.psc::before {
+    content: '✿';
+    position: absolute;
+    bottom: -5px;
+    right: 7px;
+    font-size: 3rem;
+    color: #c9a4a4;
+    opacity: 0.12;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+    z-index: 0;
+}
+
+.psc::after {
+    content: '✿';
+    position: absolute;
+    top: 6px;
+    left: 9px;
+    font-size: 0.8rem;
+    color: #c9a4a4;
+    opacity: 0.22;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+    z-index: 0;
+}
+
+/* ── Popular badge ── */
+.psc-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 10;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    background: #8c4a50;
+    color: #fff;
+    border-radius: 999px;
+    padding: 0.18rem 0.6rem;
+    box-shadow: 0 1px 6px rgba(140, 74, 80, 0.3);
+}
+
+/* ── Invisible full-card link ── */
+.psc-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: block;
+}
+
+/* ── Wishlist button ── */
+.psc-wish {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 20;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid #eedcda;
+    background: rgba(255, 250, 250, 0.92);
+    color: #c9a4a4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.psc-wish:hover {
+    background: #faeaea;
+    color: #8c4a50;
+    border-color: #c9a4a4;
+}
+
+.psc-wish--active {
+    background: #faeaea;
+    color: #8c4a50;
+    border-color: #c9a4a4;
+}
+
+/* ── Image ── */
+.psc-img-wrap {
+    position: relative;
+    height: 190px;
+    overflow: hidden;
+    background: #fdf4f3;
+    border-bottom: 1px solid #f0dcd8;
+    flex-shrink: 0;
+}
+
+.psc-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.psc:hover .psc-img {
     transform: scale(1.05);
 }
 
-.group-hovered .group-hover\:translate-y-0 {
-    transform: translateY(0);
+/* Out of stock overlay */
+.psc-oos {
+    position: absolute;
+    inset: 0;
+    background: rgba(253, 244, 243, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.group-hovered .group-hover\:opacity-100 {
-    opacity: 1;
+.psc-oos span {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #8c4a50;
+    background: #fffafa;
+    border: 1px solid #e5c9c7;
+    border-radius: 999px;
+    padding: 0.22rem 0.75rem;
 }
 
-.group-hovered .group-hover\:bg-sky-600 {
-    background-color: var(--primary-dark);
+/* ── Body ── */
+.psc-body {
+    padding: 0.9rem 1rem 1rem;
+    background: #fffafa;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
 }
 
-.group-hovered .group-hover\:text-white {
-    color: var(--foreground);
+.psc-mpn {
+    font-size: 0.68rem;
+    font-family: monospace;
+    letter-spacing: 0.05em;
+    color: #a08080;
 }
 
-.group-hovered .group-hover\:text-sky-600 {
-    color: var(--primary-content);
+.psc-name {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: #2d1a1a;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+}
+
+.psc-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 0.6rem;
+    border-top: 1px solid #f0dcd8;
+}
+
+.psc-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    font-weight: 500;
+    color: #8c4a50;
+    letter-spacing: -0.01em;
+}
+
+/* ── Cart button ── */
+.psc-cart {
+    z-index: 20;
+    position: relative;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid #e5c9c7;
+    background: #fdf4f3;
+    color: #8c4a50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+}
+
+.psc-cart:hover:not(:disabled) {
+    background: linear-gradient(135deg, #c47078, #a85058);
+    border-color: #a85058;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(168, 80, 88, 0.25);
+}
+
+.psc-cart:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
 }
 </style>
