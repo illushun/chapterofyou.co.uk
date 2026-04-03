@@ -4,701 +4,1239 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
 import { debounce } from 'lodash';
 
-// Interfaces for data structure
-interface Category {
-    id: number;
-    name: string;
-}
-
-interface Courier {
-    id: number;
-    name: string;
-    type: 'Royal Mail' | 'FedEx' | 'Evri' | 'DPD';
-    status: 'enabled' | 'disabled';
-    cost: number;
-}
-
-interface ParentProduct {
-    id: number;
-    name: string;
-}
-
-interface ProductImage {
-    id: number;
-    product_id: number;
-    image: string; // The storage path
-    status: 'enabled' | 'disabled';
-    file_path: string; // The URL for the frontend
-    is_enabled: boolean; // Computed boolean status for FE ease
-}
-
+interface Category { id: number; name: string; }
+interface Courier { id: number; name: string; type: string; status: string; cost: number; }
+interface ParentProduct { id: number; name: string; }
+interface ProductImage { id: number; product_id: number; image: string; status: string; file_path: string; is_enabled: boolean; }
 interface Product {
-    id: number;
-    mpn: string;
-    name: string;
-    description: string;
-    status: 'enabled' | 'disabled';
-    cost: number;
-    stock_qty: number;
+    id: number; mpn: string; name: string; description: string;
+    status: 'enabled' | 'disabled'; cost: number; stock_qty: number;
     parent_product_id: number | null;
-    seo: {
-        meta_title: string;
-        meta_description: string;
-        slug: string;
-    };
+    seo: { meta_title: string; meta_description: string; slug: string; };
 }
+interface Oil { id: number; name: string; supplier: string | null; cas_primary: string | null; }
+interface ProductMaterial { oil_id: number; percentage: string; }
 
-interface Oil {
-    id: number;
-    name: string;
-    supplier: string | null;
-    cas_primary: string | null;
-}
-
-interface ProductMaterial {
-    oil_id: number;
-    percentage: string; // string so v-model on input works cleanly
-}
-
-// Define props passed from AdminProductController
 const props = defineProps<{
-    product?: Product; // Only present when editing
+    product?: Product;
     categories: Category[];
     couriers: Courier[];
     parentProducts: ParentProduct[];
-    selectedCategoryIds: number[]; // Array of category IDs for the product
-    selectedCourierId: number | null; // courier ID for the product
-    courierPerItem: string; // Whether courier is charged per item
+    selectedCategoryIds: number[];
+    selectedCourierId: number | null;
+    courierPerItem: string;
     oils: Oil[];
-    productMaterials: ProductMaterial[]; // existing oil links for this product
-    productImages: ProductImage[]; // Array of existing images for the product
+    productMaterials: ProductMaterial[];
+    productImages: ProductImage[];
     isEditing: boolean;
     errors: Record<string, string>;
 }>();
 
-// Initialize the form state
 const form = useForm({
     mpn: props.product?.mpn || '',
     name: props.product?.name || '',
     description: props.product?.description || '',
     status: props.product?.status || 'enabled',
-    cost: props.product?.cost.toString() || '0.00', // Use string for input type="number" consistency
+    cost: props.product?.cost.toString() || '0.00',
     stock_qty: props.product?.stock_qty || 0,
-    parent_product_id: props.product?.parent_product_id || null, // New field
+    parent_product_id: props.product?.parent_product_id || null,
     category_ids: props.selectedCategoryIds || ([] as number[]),
     courier_id: props.selectedCourierId || null,
-    courier_per_item: props.courierPerItem || "no",
-    materials: (props.productMaterials ?? []).map(m => ({
-        oil_id: m.oil_id,
-        percentage: m.percentage,
-    })) as ProductMaterial[],
+    courier_per_item: props.courierPerItem || 'no',
+    materials: (props.productMaterials ?? []).map(m => ({ oil_id: m.oil_id, percentage: m.percentage })) as ProductMaterial[],
     meta_title: props.product?.seo?.meta_title || '',
     meta_description: props.product?.seo?.meta_description || '',
     slug: props.product?.seo?.slug || '',
-
-    // Image Handling State
-    new_images: [] as File[], // Files queued for upload
-    images_to_delete: [] as number[], // IDs of existing images to delete
-    images_to_toggle: [] as number[], // IDs of existing images whose status should be flipped
+    new_images: [] as File[],
+    images_to_delete: [] as number[],
+    images_to_toggle: [] as number[],
 });
 
-// Computed properties
-const title = computed(() => (props.isEditing ? `Edit Product: ${props.product?.name}` : 'Create New Product'));
-const submitLabel = computed(() => (props.isEditing ? 'Update Product' : 'Create Product'));
+const title = computed(() => props.isEditing ? `Edit: ${props.product?.name}` : 'New Product');
+const submitLabel = computed(() => props.isEditing ? 'Save Changes' : 'Create Product');
 
-// Filter existing images based on deletion queue
-const filteredExistingImages = computed(() => {
-    return props.productImages.filter(image =>
-        !form.images_to_delete.includes(image.id)
-    ).map(image => {
-        // Apply pending status toggle for display purposes
-        if (form.images_to_toggle.includes(image.id)) {
-            return { ...image, is_enabled: !image.is_enabled };
-        }
-        return image;
-    });
-});
-
-// Debounced watch for auto-generating slug and meta title from name
-watch(() => form.name, debounce((newName) => {
-    // Only proceed if not processing a submission
-    if (form.processing) return;
-
-    if (!props.isEditing || !props.product?.seo?.slug || form.name !== props.product?.name) {
-        const slugBase = newName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-
-        // Only auto-generate slug/title if creating or if the existing slug/title is untouched
-        if (!form.slug || form.slug === props.product?.seo?.slug) {
-            form.slug = slugBase;
-        }
-        if (!form.meta_title || form.meta_title === props.product?.seo?.meta_title) {
-            form.meta_title = newName;
-        }
-    }
-}, 500));
-
-// --- Image Management Methods ---
-
-const handleFileUpload = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    if (target.files) {
-        // Convert FileList to array and append to new_images
-        Array.from(target.files).forEach(file => {
-            if (form.new_images.length < 5) {
-                form.new_images.push(file);
-            }
-        });
-        // Reset file input to allow uploading the same file again if needed
-        target.value = '';
-    }
-};
-
-const removeNewImage = (index: number) => {
-    form.new_images.splice(index, 1);
-};
-
-const toggleImageStatus = (imageId: number) => {
-    const index = form.images_to_toggle.indexOf(imageId);
-    if (index === -1) {
-        // Add to toggle list
-        form.images_to_toggle.push(imageId);
-    } else {
-        // Remove from toggle list
-        form.images_to_toggle.splice(index, 1);
-    }
-};
-
-const deleteExistingImage = (imageId: number) => {
-    if (!form.images_to_delete.includes(imageId)) {
-        form.images_to_delete.push(imageId);
-    }
-
-    // If an image is pending deletion, it shouldn't be pending toggle
-    const toggleIndex = form.images_to_toggle.indexOf(imageId);
-    if (toggleIndex !== -1) {
-        form.images_to_toggle.splice(toggleIndex, 1);
-    }
-};
-
-// --- Category Management Method ---
-const handleCategoryChange = (categoryId: number, isChecked: boolean) => {
-    if (isChecked) {
-        if (!form.category_ids.includes(categoryId)) {
-            form.category_ids.push(categoryId);
-        }
-    } else {
-        form.category_ids = form.category_ids.filter(id => id !== categoryId);
-    }
-};
-
-const handleCourierChange = (courierId: number, isChecked: boolean) => {
-    if (isChecked) {
-        form.courier_id = courierId;
-        form.courier_per_item = "no";
-    } else {
-        form.courier_id = null;
-        form.courier_per_item = "no";
-    }
-};
-
-const addMaterial = () => {
-    form.materials.push({ oil_id: 0, percentage: '' });
-};
-
-const removeMaterial = (index: number) => {
-    form.materials.splice(index, 1);
-};
-
-// Prevent duplicate oil selections
-const availableOilsFor = (index: number): Oil[] => {
-    const selectedIds = form.materials
-        .map((m, i) => i !== index ? m.oil_id : null)
-        .filter(id => id !== null && id !== 0) as number[];
-    return props.oils.filter(o => !selectedIds.includes(o.id));
-};
-
-const materialsTotal = computed(() =>
-    form.materials.reduce((sum, m) => sum + (parseFloat(m.percentage) || 0), 0)
+const filteredExistingImages = computed(() =>
+    props.productImages
+        .filter(img => !form.images_to_delete.includes(img.id))
+        .map(img => form.images_to_toggle.includes(img.id)
+            ? { ...img, is_enabled: !img.is_enabled }
+            : img
+        )
 );
 
-// --- Form submission logic ---
-const submit = () => {
-    // Convert string cost back to number for submission (though Laravel validation handles it)
-    form.data().cost = parseFloat(form.cost);
+watch(() => form.name, debounce((n: string) => {
+    if (form.processing) return;
+    const slug = n.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    if (!form.slug || form.slug === props.product?.seo?.slug) form.slug = slug;
+    if (!form.meta_title || form.meta_title === props.product?.seo?.meta_title) form.meta_title = n;
+}, 500));
 
+const handleFileUpload = (e: Event) => {
+    const t = e.target as HTMLInputElement;
+    if (t.files) {
+        Array.from(t.files).forEach(f => { if (form.new_images.length < 5) form.new_images.push(f); });
+        t.value = '';
+    }
+};
+const removeNewImage = (i: number) => form.new_images.splice(i, 1);
+const toggleImageStatus = (id: number) => {
+    const idx = form.images_to_toggle.indexOf(id);
+    idx === -1 ? form.images_to_toggle.push(id) : form.images_to_toggle.splice(idx, 1);
+};
+const deleteExistingImage = (id: number) => {
+    if (!form.images_to_delete.includes(id)) form.images_to_delete.push(id);
+    const ti = form.images_to_toggle.indexOf(id);
+    if (ti !== -1) form.images_to_toggle.splice(ti, 1);
+};
+const handleCategoryChange = (id: number, checked: boolean) => {
+    checked
+        ? !form.category_ids.includes(id) && form.category_ids.push(id)
+        : (form.category_ids = form.category_ids.filter(c => c !== id));
+};
+const handleCourierChange = (id: number, checked: boolean) => {
+    form.courier_id = checked ? id : null;
+    form.courier_per_item = 'no';
+};
+const addMaterial = () => form.materials.push({ oil_id: 0, percentage: '' });
+const removeMaterial = (i: number) => form.materials.splice(i, 1);
+const availableOilsFor = (idx: number): Oil[] => {
+    const taken = form.materials.map((m, i) => i !== idx ? m.oil_id : null).filter(id => id !== null && id !== 0) as number[];
+    return props.oils.filter(o => !taken.includes(o.id));
+};
+const materialsTotal = computed(() => form.materials.reduce((s, m) => s + (parseFloat(m.percentage) || 0), 0));
+
+const submit = () => {
+    (form.data() as any).cost = parseFloat(form.cost);
     if (props.isEditing && props.product) {
-        // When updating an existing product, files must be sent via POST,
-        // and we use transform to inject the _method: 'put' field for method spoofing.
-        form.transform((data) => ({
-            ...data,
-            // Explicitly set _method to 'put' for Laravel to handle multipart/form-data POST as a PUT request
-            _method: 'put',
-        }))
-            // Use form.post() when uploading files, even for PUT requests
+        form.transform(d => ({ ...d, _method: 'put' }))
             .post(route('admin.products.update', props.product.id), {
                 preserveScroll: true,
-                // Reset image arrays after successful submission
-                onSuccess: () => {
-                    form.new_images = [];
-                    form.images_to_delete = [];
-                    form.images_to_toggle = [];
-                }
+                onSuccess: () => { form.new_images = []; form.images_to_delete = []; form.images_to_toggle = []; },
             });
     } else {
-        // POST request for creation (no method spoofing needed)
         form.post(route('admin.products.store'), {
             preserveScroll: true,
-            onSuccess: () => {
-                form.new_images = [];
-                form.images_to_delete = [];
-                form.images_to_toggle = [];
-            }
+            onSuccess: () => { form.new_images = []; form.images_to_delete = []; form.images_to_toggle = []; },
         });
     }
 };
 
-const formatImageSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+const fmtSize = (b: number) => {
+    if (!b) return '0 B';
+    const i = Math.floor(Math.log(b) / Math.log(1024));
+    return `${(b / Math.pow(1024, i)).toFixed(1)} ${['B', 'KB', 'MB'][i]}`;
 };
-
 </script>
 
 <template>
     <AdminLayout>
 
-        <Head :title="title" />
+        <Head :title="`${title} — Admin`" />
 
-        <div class="mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">{{ title }}</h2>
-            <p class="text-copy-light mt-1">{{ isEditing ? 'Modify product details, inventory, and SEO settings.' :
-                'Enter details for a new product.' }}</p>
+        <!-- Page header -->
+        <div class="ce-header">
+            <div>
+                <div class="ce-breadcrumb">
+                    <Link :href="route('admin.products.index')" class="ce-breadcrumb-link">Products</Link>
+                    <span class="ce-breadcrumb-sep">/</span>
+                    <span>{{ isEditing ? 'Edit' : 'New' }}</span>
+                </div>
+                <h1 class="ce-title">{{ title }}</h1>
+                <p class="ce-sub">{{ isEditing ? 'Update details, inventory, images and SEO.' : 'Fill in the details for
+                    a new product.' }}</p>
+            </div>
+            <div v-if="form.isDirty" class="ce-unsaved">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                </svg>
+                Unsaved changes
+            </div>
         </div>
 
-        <form @submit.prevent="submit" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form @submit.prevent="submit" class="ce-grid">
 
-            <div class="lg:col-span-2 space-y-6">
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">General
-                            Information</h3>
+            <!-- ── Left column ── -->
+            <div class="ce-left">
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="mb-4">
-                                <label for="name" class="block text-sm font-medium text-copy mb-1">Product Name</label>
-                                <input type="text" id="name" v-model="form.name" required
-                                    class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                    :class="{ 'border-error': form.errors.name }" />
-                                <div v-if="form.errors.name" class="text-xs text-error mt-1">{{ form.errors.name }}
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="mpn" class="block text-sm font-medium text-copy mb-1">MPN / SKU</label>
-                                <input type="text" id="mpn" v-model="form.mpn" required
-                                    class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                    :class="{ 'border-error': form.errors.mpn }" />
-                                <div v-if="form.errors.mpn" class="text-xs text-error mt-1">{{ form.errors.mpn }}</div>
-                            </div>
+                <!-- General info -->
+                <section class="ce-card">
+                    <h2 class="ce-card-title">General Information</h2>
+                    <div class="ce-field-row">
+                        <div class="ce-field">
+                            <label class="ce-label" for="name">Product Name</label>
+                            <input id="name" type="text" v-model="form.name" required class="ce-input"
+                                :class="{ 'ce-input--err': form.errors.name }" />
+                            <p v-if="form.errors.name" class="ce-err">{{ form.errors.name }}</p>
                         </div>
-
-                        <!-- Parent Product ID Field -->
-                        <div class="mb-4">
-                            <label for="parent_product_id" class="block text-sm font-medium text-copy mb-1">Parent
-                                Product (for variations)</label>
-                            <select id="parent_product_id" v-model="form.parent_product_id"
-                                class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                :class="{ 'border-error': form.errors.parent_product_id }">
-                                <option :value="null">-- No Parent (This is a main product) --</option>
-                                <option v-for="p in parentProducts" :key="p.id" :value="p.id"
-                                    :disabled="isEditing && p.id === product?.id">
-                                    {{ p.name }} (ID: {{ p.id }})
-                                </option>
-                            </select>
-                            <div v-if="form.errors.parent_product_id" class="text-xs text-error mt-1">{{
-                                form.errors.parent_product_id }}</div>
-                            <p v-if="isEditing && product?.parent_product_id === product?.id"
-                                class="text-xs text-error mt-1">This product is currently set as its own parent, which
-                                is invalid. Please select a different parent or 'No Parent'.</p>
-                            <p v-if="isEditing && product" class="text-xs text-copy-light mt-1">
-                                Note: Cannot set product "{{ product.name }}" as its own parent.
-                            </p>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="description"
-                                class="block text-sm font-medium text-copy mb-1">Description</label>
-                            <textarea id="description" v-model="form.description" required rows="6"
-                                class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                :class="{ 'border-error': form.errors.description }"></textarea>
-                            <div v-if="form.errors.description" class="text-xs text-error mt-1">{{
-                                form.errors.description }}</div>
+                        <div class="ce-field">
+                            <label class="ce-label" for="mpn">MPN / SKU</label>
+                            <input id="mpn" type="text" v-model="form.mpn" required class="ce-input"
+                                :class="{ 'ce-input--err': form.errors.mpn }" />
+                            <p v-if="form.errors.mpn" class="ce-err">{{ form.errors.mpn }}</p>
                         </div>
                     </div>
-                </div>
 
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Pricing &
-                            Inventory</h3>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="mb-4">
-                                <label for="cost" class="block text-sm font-medium text-copy mb-1">Unit Cost (excl.
-                                    VAT)</label>
-                                <input type="number" id="cost" v-model="form.cost" required min="0.01" step="0.01"
-                                    class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                    :class="{ 'border-error': form.errors.cost }" />
-                                <div v-if="form.errors.cost" class="text-xs text-error mt-1">{{ form.errors.cost }}
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="stock_qty" class="block text-sm font-medium text-copy mb-1">Stock
-                                    Quantity</label>
-                                <input type="number" id="stock_qty" v-model="form.stock_qty" required min="0" step="1"
-                                    class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                    :class="{ 'border-error': form.errors.stock_qty }" />
-                                <div v-if="form.errors.stock_qty" class="text-xs text-error mt-1">{{
-                                    form.errors.stock_qty }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PRODUCT IMAGES SECTION -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Product Images
-                            (Max 5 Total)</h3>
-
-                        <!-- Image Upload Area -->
-                        <label for="file-upload" class="block cursor-pointer">
-                            <div
-                                class="h-24 border-2 border-dashed border-copy-light flex items-center justify-center text-copy-light p-4 rounded-lg bg-secondary-light transition hover:bg-secondary-dark">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none"
-                                    viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span>Click to select files or drag and drop (Max 2MB per image)</span>
-                            </div>
-                            <input type="file" id="file-upload" multiple accept="image/jpeg,image/png,image/webp"
-                                @change="handleFileUpload" class="hidden" />
+                    <div class="ce-field">
+                        <label class="ce-label" for="parent">Parent Product
+                            <span class="ce-label-note">(for variations)</span>
                         </label>
-                        <div v-if="form.errors['new_images']" class="text-xs text-error mt-1">{{
-                            form.errors['new_images'] }}</div>
-                        <div v-if="form.errors['new_images.*']" class="text-xs text-error mt-1">{{
-                            form.errors['new_images.*'] }}</div>
+                        <select id="parent" v-model="form.parent_product_id" class="ce-input">
+                            <option :value="null">No parent — standalone product</option>
+                            <option v-for="p in parentProducts" :key="p.id" :value="p.id"
+                                :disabled="isEditing && p.id === product?.id">
+                                {{ p.name }}
+                            </option>
+                        </select>
+                        <p v-if="form.errors.parent_product_id" class="ce-err">{{ form.errors.parent_product_id }}</p>
+                    </div>
 
+                    <div class="ce-field">
+                        <label class="ce-label" for="description">Description</label>
+                        <textarea id="description" v-model="form.description" required rows="7"
+                            class="ce-input ce-textarea"
+                            :class="{ 'ce-input--err': form.errors.description }"></textarea>
+                        <p v-if="form.errors.description" class="ce-err">{{ form.errors.description }}</p>
+                    </div>
+                </section>
 
-                        <!-- New Images Queue -->
-                        <div v-if="form.new_images.length" class="mt-4 border-t border-copy-light pt-3">
-                            <h4 class="text-sm font-bold text-copy mb-2">New Images to Upload ({{ form.new_images.length
-                            }})</h4>
-                            <ul class="space-y-2">
-                                <li v-for="(file, index) in form.new_images" :key="index"
-                                    class="flex items-center justify-between p-2 rounded-lg bg-secondary-dark">
-                                    <div class="truncate text-sm text-copy">
-                                        {{ file.name }}
-                                        <span class="text-copy-light ml-2">({{ formatImageSize(file.size) }})</span>
-                                    </div>
-                                    <button type="button" @click="removeNewImage(index)"
-                                        class="text-error hover:text-red-700 transition">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20"
-                                            fill="currentColor">
-                                            <path fill-rule="evenodd"
-                                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.72-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </button>
-                                </li>
-                            </ul>
+                <!-- Pricing & inventory -->
+                <section class="ce-card">
+                    <h2 class="ce-card-title">Pricing &amp; Inventory</h2>
+                    <div class="ce-field-row">
+                        <div class="ce-field">
+                            <label class="ce-label" for="cost">Unit Cost (excl. VAT)</label>
+                            <div class="ce-input-prefix-wrap">
+                                <span class="ce-input-prefix">£</span>
+                                <input id="cost" type="number" v-model="form.cost" required min="0.01" step="0.01"
+                                    class="ce-input ce-input--prefixed"
+                                    :class="{ 'ce-input--err': form.errors.cost }" />
+                            </div>
+                            <p v-if="form.errors.cost" class="ce-err">{{ form.errors.cost }}</p>
                         </div>
+                        <div class="ce-field">
+                            <label class="ce-label" for="stock">Stock Quantity</label>
+                            <input id="stock" type="number" v-model="form.stock_qty" required min="0" step="1"
+                                class="ce-input" :class="{ 'ce-input--err': form.errors.stock_qty }" />
+                            <p v-if="form.errors.stock_qty" class="ce-err">{{ form.errors.stock_qty }}</p>
+                        </div>
+                    </div>
+                </section>
 
-                        <!-- Existing Images Grid -->
-                        <div v-if="filteredExistingImages.length" class="mt-6 border-t border-copy-light pt-3">
-                            <h4 class="text-sm font-bold text-copy mb-2">Existing Images ({{
-                                filteredExistingImages.length }})</h4>
-                            <!-- Mobile Fix: Switch to grid-cols-1 default for better mobile readability, scaling up to sm:grid-cols-2, etc. -->
-                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                <div v-for="image in filteredExistingImages" :key="image.id"
-                                    class="relative rounded-lg overflow-hidden border-2 shadow-md transition" :class="{
-                                        'border-success/80': image.is_enabled,
-                                        'border-copy-light opacity-50': !image.is_enabled,
-                                        'ring-2 ring-error/50': form.images_to_delete.includes(image.id)
-                                    }">
-                                    <!-- Image Thumbnail -->
-                                    <img :src="image.file_path" alt="Product Image" class="w-full h-24 object-cover"
-                                        onerror="this.onerror=null;this.src='https://placehold.co/150x96/f0f0f0/666?text=No+Image';" />
+                <!-- Images -->
+                <section class="ce-card">
+                    <h2 class="ce-card-title">
+                        Product Images
+                        <span class="ce-card-title-note">max 5 total</span>
+                    </h2>
 
-                                    <!-- Status Overlay -->
-                                    <span v-if="!image.is_enabled"
-                                        class="absolute top-0 left-0 bg-error text-error-content text-xs px-2 py-0.5 font-bold">DISABLED</span>
+                    <!-- Upload zone -->
+                    <label for="file-upload" class="ce-upload-zone">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        <span>Click to upload or drag &amp; drop</span>
+                        <span class="ce-upload-note">JPEG, PNG, WebP — max 2 MB each</span>
+                        <input type="file" id="file-upload" multiple accept="image/jpeg,image/png,image/webp"
+                            @change="handleFileUpload" class="ce-upload-input" />
+                    </label>
+                    <p v-if="form.errors['new_images']" class="ce-err">{{ form.errors['new_images'] }}</p>
 
-                                    <!-- Action Buttons -->
-                                    <div class="absolute bottom-0 right-0 p-1 flex gap-1 bg-black/50 rounded-tl-lg">
-
-                                        <!-- Toggle Button -->
-                                        <button type="button" @click="toggleImageStatus(image.id)"
-                                            :title="image.is_enabled ? 'Disable Image' : 'Enable Image'"
-                                            class="p-1 rounded-full text-white transition hover:scale-110" :class="{
-                                                'bg-error': image.is_enabled,
-                                                'bg-success': !image.is_enabled
-                                            }">
-                                            <svg v-if="image.is_enabled" xmlns="http://www.w3.org/2000/svg"
-                                                class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd"
-                                                    d="M3.707 2.293a1 1 0 00-1.414 1.414L5.586 7H5a1 1 0 000 2h.414l-2.293 2.293a1 1 0 001.414 1.414L7 10.414V11a1 1 0 102 0v-.586l1.293 1.293a1 1 0 001.414-1.414L10.414 9H11a1 1 0 100-2h-.586l-2.293-2.293a1 1 0 10-1.414 1.414L8.586 9H8a1 1 0 00-1 1v.586L4.707 8.707a1 1 0 00-1.414 1.414zM16 9a1 1 0 00-1 1v2a1 1 0 11-2 0v-2a1 1 0 00-2 0v2a3 3 0 003 3h2a3 3 0 003-3v-2a1 1 0 00-1-1z"
-                                                    clip-rule="evenodd" />
-                                            </svg>
-                                            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
-                                                viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                <path fill-rule="evenodd"
-                                                    d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                                                    clip-rule="evenodd" />
-                                            </svg>
-                                        </button>
-
-                                        <!-- Delete Button -->
-                                        <button type="button" @click="deleteExistingImage(image.id)"
-                                            title="Mark for Deletion"
-                                            class="p-1 rounded-full bg-error text-white transition hover:scale-110"
-                                            :class="{ 'opacity-50': form.images_to_delete.includes(image.id) }"
-                                            :disabled="form.images_to_delete.includes(image.id)">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
-                                                fill="currentColor">
-                                                <path fill-rule="evenodd"
-                                                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.72-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z"
-                                                    clip-rule="evenodd" />
-                                            </svg>
-                                        </button>
-                                    </div>
-
+                    <!-- Queued new images -->
+                    <div v-if="form.new_images.length" class="ce-queue">
+                        <p class="ce-queue-title">Queued for upload ({{ form.new_images.length }})</p>
+                        <div class="ce-queue-list">
+                            <div v-for="(file, i) in form.new_images" :key="i" class="ce-queue-item">
+                                <div class="ce-queue-thumb">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                        <polyline points="21 15 16 10 5 21" />
+                                    </svg>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- END PRODUCT IMAGES SECTION -->
-
-
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">SEO & URL</h3>
-
-                        <div class="mb-4">
-                            <label for="meta_title" class="block text-sm font-medium text-copy mb-1">Meta Title</label>
-                            <input type="text" id="meta_title" v-model="form.meta_title" maxlength="255"
-                                class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                :class="{ 'border-error': form.errors.meta_title }" />
-                            <div v-if="form.errors.meta_title" class="text-xs text-error mt-1">{{ form.errors.meta_title
-                            }}</div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="meta_description" class="block text-sm font-medium text-copy mb-1">Meta
-                                Description (Max 500 chars)</label>
-                            <textarea id="meta_description" v-model="form.meta_description" rows="3" maxlength="500"
-                                class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                :class="{ 'border-error': form.errors.meta_description }"></textarea>
-                            <div v-if="form.errors.meta_description" class="text-xs text-error mt-1">{{
-                                form.errors.meta_description }}</div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="slug" class="block text-sm font-medium text-copy mb-1">URL Slug</label>
-                            <div class="flex items-center">
-                                <!-- FIX: Ensure the prefix is visible on all screen sizes -->
-                                <span
-                                    class="bg-secondary-light border-y-2 border-l-2 border-copy p-3 rounded-l-lg text-copy-light text-sm">/product/</span>
-                                <input type="text" id="slug" v-model="form.slug" required
-                                    class="flex-grow rounded-r-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                    :class="{ 'rounded-l-lg': !isEditing, 'border-error': form.errors.slug }" />
-                            </div>
-                            <div v-if="form.errors.slug" class="text-xs text-error mt-1">{{ form.errors.slug }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="lg:col-span-1 space-y-6">
-
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Status & Actions
-                        </h3>
-
-                        <div class="mb-4">
-                            <label for="status" class="block text-sm font-medium text-copy mb-1">Product Status</label>
-                            <select id="status" v-model="form.status" required
-                                class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm">
-                                <option value="enabled">Enabled (Live)</option>
-                                <option value="disabled">Disabled (Draft/Hidden)</option>
-                            </select>
-                            <div v-if="form.errors.status" class="text-xs text-error mt-1">{{ form.errors.status }}
-                            </div>
-                        </div>
-
-                        <button type="submit" :disabled="form.processing"
-                            class="mt-4 w-full py-3 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                            style="background-color: var(--primary); color: var(--primary-content);">
-                            {{ form.processing ? 'Saving...' : submitLabel }}
-                        </button>
-
-                        <div v-if="form.isDirty" class="mt-2 text-center text-sm text-yellow-600 font-medium">Unsaved
-                            changes</div>
-                    </div>
-                </div>
-
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Categories</h3>
-
-                        <div class="max-h-64 overflow-y-auto pr-2">
-                            <ul class="space-y-3">
-                                <li v-for="category in categories" :key="category.id">
-                                    <label :for="'category-' + category.id"
-                                        class="inline-flex items-center gap-3 cursor-pointer transition hover:text-primary-content">
-                                        <input type="checkbox" :id="'category-' + category.id" :value="category.id"
-                                            :checked="form.category_ids.includes(category.id)"
-                                            @change="handleCategoryChange(category.id, ($event.target as HTMLInputElement).checked)"
-                                            class="size-5 border-2 border-copy text-primary focus:ring-primary" />
-                                        <span class="text-sm text-copy font-medium"> {{ category.name }} </span>
-                                    </label>
-                                </li>
-                            </ul>
-                        </div>
-                        <div v-if="form.errors.category_ids" class="text-xs text-error mt-2">{{ form.errors.category_ids
-                        }}</div>
-                    </div>
-                </div>
-
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Couriers</h3>
-
-                        <div class="max-h-64 overflow-y-auto pr-2">
-                            <ul class="space-y-3">
-                                <li v-for="courier in couriers" :key="courier.id">
-                                    <label :for="'courier-' + courier.id"
-                                        class="inline-flex items-center gap-3 cursor-pointer transition hover:text-primary-content">
-                                        <input type="radio" name="courier" :id="'courier-' + courier.id"
-                                            :value="courier.id" :checked="form.courier_id == courier.id"
-                                            @change="handleCourierChange(courier.id, true)"
-                                            class="size-5 border-2 border-copy text-primary focus:ring-primary" />
-
-                                        <span class="text-sm text-copy font-medium"> {{ courier.type }} - {{
-                                            courier.name }} </span>
-
-                                        <div class="mr-2 text-sm text-copy-light"> - £{{ courier.cost }}
-                                        </div>
-                                        <select :id="'courier-status-' + courier.id" v-model="form.courier_per_item"
-                                            class="size-5 border-2 border-copy text-primary focus:ring-primary mr-2">
-                                            <option value="yes">Yes</option>
-                                            <option value="no">No</option>
-                                        </select>
-                                    </label>
-                                </li>
-                                <li>
-                                    <label for="courier-none"
-                                        class="inline-flex items-center gap-3 cursor-pointer transition hover:text-primary-content">
-                                        <input type="radio" name="courier" id="courier-none" value=""
-                                            :checked="form.courier_id == null" @change="handleCourierChange(0, false)"
-                                            class="size-5 border-2 border-copy text-primary focus:ring-primary" />
-                                        <span class="text-sm text-copy font-medium"> No Courier Selected </span>
-                                    </label>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-1 border-b-2 border-copy-light pb-2">
-                            Fragrance Formulation
-                        </h3>
-                        <p class="text-xs text-copy-light mb-4">
-                            Link oils and their % in the final product for CLP calculation.
-                        </p>
-
-                        <!-- Total % indicator -->
-                        <div class="mb-4 flex items-center justify-between text-sm font-medium px-3 py-2 rounded-lg"
-                            :class="{
-                                'bg-green-50 text-green-700 border border-green-200': materialsTotal <= 100,
-                                'bg-red-50 text-red-700 border border-red-200': materialsTotal > 100,
-                            }">
-                            <span>Total</span>
-                            <span>{{ materialsTotal.toFixed(2) }}%</span>
-                        </div>
-
-                        <!-- Oil rows -->
-                        <div class="space-y-3 mb-4">
-                            <div v-for="(material, index) in form.materials" :key="index"
-                                class="flex items-center gap-2">
-                                <!-- Oil selector -->
-                                <select v-model="material.oil_id"
-                                    class="flex-1 rounded-lg border-2 border-copy bg-foreground p-2 text-copy text-sm focus:border-primary focus:ring-primary shadow-sm"
-                                    :class="{ 'border-error': material.oil_id === 0 && form.materials.length > 0 }">
-                                    <option :value="0" disabled>— select oil —</option>
-                                    <option v-for="oil in availableOilsFor(index)" :key="oil.id" :value="oil.id">
-                                        {{ oil.name }}
-                                        <template v-if="oil.supplier"> ({{ oil.supplier }})</template>
-                                    </option>
-                                    <!-- Always show the currently selected oil even if "taken" -->
-                                    <option
-                                        v-if="material.oil_id !== 0 && !availableOilsFor(index).find(o => o.id === material.oil_id)"
-                                        :value="material.oil_id">
-                                        {{props.oils.find(o => o.id === material.oil_id)?.name}}
-                                    </option>
-                                </select>
-
-                                <!-- Percentage input -->
-                                <div class="relative w-24 flex-shrink-0">
-                                    <input type="number" v-model="material.percentage" min="0.01" max="100" step="0.01"
-                                        placeholder="0.00"
-                                        class="w-full rounded-lg border-2 border-copy bg-foreground p-2 pr-7 text-copy text-sm focus:border-primary focus:ring-primary shadow-sm" />
-                                    <span
-                                        class="absolute right-2 top-1/2 -translate-y-1/2 text-copy-light text-sm">%</span>
+                                <div class="ce-queue-info">
+                                    <p class="ce-queue-name">{{ file.name }}</p>
+                                    <p class="ce-queue-size">{{ fmtSize(file.size) }}</p>
                                 </div>
-
-                                <!-- Remove button -->
-                                <button type="button" @click="removeMaterial(index)"
-                                    class="flex-shrink-0 p-2 rounded-lg border-2 border-copy text-error hover:bg-red-50 transition"
-                                    title="Remove">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20"
-                                        fill="currentColor">
-                                        <path fill-rule="evenodd"
-                                            d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.72-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 10-2 0v6a1 1 0 102 0V8z"
-                                            clip-rule="evenodd" />
+                                <button type="button" @click="removeNewImage(i)" class="ce-queue-remove"
+                                    aria-label="Remove">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M18 6 6 18M6 6l12 12" />
                                     </svg>
                                 </button>
                             </div>
-
-                            <p v-if="form.materials.length === 0" class="text-sm text-copy-light italic">
-                                No oils linked yet. Add one below.
-                            </p>
                         </div>
-
-                        <!-- Validation errors -->
-                        <div v-if="form.errors.materials" class="text-xs text-error mb-3">
-                            {{ form.errors.materials }}
-                        </div>
-
-                        <!-- Add oil button -->
-                        <button type="button" @click="addMaterial"
-                            :disabled="form.materials.length >= props.oils.length"
-                            class="w-full py-2 border-2 border-dashed border-copy-light text-sm text-copy-light rounded-lg hover:border-copy hover:text-copy transition disabled:opacity-40 disabled:cursor-not-allowed">
-                            + Add oil
-                        </button>
                     </div>
-                </div>
+
+                    <!-- Existing images -->
+                    <div v-if="filteredExistingImages.length" class="ce-existing-imgs">
+                        <p class="ce-queue-title">Existing images ({{ filteredExistingImages.length }})</p>
+                        <div class="ce-img-grid">
+                            <div v-for="img in filteredExistingImages" :key="img.id" class="ce-img-card"
+                                :class="{ 'ce-img-card--disabled': !img.is_enabled }">
+                                <img :src="img.file_path" :alt="`Image ${img.id}`" class="ce-img-thumb" />
+                                <div v-if="!img.is_enabled" class="ce-img-disabled-label">Hidden</div>
+                                <div class="ce-img-actions">
+                                    <button type="button" @click="toggleImageStatus(img.id)" class="ce-img-btn"
+                                        :class="img.is_enabled ? 'ce-img-btn--hide' : 'ce-img-btn--show'"
+                                        :title="img.is_enabled ? 'Hide image' : 'Show image'">
+                                        <svg v-if="img.is_enabled" width="12" height="12" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path
+                                                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                                            <path
+                                                d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                                            <line x1="1" y1="1" x2="23" y2="23" />
+                                        </svg>
+                                        <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                            <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                    </button>
+                                    <button type="button" @click="deleteExistingImage(img.id)"
+                                        class="ce-img-btn ce-img-btn--del" title="Delete image">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M3 6h18" />
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- SEO -->
+                <section class="ce-card">
+                    <h2 class="ce-card-title">SEO &amp; URL</h2>
+                    <div class="ce-field">
+                        <label class="ce-label" for="meta_title">Meta Title</label>
+                        <input id="meta_title" type="text" v-model="form.meta_title" maxlength="255" class="ce-input"
+                            :class="{ 'ce-input--err': form.errors.meta_title }" />
+                        <p v-if="form.errors.meta_title" class="ce-err">{{ form.errors.meta_title }}</p>
+                    </div>
+                    <div class="ce-field">
+                        <label class="ce-label" for="meta_desc">Meta Description
+                            <span class="ce-label-note">max 500 chars</span>
+                        </label>
+                        <textarea id="meta_desc" v-model="form.meta_description" rows="3" maxlength="500"
+                            class="ce-input ce-textarea"
+                            :class="{ 'ce-input--err': form.errors.meta_description }"></textarea>
+                        <p v-if="form.errors.meta_description" class="ce-err">{{ form.errors.meta_description }}</p>
+                    </div>
+                    <div class="ce-field">
+                        <label class="ce-label" for="slug">URL Slug</label>
+                        <div class="ce-slug-wrap">
+                            <span class="ce-slug-prefix">/product/</span>
+                            <input id="slug" type="text" v-model="form.slug" required class="ce-input ce-slug-input"
+                                :class="{ 'ce-input--err': form.errors.slug }" />
+                        </div>
+                        <p v-if="form.errors.slug" class="ce-err">{{ form.errors.slug }}</p>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- ── Right column ── -->
+            <div class="ce-right">
+
+                <!-- Status & submit -->
+                <section class="ce-card ce-card--sticky">
+                    <h2 class="ce-card-title">Status &amp; Actions</h2>
+
+                    <div class="ce-field">
+                        <label class="ce-label" for="status">Product Status</label>
+                        <div class="ce-status-btns">
+                            <button type="button" @click="form.status = 'enabled'" class="ce-status-btn"
+                                :class="{ 'ce-status-btn--on': form.status === 'enabled' }">
+                                <span class="ce-status-dot ce-status-dot--green"></span>
+                                Active
+                            </button>
+                            <button type="button" @click="form.status = 'disabled'" class="ce-status-btn"
+                                :class="{ 'ce-status-btn--off': form.status === 'disabled' }">
+                                <span class="ce-status-dot ce-status-dot--grey"></span>
+                                Inactive
+                            </button>
+                        </div>
+                        <p v-if="form.errors.status" class="ce-err">{{ form.errors.status }}</p>
+                    </div>
+
+                    <button type="submit" :disabled="form.processing" class="ce-submit-btn">
+                        <svg v-if="form.processing" class="ce-spinner" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                        </svg>
+                        {{ form.processing ? 'Saving...' : submitLabel }}
+                    </button>
+
+                    <div v-if="form.isDirty" class="ce-unsaved-inline">Unsaved changes</div>
+                </section>
+
+                <!-- Categories -->
+                <section class="ce-card">
+                    <h2 class="ce-card-title">Categories</h2>
+                    <div class="ce-check-list">
+                        <label v-for="cat in categories" :key="cat.id" class="ce-check-item"
+                            :class="{ 'ce-check-item--active': form.category_ids.includes(cat.id) }">
+                            <input type="checkbox" :checked="form.category_ids.includes(cat.id)"
+                                @change="handleCategoryChange(cat.id, ($event.target as HTMLInputElement).checked)"
+                                class="ce-checkbox" />
+                            {{ cat.name }}
+                        </label>
+                    </div>
+                    <p v-if="form.errors.category_ids" class="ce-err">{{ form.errors.category_ids }}</p>
+                </section>
+
+                <!-- Couriers -->
+                <section class="ce-card">
+                    <h2 class="ce-card-title">Courier</h2>
+                    <div class="ce-check-list">
+                        <label v-for="c in couriers" :key="c.id" class="ce-check-item ce-check-item--courier"
+                            :class="{ 'ce-check-item--active': form.courier_id === c.id }">
+                            <input type="radio" name="courier" :value="c.id" :checked="form.courier_id === c.id"
+                                @change="handleCourierChange(c.id, true)" class="ce-checkbox" />
+                            <div class="ce-courier-info">
+                                <span class="ce-courier-name">{{ c.type }} — {{ c.name }}</span>
+                                <span class="ce-courier-cost">£{{ c.cost }}</span>
+                            </div>
+                            <div v-if="form.courier_id === c.id" class="ce-courier-per-item">
+                                <label class="ce-label ce-label--sm">Per item?</label>
+                                <select v-model="form.courier_per_item" class="ce-input ce-input--sm">
+                                    <option value="no">No</option>
+                                    <option value="yes">Yes</option>
+                                </select>
+                            </div>
+                        </label>
+                        <label class="ce-check-item" :class="{ 'ce-check-item--active': form.courier_id === null }">
+                            <input type="radio" name="courier" :checked="form.courier_id === null"
+                                @change="handleCourierChange(0, false)" class="ce-checkbox" />
+                            No courier
+                        </label>
+                    </div>
+                </section>
+
+                <!-- Fragrance formulation -->
+                <section class="ce-card">
+                    <h2 class="ce-card-title">
+                        Fragrance Formulation
+                        <span class="ce-card-title-note">for CLP</span>
+                    </h2>
+
+                    <!-- Total indicator -->
+                    <div class="ce-total-bar" :class="materialsTotal > 100 ? 'ce-total-bar--over' : 'ce-total-bar--ok'">
+                        <span>Total</span>
+                        <strong>{{ materialsTotal.toFixed(2) }}%</strong>
+                    </div>
+
+                    <!-- Oil rows -->
+                    <div class="ce-materials">
+                        <div v-for="(mat, i) in form.materials" :key="i" class="ce-material-row">
+                            <select v-model="mat.oil_id" class="ce-input ce-input--sm ce-material-select">
+                                <option :value="0" disabled>Select oil…</option>
+                                <option v-for="oil in availableOilsFor(i)" :key="oil.id" :value="oil.id">
+                                    {{ oil.name }}{{ oil.supplier ? ` (${oil.supplier})` : '' }}
+                                </option>
+                                <option v-if="mat.oil_id !== 0 && !availableOilsFor(i).find(o => o.id === mat.oil_id)"
+                                    :value="mat.oil_id">
+                                    {{oils.find(o => o.id === mat.oil_id)?.name}}
+                                </option>
+                            </select>
+                            <div class="ce-pct-wrap">
+                                <input type="number" v-model="mat.percentage" min="0.01" max="100" step="0.01"
+                                    placeholder="0.00" class="ce-input ce-input--sm ce-pct-input" />
+                                <span class="ce-pct-symbol">%</span>
+                            </div>
+                            <button type="button" @click="removeMaterial(i)" class="ce-material-del"
+                                aria-label="Remove oil">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 6 6 18M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <p v-if="form.materials.length === 0" class="ce-empty-note">No oils linked yet.</p>
+                        <p v-if="form.errors.materials" class="ce-err">{{ form.errors.materials }}</p>
+                    </div>
+
+                    <button type="button" @click="addMaterial" :disabled="form.materials.length >= oils.length"
+                        class="ce-add-oil-btn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        Add oil
+                    </button>
+                </section>
+
             </div>
         </form>
     </AdminLayout>
 </template>
+
+<style scoped>
+/* ── Tokens ── */
+.ce-header,
+.ce-card {
+    --bb-navy: #1a1a2e;
+    --bb-cream: #faf9f7;
+    --bb-surface: #ffffff;
+    --bb-border: #ece8e2;
+    --bb-text: #1a1a2e;
+    --bb-muted: #7a7a9a;
+    --bb-red: #e05c6e;
+    --bb-red-bg: #fdeef0;
+    --bb-green: #4caf7d;
+    --bb-green-bg: #eef7f2;
+    --bb-blush: #f2c4ce;
+    --bb-lav: #c9b8f0;
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Page header ── */
+.ce-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.ce-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--bb-muted);
+    margin-bottom: 0.35rem;
+}
+
+.ce-breadcrumb-link {
+    color: var(--bb-muted);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.ce-breadcrumb-link:hover {
+    color: var(--bb-text);
+}
+
+.ce-breadcrumb-sep {
+    opacity: 0.5;
+}
+
+.ce-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--bb-text);
+}
+
+.ce-sub {
+    font-size: 0.82rem;
+    color: var(--bb-muted);
+    margin-top: 0.2rem;
+}
+
+.ce-unsaved {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    background: #fff8e6;
+    border: 1px solid #e0c060;
+    color: #8a6000;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+/* ── Layout ── */
+.ce-grid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
+    /* critical — stops columns stretching to equal height */
+}
+
+@media (max-width: 1024px) {
+    .ce-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ce-left {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.ce-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+@media (min-width: 1024px) {
+    .ce-card--sticky {
+        position: sticky;
+        top: 80px;
+    }
+}
+
+/* ── Cards ── */
+.ce-card {
+    background: var(--bb-surface);
+    border-radius: 14px;
+    border: 1px solid var(--bb-border);
+    box-shadow: 0 1px 6px rgba(26, 26, 46, 0.05);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.ce-card-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--bb-border);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0;
+}
+
+.ce-card-title-note {
+    font-size: 0.65rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    font-style: italic;
+    color: var(--bb-muted);
+    opacity: 0.75;
+}
+
+/* ── Fields ── */
+.ce-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .ce-field-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+.ce-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.ce-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--bb-text);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.ce-label-note {
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: var(--bb-muted);
+    font-style: italic;
+}
+
+.ce-input {
+    width: 100%;
+    padding: 0.62rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--bb-border);
+    background: var(--bb-cream);
+    color: var(--bb-text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ce-input:focus {
+    border-color: #b8a9e8;
+    box-shadow: 0 0 0 3px rgba(201, 184, 240, 0.2);
+}
+
+.ce-input--err {
+    border-color: var(--bb-red);
+}
+
+.ce-input--sm {
+    font-size: 0.82rem;
+    padding: 0.48rem 0.7rem;
+}
+
+.ce-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.ce-err {
+    font-size: 0.75rem;
+    color: var(--bb-red);
+}
+
+/* £ prefix */
+.ce-input-prefix-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ce-input-prefix {
+    position: absolute;
+    left: 0.85rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--bb-muted);
+    pointer-events: none;
+}
+
+.ce-input--prefixed {
+    padding-left: 1.8rem;
+}
+
+/* Slug */
+.ce-slug-wrap {
+    display: flex;
+    align-items: stretch;
+}
+
+.ce-slug-prefix {
+    padding: 0.62rem 0.75rem;
+    background: var(--bb-cream);
+    border: 1px solid var(--bb-border);
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    font-size: 0.82rem;
+    color: var(--bb-muted);
+    white-space: nowrap;
+}
+
+.ce-slug-input {
+    border-radius: 0 8px 8px 0;
+}
+
+/* ── Upload zone ── */
+.ce-upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 1.5rem 1rem;
+    border-radius: 10px;
+    border: 2px dashed var(--bb-border);
+    background: var(--bb-cream);
+    color: var(--bb-muted);
+    cursor: pointer;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.ce-upload-zone:hover {
+    border-color: #b8a9e8;
+    background: #faf8ff;
+}
+
+.ce-upload-note {
+    font-size: 0.72rem;
+    font-weight: 400;
+    opacity: 0.7;
+}
+
+.ce-upload-input {
+    display: none;
+}
+
+/* ── Image queue ── */
+.ce-queue {
+    margin-top: 0;
+}
+
+.ce-queue-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+    margin-bottom: 0.6rem;
+}
+
+.ce-queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.ce-queue-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    background: var(--bb-cream);
+    border: 1px solid var(--bb-border);
+}
+
+.ce-queue-thumb {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: #e8e4f0;
+    color: #9b84d4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ce-queue-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ce-queue-name {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--bb-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ce-queue-size {
+    font-size: 0.7rem;
+    color: var(--bb-muted);
+}
+
+.ce-queue-remove {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    color: var(--bb-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+}
+
+.ce-queue-remove:hover {
+    background: var(--bb-red-bg);
+    color: var(--bb-red);
+}
+
+/* ── Existing images ── */
+.ce-existing-imgs {}
+
+.ce-img-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 640px) {
+    .ce-img-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.ce-img-card {
+    position: relative;
+    border-radius: 8px;
+    border: 1px solid var(--bb-border);
+    overflow: hidden;
+    aspect-ratio: 1;
+    background: var(--bb-cream);
+    transition: opacity 0.15s;
+}
+
+.ce-img-card--disabled {
+    opacity: 0.5;
+}
+
+.ce-img-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.ce-img-disabled-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(224, 92, 110, 0.85);
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 5px;
+}
+
+.ce-img-actions {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    background: rgba(26, 26, 46, 0.55);
+    border-top-left-radius: 6px;
+}
+
+.ce-img-btn {
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    transition: opacity 0.15s;
+}
+
+.ce-img-btn:hover {
+    opacity: 0.8;
+}
+
+.ce-img-btn--hide {
+    background: #e0963a;
+}
+
+.ce-img-btn--show {
+    background: var(--bb-green);
+}
+
+.ce-img-btn--del {
+    background: var(--bb-red);
+}
+
+/* ── Status buttons ── */
+.ce-status-btns {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.ce-status-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--bb-border);
+    background: var(--bb-cream);
+    color: var(--bb-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.ce-status-btn--on {
+    background: var(--bb-green-bg);
+    border-color: var(--bb-green);
+    color: #2a7a50;
+}
+
+.ce-status-btn--off {
+    background: var(--bb-red-bg);
+    border-color: var(--bb-red);
+    color: var(--bb-red);
+}
+
+.ce-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.ce-status-dot--green {
+    background: var(--bb-green);
+}
+
+.ce-status-dot--grey {
+    background: #b0b0c0;
+}
+
+/* ── Submit button ── */
+.ce-submit-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.72rem 1.25rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--bb-navy);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.15s;
+}
+
+.ce-submit-btn:hover:not(:disabled) {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.ce-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ce-unsaved-inline {
+    text-align: center;
+    font-size: 0.75rem;
+    color: #8a6000;
+    font-weight: 500;
+}
+
+/* ── Check list ── */
+.ce-check-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.ce-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--bb-text);
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.ce-check-item:hover {
+    background: var(--bb-cream);
+}
+
+.ce-check-item--active {
+    background: #faf8ff;
+    border-color: #c9b8f0;
+}
+
+.ce-check-item--courier {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+}
+
+.ce-checkbox {
+    accent-color: #9b84d4;
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.ce-courier-info {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.ce-courier-name {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.ce-courier-cost {
+    font-size: 0.82rem;
+    color: var(--bb-muted);
+    font-weight: 600;
+}
+
+.ce-courier-per-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-left: 1.75rem;
+}
+
+/* ── Fragrance ── */
+.ce-total-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+}
+
+.ce-total-bar--ok {
+    background: var(--bb-green-bg);
+    color: #2a7a50;
+    border: 1px solid #b8dfc8;
+}
+
+.ce-total-bar--over {
+    background: var(--bb-red-bg);
+    color: var(--bb-red);
+    border: 1px solid #f5b8c0;
+}
+
+.ce-materials {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ce-material-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ce-material-select {
+    flex: 1;
+}
+
+.ce-pct-wrap {
+    position: relative;
+    width: 80px;
+    flex-shrink: 0;
+}
+
+.ce-pct-input {
+    padding-right: 1.5rem;
+    width: 100%;
+}
+
+.ce-pct-symbol {
+    position: absolute;
+    right: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    color: var(--bb-muted);
+    pointer-events: none;
+}
+
+.ce-material-del {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--bb-border);
+    background: none;
+    color: var(--bb-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.ce-material-del:hover {
+    background: var(--bb-red-bg);
+    color: var(--bb-red);
+    border-color: var(--bb-red);
+}
+
+.ce-empty-note {
+    font-size: 0.8rem;
+    color: var(--bb-muted);
+    font-style: italic;
+}
+
+.ce-add-oil-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.55rem;
+    border-radius: 8px;
+    border: 1.5px dashed var(--bb-border);
+    background: none;
+    color: var(--bb-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.ce-add-oil-btn:hover:not(:disabled) {
+    border-color: #b8a9e8;
+    color: #9b84d4;
+    background: #faf8ff;
+}
+
+.ce-add-oil-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── Spinner ── */
+.ce-spinner {
+    width: 15px;
+    height: 15px;
+    animation: ce-spin 0.8s linear infinite;
+}
+
+@keyframes ce-spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+</style>
