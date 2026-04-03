@@ -2,12 +2,14 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\URL;
 
 class BroadcastMail extends Mailable implements ShouldQueue
 {
@@ -17,12 +19,20 @@ class BroadcastMail extends Mailable implements ShouldQueue
     public string $emailSubject;
     public string $emailBody;
     public string $recipientName;
+    public string $unsubscribeUrl;
 
-    public function __construct(string $subject, string $body, string $recipientName)
+    public function __construct(string $subject, string $body, User $recipient)
     {
         $this->emailSubject   = $subject;
         $this->emailBody      = $body;
-        $this->recipientName  = $recipientName;
+        $this->recipientName  = $recipient->name;
+
+        // Signed URL — valid for 30 days, requires no login
+        $this->unsubscribeUrl = URL::signedRoute(
+            'unsubscribe.show',
+            ['user' => $recipient->id],
+            now()->addDays(30)
+        );
     }
 
     public function envelope(): Envelope
@@ -41,9 +51,10 @@ class BroadcastMail extends Mailable implements ShouldQueue
         return new Content(
             view: 'mail.broadcast',
             with: [
-                'subject'       => $this->emailSubject,
-                'body'          => $this->emailBody,
-                'recipientName' => $this->recipientName,
+                'subject'        => $this->emailSubject,
+                'body'           => $this->emailBody,
+                'recipientName'  => $this->recipientName,
+                'unsubscribeUrl' => $this->unsubscribeUrl,
             ],
         );
     }

@@ -39,6 +39,13 @@ const saveDetails = () => {
 };
 
 // ── Password ───────────────────────────────────────────────────────────────
+const marketingForm = useForm({
+    marketing_opt_in: props.user.marketing_opt_in ?? false,
+});
+const updateMarketing = () => {
+    marketingForm.post(route('account.marketing'), { preserveScroll: true });
+};
+
 const passwordForm = useForm({ current_password: '', password: '', password_confirmation: '' });
 const updatePassword = () => {
     passwordForm.put(route('account.password.update'), {
@@ -287,6 +294,42 @@ const formatAddress = (a: Address): string[] =>
                     </div>
                 </section>
 
+                <!-- ── Marketing preferences ── -->
+                <section class="as-card">
+                    <h2 class="as-card-title">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                            <polyline points="22,6 12,13 2,6" />
+                        </svg>
+                        Marketing Preferences
+                    </h2>
+                    <div class="as-marketing">
+                        <div class="as-marketing-info">
+                            <p class="as-marketing-label">Marketing emails</p>
+                            <p class="as-marketing-sub">
+                                {{ marketingForm.marketing_opt_in
+                                    ? 'You are opted in — you will receive updates and exclusive offers.'
+                                    : 'You are opted out — you will not receive marketing emails.' }}
+                            </p>
+                        </div>
+                        <label class="as-toggle" :class="{ 'as-toggle--on': marketingForm.marketing_opt_in }">
+                            <input type="checkbox" v-model="marketingForm.marketing_opt_in" @change="updateMarketing"
+                                class="as-toggle-input" />
+                            <span class="as-toggle-track">
+                                <span class="as-toggle-thumb"></span>
+                            </span>
+                            <span class="as-toggle-label">
+                                {{ marketingForm.marketing_opt_in ? 'Opted in' : 'Opted out' }}
+                            </span>
+                        </label>
+                    </div>
+                    <p class="as-marketing-note">
+                        You will always receive order confirmations and dispatch notifications regardless of this
+                        setting.
+                    </p>
+                </section>
+
             </div>
         </div>
     </main>
@@ -379,13 +422,12 @@ const formatAddress = (a: Address): string[] =>
                                         class="field-optional">(optional)</span></label>
                                 <input id="m-county" type="text" v-model="addressForm.county" class="field-input" />
                             </div>
-                        </div>
-
-                        <div class="field">
-                            <label for="m-postcode" class="field-label">Postcode</label>
-                            <input id="m-postcode" type="text" v-model="addressForm.postcode" class="field-input" />
-                            <p v-if="addressForm.errors.postcode" class="field-error">{{ addressForm.errors.postcode
-                            }}</p>
+                            <div class="field">
+                                <label for="m-postcode" class="field-label">Postcode</label>
+                                <input id="m-postcode" type="text" v-model="addressForm.postcode" class="field-input" />
+                                <p v-if="addressForm.errors.postcode" class="field-error">{{ addressForm.errors.postcode
+                                    }}</p>
+                            </div>
                         </div>
 
                         <div class="field">
@@ -1098,5 +1140,195 @@ const formatAddress = (a: Address): string[] =>
 
 .mt-4 {
     margin-top: 1rem;
+}
+
+/* ── Marketing preferences ── */
+.as-marketing {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.85rem;
+}
+
+.as-marketing-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.as-marketing-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2d1a1a;
+    margin-bottom: 0.15rem;
+}
+
+.as-marketing-sub {
+    font-size: 0.82rem;
+    color: #6b4f4f;
+    font-style: italic;
+}
+
+.as-marketing-note {
+    font-size: 0.78rem;
+    color: #9a7070;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+/* Toggle switch */
+.as-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.as-toggle-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.as-toggle-track {
+    width: 44px;
+    height: 24px;
+    border-radius: 999px;
+    background: #e5c9c7;
+    border: 1px solid #c9a4a4;
+    position: relative;
+    transition: background 0.25s, border-color 0.25s;
+    flex-shrink: 0;
+}
+
+.as-toggle--on .as-toggle-track {
+    background: linear-gradient(135deg, #c47078, #a85058);
+    border-color: #a85058;
+}
+
+.as-toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    transition: transform 0.25s;
+}
+
+.as-toggle--on .as-toggle-thumb {
+    transform: translateX(20px);
+}
+
+.as-toggle-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #6b4f4f;
+    white-space: nowrap;
+}
+
+.as-toggle--on .as-toggle-label {
+    color: #8c4a50;
+}
+
+/* ── Marketing preferences ── */
+.as-marketing {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.85rem;
+}
+
+.as-marketing-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.as-marketing-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #2d1a1a;
+    margin-bottom: 0.15rem;
+}
+
+.as-marketing-sub {
+    font-size: 0.82rem;
+    color: #6b4f4f;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.as-marketing-note {
+    font-size: 0.78rem;
+    color: #9a7070;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+.as-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.as-toggle-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.as-toggle-track {
+    width: 44px;
+    height: 24px;
+    border-radius: 999px;
+    background: #e5c9c7;
+    border: 1px solid #c9a4a4;
+    position: relative;
+    transition: background 0.25s, border-color 0.25s;
+    flex-shrink: 0;
+}
+
+.as-toggle--on .as-toggle-track {
+    background: linear-gradient(135deg, #c47078, #a85058);
+    border-color: #a85058;
+}
+
+.as-toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    transition: transform 0.25s;
+}
+
+.as-toggle--on .as-toggle-thumb {
+    transform: translateX(20px);
+}
+
+.as-toggle-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #6b4f4f;
+    white-space: nowrap;
+}
+
+.as-toggle--on .as-toggle-label {
+    color: #8c4a50;
 }
 </style>

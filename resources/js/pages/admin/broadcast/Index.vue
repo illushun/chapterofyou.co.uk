@@ -16,7 +16,7 @@ interface BroadcastsPaginated {
     last_page: number;
 }
 
-defineProps<{ broadcasts: BroadcastsPaginated }>();
+defineProps<{ broadcasts: BroadcastsPaginated; totalOptedIn: number }>();
 
 const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString('en-GB', {
@@ -53,6 +53,21 @@ const paginate = (url: string | null) => {
             </svg>
             Compose
             </Link>
+        </div>
+
+        <!-- Opted-in stat bar -->
+        <div class="be-stat-bar">
+            <div class="be-stat">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <span><strong>{{ totalOptedIn.toLocaleString() }}</strong> opted-in customers in your mailing
+                    list</span>
+            </div>
         </div>
 
         <!-- History table -->
@@ -190,6 +205,36 @@ const paginate = (url: string | null) => {
 
 .be-compose-btn:hover {
     opacity: 0.85;
+}
+
+/* ── Stat bar ── */
+.be-stat-bar {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+    border-radius: 10px;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.be-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--copy-light);
+}
+
+.be-stat svg {
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.be-stat strong {
+    color: var(--copy);
 }
 
 /* ── Table ── */

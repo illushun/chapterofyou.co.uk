@@ -17,9 +17,9 @@ class AdminBroadcastEmailController extends Controller
      * Audience options and their labels — single source of truth.
      */
     public const AUDIENCES = [
-        'all'             => 'All customers (non-admin)',
-        'ordered_last_90' => 'Ordered in the last 90 days',
-        'never_ordered'   => 'Registered but never ordered',
+        'all'             => 'All opted-in customers',
+        'ordered_last_90' => 'Opted-in, ordered in last 90 days',
+        'never_ordered'   => 'Opted-in, never ordered',
     ];
 
     /**
@@ -31,8 +31,11 @@ class AdminBroadcastEmailController extends Controller
             ->latest('sent_at')
             ->paginate(20);
 
+        $totalOptedIn = User::where('is_admin', false)->where('marketing_opt_in', true)->count();
+
         return Inertia::render('admin/broadcast/Index', [
-            'broadcasts' => $broadcasts,
+            'broadcasts'    => $broadcasts,
+            'totalOptedIn'  => $totalOptedIn,
         ]);
     }
 
@@ -73,9 +76,9 @@ class AdminBroadcastEmailController extends Controller
         foreach ($recipients as $user) {
             Mail::to($user->email)->queue(
                 new BroadcastMail(
-                    subject:       $validated['subject'],
-                    body:          $validated['body'],
-                    recipientName: $user->name,
+                    subject:   $validated['subject'],
+                    body:      $validated['body'],
+                    recipient: $user,
                 )
             );
         }
@@ -116,7 +119,10 @@ class AdminBroadcastEmailController extends Controller
      */
     private function resolveRecipients(string $audience)
     {
-        $query = User::where('is_admin', false)->select('id', 'name', 'email');
+        // Always restrict to opted-in, non-admin users
+        $query = User::where('is_admin', false)
+            ->where('marketing_opt_in', true)
+            ->select('id', 'name', 'email');
 
         return match ($audience) {
             'ordered_last_90' => $query->whereHas('orders', function ($q) {

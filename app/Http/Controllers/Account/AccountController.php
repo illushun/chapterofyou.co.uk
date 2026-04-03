@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-
 use App\Models\Address;
 use App\Models\User;
 use App\Models\Address\Lookup as AddressLookup;
@@ -18,16 +17,14 @@ class AccountController extends Controller
 {
     /**
      * Show the main account settings view.
-     * Fetches user and associated addresses.
-     * @return \Inertia\Response
      */
     public function index()
     {
-        $user = Auth::user();
+        $user      = Auth::user();
         $addresses = $user->addresses()->orderByDesc('is_default')->get();
 
         return inertia('account/View', [
-            'user' => $user->only('name', 'email'),
+            'user'      => $user->only('name', 'email', 'marketing_opt_in'),
             'addresses' => $addresses,
         ]);
     }
@@ -38,7 +35,7 @@ class AccountController extends Controller
     public function updateProfile(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name'  => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore(Auth::id())],
         ]);
 
@@ -46,7 +43,7 @@ class AccountController extends Controller
         $user->fill($validated);
 
         if ($user->isDirty('email')) {
-            $user->email_verified_at = null; // Forces re-verification
+            $user->email_verified_at = null;
         }
         $user->save();
 
@@ -60,16 +57,10 @@ class AccountController extends Controller
     {
         $validated = $request->validate([
             'current_password' => ['required', 'string', 'current_password'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password'         => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $user = Auth::user();
-
-        if (!Hash::check($validated['current_password'], $user->password)) {
-            throw ValidationException::withMessages([
-                'current_password' => 'The provided password does not match your current password.',
-            ]);
-        }
         $user->password = Hash::make($validated['password']);
         $user->save();
 
@@ -86,61 +77,43 @@ class AccountController extends Controller
         ]);
         $query = $validated['query'];
 
-        // Check database cache
         $cachedLookup = AddressLookup::where('query', $query)->first();
         if ($cachedLookup) {
-            // Return cached data
-            return response()->json([
-                'addresses' => json_decode($cachedLookup->data, true)
-            ]);
+            return response()->json(['addresses' => json_decode($cachedLookup->data, true)]);
         }
 
-        // Cache miss, call API
         $apiKey = env('GETADDRESS_IO_API_KEY');
         if (!$apiKey) {
-            // Placeholder error if API key is missing
-            return response()->json([
-                'message' => 'Address API Key is not configured.',
-                'addresses' => []
-            ], 503);
+            return response()->json(['message' => 'Address API Key is not configured.', 'addresses' => []], 503);
         }
 
         $response = Http::get("https://api.getaddress.io/autocomplete/{$query}", [
             'api-key' => $apiKey,
-            'all' => 'true',
+            'all'     => 'true',
         ]);
 
         if ($response->successful()) {
-            $data = $response->json();
+            $data        = $response->json();
             $addressList = [];
 
-            // Transform the raw results into the required format
             if (isset($data['suggestions']) && is_array($data['suggestions'])) {
                 foreach ($data['suggestions'] as $suggestion) {
                     $addressList[] = [
-                        'line_1' => $suggestion['address'] ?? 'Address Line 1',
-                        'line_2' => null,
-                        'city' => $suggestion['locality'] ?? 'City',
-                        'county' => null,
+                        'line_1'   => $suggestion['address'] ?? 'Address Line 1',
+                        'line_2'   => null,
+                        'city'     => $suggestion['locality'] ?? 'City',
+                        'county'   => null,
                         'postcode' => $suggestion['postcode'] ?? 'POSTCODE',
-                        'country' => 'United Kingdom',
+                        'country'  => 'United Kingdom',
                     ];
                 }
             }
 
-            // Store the result for future use
-            AddressLookup::create([
-                'query' => $query,
-                'data' => json_encode($addressList),
-            ]);
+            AddressLookup::create(['query' => $query, 'data' => json_encode($addressList)]);
             return response()->json(['addresses' => $addressList]);
         }
 
-        // Handle API failure
-        return response()->json([
-            'message' => 'Failed to connect to address lookup service.',
-            'addresses' => []
-        ], 500);
+        return response()->json(['message' => 'Failed to connect to address lookup service.', 'addresses' => []], 500);
     }
 
     /**
@@ -149,22 +122,21 @@ class AccountController extends Controller
     public function storeAddress(Request $request)
     {
         $validated = $request->validate([
-            'type' => ['required', Rule::in(['shipping', 'billing'])],
+            'type'     => ['required', Rule::in(['shipping', 'billing'])],
             'is_default' => ['boolean'],
-            'line_1' => ['required', 'string', 'max:255'],
-            'line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:255'],
-            'county' => ['nullable', 'string', 'max:255'],
+            'line_1'   => ['required', 'string', 'max:255'],
+            'line_2'   => ['nullable', 'string', 'max:255'],
+            'city'     => ['required', 'string', 'max:255'],
+            'county'   => ['nullable', 'string', 'max:255'],
             'postcode' => ['required', 'string', 'max:20'],
-            'country' => ['required', 'string', 'max:255'],
+            'country'  => ['required', 'string', 'max:255'],
         ]);
 
         if ($validated['is_default'] ?? false) {
-            // Set all other addresses of this user to not default
             Auth::user()->addresses()->update(['is_default' => false]);
         }
 
-        $address = Auth::user()->addresses()->create($validated);
+        Auth::user()->addresses()->create($validated);
         return back()->with('success', 'Address added successfully.');
     }
 
@@ -178,18 +150,17 @@ class AccountController extends Controller
         }
 
         $validated = $request->validate([
-            'type' => ['required', Rule::in(['shipping', 'billing'])],
+            'type'     => ['required', Rule::in(['shipping', 'billing'])],
             'is_default' => ['boolean'],
-            'line_1' => ['required', 'string', 'max:255'],
-            'line_2' => ['nullable', 'string', 'max:255'],
-            'city' => ['required', 'string', 'max:255'],
-            'county' => ['nullable', 'string', 'max:255'],
+            'line_1'   => ['required', 'string', 'max:255'],
+            'line_2'   => ['nullable', 'string', 'max:255'],
+            'city'     => ['required', 'string', 'max:255'],
+            'county'   => ['nullable', 'string', 'max:255'],
             'postcode' => ['required', 'string', 'max:20'],
-            'country' => ['required', 'string', 'max:255'],
+            'country'  => ['required', 'string', 'max:255'],
         ]);
 
         if ($validated['is_default'] ?? false) {
-            // Set all other addresses of this user to not default
             Auth::user()->addresses()->where('id', '!=', $address->id)->update(['is_default' => false]);
         }
         $address->update($validated);
@@ -206,8 +177,7 @@ class AccountController extends Controller
         }
 
         if ($address->is_default && Auth::user()->addresses()->count() > 1) {
-             // Find another address to set as default before deleting
-             Auth::user()->addresses()->where('id', '!=', $address->id)->limit(1)->update(['is_default' => true]);
+            Auth::user()->addresses()->where('id', '!=', $address->id)->limit(1)->update(['is_default' => true]);
         }
 
         $address->delete();

@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminWishlistController;
 use App\Http\Controllers\Admin\Label\OilController;
 use App\Http\Controllers\Cart\VoucherController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MarketingOptInController;
 use App\Http\Controllers\Order\ConfirmationController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\Product\ProductController;
@@ -48,6 +49,8 @@ Route::prefix('cart')->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/account', [AccountController::class, 'index'])->name('account.index');
+
+    Route::post('/account/marketing', [MarketingOptInController::class, 'update'])->name('account.marketing');
 
     Route::get('/account/orders', [OrderController::class, 'index'])->name('account.orders.index');
     Route::get('/account/orders/{order}', [OrderController::class, 'show'])->name('account.order.view');
@@ -159,6 +162,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
+
+// Signed unsubscribe routes — no auth required
+Route::get('/unsubscribe/{user}', [MarketingOptInController::class, 'unsubscribeShow'])->name('unsubscribe.show');
+Route::post('/unsubscribe/confirm/{user}', [MarketingOptInController::class, 'unsubscribeConfirm'])->name('unsubscribe.confirm');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

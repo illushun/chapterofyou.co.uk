@@ -67,6 +67,17 @@ import NavBar from '@/components/NavBar.vue';
                         <InputError :message="errors.password_confirmation" class="field-error" />
                     </div>
 
+                    <!-- Marketing opt-in -->
+                    <label class="rp-optin">
+                        <input type="checkbox" name="marketing_opt_in" v-model="form.marketing_opt_in"
+                            class="rp-optin-check" />
+                        <span>
+                            I'd like to receive updates, news and exclusive offers from Chapter of You.
+                            <span class="rp-optin-note">(Optional — you can change this in your account at any
+                                time)</span>
+                        </span>
+                    </label>
+
                     <!-- Submit -->
                     <Button type="submit" tabindex="5" :disabled="processing" class="btn-rose btn-rose--full"
                         data-test="register-user-button">
@@ -215,6 +226,43 @@ import NavBar from '@/components/NavBar.vue';
 .field-error {
     font-size: 0.78rem;
     color: #b54040;
+}
+
+/* ── Opt-in ── */
+.rp-optin {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    color: #6b4f4f;
+    cursor: pointer;
+    line-height: 1.5;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid #e5c9c7;
+    border-radius: 10px;
+    background: #fdf4f3;
+    transition: background 0.15s;
+}
+
+.rp-optin:hover {
+    background: #faeaea;
+}
+
+.rp-optin-check {
+    width: 15px;
+    height: 15px;
+    accent-color: #8c4a50;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.rp-optin-note {
+    display: block;
+    font-size: 0.75rem;
+    color: #9a7070;
+    font-style: italic;
+    margin-top: 0.15rem;
 }
 
 /* ── Button ── */
