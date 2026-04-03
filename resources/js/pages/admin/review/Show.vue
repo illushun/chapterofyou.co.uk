@@ -121,8 +121,8 @@ const hasReply = computed(() => !!props.review.admin_reply?.trim());
                     <p class="rs-reply-help">
                         Your reply will appear publicly beneath this review on the product page, attributed as "Chapter
                         of You".
-                        {{ review.status !== 'approved' ? ' Note: the review must be approved for your reply to be
-                        visible.' : '' }}
+                        {{ review.status !== 'approved' ?
+                            ' Note: the review must be approved for your reply to be visible.' : '' }}
                     </p>
 
                     <!-- Existing reply preview -->
