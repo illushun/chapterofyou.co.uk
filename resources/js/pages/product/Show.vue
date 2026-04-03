@@ -14,6 +14,7 @@ interface ProductReview {
     id: number; product_id: number; user_id: number;
     message: string; rating: number; review_images: string[];
     created_at: string; user: { id: number; name: string };
+    admin_reply: string | null;
 }
 interface ProductVariation {
     id: number; mpn: string; name: string;
@@ -411,6 +412,17 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                         <div v-if="review.review_images?.length" class="pd-review-imgs">
                             <img v-for="(img, idx) in review.review_images" :key="idx" :src="img"
                                 :alt="`Review photo ${idx + 1}`" class="pd-review-img" @click="openImageModal" />
+                        </div>
+                        <!-- Admin reply -->
+                        <div v-if="review.admin_reply" class="pd-admin-reply">
+                            <div class="pd-admin-reply-head">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                </svg>
+                                Chapter of You replied
+                            </div>
+                            <p class="pd-admin-reply-body">{{ review.admin_reply }}</p>
                         </div>
                     </div>
                 </div>
@@ -1089,6 +1101,34 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     color: #6b4f4f;
     font-style: italic;
     margin-top: 1rem;
+}
+
+/* ── Admin reply ── */
+.pd-admin-reply {
+    margin-top: 0.85rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #fdf4f3, #fff8f7);
+    border: 1px solid #e5c9c7;
+    border-left: 3px solid #8c4a50;
+}
+
+.pd-admin-reply-head {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #8c4a50;
+    margin-bottom: 0.45rem;
+}
+
+.pd-admin-reply-body {
+    font-size: 0.88rem;
+    color: #2d1a1a;
+    line-height: 1.6;
 }
 
 /* ── Related products ── */

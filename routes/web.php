@@ -102,6 +102,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
     Route::get('reviews/{review}', [AdminReviewController::class, 'show'])->name('reviews.show');
     Route::put('reviews/update/{review}', [AdminReviewController::class, 'update'])->name('reviews.update');
+    Route::post('reviews/reply/{review}', [AdminReviewController::class, 'reply'])->name('reviews.reply');
 
     Route::get('orders', [AdminOrderController::class, 'index'])->name('orders.index');
     Route::get('orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');

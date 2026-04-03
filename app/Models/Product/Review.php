@@ -26,6 +26,7 @@ class Review extends Model
         'rating',
         'status',
         'review_images',
+        'admin_reply',
     ];
 
     /**
