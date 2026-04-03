@@ -108,7 +108,7 @@ const tabs = [
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="review in reviews.data" :key="review.id" class="ri-row">
+                    <tr v-for="review in reviews.data" :key="review.id" class="ri-row" style="background-color: white;">
                         <td class="ri-td-id">#{{ review.id }}</td>
                         <td>
                             <template v-if="review.user">
