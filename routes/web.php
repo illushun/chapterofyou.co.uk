@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBatchSheetController;
+use App\Http\Controllers\Admin\AdminBroadcastEmailController;
 use App\Http\Controllers\Admin\AdminCourierController;
 use App\Http\Controllers\Admin\AdminMessageController;
 use App\Http\Controllers\Admin\AdminReviewController;
@@ -150,6 +151,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('/batch-sheets/{batch_sheet}', [AdminBatchSheetController::class, 'update']) ->name('batch-sheets.update');
     Route::delete('/batch-sheets/{batch_sheet}', [AdminBatchSheetController::class, 'destroy'])->name('batch-sheets.destroy');
     Route::get('/batch-sheets/{batch_sheet}/pdf', [AdminBatchSheetController::class, 'pdf'])    ->name('batch-sheets.pdf');
+
+    Route::get('broadcasts', [AdminBroadcastEmailController::class, 'index'])->name('broadcasts.index');
+    Route::get('broadcasts/create', [AdminBroadcastEmailController::class, 'create'])->name('broadcasts.create');
+    Route::post('broadcasts', [AdminBroadcastEmailController::class, 'store'])->name('broadcasts.store');
+    Route::get('broadcasts/{broadcast}', [AdminBroadcastEmailController::class, 'show'])->name('broadcasts.show');
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');

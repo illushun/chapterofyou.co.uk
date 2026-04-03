@@ -38,6 +38,7 @@ const navLinks = [
     { name: 'Oils', route: 'admin.oils.index', icon: ClpLabelsIcon },
     { name: 'CLP Labels', route: 'admin.clp-labels.index', icon: ClpLabelsIcon },
     { name: 'Batch Sheets', route: 'admin.batch-sheets.index', icon: ClpLabelsIcon },
+    { name: 'Broadcast', route: 'admin.broadcasts.index', icon: ClpLabelsIcon },
     { name: 'View Website', route: 'home', icon: ViewWebsiteIcon, external: true },
 ];
 
@@ -105,7 +106,7 @@ const getTitle = computed(() => {
 
                     <div class="flex items-center gap-3">
                         <span class="text-sm font-medium text-copy-light hidden sm:inline-block">Welcome, {{ user?.name
-                        }}</span>
+                            }}</span>
                         <Link :href="route('logout')" method="post" as="button"
                             class="relative rounded-lg -m-0.5 px-3 py-1 text-sm font-medium text-error-content transition border-2 border-copy bg-error-light hover:bg-error-dark">
                         Logout

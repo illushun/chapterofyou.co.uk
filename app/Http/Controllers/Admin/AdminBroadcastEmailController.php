@@ -1,0 +1,132 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Mail\BroadcastMail;
+use App\Models\BroadcastEmail;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Inertia\Inertia;
+
+class AdminBroadcastEmailController extends Controller
+{
+    /**
+     * Audience options and their labels — single source of truth.
+     */
+    public const AUDIENCES = [
+        'all'             => 'All customers (non-admin)',
+        'ordered_last_90' => 'Ordered in the last 90 days',
+        'never_ordered'   => 'Registered but never ordered',
+    ];
+
+    /**
+     * Display broadcast history.
+     */
+    public function index()
+    {
+        $broadcasts = BroadcastEmail::with('sender:id,name')
+            ->latest('sent_at')
+            ->paginate(20);
+
+        return Inertia::render('admin/broadcast/Index', [
+            'broadcasts' => $broadcasts,
+        ]);
+    }
+
+    /**
+     * Show the compose form, including a live recipient count per audience.
+     */
+    public function create()
+    {
+        $audienceCounts = [];
+        foreach (array_keys(self::AUDIENCES) as $key) {
+            $audienceCounts[$key] = $this->resolveRecipients($key)->count();
+        }
+
+        return Inertia::render('admin/broadcast/Create', [
+            'audiences'      => self::AUDIENCES,
+            'audienceCounts' => $audienceCounts,
+        ]);
+    }
+
+    /**
+     * Send the broadcast and log it.
+     */
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'subject'  => ['required', 'string', 'max:255'],
+            'body'     => ['required', 'string', 'min:10'],
+            'audience' => ['required', 'in:' . implode(',', array_keys(self::AUDIENCES))],
+        ]);
+
+        $recipients = $this->resolveRecipients($validated['audience'])->get();
+
+        if ($recipients->isEmpty()) {
+            return back()->withErrors(['audience' => 'No recipients found for the selected audience.']);
+        }
+
+        // Queue one email per recipient
+        foreach ($recipients as $user) {
+            Mail::to($user->email)->queue(
+                new BroadcastMail(
+                    subject:       $validated['subject'],
+                    body:          $validated['body'],
+                    recipientName: $user->name,
+                )
+            );
+        }
+
+        // Log the broadcast
+        BroadcastEmail::create([
+            'sent_by'         => Auth::id(),
+            'subject'         => $validated['subject'],
+            'body'            => $validated['body'],
+            'audience'        => $validated['audience'],
+            'recipient_count' => $recipients->count(),
+            'sent_at'         => now(),
+        ]);
+
+        return redirect()
+            ->route('admin.broadcasts.index')
+            ->with('success', "Broadcast queued for {$recipients->count()} recipient(s).");
+    }
+
+    /**
+     * Show a previously sent broadcast (read-only).
+     */
+    public function show(BroadcastEmail $broadcast)
+    {
+        $broadcast->load('sender:id,name');
+
+        return Inertia::render('admin/broadcast/Show', [
+            'broadcast'     => $broadcast,
+            'audienceLabel' => self::AUDIENCES[$broadcast->audience] ?? $broadcast->audience,
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Build the base query for a given audience key (without ->get() so we can
+     * call ->count() and ->get() separately).
+     */
+    private function resolveRecipients(string $audience)
+    {
+        $query = User::where('is_admin', false)->select('id', 'name', 'email');
+
+        return match ($audience) {
+            'ordered_last_90' => $query->whereHas('orders', function ($q) {
+                $q->where('status', 'successful')
+                  ->where('created_at', '>=', now()->subDays(90));
+            }),
+            'never_ordered' => $query->whereDoesntHave('orders', function ($q) {
+                $q->where('status', 'successful');
+            }),
+            default => $query, // 'all' — every non-admin user
+        };
+    }
+}
