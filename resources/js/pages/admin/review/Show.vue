@@ -141,8 +141,7 @@ const hasReply = computed(() => !!props.review.admin_reply?.trim());
                     <div class="rs-reply-form">
                         <textarea v-model="replyForm.admin_reply" rows="4" class="rs-textarea"
                             :placeholder="hasReply ? 'Edit your reply...' : 'Write a reply to this customer...'"
-                            maxlength="1000">
-                        </textarea>
+                            maxlength="1000"></textarea>
                         <div class="rs-reply-actions">
                             <span class="rs-char-count">{{ replyForm.admin_reply.length }} / 1000</span>
                             <div class="rs-reply-btns">
