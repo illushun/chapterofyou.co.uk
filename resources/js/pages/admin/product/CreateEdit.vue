@@ -142,8 +142,8 @@ const fmtSize = (b: number) => {
                     <span>{{ isEditing ? 'Edit' : 'New' }}</span>
                 </div>
                 <h1 class="ce-title">{{ title }}</h1>
-                <p class="ce-sub">{{ isEditing ? 'Update details, inventory, images and SEO.' : 'Fill in the details for
-                    a new product.' }}</p>
+                <p class="ce-sub">{{ isEditing ? 'Update details, inventory, images and SEO.' :
+                    'Fill in the details for a new product.' }}</p>
             </div>
             <div v-if="form.isDirty" class="ce-unsaved">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
