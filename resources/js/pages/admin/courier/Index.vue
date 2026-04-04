@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
 
 // Interfaces for data structure
 interface Courier {
@@ -24,14 +23,9 @@ const props = defineProps<{
 }>();
 
 const confirmDelete = (courier: Courier) => {
-    console.info(`Attempting to delete courier: ${courier.name}`);
     if (confirm(`Are you sure you want to delete the courier: ${courier.name}? This action cannot be undone.`)) {
         router.delete(route('admin.couriers.destroy', courier.id), {
             preserveScroll: true,
-            onSuccess: () => {
-                console.log('Courier deleted successfully.');
-                // Placeholder for success notification
-            },
         });
     }
 };
@@ -42,25 +36,11 @@ const formatCurrency = (amount: number | string | null | undefined): string => {
 };
 
 const formatDate = (dateString: string): string => {
-    // Standard format for cards and tables
     return new Date(dateString).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
     });
-};
-
-const getStatusClasses = (status: Courier['status']) => {
-    switch (status) {
-        case 'enabled':
-            return 'bg-green-500/20 text-green-700 border border-green-700';
-        case 'disabled':
-            return 'bg-red-500/20 text-error border border-error-dark';
-        default:
-            return 'bg-gray-500/20 text-gray-700 border border-gray-700';
-    }
 };
 
 const paginate = (url: string | null) => {
@@ -72,140 +52,515 @@ const paginate = (url: string | null) => {
 
 <template>
     <AdminLayout>
+        <component :is="'link'"
+            href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap"
+            rel="stylesheet" />
 
         <Head title="Manage Couriers" />
 
-        <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">Couriers (Recent)</h2>
-            <Link :href="route('admin.couriers.create')"
-                class="relative rounded-lg -m-0.5 px-4 py-2 text-sm font-bold text-primary-content transition border-2 border-copy bg-primary hover:bg-primary-dark shadow-md">
-            + Add New Courier
-            </Link>
-        </div>
+        <div class="ci-wrap">
 
-        <div v-if="couriers.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
-
-            <!--
-                DESKTOP TABLE VIEW
-                (Hidden below 'md' breakpoint, uses full table structure)
-            -->
-            <div class="hidden md:block relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
-                <table class="min-w-full text-sm divide-y divide-copy-light/50">
-                    <thead>
-                        <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
-                            <th class="px-4 py-3">#</th>
-                            <th class="px-4 py-3">Name</th>
-                            <th class="px-4 py-3">Type</th>
-                            <th class="px-4 py-3">Cost</th>
-                            <th class="px-4 py-3">Status</th>
-                            <th class="px-4 py-3">Date</th>
-                            <th class="px-4 py-3 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-copy-light/50">
-                        <tr v-for="courier in couriers.data" :key="courier.id"
-                            class="hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-semibold">{{ courier.id }}</td>
-                            <td class="px-4 py-3">
-                                <span class="text-copy-light">{{ courier.name }}</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span
-                                    :class="['px-3 py-1 rounded-full text-xs font-semibold uppercase', getStatusClasses(courier.type)]">
-                                    {{ courier.type }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 font-bold text-primary-content">{{ formatCurrency(courier.cost) }}</td>
-                            <td class="px-4 py-3">
-                                <span
-                                    :class="['px-3 py-1 rounded-full text-xs font-semibold uppercase', getStatusClasses(courier.status)]">
-                                    {{ courier.status }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">{{ formatDate(courier.created_at) }}</td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <Link :href="route('admin.couriers.edit', courier.id)"
-                                    class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                Edit
-                                </Link>
-                                <button @click="confirmDelete(courier)"
-                                    class="text-error-content hover:text-error transition font-semibold cursor-pointer">
-                                    Delete
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Page Header -->
+            <div class="ci-header">
+                <div>
+                    <h1 class="ci-title">Couriers</h1>
+                    <p class="ci-sub">Manage shipping providers and their rates. {{ couriers.data.length }} couriers
+                        shown.</p>
+                </div>
+                <Link :href="route('admin.couriers.create')" class="ci-btn-primary">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                Add Courier
+                </Link>
             </div>
 
-            <!--
-                MOBILE CARD VIEW
-                (Visible below 'md' breakpoint, stacked layout for small screens)
-            -->
-            <div class="md:hidden divide-y divide-copy-light/50">
-                <div v-for="courier in couriers.data" :key="courier.id"
-                    class="p-4 bg-foreground hover:bg-secondary-light transition">
+            <!-- Table (desktop) -->
+            <div v-if="couriers.data.length">
+                <div class="ci-table-wrap">
+                    <table class="ci-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Cost</th>
+                                <th>Status</th>
+                                <th>Added</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="courier in couriers.data" :key="courier.id">
+                                <td class="ci-td-id">{{ courier.id }}</td>
+                                <td class="ci-td-name">{{ courier.name }}</td>
+                                <td>
+                                    <span class="ci-badge ci-badge--type">{{ courier.type }}</span>
+                                </td>
+                                <td class="ci-td-cost">{{ formatCurrency(courier.cost) }}</td>
+                                <td>
+                                    <span
+                                        :class="['ci-badge', courier.status === 'enabled' ? 'ci-badge--on' : 'ci-badge--off']">
+                                        {{ courier.status === 'enabled' ? 'Active' : 'Inactive' }}
+                                    </span>
+                                </td>
+                                <td class="ci-td-date">{{ formatDate(courier.created_at) }}</td>
+                                <td class="ci-td-actions">
+                                    <Link :href="route('admin.couriers.edit', courier.id)"
+                                        class="ci-action-btn ci-action-btn--edit">
+                                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M9.5 1.5a1.414 1.414 0 0 1 2 2L4 11H1.5V8.5L9.5 1.5Z"
+                                            stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
+                                    </svg>
+                                    Edit
+                                    </Link>
+                                    <button @click="confirmDelete(courier)" class="ci-action-btn ci-action-btn--delete">
+                                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M2 3.5h9M5 3.5V2h3v1.5M5.5 6v3.5M7.5 6v3.5M3 3.5l.5 7h6l.5-7"
+                                                stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
+                                                stroke-linejoin="round" />
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-                    <!-- Order ID and Status -->
-                    <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
-                        <div>
-                            <Link :href="route('admin.couriers.edit', courier.id)"
-                                class="text-xl font-bold hover:underline">
-                            #{{ courier.id }}
-                            </Link>
-                        </div>
-                        <span
-                            :class="['mt-1 px-3 py-1 rounded-full text-xs font-semibold uppercase flex-shrink-0', getStatusClasses(courier.status)]">
-                            {{ courier.status }}
-                        </span>
-                    </div>
-
-                    <!-- Courier Type -->
-                    <div class="py-2 border-b border-copy-light/30">
-                        <div class="text-xs text-copy-light uppercase font-medium">Type</div>
-                        <div class="font-semibold text-copy">{{ courier.type }}</div>
-                    </div>
-
-                    <!-- Cost, and Actions -->
-                    <div class="flex justify-between items-end pt-3">
-                        <!-- Cost -->
-                        <div class="flex flex-col space-y-1">
+                <!-- Mobile Cards -->
+                <div class="ci-mobile-list">
+                    <div v-for="courier in couriers.data" :key="courier.id" class="ci-mobile-card">
+                        <div class="ci-mobile-card__header">
                             <div>
-                                <div class="text-xs text-copy-light uppercase font-medium">Cost</div>
-                                <div class="font-bold text-lg text-primary-content">{{ formatCurrency(courier.cost) }}
-                                </div>
+                                <span class="ci-mobile-card__id">#{{ courier.id }}</span>
+                                <span class="ci-mobile-card__name">{{ courier.name }}</span>
                             </div>
-                            <div class="text-xs text-copy-light italic">
-                                Created: {{ formatDate(courier.created_at) }}
+                            <span
+                                :class="['ci-badge', courier.status === 'enabled' ? 'ci-badge--on' : 'ci-badge--off']">
+                                {{ courier.status === 'enabled' ? 'Active' : 'Inactive' }}
+                            </span>
+                        </div>
+                        <div class="ci-mobile-card__body">
+                            <div class="ci-mobile-card__row">
+                                <span class="ci-mobile-card__label">Type</span>
+                                <span class="ci-badge ci-badge--type">{{ courier.type }}</span>
+                            </div>
+                            <div class="ci-mobile-card__row">
+                                <span class="ci-mobile-card__label">Cost</span>
+                                <span class="ci-mobile-card__value ci-mobile-card__value--bold">{{
+                                    formatCurrency(courier.cost) }}</span>
+                            </div>
+                            <div class="ci-mobile-card__row">
+                                <span class="ci-mobile-card__label">Added</span>
+                                <span class="ci-mobile-card__value">{{ formatDate(courier.created_at) }}</span>
                             </div>
                         </div>
-
-                        <!-- Actions -->
-                        <div class="flex-shrink-0">
+                        <div class="ci-mobile-card__footer">
                             <Link :href="route('admin.couriers.edit', courier.id)"
-                                class="px-4 py-2 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
-                            View
+                                class="ci-action-btn ci-action-btn--edit">
+                            Edit
                             </Link>
+                            <button @click="confirmDelete(courier)" class="ci-action-btn ci-action-btn--delete">
+                                Delete
+                            </button>
                         </div>
                     </div>
+                </div>
 
+                <!-- Pagination -->
+                <div v-if="couriers.last_page > 1" class="ci-pagination">
+                    <span class="ci-pagination__info">
+                        Page {{couriers.links.find(l => l.active)?.label}} of {{ couriers.last_page }}
+                    </span>
+                    <div class="ci-pagination__btns">
+                        <button v-for="link in couriers.links" :key="link.label" @click.prevent="paginate(link.url)"
+                            :disabled="!link.url" :class="['ci-page-btn', { 'ci-page-btn--active': link.active }]"
+                            v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')" />
+                    </div>
                 </div>
             </div>
-        </div>
-        <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-secondary-light/50">
-            <p class="text-xl font-semibold text-copy mb-2">No couriers found.</p>
-        </div>
 
-        <div v-if="couriers.last_page > 1" class="mt-6 flex justify-center">
-            <ol class="flex gap-2 text-sm font-medium">
-                <li v-for="link in couriers.links" :key="link.label">
-                    <button @click.prevent="paginate(link.url)" :disabled="!link.url"
-                        :class="{ 'px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold': true, 'bg-primary text-primary-content shadow-md': link.active, 'bg-foreground hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed': !link.active }"
-                        v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')"
-                        :aria-label="link.label">
-                    </button>
-                </li>
-            </ol>
+            <!-- Empty State -->
+            <div v-else class="ci-empty">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="6" y="12" width="28" height="20" rx="3" stroke="var(--bb-muted)" stroke-width="1.8" />
+                    <path d="M6 18h28M14 12V8a6 6 0 0 1 12 0v4" stroke="var(--bb-muted)" stroke-width="1.8"
+                        stroke-linecap="round" />
+                </svg>
+                <p class="ci-empty__title">No couriers found</p>
+                <p class="ci-empty__sub">Add your first courier to get started.</p>
+                <Link :href="route('admin.couriers.create')" class="ci-btn-primary">+ Add Courier</Link>
+            </div>
+
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.ci-wrap {
+    --bb-navy: #1a1a2e;
+    --bb-cream: #faf9f7;
+    --bb-surface: #ffffff;
+    --bb-border: #ece8e2;
+    --bb-text: #1a1a2e;
+    --bb-muted: #7a7a9a;
+    --bb-red: #e05c6e;
+    --bb-red-bg: #fdeef0;
+    --bb-green: #4caf7d;
+    --bb-green-bg: #eef7f2;
+    --bb-lav: #c9b8f0;
+    --bb-lav-d: #9b84d4;
+    --bb-peach: #f5d5b8;
+    --bb-peach-d: #c8820a;
+
+    font-family: 'DM Sans', sans-serif;
+    color: var(--bb-text);
+    padding: 0.25rem 0;
+}
+
+/* ── Header ── */
+.ci-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.ci-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.25rem;
+}
+
+.ci-sub {
+    font-size: 0.85rem;
+    color: var(--bb-muted);
+    margin: 0;
+}
+
+.ci-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--bb-navy);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1.1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.15s;
+    white-space: nowrap;
+}
+
+.ci-btn-primary:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+/* ── Table (desktop) ── */
+.ci-table-wrap {
+    background: var(--bb-surface);
+    border-radius: 14px;
+    border: 1px solid var(--bb-border);
+    box-shadow: 0 1px 6px rgba(26, 26, 46, 0.05);
+    overflow: hidden;
+}
+
+.ci-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.ci-table thead {
+    background: var(--bb-cream);
+    border-bottom: 1px solid var(--bb-border);
+}
+
+.ci-table th {
+    padding: 0.75rem 1rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+    text-align: left;
+}
+
+.ci-table tbody tr {
+    border-bottom: 1px solid var(--bb-border);
+    transition: background 0.12s;
+}
+
+.ci-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.ci-table tbody tr:hover {
+    background: #fdfcfb;
+}
+
+.ci-table td {
+    padding: 0.85rem 1rem;
+    vertical-align: middle;
+}
+
+.ci-td-id {
+    font-weight: 600;
+    color: var(--bb-muted);
+    font-size: 0.82rem;
+}
+
+.ci-td-name {
+    font-weight: 600;
+}
+
+.ci-td-cost {
+    font-weight: 700;
+}
+
+.ci-td-date {
+    color: var(--bb-muted);
+    font-size: 0.83rem;
+}
+
+.ci-td-actions {
+    text-align: right;
+    white-space: nowrap;
+}
+
+/* ── Badges ── */
+.ci-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.22rem 0.65rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.ci-badge--on {
+    background: var(--bb-green-bg);
+    color: #2a7a50;
+}
+
+.ci-badge--off {
+    background: var(--bb-red-bg);
+    color: var(--bb-red);
+}
+
+.ci-badge--type {
+    background: #f8f6ff;
+    color: var(--bb-lav-d);
+    border: 1px solid var(--bb-lav);
+}
+
+/* ── Action buttons ── */
+.ci-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.13s, color 0.13s, border-color 0.13s;
+    color: var(--bb-muted);
+    margin-left: 0.2rem;
+}
+
+.ci-action-btn--edit:hover {
+    background: var(--bb-cream);
+    border-color: var(--bb-border);
+    color: var(--bb-text);
+}
+
+.ci-action-btn--delete:hover {
+    background: var(--bb-red-bg);
+    border-color: var(--bb-red);
+    color: var(--bb-red);
+}
+
+/* ── Mobile cards ── */
+.ci-mobile-list {
+    display: none;
+    background: var(--bb-surface);
+    border-radius: 14px;
+    border: 1px solid var(--bb-border);
+    box-shadow: 0 1px 6px rgba(26, 26, 46, 0.05);
+    overflow: hidden;
+}
+
+.ci-mobile-card {
+    padding: 1rem;
+    border-bottom: 1px solid var(--bb-border);
+}
+
+.ci-mobile-card:last-child {
+    border-bottom: none;
+}
+
+.ci-mobile-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    gap: 0.5rem;
+}
+
+.ci-mobile-card__id {
+    font-size: 0.75rem;
+    color: var(--bb-muted);
+    font-weight: 600;
+    margin-right: 0.4rem;
+}
+
+.ci-mobile-card__name {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.ci-mobile-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-bottom: 0.85rem;
+}
+
+.ci-mobile-card__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.ci-mobile-card__label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+}
+
+.ci-mobile-card__value {
+    font-size: 0.88rem;
+    color: var(--bb-text);
+}
+
+.ci-mobile-card__value--bold {
+    font-weight: 700;
+}
+
+.ci-mobile-card__footer {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--bb-border);
+}
+
+/* ── Pagination ── */
+.ci-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.1rem 1.25rem;
+    background: var(--bb-surface);
+    border-radius: 14px;
+    border: 1px solid var(--bb-border);
+    margin-top: 1rem;
+    font-size: 0.83rem;
+    color: var(--bb-muted);
+    font-weight: 500;
+}
+
+.ci-pagination__btns {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.ci-page-btn {
+    min-width: 2.1rem;
+    height: 2.1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--bb-border);
+    background: var(--bb-surface);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.83rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    color: var(--bb-text);
+    padding: 0 0.5rem;
+}
+
+.ci-page-btn:hover:not(:disabled) {
+    background: var(--bb-cream);
+}
+
+.ci-page-btn--active {
+    background: var(--bb-navy);
+    color: #fff;
+    border-color: var(--bb-navy);
+    font-weight: 700;
+}
+
+.ci-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* ── Empty state ── */
+.ci-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 3.5rem 2rem;
+    background: var(--bb-surface);
+    border-radius: 14px;
+    border: 2px dashed var(--bb-border);
+    text-align: center;
+}
+
+.ci-empty__title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0.25rem 0 0;
+}
+
+.ci-empty__sub {
+    font-size: 0.85rem;
+    color: var(--bb-muted);
+    margin: 0 0 0.5rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 767px) {
+    .ci-table-wrap {
+        display: none;
+    }
+
+    .ci-mobile-list {
+        display: block;
+    }
+}
+</style>
