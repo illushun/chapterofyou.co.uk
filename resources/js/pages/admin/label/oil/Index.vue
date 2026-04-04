@@ -4,8 +4,6 @@ import { Head, router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface OilHazard {
     id: number;
     hazard_code: string;
@@ -14,7 +12,6 @@ interface OilHazard {
     signal_word: string | null;
     pictogram: string | null;
 }
-
 interface OilComponent {
     id: number;
     name: string;
@@ -23,7 +20,6 @@ interface OilComponent {
     concentration_max: number | null;
     clp_classification: string | null;
 }
-
 interface SdsDocument {
     id: number;
     version: string | null;
@@ -31,7 +27,6 @@ interface SdsDocument {
     parsed: boolean;
     file_path: string;
 }
-
 interface Oil {
     id: number;
     name: string;
@@ -42,99 +37,45 @@ interface Oil {
     components: OilComponent[];
 }
 
-// ─── Props ────────────────────────────────────────────────────────────────────
-
-function sdsDocs(oil: Oil): SdsDocument[] {
-    return oil.sds_documents ?? [];
-}
+function sdsDocs(oil: Oil): SdsDocument[] { return oil.sds_documents ?? []; }
 
 const props = defineProps<{ oils: Oil[] }>();
-
-// ─── State ────────────────────────────────────────────────────────────────────
 
 const searchQuery = ref('');
 const openOilId = ref<number | null>(null);
 const activeTab = ref<Record<number, 'hazards' | 'components' | 'sds'>>({});
 const showAddForm = ref(false);
 const editingHazard = ref<number | null>(null);
-
-// Add oil form
 const newOil = ref({ name: '', supplier: '', cas_primary: '' });
-
-// Hazard edit form (keyed by hazard id)
 const hazardEdits = ref<Record<number, OilHazard>>({});
-
-// Add hazard form (keyed by oil id)
 const showAddHazard = ref<number | null>(null);
-const newHazard = ref({
-    hazard_code: '',
-    hazard_class: '',
-    category: '',
-    signal_word: 'Warning',
-    pictogram: 'exclamation',
-});
-
-// Upload state per oil
+const newHazard = ref({ hazard_code: '', hazard_class: '', category: '', signal_word: 'Warning', pictogram: 'exclamation' });
 const uploadingFor = ref<number | null>(null);
 const fileInputRefs = ref<Record<number, HTMLInputElement | null>>({});
-
-// ─── Computed ─────────────────────────────────────────────────────────────────
 
 const filteredOils = computed(() => {
     const q = searchQuery.value.toLowerCase();
     if (!q) return props.oils;
-    return props.oils.filter(
-        o => o.name.toLowerCase().includes(q) || (o.supplier ?? '').toLowerCase().includes(q)
-    );
+    return props.oils.filter(o => o.name.toLowerCase().includes(q) || (o.supplier ?? '').toLowerCase().includes(q));
 });
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function initials(name: string): string {
-    return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
-}
-
-function tabFor(oilId: number): 'hazards' | 'components' | 'sds' {
-    return activeTab.value[oilId] ?? 'hazards';
-}
-
-function toggleOil(id: number) {
-    openOilId.value = openOilId.value === id ? null : id;
-}
-
-function setTab(oilId: number, tab: 'hazards' | 'components' | 'sds') {
-    activeTab.value[oilId] = tab;
-}
-
-function signalClass(word: string | null) {
-    if (word === 'Danger') return 'signal-danger';
-    if (word === 'Warning') return 'signal-warning';
-    return '';
-}
-
-function startEditHazard(hazard: OilHazard) {
-    editingHazard.value = hazard.id;
-    hazardEdits.value[hazard.id] = { ...hazard };
-}
-
-function cancelEditHazard() {
-    editingHazard.value = null;
-}
+function initials(name: string) { return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase(); }
+function tabFor(id: number): 'hazards' | 'components' | 'sds' { return activeTab.value[id] ?? 'hazards'; }
+function toggleOil(id: number) { openOilId.value = openOilId.value === id ? null : id; }
+function setTab(id: number, tab: 'hazards' | 'components' | 'sds') { activeTab.value[id] = tab; }
+function startEditHazard(h: OilHazard) { editingHazard.value = h.id; hazardEdits.value[h.id] = { ...h }; }
+function cancelEditHazard() { editingHazard.value = null; }
 
 async function deleteHazard(oilId: number, hazardId: number) {
     if (!confirm('Remove this hazard?')) return;
     await axios.delete(route('admin.oils.hazards.destroy', { oil: oilId, hazard: hazardId }));
     router.reload({ only: ['oils'] });
 }
-
 async function deleteComponent(oilId: number, componentId: number) {
     if (!confirm('Remove this component?')) return;
     await axios.delete(route('admin.oils.components.destroy', { oil: oilId, component: componentId }));
     router.reload({ only: ['oils'] });
 }
-
-// ─── Actions ──────────────────────────────────────────────────────────────────
-
 async function submitAddOil() {
     if (!newOil.value.name.trim()) return;
     await axios.post(route('admin.oils.store'), newOil.value);
@@ -142,335 +83,368 @@ async function submitAddOil() {
     showAddForm.value = false;
     router.reload({ only: ['oils'] });
 }
-
 async function submitUpdateHazard(oilId: number, hazardId: number) {
-    const data = hazardEdits.value[hazardId];
-    await axios.put(route('admin.oils.hazards.update', { oil: oilId, hazard: hazardId }), data);
+    await axios.put(route('admin.oils.hazards.update', { oil: oilId, hazard: hazardId }), hazardEdits.value[hazardId]);
     editingHazard.value = null;
     router.reload({ only: ['oils'] });
 }
-
 async function submitAddHazard(oilId: number) {
     await axios.post(route('admin.oils.hazards.store', { oil: oilId }), newHazard.value);
     showAddHazard.value = null;
     newHazard.value = { hazard_code: '', hazard_class: '', category: '', signal_word: 'Warning', pictogram: 'exclamation' };
     router.reload({ only: ['oils'] });
 }
-
-function triggerUpload(oilId: number) {
-    fileInputRefs.value[oilId]?.click();
-}
-
+function triggerUpload(oilId: number) { fileInputRefs.value[oilId]?.click(); }
 async function handleFileUpload(oilId: number, event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
-
     uploadingFor.value = oilId;
     const form = new FormData();
     form.append('sds', file);
-
     try {
-        await axios.post(route('admin.oils.sds.upload', { oil: oilId }), form, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        await axios.post(route('admin.oils.sds.upload', { oil: oilId }), form, { headers: { 'Content-Type': 'multipart/form-data' } });
         router.reload({ only: ['oils'] });
-    } finally {
-        uploadingFor.value = null;
-    }
+    } finally { uploadingFor.value = null; }
 }
 </script>
 
 <template>
     <AdminLayout>
 
-        <Head title="Oils" />
+        <Head title="Oils — Admin" />
 
-        <!-- ── Page header ── -->
-        <div class="flex items-center justify-between mb-6">
+        <!-- Header -->
+        <div class="adm-header">
             <div>
-                <h1 class="text-xl font-semibold text-gray-900">Oils</h1>
-                <p class="text-sm text-gray-500 mt-0.5">Manage fragrance &amp; essential oils and their SDS data</p>
+                <h1 class="adm-title">Oils</h1>
+                <p class="adm-sub">Manage fragrance &amp; essential oils and their SDS data</p>
             </div>
-            <button class="btn btn-primary" @click="showAddForm = !showAddForm">
-                {{ showAddForm ? 'Cancel' : '+ Add oil' }}
+            <button class="adm-btn adm-btn--primary" @click="showAddForm = !showAddForm">
+                <svg v-if="!showAddForm" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.5" stroke-linecap="round">
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+                {{ showAddForm ? 'Cancel' : 'Add Oil' }}
             </button>
         </div>
 
-        <!-- ── Add oil form ── -->
-        <div v-if="showAddForm" class="card mb-6">
-            <div class="card-header">
-                <span class="card-title">New oil</span>
+        <!-- Add oil form -->
+        <div v-if="showAddForm" class="adm-card adm-card--sm oi-add-card">
+            <h2 class="adm-card-title">New Oil</h2>
+            <div class="oi-add-grid">
+                <div class="adm-field">
+                    <label class="adm-label">Name</label>
+                    <input v-model="newOil.name" type="text" class="adm-input"
+                        placeholder="e.g. Lavender Essential Oil" />
+                </div>
+                <div class="adm-field">
+                    <label class="adm-label">Supplier</label>
+                    <input v-model="newOil.supplier" type="text" class="adm-input" placeholder="e.g. Nikura" />
+                </div>
+                <div class="adm-field">
+                    <label class="adm-label">Primary CAS</label>
+                    <input v-model="newOil.cas_primary" type="text" class="adm-input" placeholder="e.g. 8000-28-0" />
+                </div>
             </div>
-            <div class="grid grid-cols-3 gap-3 mb-4">
-                <div>
-                    <label class="form-label">Name</label>
-                    <input v-model="newOil.name" type="text" placeholder="e.g. Lavender Essential Oil" />
-                </div>
-                <div>
-                    <label class="form-label">Supplier</label>
-                    <input v-model="newOil.supplier" type="text" placeholder="e.g. Nikura" />
-                </div>
-                <div>
-                    <label class="form-label">Primary CAS</label>
-                    <input v-model="newOil.cas_primary" type="text" placeholder="e.g. 8000-28-0" />
-                </div>
-            </div>
-            <div class="flex justify-end">
-                <button class="btn btn-primary" @click="submitAddOil">Save oil</button>
+            <div style="display:flex; justify-content:flex-end; margin-top:0.75rem">
+                <button class="adm-btn adm-btn--primary" @click="submitAddOil">Save Oil</button>
             </div>
         </div>
 
-        <!-- ── Search ── -->
-        <div class="mb-4">
-            <input v-model="searchQuery" type="text" placeholder="Search by name or supplier…"
-                class="w-full max-w-xs" />
+        <!-- Search -->
+        <div class="oi-search-wrap">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+            </svg>
+            <input v-model="searchQuery" type="text" class="oi-search-input"
+                placeholder="Search by name or supplier…" />
+            <button v-if="searchQuery" @click="searchQuery = ''" class="oi-search-clear" aria-label="Clear">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
         </div>
 
-        <!-- ── Oil list ── -->
-        <div class="flex flex-col gap-2">
-            <p v-if="!filteredOils.length" class="text-sm text-gray-400 italic py-4">No oils found.</p>
+        <!-- Oil list -->
+        <div class="oi-list">
+            <div v-if="!filteredOils.length" class="adm-empty">
+                <div class="adm-empty-icon">🧴</div>
+                <p class="adm-empty-title">No oils found</p>
+                <p class="adm-empty-sub">Try a different search or add a new oil above.</p>
+            </div>
 
-            <div v-for="oil in filteredOils" :key="oil.id" class="oil-row">
+            <div v-for="oil in filteredOils" :key="oil.id" class="oi-row">
+
                 <!-- Row header -->
-                <div class="oil-row-header" @click="toggleOil(oil.id)">
-                    <div class="oil-icon">{{ initials(oil.name) }}</div>
-                    <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium text-gray-900">{{ oil.name }}</div>
-                        <div class="text-xs text-gray-500 mt-0.5">
-                            {{ oil.supplier || '—' }}&nbsp;·&nbsp;CAS {{ oil.cas_primary || '—' }}
-                        </div>
+                <div class="oi-row-head" @click="toggleOil(oil.id)">
+                    <div class="oi-avatar">{{ initials(oil.name) }}</div>
+                    <div class="oi-row-info">
+                        <p class="oi-row-name">{{ oil.name }}</p>
+                        <p class="oi-row-meta">
+                            {{ oil.supplier || '—' }}
+                            <span class="oi-meta-sep">·</span>
+                            CAS {{ oil.cas_primary || '—' }}
+                        </p>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="badge"
-                            :class="sdsDocs(oil).some(d => d.parsed) ? 'badge-success' : 'badge-warning'">
+                    <div class="oi-row-badges">
+                        <span class="adm-badge"
+                            :class="sdsDocs(oil).some(d => d.parsed) ? 'adm-badge--on' : 'adm-badge--warn'">
                             {{sdsDocs(oil).some(d => d.parsed) ? 'SDS parsed' : 'No SDS'}}
                         </span>
-                        <span class="badge badge-gray">
+                        <span class="adm-badge adm-badge--lav">
                             {{ oil.hazards.length }} hazard{{ oil.hazards.length !== 1 ? 's' : '' }}
                         </span>
-                        <span class="chevron" :class="{ open: openOilId === oil.id }">▶</span>
+                        <svg class="oi-chevron" :class="{ 'oi-chevron--open': openOilId === oil.id }" width="14"
+                            height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round">
+                            <path d="m6 9 6 6 6-6" />
+                        </svg>
                     </div>
                 </div>
 
                 <!-- Expanded detail -->
-                <div v-if="openOilId === oil.id" class="oil-detail">
+                <div v-if="openOilId === oil.id" class="oi-detail">
 
                     <!-- Tabs -->
-                    <div class="tabs">
-                        <button class="tab" :class="{ active: tabFor(oil.id) === 'hazards' }"
+                    <div class="oi-tabs">
+                        <button class="oi-tab" :class="{ 'oi-tab--active': tabFor(oil.id) === 'hazards' }"
                             @click="setTab(oil.id, 'hazards')">Section 2 — Hazards</button>
-                        <button class="tab" :class="{ active: tabFor(oil.id) === 'components' }"
+                        <button class="oi-tab" :class="{ 'oi-tab--active': tabFor(oil.id) === 'components' }"
                             @click="setTab(oil.id, 'components')">Section 3 — Components</button>
-                        <button class="tab" :class="{ active: tabFor(oil.id) === 'sds' }"
-                            @click="setTab(oil.id, 'sds')">SDS documents</button>
+                        <button class="oi-tab" :class="{ 'oi-tab--active': tabFor(oil.id) === 'sds' }"
+                            @click="setTab(oil.id, 'sds')">SDS Documents</button>
                     </div>
 
-                    <!-- ── HAZARDS TAB ── -->
-                    <div v-if="tabFor(oil.id) === 'hazards'">
-                        <p v-if="!oil.hazards.length" class="empty-msg">
+                    <!-- ── Hazards ── -->
+                    <div v-if="tabFor(oil.id) === 'hazards'" class="oi-tab-body">
+                        <p v-if="!oil.hazards.length" class="oi-empty">
                             No hazards parsed yet. Upload an SDS to auto-populate, or add manually.
                         </p>
 
-                        <table v-else class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Code</th>
-                                    <th>Class</th>
-                                    <th>Category</th>
-                                    <th>Signal word</th>
-                                    <th>Pictogram</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <template v-for="hazard in oil.hazards" :key="hazard.id">
-                                    <!-- Display row -->
-                                    <tr v-if="editingHazard !== hazard.id">
-                                        <td>
-                                            <span class="badge badge-code">{{ hazard.hazard_code }}</span>
-                                        </td>
-                                        <td>{{ hazard.hazard_class || '—' }}</td>
-                                        <td>{{ hazard.category || '—' }}</td>
-                                        <td>
-                                            <span :class="signalClass(hazard.signal_word)">
-                                                {{ hazard.signal_word || '—' }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span class="badge badge-gray">{{ hazard.pictogram || '—' }}</span>
-                                        </td>
-                                        <td class="text-right">
-                                            <div class="flex justify-end gap-1">
-                                                <button class="btn btn-sm"
+                        <div v-else class="adm-card adm-card--flush" style="margin-bottom:0.85rem">
+                            <table class="adm-table">
+                                <thead>
+                                    <tr class="adm-thead">
+                                        <th class="adm-th">Code</th>
+                                        <th class="adm-th">Class</th>
+                                        <th class="adm-th">Category</th>
+                                        <th class="adm-th">Signal Word</th>
+                                        <th class="adm-th">Pictogram</th>
+                                        <th class="adm-th adm-th--right"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template v-for="hazard in oil.hazards" :key="hazard.id">
+                                        <!-- Display row -->
+                                        <tr v-if="editingHazard !== hazard.id" class="adm-row">
+                                            <td class="adm-td"><span class="oi-hcode">{{ hazard.hazard_code }}</span>
+                                            </td>
+                                            <td class="adm-td" style="color:var(--bb-muted)">{{ hazard.hazard_class ||
+                                                '—' }}</td>
+                                            <td class="adm-td" style="color:var(--bb-muted)">{{ hazard.category || '—'
+                                            }}</td>
+                                            <td class="adm-td">
+                                                <span class="oi-signal"
+                                                    :class="{ 'oi-signal--danger': hazard.signal_word === 'Danger', 'oi-signal--warning': hazard.signal_word === 'Warning' }">
+                                                    {{ hazard.signal_word || '—' }}
+                                                </span>
+                                            </td>
+                                            <td class="adm-td adm-td--mono">{{ hazard.pictogram || '—' }}</td>
+                                            <td class="adm-td adm-td--actions">
+                                                <button class="adm-action adm-action--edit"
                                                     @click="startEditHazard(hazard)">Edit</button>
-                                                <button class="btn btn-sm btn-danger"
+                                                <button class="adm-action adm-action--del"
                                                     @click="deleteHazard(oil.id, hazard.id)">Delete</button>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                        </tr>
 
-                                    <!-- Edit row -->
-                                    <tr v-else>
-                                        <td colspan="6">
-                                            <div class="edit-panel">
-                                                <div class="grid grid-cols-3 gap-2 mb-2">
-                                                    <div>
-                                                        <label class="form-label">Code</label>
-                                                        <input v-model="hazardEdits[hazard.id].hazard_code"
-                                                            type="text" />
-                                                    </div>
-                                                    <div>
-                                                        <label class="form-label">Class</label>
-                                                        <input v-model="hazardEdits[hazard.id].hazard_class"
-                                                            type="text" />
-                                                    </div>
-                                                    <div>
-                                                        <label class="form-label">Category</label>
-                                                        <input v-model="hazardEdits[hazard.id].category" type="text" />
+                                        <!-- Edit row -->
+                                        <tr v-else class="adm-row">
+                                            <td colspan="6" class="adm-td">
+                                                <div class="oi-edit-panel">
+                                                    <div class="oi-edit-grid">
+                                                        <div class="adm-field">
+                                                            <label class="adm-label--sm adm-label">Code</label>
+                                                            <input v-model="hazardEdits[hazard.id].hazard_code"
+                                                                type="text" class="adm-input adm-input--sm" />
+                                                        </div>
+                                                        <div class="adm-field">
+                                                            <label class="adm-label--sm adm-label">Class</label>
+                                                            <input v-model="hazardEdits[hazard.id].hazard_class"
+                                                                type="text" class="adm-input adm-input--sm" />
+                                                        </div>
+                                                        <div class="adm-field">
+                                                            <label class="adm-label--sm adm-label">Category</label>
+                                                            <input v-model="hazardEdits[hazard.id].category" type="text"
+                                                                class="adm-input adm-input--sm" />
+                                                        </div>
+                                                        <div class="adm-field">
+                                                            <label class="adm-label--sm adm-label">Signal Word</label>
+                                                            <select v-model="hazardEdits[hazard.id].signal_word"
+                                                                class="adm-select adm-input--sm">
+                                                                <option>Warning</option>
+                                                                <option>Danger</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="adm-field">
+                                                            <label class="adm-label--sm adm-label">Pictogram</label>
+                                                            <input v-model="hazardEdits[hazard.id].pictogram"
+                                                                type="text" class="adm-input adm-input--sm" />
+                                                        </div>
+                                                        <div class="oi-edit-actions">
+                                                            <button class="adm-btn adm-btn--primary adm-btn--sm"
+                                                                @click="submitUpdateHazard(oil.id, hazard.id)">Save</button>
+                                                            <button class="adm-btn adm-btn--ghost adm-btn--sm"
+                                                                @click="cancelEditHazard">Cancel</button>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div class="grid grid-cols-3 gap-2">
-                                                    <div>
-                                                        <label class="form-label">Signal word</label>
-                                                        <select v-model="hazardEdits[hazard.id].signal_word">
-                                                            <option>Warning</option>
-                                                            <option>Danger</option>
-                                                        </select>
-                                                    </div>
-                                                    <div>
-                                                        <label class="form-label">Pictogram</label>
-                                                        <input v-model="hazardEdits[hazard.id].pictogram" type="text" />
-                                                    </div>
-                                                    <div class="flex items-end gap-2">
-                                                        <button class="btn btn-primary btn-sm"
-                                                            @click="submitUpdateHazard(oil.id, hazard.id)">Save</button>
-                                                        <button class="btn btn-sm btn-danger"
-                                                            @click="cancelEditHazard">Cancel</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                </template>
-                            </tbody>
-                        </table>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
 
-                        <!-- Add hazard -->
-                        <div class="mt-3">
-                            <button v-if="showAddHazard !== oil.id" class="btn btn-sm" @click="showAddHazard = oil.id">+
-                                Add hazard</button>
-
-                            <div v-else class="edit-panel mt-2">
-                                <div class="grid grid-cols-3 gap-2 mb-2">
-                                    <div>
-                                        <label class="form-label">Code</label>
-                                        <input v-model="newHazard.hazard_code" type="text" placeholder="H317" />
+                        <!-- Add hazard toggle -->
+                        <div class="oi-add-hazard">
+                            <button v-if="showAddHazard !== oil.id" class="adm-btn adm-btn--ghost adm-btn--sm"
+                                @click="showAddHazard = oil.id">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round">
+                                    <path d="M12 5v14M5 12h14" />
+                                </svg>
+                                Add Hazard
+                            </button>
+                            <div v-else class="oi-edit-panel">
+                                <div class="oi-edit-grid">
+                                    <div class="adm-field">
+                                        <label class="adm-label--sm adm-label">Code</label>
+                                        <input v-model="newHazard.hazard_code" type="text"
+                                            class="adm-input adm-input--sm" placeholder="H317" />
                                     </div>
-                                    <div>
-                                        <label class="form-label">Class</label>
+                                    <div class="adm-field">
+                                        <label class="adm-label--sm adm-label">Class</label>
                                         <input v-model="newHazard.hazard_class" type="text"
-                                            placeholder="Skin Sensitisation" />
+                                            class="adm-input adm-input--sm" placeholder="Skin Sensitisation" />
                                     </div>
-                                    <div>
-                                        <label class="form-label">Category</label>
-                                        <input v-model="newHazard.category" type="text" placeholder="1B" />
+                                    <div class="adm-field">
+                                        <label class="adm-label--sm adm-label">Category</label>
+                                        <input v-model="newHazard.category" type="text" class="adm-input adm-input--sm"
+                                            placeholder="1B" />
                                     </div>
-                                </div>
-                                <div class="grid grid-cols-3 gap-2">
-                                    <div>
-                                        <label class="form-label">Signal word</label>
-                                        <select v-model="newHazard.signal_word">
+                                    <div class="adm-field">
+                                        <label class="adm-label--sm adm-label">Signal Word</label>
+                                        <select v-model="newHazard.signal_word" class="adm-select adm-input--sm">
                                             <option>Warning</option>
                                             <option>Danger</option>
                                         </select>
                                     </div>
-                                    <div>
-                                        <label class="form-label">Pictogram</label>
-                                        <input v-model="newHazard.pictogram" type="text" placeholder="exclamation" />
+                                    <div class="adm-field">
+                                        <label class="adm-label--sm adm-label">Pictogram</label>
+                                        <input v-model="newHazard.pictogram" type="text" class="adm-input adm-input--sm"
+                                            placeholder="exclamation" />
                                     </div>
-                                    <div class="flex items-end gap-2">
-                                        <button class="btn btn-primary btn-sm"
+                                    <div class="oi-edit-actions">
+                                        <button class="adm-btn adm-btn--primary adm-btn--sm"
                                             @click="submitAddHazard(oil.id)">Add</button>
-                                        <button class="btn btn-sm" @click="showAddHazard = null">Cancel</button>
+                                        <button class="adm-btn adm-btn--ghost adm-btn--sm"
+                                            @click="showAddHazard = null">Cancel</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ── COMPONENTS TAB ── -->
-                    <div v-if="tabFor(oil.id) === 'components'">
-                        <p v-if="!oil.components.length" class="empty-msg">
+                    <!-- ── Components ── -->
+                    <div v-if="tabFor(oil.id) === 'components'" class="oi-tab-body">
+                        <p v-if="!oil.components.length" class="oi-empty">
                             No components parsed yet. Upload an SDS to auto-populate.
                         </p>
-                        <table v-else class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>CAS</th>
-                                    <th>Concentration (%)</th>
-                                    <th>CLP classification</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="comp in oil.components" :key="comp.id">
-                                    <td>{{ comp.name }}</td>
-                                    <td class="font-mono text-xs">{{ comp.cas || '—' }}</td>
-                                    <td>
-                                        <span v-if="comp.concentration_min !== null && comp.concentration_max !== null">
-                                            {{ comp.concentration_min }}–{{ comp.concentration_max }}%
-                                        </span>
-                                        <span v-else>—</span>
-                                    </td>
-                                    <td>
-                                        <template v-if="comp.clp_classification">
-                                            <span v-for="code in comp.clp_classification.split(',')" :key="code"
-                                                class="badge badge-code mr-1">{{ code.trim() }}</span>
-                                        </template>
-                                        <span v-else class="text-gray-400">—</span>
-                                    </td>
-                                    <td class="text-right">
-                                        <button class="btn btn-sm btn-danger"
-                                            @click="deleteComponent(oil.id, comp.id)">Delete</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div v-else class="adm-card adm-card--flush">
+                            <table class="adm-table">
+                                <thead>
+                                    <tr class="adm-thead">
+                                        <th class="adm-th">Name</th>
+                                        <th class="adm-th">CAS</th>
+                                        <th class="adm-th">Concentration (%)</th>
+                                        <th class="adm-th">CLP Classification</th>
+                                        <th class="adm-th adm-th--right"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="comp in oil.components" :key="comp.id" class="adm-row">
+                                        <td class="adm-td" style="font-weight:500">{{ comp.name }}</td>
+                                        <td class="adm-td adm-td--mono">{{ comp.cas || '—' }}</td>
+                                        <td class="adm-td" style="color:var(--bb-muted)">
+                                            <span
+                                                v-if="comp.concentration_min !== null && comp.concentration_max !== null">
+                                                {{ comp.concentration_min }}–{{ comp.concentration_max }}%
+                                            </span>
+                                            <span v-else>—</span>
+                                        </td>
+                                        <td class="adm-td">
+                                            <template v-if="comp.clp_classification">
+                                                <span v-for="code in comp.clp_classification.split(',')" :key="code"
+                                                    class="oi-hcode" style="margin-right:0.25rem">{{ code.trim()
+                                                    }}</span>
+                                            </template>
+                                            <span v-else style="color:var(--bb-muted)">—</span>
+                                        </td>
+                                        <td class="adm-td adm-td--actions">
+                                            <button class="adm-action adm-action--del"
+                                                @click="deleteComponent(oil.id, comp.id)">Delete</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
-                    <!-- ── SDS TAB ── -->
-                    <div v-if="tabFor(oil.id) === 'sds'">
-                        <div class="flex flex-col gap-2 mb-3">
-                            <p v-if="!sdsDocs(oil).length" class="empty-msg">No SDS uploaded yet.</p>
-
-                            <div v-for="doc in sdsDocs(oil)" :key="doc.id" class="sds-item">
-                                <span class="text-base">📄</span>
-                                <div class="flex-1">
-                                    <div class="text-xs font-medium text-gray-800">
-                                        {{ doc.version ? `v${doc.version}` : 'Unknown version' }}
-                                        <span v-if="doc.issue_date"> — {{ doc.issue_date }}</span>
-                                    </div>
-                                    <div class="text-xs text-gray-500">
-                                        {{ doc.parsed ? 'Auto-parsed ✓' : 'Not yet parsed' }}
-                                    </div>
+                    <!-- ── SDS ── -->
+                    <div v-if="tabFor(oil.id) === 'sds'" class="oi-tab-body">
+                        <p v-if="!sdsDocs(oil).length" class="oi-empty">No SDS documents uploaded yet.</p>
+                        <div class="oi-sds-list">
+                            <div v-for="doc in sdsDocs(oil)" :key="doc.id" class="oi-sds-item">
+                                <div class="oi-sds-icon">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                    </svg>
                                 </div>
-                                <span class="badge" :class="doc.parsed ? 'badge-success' : 'badge-warning'">
+                                <div class="oi-sds-info">
+                                    <p class="oi-sds-version">{{ doc.version ? `v${doc.version}` : 'Unknown version'
+                                    }}<span v-if="doc.issue_date"> — {{ doc.issue_date }}</span></p>
+                                    <p class="oi-sds-status">{{ doc.parsed ? 'Auto-parsed ✓' : 'Not yet parsed' }}</p>
+                                </div>
+                                <span class="adm-badge" :class="doc.parsed ? 'adm-badge--on' : 'adm-badge--warn'">
                                     {{ doc.parsed ? 'Parsed' : 'Pending' }}
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Upload zone -->
                         <input :ref="el => fileInputRefs[oil.id] = el as HTMLInputElement" type="file"
-                            accept="application/pdf" class="hidden" @change="handleFileUpload(oil.id, $event)" />
-                        <button class="upload-zone w-full" :disabled="uploadingFor === oil.id"
+                            accept="application/pdf" style="display:none" @change="handleFileUpload(oil.id, $event)" />
+
+                        <button class="adm-upload-zone" :disabled="uploadingFor === oil.id"
                             @click="triggerUpload(oil.id)">
-                            <span v-if="uploadingFor === oil.id" class="text-sm text-gray-400">Uploading…</span>
-                            <template v-else>
-                                <p class="text-sm text-gray-500">Click to upload SDS PDF</p>
-                                <p class="text-xs text-gray-400 mt-1">Max 10MB · PDF only</p>
-                            </template>
+                            <svg v-if="uploadingFor !== oil.id" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            <svg v-else class="adm-spinner" viewBox="0 0 24 24" fill="none">
+                                <circle cx="12" cy="12" r="10" stroke="rgba(26,26,46,0.15)" stroke-width="3" />
+                                <path d="M12 2a10 10 0 0 1 10 10" stroke="#9b84d4" stroke-width="3"
+                                    stroke-linecap="round" />
+                            </svg>
+                            <span>{{ uploadingFor === oil.id ? 'Uploading…' : 'Click to upload SDS PDF' }}</span>
+                            <span class="adm-upload-note">Max 10 MB · PDF only</span>
                         </button>
                     </div>
 
@@ -482,313 +456,317 @@ async function handleFileUpload(oilId: number, event: Event) {
 </template>
 
 <style scoped>
-/* ── Layout ────────────────────────────────────────── */
-.card {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    padding: 1.25rem;
+/* ── Page-specific styles only — shared styles come from admin-design-system.css ── */
+
+/* Add oil form grid */
+.oi-add-card {
+    margin-bottom: 1.25rem;
 }
 
-.card-header {
+.oi-add-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .oi-add-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Search bar */
+.oi-search-wrap {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid #f3f4f6;
+    gap: 0.6rem;
+    max-width: 340px;
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--bb-radius);
+    border: 1px solid var(--bb-border);
+    background: var(--bb-surface);
+    margin-bottom: 1.25rem;
+    color: var(--bb-muted);
 }
 
-.card-title {
-    font-size: 0.9375rem;
-    font-weight: 500;
-    color: #111827;
-}
-
-/* ── Form elements ─────────────────────────────────── */
-.form-label {
-    display: block;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #6b7280;
-    margin-bottom: 4px;
-}
-
-input[type="text"],
-input[type="email"],
-select {
-    display: block;
-    width: 100%;
-    font-size: 0.8125rem;
-    color: #111827;
-    background: white;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    padding: 6px 10px;
-    outline: none;
-    transition: border-color 0.15s;
-}
-
-input:focus,
-select:focus {
-    border-color: #6b7280;
-}
-
-/* ── Buttons ───────────────────────────────────────── */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    padding: 6px 14px;
-    border-radius: 0.375rem;
-    border: 1px solid #d1d5db;
+.oi-search-input {
+    flex: 1;
     background: transparent;
-    color: #374151;
-    cursor: pointer;
-    transition: background 0.1s;
+    border: none;
+    outline: none;
+    font-family: var(--bb-font);
+    font-size: 0.88rem;
+    color: var(--bb-text);
 }
 
-.btn:hover {
-    background: #f9fafb;
+.oi-search-input::placeholder {
+    color: var(--bb-muted);
 }
 
-.btn-primary {
-    background: #111827;
-    color: white;
-    border-color: transparent;
-}
-
-.btn-primary:hover {
-    opacity: 0.85;
-    background: #111827;
-}
-
-.btn-sm {
-    padding: 4px 10px;
-    font-size: 0.75rem;
-}
-
-.btn-danger {
-    color: #b91c1c;
-    border-color: #fca5a5;
-}
-
-.btn-danger:hover {
-    background: #fef2f2;
-}
-
-/* ── Badges ────────────────────────────────────────── */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    white-space: nowrap;
-}
-
-.badge-success {
-    background: #dcfce7;
-    color: #15803d;
-}
-
-.badge-warning {
-    background: #fef9c3;
-    color: #a16207;
-}
-
-.badge-gray {
-    background: #f3f4f6;
-    color: #6b7280;
-    border-radius: 0.25rem;
-}
-
-.badge-code {
-    background: #fef2f2;
-    color: #b91c1c;
-    border-radius: 0.25rem;
-    font-family: ui-monospace, monospace;
-    font-size: 0.6875rem;
-}
-
-/* ── Oil row ───────────────────────────────────────── */
-.oil-row {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
-    overflow: hidden;
-}
-
-.oil-row-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    cursor: pointer;
-    user-select: none;
-}
-
-.oil-row-header:hover {
-    background: #f9fafb;
-}
-
-.oil-icon {
-    width: 32px;
-    height: 32px;
+.oi-search-clear {
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
-    background: #eff6ff;
-    color: #1d4ed8;
+    border: none;
+    background: none;
+    color: var(--bb-muted);
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.8125rem;
-    font-weight: 500;
+    transition: background 0.12s;
+}
+
+.oi-search-clear:hover {
+    background: var(--bb-border);
+}
+
+/* Oil list */
+.oi-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+/* Oil row card */
+.oi-row {
+    background: var(--bb-surface);
+    border-radius: var(--bb-radius-lg);
+    border: 1px solid var(--bb-border);
+    box-shadow: var(--bb-shadow-sm);
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+}
+
+.oi-row:hover {
+    box-shadow: 0 2px 10px rgba(26, 26, 46, 0.08);
+}
+
+.oi-row-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.85rem 1.1rem;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.12s;
+}
+
+.oi-row-head:hover {
+    background: var(--bb-cream);
+}
+
+.oi-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #f0edf8;
+    color: var(--bb-lav-d);
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    letter-spacing: 0.03em;
+}
+
+.oi-row-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.oi-row-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--bb-text);
+}
+
+.oi-row-meta {
+    font-size: 0.75rem;
+    color: var(--bb-muted);
+    margin-top: 0.1rem;
+}
+
+.oi-meta-sep {
+    margin: 0 0.25rem;
+    opacity: 0.5;
+}
+
+.oi-row-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.oi-chevron {
+    color: var(--bb-muted);
+    transition: transform 0.2s;
     flex-shrink: 0;
 }
 
-.chevron {
-    font-size: 0.6875rem;
-    color: #9ca3af;
-    transition: transform 0.2s;
+.oi-chevron--open {
+    transform: rotate(180deg);
 }
 
-.chevron.open {
-    transform: rotate(90deg);
+/* Detail area */
+.oi-detail {
+    border-top: 1px solid var(--bb-border);
+    background: var(--bb-cream);
 }
 
-/* ── Detail panel ──────────────────────────────────── */
-.oil-detail {
-    border-top: 1px solid #f3f4f6;
-    padding: 16px;
-}
-
-/* ── Tabs ──────────────────────────────────────────── */
-.tabs {
+/* Tabs */
+.oi-tabs {
     display: flex;
-    gap: 0;
-    margin-bottom: 1rem;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 0 1rem;
+    border-bottom: 1px solid var(--bb-border);
+    background: var(--bb-surface);
 }
 
-.tab {
-    font-size: 0.8125rem;
-    padding: 6px 14px;
-    cursor: pointer;
-    color: #6b7280;
+.oi-tab {
+    font-family: var(--bb-font);
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0.7rem 0.85rem;
     border: none;
     border-bottom: 2px solid transparent;
     background: transparent;
+    color: var(--bb-muted);
+    cursor: pointer;
     margin-bottom: -1px;
     transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
 }
 
-.tab:hover {
-    color: #374151;
+.oi-tab:hover {
+    color: var(--bb-text);
 }
 
-.tab.active {
-    color: #111827;
-    border-bottom-color: #111827;
+.oi-tab--active {
+    color: var(--bb-navy);
+    border-bottom-color: var(--bb-lav-d);
+    font-weight: 600;
+}
+
+/* Tab body */
+.oi-tab-body {
+    padding: 1rem 1.1rem;
+}
+
+.oi-empty {
+    font-size: 0.82rem;
+    color: var(--bb-muted);
+    font-style: italic;
+}
+
+/* Hazard code chip — reused in both tabs */
+.oi-hcode {
+    display: inline-block;
+    font-family: var(--bb-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.1rem 0.45rem;
+    border-radius: 4px;
+    background: var(--bb-red-bg);
+    color: var(--bb-red);
+}
+
+/* Signal word colours */
+.oi-signal {
     font-weight: 500;
 }
 
-/* ── Data tables ───────────────────────────────────── */
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.8125rem;
+.oi-signal--danger {
+    color: var(--bb-red);
 }
 
-.data-table th {
-    text-align: left;
-    color: #6b7280;
-    font-weight: 500;
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-bottom: 1px solid #f3f4f6;
+.oi-signal--warning {
+    color: var(--bb-peach-d);
 }
 
-.data-table td {
-    padding: 7px 10px;
-    border-bottom: 1px solid #f9fafb;
-    vertical-align: middle;
-    color: #374151;
+/* Inline edit panel */
+.oi-edit-panel {
+    background: var(--bb-cream);
+    border: 1px solid var(--bb-border);
+    border-radius: var(--bb-radius);
+    padding: 1rem;
 }
 
-.data-table tbody tr:last-child td {
-    border-bottom: none;
+.oi-edit-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) repeat(2, 1fr) auto;
+    gap: 0.75rem;
+    align-items: end;
 }
 
-/* ── Edit panel ────────────────────────────────────── */
-.edit-panel {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.375rem;
-    padding: 12px;
+@media (max-width: 900px) {
+    .oi-edit-grid {
+        grid-template-columns: 1fr 1fr;
+    }
 }
 
-/* ── SDS ───────────────────────────────────────────── */
-.sds-item {
+@media (max-width: 640px) {
+    .oi-edit-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.oi-edit-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.4rem;
+}
+
+/* Add hazard trigger area */
+.oi-add-hazard {
+    margin-top: 0.75rem;
+}
+
+/* SDS list */
+.oi-sds-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.oi-sds-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    background: #f9fafb;
-    border-radius: 0.375rem;
-    font-size: 0.8125rem;
+    gap: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--bb-radius);
+    background: var(--bb-surface);
+    border: 1px solid var(--bb-border);
 }
 
-.upload-zone {
-    border: 1px dashed #d1d5db;
-    border-radius: 0.375rem;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    background: transparent;
-    transition: background 0.1s;
+.oi-sds-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--bb-radius-sm);
+    background: #f0edf8;
+    color: var(--bb-lav-d);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-.upload-zone:hover:not(:disabled) {
-    background: #f9fafb;
+.oi-sds-info {
+    flex: 1;
 }
 
-.upload-zone:disabled {
-    cursor: default;
-    opacity: 0.6;
-}
-
-/* ── Misc ──────────────────────────────────────────── */
-.empty-msg {
-    font-size: 0.8125rem;
-    color: #9ca3af;
-    font-style: italic;
-    padding: 4px 0;
-}
-
-.signal-danger {
-    color: #b91c1c;
+.oi-sds-version {
+    font-size: 0.82rem;
     font-weight: 500;
+    color: var(--bb-text);
 }
 
-.signal-warning {
-    color: #b45309;
-    font-weight: 500;
-}
-
-.text-right {
-    text-align: right;
-}
-
-.hidden {
-    display: none;
-}
-
-.mr-1 {
-    margin-right: 0.25rem;
+.oi-sds-status {
+    font-size: 0.72rem;
+    color: var(--bb-muted);
+    margin-top: 0.1rem;
 }
 </style>
