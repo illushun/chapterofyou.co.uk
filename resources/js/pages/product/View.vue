@@ -4,6 +4,8 @@ import { Head, router } from '@inertiajs/vue3';
 import { ref, watch, reactive, nextTick } from 'vue';
 import { debounce } from 'lodash';
 import axios from 'axios';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -23,6 +25,12 @@ interface ProductProps {
 }
 
 const props = defineProps<ProductProps & { wishlistedIds: number[] }>();
+
+const seo = useSeoHead({
+    title: 'Shop Reed Diffusers',
+    description: 'Browse my full collection of hand-crafted reed diffusers. Free UK delivery on orders over £50.',
+    canonical: '/products',
+});
 
 const form = reactive({
     search: props.filters.search || '',
@@ -108,7 +116,7 @@ const handleFavourite = async (product: ProductCardData) => {
 <template>
     <NavBar />
 
-    <Head title="Browse Products | Chapter of You" />
+    <SeoHead v-bind="seo" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"

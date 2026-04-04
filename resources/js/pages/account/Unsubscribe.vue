@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import NavBar from '@/components/NavBar.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 const props = defineProps<{
     user: { name: string; email: string };
     alreadyOut?: boolean;
     confirmed?: boolean;
 }>();
+
+const seo = useSeoHead({ noIndex: true });
 
 // Hit the confirm route (POST to signed URL preserved in the current URL)
 const confirm = () => {
@@ -19,7 +23,7 @@ const confirm = () => {
 <template>
     <NavBar />
 
-    <Head title="Unsubscribe" />
+    <SeoHead v-bind="seo" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Nunito:wght@400;500;600&display=swap"

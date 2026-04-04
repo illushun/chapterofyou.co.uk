@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import NavBar from '@/components/NavBar.vue';
 import { Head } from '@inertiajs/vue3';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 interface FeaturedProduct {
     id: number;
@@ -15,12 +17,18 @@ interface FeaturedProduct {
 defineProps<{
     featuredProducts?: FeaturedProduct[];
 }>();
+
+const seo = useSeoHead({
+    // No title — homepage should just be "Chapter of You"
+    description: 'Chapter of You. Luxurious hand-crafted reed diffusers made with care for your home. Your chapter, your self-care.',
+    canonical: '/',  // resolves to https://www.chapterofyou.co.uk
+});
 </script>
 
 <template>
     <NavBar />
 
-    <Head title="Chapter of You — Handcrafted Reed Diffusers" />
+    <SeoHead v-bind="seo" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"

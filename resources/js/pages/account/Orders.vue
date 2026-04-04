@@ -2,6 +2,8 @@
 import { Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 interface Order {
     id: number;
@@ -11,6 +13,8 @@ interface Order {
 }
 
 const props = defineProps<{ orders: Order[] }>();
+
+const seo = useSeoHead({ noIndex: true });
 
 const hasOrders = computed(() => props.orders && props.orders.length > 0);
 
@@ -42,7 +46,7 @@ const statusLabel = (s: string): string => {
 <template>
     <NavBar />
 
-    <Head title="My Orders" />
+    <SeoHead v-bind="seo" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"

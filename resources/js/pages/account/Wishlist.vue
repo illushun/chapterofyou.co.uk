@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import NavBar from '@/components/NavBar.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 interface WishlistItem {
     wishlist_id: number;
@@ -34,12 +36,14 @@ const removeItem = (wishlistId: number) => {
 const addToCart = (productId: number) => {
     router.post('/cart/add', { product_id: productId, quantity: 1 }, { preserveScroll: true });
 };
+
+const seo = useSeoHead({ noIndex: true });
 </script>
 
 <template>
     <NavBar />
 
-    <Head title="My Wishlist" />
+    <SeoHead v-bind="seo" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"

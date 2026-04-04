@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import NavBar from '@/components/NavBar.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 interface Product { id: number; mpn: string; name: string; cost: number; }
 interface OrderItem {
@@ -20,6 +22,8 @@ interface Order {
 }
 
 const props = defineProps<{ order: Order }>();
+
+const seo = useSeoHead({ noIndex: true });
 
 const fmt = (v: number | string) =>
     new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(Number(v) || 0);
@@ -62,7 +66,7 @@ const statusMessage: Record<string, string> = {
 <template>
     <NavBar />
 
-    <Head :title="`Order #COY-${String(order.id).padStart(5, '0')}`" />
+    <SeoHead v-bind="seo" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
@@ -160,7 +164,7 @@ const statusMessage: Record<string, string> = {
                                 <span>{{ order.shipping_line_1 }}</span>
                                 <span v-if="order.shipping_line_2">{{ order.shipping_line_2 }}</span>
                                 <span>{{ order.shipping_city }}<template v-if="order.shipping_county">, {{
-                                        order.shipping_county }}</template></span>
+                                    order.shipping_county }}</template></span>
                                 <span>{{ order.shipping_postcode }}</span>
                             </address>
                         </div>
@@ -170,7 +174,7 @@ const statusMessage: Record<string, string> = {
                                 <span>{{ order.billing_line_1 }}</span>
                                 <span v-if="order.billing_line_2">{{ order.billing_line_2 }}</span>
                                 <span>{{ order.billing_city }}<template v-if="order.billing_county">, {{
-                                        order.billing_county }}</template></span>
+                                    order.billing_county }}</template></span>
                                 <span>{{ order.billing_postcode }}</span>
                             </address>
                         </div>

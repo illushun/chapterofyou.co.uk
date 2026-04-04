@@ -2,6 +2,8 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 const IconEdit = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
 const IconCheck = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>`;
@@ -27,6 +29,8 @@ interface LookupAddress {
 }
 
 const props = defineProps<{ user: User; addresses: Address[]; }>();
+
+const seo = useSeoHead({ noIndex: true });
 
 // ── General details ────────────────────────────────────────────────────────
 const isEditingDetails = ref(false);
@@ -146,7 +150,7 @@ const formatAddress = (a: Address): string[] =>
 <template>
     <NavBar />
 
-    <Head title="My Account" />
+    <SeoHead v-bind="seo" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
@@ -426,7 +430,7 @@ const formatAddress = (a: Address): string[] =>
                                 <label for="m-postcode" class="field-label">Postcode</label>
                                 <input id="m-postcode" type="text" v-model="addressForm.postcode" class="field-input" />
                                 <p v-if="addressForm.errors.postcode" class="field-error">{{ addressForm.errors.postcode
-                                    }}</p>
+                                }}</p>
                             </div>
                         </div>
 

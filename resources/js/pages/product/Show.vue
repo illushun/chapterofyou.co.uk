@@ -3,6 +3,8 @@ import NavBar from '@/components/NavBar.vue';
 import { Head, usePage, router, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
@@ -48,6 +50,15 @@ const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 const isModalOpen = ref(false);
 const isWishlisted = ref(props.wishlisted ?? false);
 const wishlistedIds = ref<number[]>(props.wishlistedIds ?? []);
+
+const seo = useSeoHead({
+    title: props.product.seo?.meta_title || props.product.name,
+    description: props.product.seo?.meta_description
+        || props.product.description?.replace(/<[^>]*>/g, '').slice(0, 155),
+    canonical: `/product/${props.product.seo?.slug || props.product.id}`,
+    ogImage: props.product.images?.[0]?.image,
+    ogType: 'product',
+});
 
 const quantity = ref(1);
 const increaseQuantity = () => { if (currentVariation.value.stock_qty > quantity.value) quantity.value++; };
@@ -138,7 +149,6 @@ const handleFavourite = async (productArg?: any) => {
     }
 };
 
-const pageTitle = computed(() => props.product.seo?.meta_title || `${props.product.name} | Chapter of You`);
 const hasHowToUse = computed(() => !!props.product.how_to_use?.trim());
 const hasFaqs = computed(() => (props.product.faqs?.length ?? 0) > 0);
 </script>
@@ -146,7 +156,8 @@ const hasFaqs = computed(() => (props.product.faqs?.length ?? 0) > 0);
 <template>
     <NavBar />
 
-    <Head :title="pageTitle" />
+    <SeoHead v-bind="seo" />
+
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
         rel="stylesheet" />

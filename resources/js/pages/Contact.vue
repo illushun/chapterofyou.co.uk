@@ -3,6 +3,8 @@ import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 
@@ -23,12 +25,18 @@ const submit = () => {
         preserveScroll: true,
     });
 };
+
+const seo = useSeoHead({
+    title: 'Contact Us',
+    description: 'Get in touch with Chapter of You. I\'d love to hear from you and will respond within 1–2 working days.',
+    canonical: '/contact',
+});
 </script>
 
 <template>
     <NavBar />
 
-    <Head title="Contact Us" />
+    <SeoHead v-bind="seo" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"

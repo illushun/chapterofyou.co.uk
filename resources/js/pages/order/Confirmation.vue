@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import NavBar from '@/components/NavBar.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 const IconCheckCircle = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>`;
 const IconArrowLeft = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`;
@@ -41,6 +43,8 @@ const props = defineProps<{
     order: Order;
 }>();
 
+const seo = useSeoHead({ noIndex: true });
+
 const formatCurrency = (amount: number | string): string => {
     const n = Number(amount);
     return isNaN(n) ? '£0.00' : `£${n.toFixed(2)}`;
@@ -50,7 +54,7 @@ const formatCurrency = (amount: number | string): string => {
 <template>
     <NavBar />
 
-    <Head title="Order Confirmed" />
+    <SeoHead v-bind="seo" />
 
     <section class="py-20">
         <div class="min-h-[70vh] bg-background text-copy p-4 md:p-8 lg:p-12">
@@ -131,7 +135,7 @@ const formatCurrency = (amount: number | string): string => {
                             <div class="flex justify-between text-copy-light">
                                 <span>Shipping</span>
                                 <span>{{ Number(order.shipping) === 0 ? 'FREE' : formatCurrency(order.shipping)
-                                    }}</span>
+                                }}</span>
                             </div>
                             <div class="flex justify-between text-copy-light">
                                 <span>VAT (20%)</span>

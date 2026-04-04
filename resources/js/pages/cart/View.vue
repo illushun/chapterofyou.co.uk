@@ -2,6 +2,8 @@
 import { Head, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
 interface CartItem {
     id: number;
@@ -18,6 +20,8 @@ const props = defineProps<{
     cartItems: CartItem[];
     cartTotal: number;
 }>();
+
+const seo = useSeoHead({ noIndex: true });
 
 const hasItems = computed(() => props.cartItems.length > 0);
 const itemCount = computed(() => props.cartItems.reduce((s, i) => s + Number(i.quantity), 0));
@@ -58,7 +62,7 @@ const remove = (productId: number) => {
 <template>
     <NavBar />
 
-    <Head title="Your Cart" />
+    <SeoHead v-bind="seo" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap"
