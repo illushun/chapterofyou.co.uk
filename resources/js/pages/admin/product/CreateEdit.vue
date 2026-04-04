@@ -150,8 +150,8 @@ const submit = () => {
                     <span>{{ isEditing ? 'Edit' : 'New' }}</span>
                 </div>
                 <h1 class="adm-title">{{ title }}</h1>
-                <p class="adm-sub">{{ isEditing ? 'Update details, inventory, images and SEO.' : 'Fill in the details
-                for a new product.' }}</p>
+                <p class="adm-sub">{{ isEditing ? 'Update details, inventory, images and SEO.' :
+                    'Fill in the details for a new product.' }}</p>
             </div>
             <div v-if="form.isDirty" class="adm-unsaved">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
