@@ -232,10 +232,7 @@
     {{-- 1. Product Identifier --}}
     <div class="product-id">
         <div class="product-company">{{ $supplierName ?? config('clp.supplier_name', 'Chapter of You') }}</div>
-        <div class="product-name">{{ $label->product_name }}</div>
-        @if(!empty($productMeta))
-            <div class="product-meta">{{ $productMeta }}</div>
-        @endif
+        <div class="product-name">{{ $label->product_name }} @if(!empty($productMeta))( {{ $productMeta}} )@endif</div>
     </div>
 
     {{-- 2. Allergen Information --}}
