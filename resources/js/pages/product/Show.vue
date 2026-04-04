@@ -342,8 +342,8 @@ const hasFaqs = computed(() => (props.product.faqs?.length ?? 0) > 0);
                                 </svg>
                             </button>
                         </div>
-                        <p class="pd-rf-rating-label" v-if="reviewForm.rating > 0">{{ ['', 'Poor', 'Fair', 'Good', 'Very
-                            Good',
+                        <p class="pd-rf-rating-label" v-if="reviewForm.rating > 0">{{ ['', 'Poor', 'Fair', 'Good',
+                            'Very Good',
                             'Excellent'][reviewForm.rating] }}</p>
                         <p v-if="reviewForm.errors.rating" class="field-error">{{ reviewForm.errors.rating }}</p>
                     </div>
@@ -369,7 +369,7 @@ const hasFaqs = computed(() => (props.product.faqs?.length ?? 0) > 0);
                                 </svg>
                                 {{ reviewForm.images.length > 0 ? `${reviewForm.images.length}
                                 photo${reviewForm.images.length !== 1
-                                ? 's' : ''} selected` : 'Choose photos' }}
+                                        ? 's' : ''} selected` : 'Choose photos' }}
                             </label>
                             <input type="file" id="review_images" multiple accept="image/*" @change="handleImageUpload"
                                 class="pd-file-hidden" />
@@ -408,7 +408,8 @@ const hasFaqs = computed(() => (props.product.faqs?.length ?? 0) > 0);
                                 <p class="pd-reviewer-name">{{ review.user.name }}</p>
                                 <p class="pd-review-date">{{ new Date(review.created_at).toLocaleDateString('en-GB', {
                                     day:
-                                    'numeric', month: 'long', year: 'numeric' }) }}</p>
+                                        'numeric', month: 'long', year: 'numeric'
+                                }) }}</p>
                             </div>
                             <button v-if="auth.user && auth.user.id === review.user_id" @click="deleteReview(review.id)"
                                 class="pd-review-delete" aria-label="Delete review">
