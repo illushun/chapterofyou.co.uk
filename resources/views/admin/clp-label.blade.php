@@ -104,10 +104,7 @@
 <div class="label">
 
     <div class="hdr cf">
-        <span class="hdr-name">{{ $label->product_name }}</span>
-        @if($label->nominal_quantity)
-            <span class="hdr-qty">{{ $label->nominal_quantity }}</span>
-        @endif
+        <span class="hdr-name">{{ $label->product_name }} @if($label->nominal_quantity) {{ $label->nominal_quantity }} @endif</span>
     </div>
 
     <table class="body-table">
