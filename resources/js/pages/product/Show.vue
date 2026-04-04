@@ -32,6 +32,7 @@ interface ProductDetailData {
     images: ProductImage[]; reviews: ProductReview[];
     categories: { id: number; name: string }[];
     children: ProductVariation[];
+    details: string;
     how_to_use?: string | null;
     faqs?: FaqItem[] | null;
     seo?: { meta_title: string; meta_description: string };
@@ -313,7 +314,12 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
                     </div>
 
                     <div class="pd-description">
-                        <h2 class="pd-section-title">Details</h2>
+                        <h2 class="pd-section-title">Description</h2>
+                        <div class="pd-description-body" v-html="product.description"></div>
+                    </div>
+
+                    <div class="pd-description">
+                        <h2 class="pd-section-title">The Details</h2>
                         <div class="pd-description-body" v-html="product.description"></div>
                     </div>
                 </div>

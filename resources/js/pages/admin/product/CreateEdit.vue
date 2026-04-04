@@ -12,7 +12,7 @@ interface ProductImage { id: number; product_id: number; image: string; status: 
 interface Product {
     id: number; mpn: string; name: string; description: string;
     status: 'enabled' | 'disabled'; cost: number; stock_qty: number;
-    parent_product_id: number | null;
+    details: string; parent_product_id: number | null;
     how_to_use: string | null;
     seo: { meta_title: string; meta_description: string; slug: string; };
 }
@@ -42,6 +42,7 @@ const form = useForm({
     mpn: props.product?.mpn || '',
     name: props.product?.name || '',
     description: props.product?.description || '',
+    details: props.product?.details || '',
     how_to_use: props.product?.how_to_use || '',
     faqs: (props.productFaqs ?? []) as FaqItem[],
     status: props.product?.status || 'enabled',
@@ -206,6 +207,13 @@ const submit = () => {
                         <textarea id="description" v-model="form.description" required rows="7" class="adm-textarea"
                             :class="{ 'adm-input--err': form.errors.description }"></textarea>
                         <p v-if="form.errors.description" class="adm-err">{{ form.errors.description }}</p>
+                    </div>
+
+                    <div class="adm-field">
+                        <label class="adm-label" for="details">Details</label>
+                        <textarea id="details" v-model="form.details" required rows="7" class="adm-textarea"
+                            :class="{ 'adm-input--err': form.errors.details }"></textarea>
+                        <p v-if="form.errors.details" class="adm-err">{{ form.errors.details }}</p>
                     </div>
                 </section>
 

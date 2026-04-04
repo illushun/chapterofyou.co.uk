@@ -26,6 +26,7 @@ class Product extends Model
         'mpn',
         'name',
         'description',
+        'details',
         'status',
         'cost',
         'stock_qty',
