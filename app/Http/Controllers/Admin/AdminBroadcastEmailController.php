@@ -34,7 +34,7 @@ class AdminBroadcastEmailController extends Controller
             ->paginate(20);
 
         $totalOptedIn = User::where('is_admin', false)->where('marketing_opt_in', true)->count();
-        $waitlistCount = WaitlistEntry::whereIn('email', ['daveystuart1@gmail.com', 'kacey.zytko14@icloud.com'])->count();
+        $waitlistCount = WaitlistEntry::count();
 
         return Inertia::render('admin/broadcast/Index', [
             'broadcasts'    => $broadcasts,
@@ -145,7 +145,7 @@ class AdminBroadcastEmailController extends Controller
     */
     public function sendWaitlistLaunch(Request $request)
     {
-        $recipients = WaitlistEntry::whereIn('email', ['daveystuart1@gmail.com', 'kacey.zytko14@icloud.com'])->get();
+        $recipients = WaitlistEntry::all();
 
         if ($recipients->isEmpty()) {
             return response()->json(['error' => 'No waitlist entries found.'], 422);
