@@ -28,7 +28,9 @@ class Product extends Model
         'status',
         'cost',
         'stock_qty',
-        'parent_product_id'
+        'parent_product_id',
+        'how_to_use',
+        'faqs'
     ];
 
     protected $hidden = [];

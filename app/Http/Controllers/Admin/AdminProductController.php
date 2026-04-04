@@ -122,6 +122,11 @@ class AdminProductController extends Controller
             'materials'              => ['nullable', 'array'],
             'materials.*.oil_id'     => ['required_with:materials', 'exists:oil,id', 'distinct'],
             'materials.*.percentage' => ['required_with:materials', 'numeric', 'min:0.01', 'max:100'],
+
+            'how_to_use' => ['nullable', 'string'],
+            'faqs'       => ['nullable', 'array'],
+            'faqs.*.question' => ['required_with:faqs', 'string', 'max:500'],
+            'faqs.*.answer'   => ['required_with:faqs', 'string', 'max:2000'],
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
@@ -236,6 +241,11 @@ class AdminProductController extends Controller
             'materials'              => ['nullable', 'array'],
             'materials.*.oil_id'     => ['required_with:materials', 'exists:oil,id', 'distinct'],
             'materials.*.percentage' => ['required_with:materials', 'numeric', 'min:0.01', 'max:100'],
+
+            'how_to_use' => ['nullable', 'string'],
+            'faqs'       => ['nullable', 'array'],
+            'faqs.*.question' => ['required_with:faqs', 'string', 'max:500'],
+            'faqs.*.answer'   => ['required_with:faqs', 'string', 'max:2000'],
         ]);
 
         return DB::transaction(function () use ($request, $validated, $product) {

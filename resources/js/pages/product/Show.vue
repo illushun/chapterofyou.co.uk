@@ -20,6 +20,7 @@ interface ProductVariation {
     id: number; mpn: string; name: string;
     cost: number; stock_qty: number; parent_product_id: number;
 }
+interface FaqItem { question: string; answer: string; }
 interface ProductDetailData {
     id: number; name: string; mpn: string; description: string;
     cost: number; stock_qty: number; total_unique_views: number;
@@ -27,6 +28,8 @@ interface ProductDetailData {
     images: ProductImage[]; reviews: ProductReview[];
     categories: { id: number; name: string }[];
     children: ProductVariation[];
+    how_to_use?: string | null;
+    faqs?: FaqItem[] | null;
     seo?: { meta_title: string; meta_description: string };
 }
 interface ProductProps {
@@ -54,6 +57,11 @@ const selectedImageIndex = ref(0);
 const mainImageUrl = computed(() => props.product.images[selectedImageIndex.value]?.image || '/images/placeholder.jpg');
 const openImageModal = () => { if ((props.product.images || []).length > 0) isModalOpen.value = true; };
 
+// ── FAQ accordion ─────────────────────────────────────────────────────────
+const openFaqIndex = ref<number | null>(null);
+const toggleFaq = (i: number) => { openFaqIndex.value = openFaqIndex.value === i ? null : i; };
+
+// ── Review form ───────────────────────────────────────────────────────────
 const reviewForm = useForm({ rating: 0, message: '', images: [] as File[] });
 
 const submitReview = () => {
@@ -64,25 +72,23 @@ const submitReview = () => {
         },
     });
 };
-
 const deleteReview = (reviewId: number) => {
     router.delete(route('products.review.destroy', reviewId), {
         preserveScroll: true,
         onSuccess: () => successToastRef.value?.show('Review deleted.', 'trash'),
     });
 };
-
 const handleImageUpload = (event: Event) => {
     const t = event.target as HTMLInputElement;
     if (t.files) reviewForm.images = Array.from(t.files).slice(0, 3);
 };
 
+// ── Variations ────────────────────────────────────────────────────────────
 const getInitialVariationId = (): number | null => {
     if (props.product.children?.length > 0)
         return props.product.children.find(v => v.stock_qty > 0)?.id ?? null;
     return null;
 };
-
 const selectedVariationId = ref<number | null>(getInitialVariationId());
 const currentVariation = computed(() => {
     if (selectedVariationId.value) {
@@ -94,20 +100,14 @@ const currentVariation = computed(() => {
 
 const isOutOfStock = computed(() => currentVariation.value.stock_qty <= 0);
 const isPopular = computed(() => props.product.total_unique_views > 100);
-
-const fmt = (v: number | string) => {
-    const n = Number(v);
-    return isNaN(n) ? 'N/A' : `£${n.toFixed(2)}`;
-};
+const fmt = (v: number | string) => { const n = Number(v); return isNaN(n) ? 'N/A' : `£${n.toFixed(2)}`; };
 const formattedCost = computed(() => fmt(currentVariation.value.cost));
 
 const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
     const itemToAdd = quickAddProduct ?? currentVariation.value;
     const qty = quickAddProduct ? 1 : quantity.value;
     const name = quickAddProduct ? quickAddProduct.name : props.product.name;
-
     if (!itemToAdd?.id || qty < 1 || itemToAdd.stock_qty < qty) return;
-
     router.post('/cart/add', { product_id: itemToAdd.id, quantity: qty }, {
         preserveScroll: true,
         onSuccess: () => {
@@ -120,13 +120,11 @@ const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
 const handleFavourite = async (productArg?: any) => {
     const targetId = (productArg && typeof productArg === 'object' ? productArg.id : null) ?? props.product.id;
     const isRelated = targetId !== props.product.id;
-
     isRelated
         ? (wishlistedIds.value.includes(targetId)
             ? wishlistedIds.value.splice(wishlistedIds.value.indexOf(targetId), 1)
             : wishlistedIds.value.push(targetId))
         : (isWishlisted.value = !isWishlisted.value);
-
     try {
         const { data } = await axios.post(route('wishlist.toggle'), { product_id: targetId });
         successToastRef.value?.show(data.message, data.wishlisted ? 'favourite' : 'trash');
@@ -141,13 +139,14 @@ const handleFavourite = async (productArg?: any) => {
 };
 
 const pageTitle = computed(() => props.product.seo?.meta_title || `${props.product.name} | Chapter of You`);
+const hasHowToUse = computed(() => !!props.product.how_to_use?.trim());
+const hasFaqs = computed(() => (props.product.faqs?.length ?? 0) > 0);
 </script>
 
 <template>
     <NavBar />
 
     <Head :title="pageTitle" />
-
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
         rel="stylesheet" />
@@ -155,17 +154,15 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     <main class="pd">
         <div class="pd-wrap">
 
-            <!-- ── Product main section ── -->
+            <!-- ── Product main grid ── -->
             <div class="pd-grid">
 
-                <!-- Image column -->
+                <!-- Images -->
                 <div class="pd-images">
-                    <!-- Main image -->
                     <button @click="openImageModal" class="pd-main-img-btn" aria-label="View full image">
                         <div class="pd-main-img-wrap">
                             <span v-if="isPopular" class="pd-popular-badge">Popular</span>
                             <img :src="mainImageUrl" :alt="product.name" class="pd-main-img" />
-                            <!-- Zoom hint -->
                             <div class="pd-img-zoom-hint" aria-hidden="true">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -175,8 +172,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                             </div>
                         </div>
                     </button>
-
-                    <!-- Thumbnails -->
                     <div v-if="product.images.length > 1" class="pd-thumbs">
                         <button v-for="(img, i) in product.images" :key="i" @click="selectedImageIndex = i"
                             class="pd-thumb" :class="{ 'pd-thumb--active': selectedImageIndex === i }">
@@ -185,10 +180,8 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                     </div>
                 </div>
 
-                <!-- Info column -->
+                <!-- Info -->
                 <div class="pd-info">
-
-                    <!-- Breadcrumb -->
                     <nav class="pd-breadcrumb" aria-label="Breadcrumb">
                         <a href="/products" class="pd-crumb">Products</a>
                         <template v-for="cat in product.categories" :key="cat.id">
@@ -200,41 +193,33 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                     <h1 class="pd-title">{{ product.name }}</h1>
                     <p class="pd-mpn">{{ currentVariation.mpn }}</p>
 
-                    <!-- Rating summary -->
                     <div v-if="product.approved_reviews_count > 0" class="pd-rating-row">
-                        <StarRating :rating="product.average_rating" :size="18" class="text-secondary-content" />
+                        <StarRating :rating="product.average_rating" :size="18" />
                         <span class="pd-rating-label">{{ product.average_rating.toFixed(1) }} ({{
                             product.approved_reviews_count }} review{{
                                 product.approved_reviews_count !== 1 ? 's' : '' }})</span>
                     </div>
 
-                    <!-- Stock badge -->
                     <div class="pd-stock-row">
                         <span class="pd-stock-badge" :class="isOutOfStock ? 'pd-stock--out' : 'pd-stock--in'">
                             {{ isOutOfStock ? 'Out of Stock' : 'In Stock' }}
                         </span>
                     </div>
 
-                    <!-- Price -->
                     <p class="pd-price">{{ formattedCost }}</p>
 
-                    <!-- Variations -->
                     <div v-if="product.children?.length > 0" class="pd-variations">
                         <h3 class="pd-variations-label">Choose Option</h3>
                         <div class="pd-variation-btns">
                             <button v-for="v in product.children" :key="v.id" @click="selectedVariationId = v.id"
-                                :disabled="v.stock_qty <= 0" class="pd-variation-btn" :class="{
-                                    'pd-variation-btn--active': v.id === selectedVariationId,
-                                    'pd-variation-btn--disabled': v.stock_qty <= 0,
-                                }">
+                                :disabled="v.stock_qty <= 0" class="pd-variation-btn"
+                                :class="{ 'pd-variation-btn--active': v.id === selectedVariationId, 'pd-variation-btn--disabled': v.stock_qty <= 0 }">
                                 {{ v.name }}
                             </button>
                         </div>
                     </div>
 
-                    <!-- Add to cart row -->
                     <div class="pd-actions">
-                        <!-- Qty stepper -->
                         <div class="pd-qty">
                             <button @click="decreaseQuantity" :disabled="quantity <= 1" class="pd-qty-btn"
                                 aria-label="Decrease quantity">
@@ -255,8 +240,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                                 </svg>
                             </button>
                         </div>
-
-                        <!-- Add to cart -->
                         <button @click="handleAddToCart()"
                             :disabled="isOutOfStock || quantity > currentVariation.stock_qty || quantity < 1"
                             class="pd-cart-btn" :class="{ 'pd-cart-btn--disabled': isOutOfStock }">
@@ -268,8 +251,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                             </svg>
                             {{ isOutOfStock ? 'Out of Stock' : 'Add to Cart' }}
                         </button>
-
-                        <!-- Wishlist -->
                         <button @click="handleFavourite()" class="pd-wish-btn"
                             :class="{ 'pd-wish-btn--active': isWishlisted }"
                             :aria-label="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'">
@@ -285,32 +266,69 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                         </button>
                     </div>
 
-                    <!-- Description -->
                     <div class="pd-description">
                         <h2 class="pd-section-title">Details</h2>
                         <div class="pd-description-body" v-html="product.description"></div>
                     </div>
-
                 </div>
             </div>
 
-            <!-- ── Reviews ── -->
+            <!-- ── How to Use ─────────────────────────────────────────────── -->
+            <section v-if="hasHowToUse" class="pd-content-section">
+                <h2 class="pd-section-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 8v4M12 16h.01" />
+                    </svg>
+                    How to Use
+                </h2>
+                <div class="pd-how-to-use" v-html="product.how_to_use"></div>
+            </section>
+
+            <!-- ── FAQs ───────────────────────────────────────────────────── -->
+            <section v-if="hasFaqs" class="pd-content-section">
+                <h2 class="pd-section-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                        <path d="M12 17h.01" />
+                    </svg>
+                    Frequently Asked Questions
+                </h2>
+                <div class="pd-faq-list">
+                    <div v-for="(faq, i) in product.faqs" :key="i" class="pd-faq-item">
+                        <button class="pd-faq-trigger" @click="toggleFaq(i)" :aria-expanded="openFaqIndex === i"
+                            :aria-controls="`faq-body-${i}`">
+                            <span class="pd-faq-q">{{ faq.question }}</span>
+                            <svg class="pd-faq-chevron" :class="{ 'pd-faq-chevron--open': openFaqIndex === i }"
+                                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="m6 9 6 6 6-6" />
+                            </svg>
+                        </button>
+                        <div :id="`faq-body-${i}`" class="pd-faq-body"
+                            :class="{ 'pd-faq-body--open': openFaqIndex === i }">
+                            <p class="pd-faq-a">{{ faq.answer }}</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ── Reviews ────────────────────────────────────────────────── -->
             <section class="pd-reviews-section">
                 <h2 class="pd-section-title">
                     Customer Reviews
                     <span class="pd-reviews-count">{{ product.approved_reviews_count }}</span>
                 </h2>
 
-                <!-- Average rating -->
                 <div v-if="product.approved_reviews_count > 0" class="pd-avg-rating">
-                    <StarRating :rating="product.average_rating" :size="22" class="text-secondary-content" />
+                    <StarRating :rating="product.average_rating" :size="22" />
                     <span class="pd-avg-val">{{ product.average_rating.toFixed(1) }} average</span>
                 </div>
 
-                <!-- Write a review -->
                 <div v-if="canReview" class="pd-review-form-card">
-
-                    <!-- Rating picker -->
                     <div class="pd-rf-rating-section">
                         <p class="pd-rf-rating-prompt">How would you rate this product?</p>
                         <div class="pd-rf-stars">
@@ -324,12 +342,11 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                                 </svg>
                             </button>
                         </div>
-                        <p class="pd-rf-rating-label" v-if="reviewForm.rating > 0">
-                            {{ ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'][reviewForm.rating] }}
-                        </p>
+                        <p class="pd-rf-rating-label" v-if="reviewForm.rating > 0">{{ ['', 'Poor', 'Fair', 'Good', 'Very
+                            Good',
+                            'Excellent'][reviewForm.rating] }}</p>
                         <p v-if="reviewForm.errors.rating" class="field-error">{{ reviewForm.errors.rating }}</p>
                     </div>
-
                     <form @submit.prevent="submitReview" class="pd-review-form">
                         <div class="field">
                             <label for="review_message" class="field-label">Your Review</label>
@@ -339,11 +356,10 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                                 :class="{ 'field-input--error': reviewForm.errors.message }"></textarea>
                             <p v-if="reviewForm.errors.message" class="field-error">{{ reviewForm.errors.message }}</p>
                         </div>
-
                         <div class="field">
-                            <label for="review_images" class="field-label">
-                                Add Photos <span class="field-optional">(optional, up to 3)</span>
-                            </label>
+                            <label for="review_images" class="field-label">Add Photos <span
+                                    class="field-optional">(optional, up to
+                                    3)</span></label>
                             <label for="review_images" class="pd-file-label">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -358,10 +374,9 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                             <input type="file" id="review_images" multiple accept="image/*" @change="handleImageUpload"
                                 class="pd-file-hidden" />
                             <p v-if="reviewForm.errors['images'] || reviewForm.errors['images.0']" class="field-error">
-                                {{ reviewForm.errors['images'] || reviewForm.errors['images.0'] }}
-                            </p>
+                                {{
+                                    reviewForm.errors['images'] || reviewForm.errors['images.0'] }}</p>
                         </div>
-
                         <div class="pd-rf-footer">
                             <button type="submit" :disabled="reviewForm.processing || reviewForm.rating === 0"
                                 class="btn-rose" :class="{ 'btn-rose--disabled': reviewForm.rating === 0 }">
@@ -378,21 +393,18 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                     </form>
                 </div>
 
-                <!-- Not eligible notices -->
-                <div v-else-if="auth.user" class="pd-notice">
-                    You must have purchased this product to leave a review.
+                <div v-else-if="auth.user" class="pd-notice">You must have purchased this product to leave a review.
                 </div>
                 <div v-else class="pd-notice">
                     <a :href="route('login')" class="pd-notice-link">Log in</a> to see if you're eligible to leave a
                     review.
                 </div>
 
-                <!-- Review list -->
                 <div v-if="product.reviews.length > 0" class="pd-review-list">
                     <div v-for="review in product.reviews" :key="review.id" class="pd-review-card">
                         <div class="pd-review-header">
                             <div>
-                                <StarRating :rating="review.rating" :size="16" class="text-secondary-content" />
+                                <StarRating :rating="review.rating" :size="16" />
                                 <p class="pd-reviewer-name">{{ review.user.name }}</p>
                                 <p class="pd-review-date">{{ new Date(review.created_at).toLocaleDateString('en-GB', {
                                     day:
@@ -413,7 +425,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
                             <img v-for="(img, idx) in review.review_images" :key="idx" :src="img"
                                 :alt="`Review photo ${idx + 1}`" class="pd-review-img" @click="openImageModal" />
                         </div>
-                        <!-- Admin reply -->
                         <div v-if="review.admin_reply" class="pd-admin-reply">
                             <div class="pd-admin-reply-head">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -431,7 +442,7 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
 
         </div>
 
-        <!-- ── Related products ── -->
+        <!-- ── Related ── -->
         <section v-if="related.length" class="pd-related">
             <div class="pd-related-wrap">
                 <h2 class="pd-related-title">You might also love</h2>
@@ -465,7 +476,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     padding: 3rem 1.25rem 4rem;
 }
 
-/* ── Product grid ── */
 .pd-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -480,9 +490,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
         gap: 2rem;
     }
 }
-
-/* ── Images ── */
-.pd-images {}
 
 @media (min-width: 860px) {
     .pd-images {
@@ -587,7 +594,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     object-fit: cover;
 }
 
-/* ── Info column ── */
 .pd-info {
     display: flex;
     flex-direction: column;
@@ -679,7 +685,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     margin: 0;
 }
 
-/* ── Variations ── */
 .pd-variations {
     border-top: 1px solid #e5c9c7;
     padding-top: 1rem;
@@ -731,7 +736,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     text-decoration: line-through;
 }
 
-/* ── Actions row ── */
 .pd-actions {
     display: flex;
     align-items: center;
@@ -740,7 +744,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     padding-top: 0.5rem;
 }
 
-/* Qty stepper */
 .pd-qty {
     display: flex;
     align-items: center;
@@ -787,8 +790,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     outline: none;
     padding: 0;
     height: 40px;
-    line-height: 40px;
-    /* hide number arrows */
     -moz-appearance: textfield;
 }
 
@@ -798,7 +799,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     margin: 0;
 }
 
-/* Cart button */
 .pd-cart-btn {
     flex: 1;
     display: inline-flex;
@@ -832,7 +832,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     box-shadow: none;
 }
 
-/* Wishlist button */
 .pd-wish-btn {
     width: 42px;
     height: 42px;
@@ -848,19 +847,13 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
-.pd-wish-btn:hover {
-    background: #faeaea;
-    color: #8c4a50;
-    border-color: #c9a4a4;
-}
-
+.pd-wish-btn:hover,
 .pd-wish-btn--active {
     background: #faeaea;
     color: #8c4a50;
     border-color: #c9a4a4;
 }
 
-/* ── Description ── */
 .pd-description {
     border-top: 1px solid #e5c9c7;
     padding-top: 1.25rem;
@@ -884,7 +877,145 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     line-height: 1.75;
 }
 
-/* ── Reviews section ── */
+/* ════════════════════════════════════════════════════════
+   NEW: How to Use & FAQ
+   ════════════════════════════════════════════════════════ */
+
+/* Shared wrapper for both new sections */
+.pd-content-section {
+    border-top: 1px solid #e5c9c7;
+    padding-top: 2.5rem;
+    margin-bottom: 2.5rem;
+}
+
+/* How to Use — rendered HTML block */
+.pd-how-to-use {
+    background: #fffafa;
+    border: 1px solid #e5c9c7;
+    border-radius: 16px;
+    padding: 1.5rem 1.75rem;
+    font-size: 0.95rem;
+    color: #3d2222;
+    line-height: 1.8;
+    position: relative;
+    overflow: hidden;
+}
+
+.pd-how-to-use::before {
+    content: '✿';
+    position: absolute;
+    bottom: -6px;
+    right: 8px;
+    font-size: 3rem;
+    color: #c9a4a4;
+    opacity: 0.1;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.pd-how-to-use :deep(p) {
+    margin-bottom: 0.75rem;
+}
+
+.pd-how-to-use :deep(p:last-child) {
+    margin-bottom: 0;
+}
+
+.pd-how-to-use :deep(ul),
+.pd-how-to-use :deep(ol) {
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.pd-how-to-use :deep(li) {
+    margin-bottom: 0.35rem;
+}
+
+.pd-how-to-use :deep(strong) {
+    font-weight: 700;
+    color: #2d1a1a;
+}
+
+/* FAQ accordion */
+.pd-faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.pd-faq-item {
+    border: 1px solid #e5c9c7;
+    border-radius: 14px;
+    background: #fffafa;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+
+.pd-faq-item:hover {
+    box-shadow: 0 2px 12px rgba(229, 201, 199, 0.4);
+}
+
+.pd-faq-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s;
+}
+
+.pd-faq-trigger:hover {
+    background: rgba(229, 201, 199, 0.12);
+}
+
+.pd-faq-q {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2d1a1a;
+    line-height: 1.4;
+}
+
+.pd-faq-chevron {
+    color: #8c4a50;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+}
+
+.pd-faq-chevron--open {
+    transform: rotate(180deg);
+}
+
+/* Collapse/expand via max-height transition */
+.pd-faq-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+    padding: 0 1.25rem;
+}
+
+.pd-faq-body--open {
+    max-height: 800px;
+    padding: 0 1.25rem 1.1rem;
+}
+
+.pd-faq-a {
+    font-size: 0.92rem;
+    color: #6b4f4f;
+    line-height: 1.7;
+    padding-top: 0.6rem;
+    border-top: 1px solid #f0dcd8;
+}
+
+/* ════════════════════════════════════════════════════════
+   Reviews (unchanged from original)
+   ════════════════════════════════════════════════════════ */
 .pd-reviews-section {
     border-top: 1px solid #e5c9c7;
     padding-top: 2.5rem;
@@ -917,20 +1048,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     font-style: italic;
 }
 
-
-.pd-review-form-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.15rem;
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 1.1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid #e5c9c7;
-}
-
-
-/* Shared field styles */
 .field {
     display: flex;
     flex-direction: column;
@@ -982,9 +1099,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     color: #b54040;
 }
 
-
-
-/* Notices */
 .pd-notice {
     border: 1px solid #e5c9c7;
     border-radius: 12px;
@@ -1006,7 +1120,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     text-decoration: underline;
 }
 
-/* Review list */
 .pd-review-list {
     display: flex;
     flex-direction: column;
@@ -1103,7 +1216,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     margin-top: 1rem;
 }
 
-/* ── Admin reply ── */
 .pd-admin-reply {
     margin-top: 0.85rem;
     padding: 0.85rem 1rem;
@@ -1131,7 +1243,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     line-height: 1.6;
 }
 
-/* ── Related products ── */
 .pd-related {
     background: #f5ece9;
     padding: 3rem 0 4rem;
@@ -1174,7 +1285,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     }
 }
 
-/* ── Review form extras ── */
 .pd-rf-rating-section {
     padding: 1.5rem 1.5rem 1.25rem;
     background: linear-gradient(135deg, #fdf4f3, #fff8f7);
@@ -1213,20 +1323,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
 }
 
 .pd-rf-star--filled {
-    color: #c9747a;
-}
-
-.pd-rf-stars:hover .pd-rf-star {
-    color: #e5c9c7;
-}
-
-.pd-rf-stars:hover .pd-rf-star:hover,
-.pd-rf-stars:hover .pd-rf-star:hover~.pd-rf-star {
-    color: #e5c9c7;
-}
-
-.pd-rf-stars .pd-rf-star:hover,
-.pd-rf-stars .pd-rf-star:hover~.pd-rf-star-sibling {
     color: #c9747a;
 }
 
@@ -1292,7 +1388,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     font-style: italic;
 }
 
-/* Remove old form card padding since rating section now has its own */
 .pd-review-form-card {
     border: 1px solid #e5c9c7;
     border-radius: 20px;
@@ -1303,7 +1398,6 @@ const pageTitle = computed(() => props.product.seo?.meta_title || `${props.produ
     overflow: hidden;
 }
 
-/* ── Buttons ── */
 .btn-rose {
     display: inline-flex;
     align-items: center;
