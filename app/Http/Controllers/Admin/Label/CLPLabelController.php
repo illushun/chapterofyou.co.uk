@@ -111,7 +111,7 @@ class CLPLabelController extends Controller
         } elseif ($label->nominal_quantity ?? null) {
             $productMeta = $label->nominal_quantity;
         }*/
-        $productMeta = $label->nominal_quantity ? $label->nominal_quantity : "100ml";
+        $productMeta = $label->nominal_quantity ? $label->nominal_quantity : "100 ml";
 
         // ── Pictogram images as base64 ────────────────────────────────────────────
         $pictogramMap = [
