@@ -318,9 +318,9 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
                         <div class="pd-description-body" v-html="product.description"></div>
                     </div>
 
-                    <div class="pd-description">
+                    <div v-if="product.details" class="pd-description">
                         <h2 class="pd-section-title">The Details</h2>
-                        <div class="pd-description-body" v-html="product.description"></div>
+                        <div class="pd-description-body" v-html="product.details"></div>
                     </div>
                 </div>
             </div>
