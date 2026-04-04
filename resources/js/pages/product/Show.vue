@@ -5,6 +5,8 @@ import { ref, computed } from 'vue';
 import axios from 'axios';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import JsonLdSchema from '@/components/JsonLdSchema.vue';
+import { useProductSchema, useBreadcrumbSchema } from '@/composables/useProductSchema';
 
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
@@ -58,6 +60,37 @@ const seo = useSeoHead({
     canonical: `/product/${props.product.seo?.slug || props.product.id}`,
     ogImage: props.product.images?.[0]?.image,
     ogType: 'product',
+});
+
+const productSlug = computed(() =>
+    props.product.seo?.slug || String(props.product.id)
+);
+
+const productSchema = computed(() =>
+    useProductSchema({
+        product: props.product,
+        slug: productSlug.value,
+    })
+);
+
+const breadcrumbSchema = computed(() => {
+    const crumbs = [
+        { name: 'Home', url: '/' },
+        { name: 'Products', url: '/products' },
+    ];
+
+    // Add category if the product has one
+    if (props.product.categories?.length) {
+        const cat = props.product.categories[0];
+        crumbs.push({ name: cat.name, url: `/products?categories=${cat.id}` });
+    }
+
+    crumbs.push({
+        name: props.product.name,
+        url: `/product/${productSlug.value}`,
+    });
+
+    return useBreadcrumbSchema(crumbs);
 });
 
 const quantity = ref(1);
@@ -151,12 +184,14 @@ const handleFavourite = async (productArg?: any) => {
 
 const hasHowToUse = computed(() => !!props.product.how_to_use?.trim());
 const hasFaqs = computed(() => (props.product.faqs?.length ?? 0) > 0);
+const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
 </script>
 
 <template>
     <NavBar />
 
     <SeoHead v-bind="seo" />
+    <JsonLdSchema :schema="ldSchemas" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"

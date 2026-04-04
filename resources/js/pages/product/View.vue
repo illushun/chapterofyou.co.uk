@@ -6,6 +6,7 @@ import { debounce } from 'lodash';
 import axios from 'axios';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import JsonLdSchema from '@/components/JsonLdSchema.vue';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -23,6 +24,8 @@ interface ProductProps {
     categories: Category[];
     filters: { search: string; categories: number[]; min_price: string | null; max_price: string | null; sort: string; in_stock: string | boolean; };
 }
+
+const BASE_URL = 'https://www.chapterofyou.co.uk';
 
 const props = defineProps<ProductProps & { wishlistedIds: number[] }>();
 
@@ -111,12 +114,26 @@ const handleFavourite = async (product: ProductCardData) => {
         if (err.response?.status === 401) window.location.href = route('login');
     }
 };
+
+const productListSchema = computed(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    'name': 'Reed Diffusers',
+    'url': `${BASE_URL}/products`,
+    'itemListElement': (props.products?.data ?? []).map((p: any, index: number) => ({
+        '@type': 'ListItem',
+        'position': index + 1,
+        'url': `${BASE_URL}/product/${p.seo?.slug || p.id}`,
+        'name': p.name,
+    })),
+}));
 </script>
 
 <template>
     <NavBar />
 
     <SeoHead v-bind="seo" />
+    <JsonLdSchema :schema="productListSchema" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
@@ -128,7 +145,7 @@ const handleFavourite = async (product: ProductCardData) => {
             <!-- Page header + search -->
             <header class="pv-header">
                 <div>
-                    <h1 class="pv-title">Our Collection</h1>
+                    <h1 class="pv-title">My Collection</h1>
                     <p class="pv-sub">Handcrafted reed diffusers, made just for you.</p>
                 </div>
                 <div class="pv-search-wrap">

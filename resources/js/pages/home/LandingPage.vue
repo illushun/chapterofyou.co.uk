@@ -3,6 +3,8 @@ import NavBar from '@/components/NavBar.vue';
 import { Head } from '@inertiajs/vue3';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import JsonLdSchema from '@/components/JsonLdSchema.vue';
+import { useOrganizationSchema, useWebsiteSchema } from '@/composables/useProductSchema';
 
 interface FeaturedProduct {
     id: number;
@@ -23,12 +25,15 @@ const seo = useSeoHead({
     description: 'Chapter of You. Luxurious hand-crafted reed diffusers made with care for your home. Your chapter, your self-care.',
     canonical: '/',  // resolves to https://www.chapterofyou.co.uk
 });
+
+const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 </script>
 
 <template>
     <NavBar />
 
     <SeoHead v-bind="seo" />
+    <JsonLdSchema :schema="siteSchemas" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
