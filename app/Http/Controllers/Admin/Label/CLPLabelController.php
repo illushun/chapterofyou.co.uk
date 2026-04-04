@@ -104,12 +104,14 @@ class CLPLabelController extends Controller
         $allergens = $calculator->calculateAllergens($product);
 
         // ── Product meta line ────────────────────────────────────────────────────
-        $productMeta = null;
+        // Not needed for now
+        /*$productMeta = null;
         if ($product->bottle_size_ml ?? null) {
             $productMeta = 'Reed Diffuser, ' . $product->bottle_size_ml . 'ml';
         } elseif ($label->nominal_quantity ?? null) {
             $productMeta = $label->nominal_quantity;
-        }
+        }*/
+        $productMeta = $label->nominal_quantity ? $label->nominal_quantity : "100ml";
 
         // ── Pictogram images as base64 ────────────────────────────────────────────
         $pictogramMap = [
