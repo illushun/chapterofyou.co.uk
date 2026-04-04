@@ -41,9 +41,6 @@ const pictogramMap: Record<string, string> = {
     'flame': '/storage/images/Pictograms/GHS02.png',
     'skull': '/storage/images/Pictograms/GHS06.png',
     'corrosion': '/storage/images/Pictograms/GHS05.png',
-    'oxidizer': '/storage/images/Pictograms/GHS03.png',
-    'gas-cylinder': '/storage/images/Pictograms/GHS04.png',
-    'explosion': '/storage/images/Pictograms/GHS01.png',
 };
 
 const pictogramLabels: Record<string, string> = {
@@ -53,9 +50,6 @@ const pictogramLabels: Record<string, string> = {
     'flame': 'GHS02 Flame',
     'skull': 'GHS06 Skull & Crossbones',
     'corrosion': 'GHS05 Corrosion',
-    'oxidizer': 'GHS03 Oxidiser',
-    'gas-cylinder': 'GHS04 Gas Cylinder',
-    'explosion': 'GHS01 Explosion',
 };
 
 async function onProductChange() {
@@ -76,82 +70,127 @@ watch(selectedProductId, () => { clpResult.value = null; showReasoning.value = f
 
 // ── Pictogram PDF export ──────────────────────────────────────────────────
 // Builds a hidden HTML sheet of all pictograms at exactly 1cm × 1cm and
-// triggers window.print() in a new window (print-to-PDF).
+// One full A4 sheet per pictogram, tiled at exactly 1cm × 1cm.
+// A4 printable area at 15mm margins = 180mm wide × 267mm tall.
+// Grid: 15 cols × 10mm + 14 gaps × 2mm = 178mm wide  ✓
+//       Label row ~4mm + grid rows of 12mm (10mm + 2mm gap)
+//       ≈ 21 rows fit → ~315 pictograms per sheet.
 async function exportPictogramsPdf() {
     exportingPdf.value = true;
     try {
-        // Convert all pictogram images to base64 so they render in the print window
         const entries = Object.entries(pictogramMap);
 
+        // Convert each image to base64 so it survives being written into a new window
         const toBase64 = (url: string): Promise<string> =>
-            new Promise((resolve, reject) => {
+            new Promise((resolve) => {
                 const img = new Image();
                 img.crossOrigin = 'anonymous';
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     canvas.width = img.naturalWidth || 128;
                     canvas.height = img.naturalHeight || 128;
-                    const ctx = canvas.getContext('2d')!;
-                    ctx.drawImage(img, 0, 0);
+                    canvas.getContext('2d')!.drawImage(img, 0, 0);
                     resolve(canvas.toDataURL('image/png'));
                 };
-                img.onerror = () => resolve(url); // fallback: use original URL
+                img.onerror = () => resolve(url);
                 img.src = url;
             });
 
-        const b64Images: Record<string, string> = {};
+        const b64: Record<string, string> = {};
         for (const [key, url] of entries) {
-            b64Images[key] = await toBase64(url);
+            b64[key] = await toBase64(url);
         }
 
-        // Build the print document
-        const rows = entries.map(([key]) => `
-            <div class="pic-item">
-                <img src="${b64Images[key]}" alt="${pictogramLabels[key] ?? key}" />
-                <p>${pictogramLabels[key] ?? key}</p>
-            </div>
-        `).join('');
+        // 15 cols × 21 rows = 315 pictograms per A4 sheet
+        const COLS = 15;
+        const ROWS = 21;
+        const COUNT = COLS * ROWS;
+
+        // One <section> per pictogram — each gets its own @page via page-break-after
+        const sections = entries.map(([key]) => {
+            const label = pictogramLabels[key] ?? key;
+            const cells = Array(COUNT)
+                .fill(`<div class="cell"><img src="${b64[key]}" alt="${label}" /></div>`)
+                .join('');
+            return `
+            <section>
+                <p class="sheet-label">${label}</p>
+                <div class="grid">${cells}</div>
+            </section>`;
+        }).join('\n');
 
         const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<title>GHS Pictograms — Chapter of You</title>
+<title>GHS Pictogram Sheets — Chapter of You</title>
 <style>
-  @page { size: A4; margin: 15mm; }
+  @page { size: A4 portrait; margin: 15mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'DM Sans', sans-serif; background: #fff; color: #1a1a2e; }
-  h1 { font-size: 11pt; font-weight: 700; margin-bottom: 6mm; letter-spacing: 0.05em; text-transform: uppercase; }
-  .grid { display: flex; flex-wrap: wrap; gap: 6mm; }
-  .pic-item {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 1.5mm; width: 25mm;
+  body { background: #fff; }
+
+  section {
+    width: 180mm;
+    height: 267mm;
+    overflow: hidden;
+    page-break-after: always;
+    break-after: page;
+    display: flex;
+    flex-direction: column;
   }
-  .pic-item img {
-    width: 10mm; height: 10mm;   /* 1cm × 1cm */
+  section:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .sheet-label {
+    font-family: Arial, sans-serif;
+    font-size: 7pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #555;
+    margin-bottom: 2mm;
+    flex-shrink: 0;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(${COLS}, 10mm);
+    grid-auto-rows: 10mm;
+    gap: 2mm;
+    overflow: hidden;
+  }
+
+  .cell {
+    width: 10mm;
+    height: 10mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cell img {
+    width: 10mm;
+    height: 10mm;
     object-fit: contain;
-    border: 0.5pt solid #1a1a2e;
     display: block;
   }
-  .pic-item p {
-    font-size: 6pt; text-align: center;
-    color: #555; line-height: 1.3;
-  }
-  .meta { font-size: 7pt; color: #888; margin-top: 8mm; border-top: 0.5pt solid #ccc; padding-top: 3mm; }
 </style>
 </head>
-<body>
-  <h1>GHS / CLP Pictograms Reference Sheet</h1>
-  <div class="grid">${rows}</div>
-  <p class="meta">Chapter of You — printed ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+<body>${sections}
 </body>
 </html>`;
 
         const win = window.open('', '_blank');
-        if (!win) { alert('Pop-up blocked. Please allow pop-ups for this page.'); return; }
+        if (!win) {
+            alert('Pop-up blocked — please allow pop-ups for this page and try again.');
+            return;
+        }
         win.document.write(html);
         win.document.close();
-        win.onload = () => { win.focus(); win.print(); };
+        // Small delay lets images render fully before the print dialog opens
+        setTimeout(() => { win.focus(); win.print(); }, 800);
     } finally {
         exportingPdf.value = false;
     }
