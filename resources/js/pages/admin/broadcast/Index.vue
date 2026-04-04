@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import axios from 'axios';
 
 interface Broadcast {
     id: number;
@@ -16,7 +18,7 @@ interface BroadcastsPaginated {
     last_page: number;
 }
 
-defineProps<{ broadcasts: BroadcastsPaginated; totalOptedIn: number }>();
+defineProps<{ broadcasts: BroadcastsPaginated; totalOptedIn: number; waitlistCount: number }>();
 
 const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString('en-GB', {
@@ -33,6 +35,26 @@ const audienceLabel: Record<string, string> = {
 const paginate = (url: string | null) => {
     if (url) router.get(url, {}, { preserveScroll: true });
 };
+
+// ── Waitlist launch ───────────────────────────────────────────────────────
+const waitlistConfirming = ref(false);
+const waitlistSending = ref(false);
+const waitlistDone = ref<string | null>(null);
+const waitlistError = ref<string | null>(null);
+
+async function sendWaitlistLaunch() {
+    waitlistSending.value = true;
+    waitlistError.value = null;
+    try {
+        const res = await axios.post(route('admin.broadcasts.waitlist-launch'));
+        waitlistDone.value = res.data.message;
+        waitlistConfirming.value = false;
+    } catch (e: any) {
+        waitlistError.value = e?.response?.data?.error ?? 'Something went wrong. Please try again.';
+    } finally {
+        waitlistSending.value = false;
+    }
+}
 </script>
 
 <template>
@@ -159,6 +181,92 @@ const paginate = (url: string | null) => {
                 :disabled="!link.url" class="be-page-btn" :class="{ 'be-page-btn--active': link.active }"
                 v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')">
             </button>
+        </div>
+
+        <!-- ── Waitlist Launch Email ── -->
+        <div class="be-waitlist-card">
+            <div class="be-waitlist-head">
+                <div class="be-waitlist-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="be-waitlist-title">Waitlist Launch Email</p>
+                    <p class="be-waitlist-sub">
+                        Send the "we're live" email to all waitlist subscribers with their exclusive discount code.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Stats row -->
+            <div class="be-waitlist-stats">
+                <div class="be-waitlist-stat">
+                    <span class="be-waitlist-stat-val">{{ waitlistCount.toLocaleString() }}</span>
+                    <span class="be-waitlist-stat-label">Waitlist subscribers</span>
+                </div>
+                <div class="be-waitlist-stat">
+                    <span class="be-waitlist-stat-val be-waitlist-stat-val--code">CHAPTERONE</span>
+                    <span class="be-waitlist-stat-label">Discount code included</span>
+                </div>
+            </div>
+
+            <!-- Success state -->
+            <div v-if="waitlistDone" class="be-waitlist-success">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 6 9 17l-5-5" />
+                </svg>
+                {{ waitlistDone }}
+            </div>
+
+            <!-- Error state -->
+            <div v-if="waitlistError" class="be-waitlist-error">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                </svg>
+                {{ waitlistError }}
+            </div>
+
+            <!-- Confirm step -->
+            <div v-if="waitlistConfirming && !waitlistDone" class="be-waitlist-confirm">
+                <p class="be-waitlist-confirm-text">
+                    This will queue the launch email for
+                    <strong>{{ waitlistCount.toLocaleString() }} subscriber{{ waitlistCount !== 1 ? 's' : ''
+                    }}</strong>.
+                    This cannot be undone.
+                </p>
+                <div class="be-waitlist-confirm-btns">
+                    <button @click="waitlistConfirming = false" class="adm-btn adm-btn--ghost adm-btn--sm">
+                        Cancel
+                    </button>
+                    <button @click="sendWaitlistLaunch" :disabled="waitlistSending" class="be-waitlist-send-btn">
+                        <svg v-if="waitlistSending" class="adm-spinner" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                        </svg>
+                        {{ waitlistSending ? 'Sending…' : `Yes, send to ${waitlistCount.toLocaleString()}` }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Trigger button -->
+            <button v-if="!waitlistConfirming && !waitlistDone" @click="waitlistConfirming = true"
+                :disabled="waitlistCount === 0" class="be-waitlist-trigger-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 2 11 13" />
+                    <path d="M22 2 15 22 11 13 2 9l20-7z" />
+                </svg>
+                Send Launch Email to Waitlist
+            </button>
+            <p v-if="waitlistCount === 0 && !waitlistDone" class="be-waitlist-empty-note">No waitlist entries found.</p>
         </div>
 
     </AdminLayout>
@@ -452,5 +560,206 @@ const paginate = (url: string | null) => {
 .be-page-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+}
+
+/* ── Waitlist launch card ── */
+.be-waitlist-card {
+    margin-top: 2rem;
+    background: var(--bb-surface, #ffffff);
+    border-radius: var(--bb-radius-lg, 14px);
+    border: 1px solid var(--bb-blush, #f2c4ce);
+    box-shadow: var(--bb-shadow-card, 0 1px 6px rgba(26, 26, 46, 0.05));
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.be-waitlist-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+}
+
+.be-waitlist-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #fff5f7;
+    border: 1px solid var(--bb-blush, #f2c4ce);
+    color: var(--bb-blush-d, #d4899a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.be-waitlist-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--bb-text, #1a1a2e);
+    margin-bottom: 0.2rem;
+}
+
+.be-waitlist-sub {
+    font-size: 0.82rem;
+    color: var(--bb-muted, #7a7a9a);
+    line-height: 1.5;
+}
+
+/* Stats row */
+.be-waitlist-stats {
+    display: flex;
+    gap: 2rem;
+    padding: 0.85rem 1rem;
+    background: #fff5f7;
+    border-radius: 8px;
+    border: 1px solid var(--bb-blush, #f2c4ce);
+    flex-wrap: wrap;
+}
+
+.be-waitlist-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.be-waitlist-stat-val {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--bb-text, #1a1a2e);
+    letter-spacing: -0.02em;
+}
+
+.be-waitlist-stat-val--code {
+    font-family: monospace;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    color: var(--bb-blush-d, #d4899a);
+}
+
+.be-waitlist-stat-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bb-muted, #7a7a9a);
+}
+
+/* Alerts */
+.be-waitlist-success {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    background: var(--bb-green-bg, #eef7f2);
+    border: 1px solid var(--bb-green-border, #b8dfc8);
+    color: #2a7a50;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.be-waitlist-error {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    background: var(--bb-red-bg, #fdeef0);
+    border: 1px solid var(--bb-red-border, #f5b8c0);
+    color: var(--bb-red, #e05c6e);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+/* Confirm step */
+.be-waitlist-confirm {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 8px;
+    background: var(--bb-cream, #faf9f7);
+    border: 1px solid var(--bb-border, #ece8e2);
+}
+
+.be-waitlist-confirm-text {
+    font-size: 0.85rem;
+    color: var(--bb-muted, #7a7a9a);
+    line-height: 1.5;
+}
+
+.be-waitlist-confirm-text strong {
+    color: var(--bb-text, #1a1a2e);
+}
+
+.be-waitlist-confirm-btns {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+
+/* Send button */
+.be-waitlist-send-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--bb-blush-d, #d4899a);
+    color: #fff;
+    font-family: var(--bb-font, 'DM Sans', sans-serif);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.15s;
+}
+
+.be-waitlist-send-btn:hover:not(:disabled) {
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.be-waitlist-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Trigger button */
+.be-waitlist-trigger-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    align-self: flex-start;
+    padding: 0.6rem 1.1rem;
+    border-radius: 8px;
+    border: 1px solid var(--bb-blush, #f2c4ce);
+    background: #fff5f7;
+    color: var(--bb-blush-d, #d4899a);
+    font-family: var(--bb-font, 'DM Sans', sans-serif);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+
+.be-waitlist-trigger-btn:hover:not(:disabled) {
+    background: var(--bb-blush-d, #d4899a);
+    border-color: var(--bb-blush-d, #d4899a);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.be-waitlist-trigger-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.be-waitlist-empty-note {
+    font-size: 0.78rem;
+    color: var(--bb-muted, #7a7a9a);
+    font-style: italic;
 }
 </style>

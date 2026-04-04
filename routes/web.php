@@ -158,6 +158,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('broadcasts', [AdminBroadcastEmailController::class, 'index'])->name('broadcasts.index');
     Route::get('broadcasts/create', [AdminBroadcastEmailController::class, 'create'])->name('broadcasts.create');
     Route::post('broadcasts', [AdminBroadcastEmailController::class, 'store'])->name('broadcasts.store');
+    Route::post('broadcasts/waitlist-launch', [AdminBroadcastEmailController::class, 'sendWaitlistLaunch'])
+        ->name('broadcasts.waitlist-launch');
     Route::get('broadcasts/{broadcast}', [AdminBroadcastEmailController::class, 'show'])->name('broadcasts.show');
 });
 

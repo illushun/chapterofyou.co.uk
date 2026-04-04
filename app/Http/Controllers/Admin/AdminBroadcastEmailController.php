@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
+use App\Mail\WaitlistLaunchMail;
+use App\Models\WaitlistEntry;
 
 class AdminBroadcastEmailController extends Controller
 {
@@ -32,10 +34,12 @@ class AdminBroadcastEmailController extends Controller
             ->paginate(20);
 
         $totalOptedIn = User::where('is_admin', false)->where('marketing_opt_in', true)->count();
+        $waitlistCount = WaitlistEntry::whereIn('email', ['daveystuart1@gmail.com', 'kacey.zytko14@icloud.com'])->count();
 
         return Inertia::render('admin/broadcast/Index', [
             'broadcasts'    => $broadcasts,
             'totalOptedIn'  => $totalOptedIn,
+            'waitlistCount' => $waitlistCount,
         ]);
     }
 
@@ -134,5 +138,26 @@ class AdminBroadcastEmailController extends Controller
             }),
             default => $query, // 'all' — every non-admin user
         };
+    }
+
+    /**
+    * Send the waitlist launch email to all waitlist entries.
+    */
+    public function sendWaitlistLaunch(Request $request)
+    {
+        $recipients = WaitlistEntry::whereIn('email', ['daveystuart1@gmail.com', 'kacey.zytko14@icloud.com'])->get();
+
+        if ($recipients->isEmpty()) {
+            return response()->json(['error' => 'No waitlist entries found.'], 422);
+        }
+
+        foreach ($recipients as $entry) {
+            Mail::to($entry->email)->queue(new WaitlistLaunchMail('CHAPTERONE'));
+        }
+
+        return response()->json([
+            'sent' => $recipients->count(),
+            'message' => "Launch email queued for {$recipients->count()} waitlist subscriber(s).",
+        ]);
     }
 }
