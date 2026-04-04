@@ -2,6 +2,7 @@
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { useAdmin } from '@/composables/useAdmin';
 
 interface User { id: number; name: string; email: string; }
 interface Product { id: number; mpn: string; name: string; cost: number; }
@@ -27,16 +28,16 @@ const props = defineProps<{
     statuses: Record<string, string>;
 }>();
 
+const { fmtCurrency } = useAdmin();
+
 const page = usePage();
 const flash = computed(() => (page.props.flash as any) ?? {});
+
 const selectedStatus = ref(props.order.status);
 const updatingStatus = ref(false);
 const sendingDispatch = ref(false);
 const sendingConfirmation = ref(false);
 const trackingUrl = ref('');
-
-const fmt = (v: number | string | null | undefined) =>
-    `£${(Number(v) || 0).toFixed(2)}`;
 
 const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString('en-GB', {
@@ -44,15 +45,19 @@ const fmtDate = (d: string) =>
         hour: '2-digit', minute: '2-digit',
     });
 
-const statusColour: Record<string, string> = {
-    successful: 'bg-green-100 text-green-800 border-green-300',
-    shipped: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-    processing: 'bg-blue-100 text-blue-800 border-blue-300',
-    pending: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-    cancelled: 'bg-red-100 text-red-800 border-red-300',
-    failed: 'bg-red-100 text-red-800 border-red-300',
-};
-const statusClass = (s: string) => statusColour[s] ?? 'bg-gray-100 text-gray-700 border-gray-300';
+const orderId = computed(() => `COY-${String(props.order.id).padStart(6, '0')}`);
+
+const statusBadgeClass = computed(() => {
+    const map: Record<string, string> = {
+        successful: 'adm-badge--on',
+        processing: 'adm-badge--lav',
+        'not started': 'adm-badge--warn',
+        cancelled: 'adm-badge--red',
+        failed: 'adm-badge--red',
+        refunded: 'adm-badge--off',
+    };
+    return map[props.order.status] ?? 'adm-badge--off';
+});
 
 function updateStatus() {
     if (selectedStatus.value === props.order.status) return;
@@ -90,235 +95,506 @@ function resendConfirmation() {
 <template>
     <AdminLayout>
 
-        <Head :title="`Order #${order.id}`" />
+        <Head :title="`Order #${orderId} — Admin`" />
 
-        <!-- Flash message -->
-        <div v-if="flash.success"
-            class="mb-4 rounded-lg border border-green-300 bg-green-50 px-4 py-3 text-sm font-medium text-green-800">
-            ✓ {{ flash.success }}
+        <!-- Flash -->
+        <div v-if="flash.success" class="adm-flash adm-flash--success">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 6 9 17l-5-5" />
+            </svg>
+            {{ flash.success }}
         </div>
 
-        <!-- Page header -->
-        <div class="mb-6 flex flex-wrap items-start justify-between gap-3 border-b-2 border-copy pb-3">
+        <!-- Header -->
+        <div class="adm-header">
             <div>
-                <h2 class="text-3xl font-black">Order #COY-{{ String(order.id).padStart(6, '0') }}</h2>
-                <p class="text-copy-light text-sm mt-0.5">Placed {{ fmtDate(order.created_at) }}</p>
+                <div class="adm-breadcrumb">
+                    <Link :href="route('admin.orders.index')" class="adm-breadcrumb a">Orders</Link>
+                    <span class="adm-breadcrumb-sep">/</span>
+                    <span>{{ orderId }}</span>
+                </div>
+                <h1 class="adm-title">Order {{ orderId }}</h1>
+                <p class="adm-sub">Placed {{ fmtDate(order.created_at) }}</p>
             </div>
-            <span :class="['px-3 py-1 rounded-full text-sm font-bold uppercase border', statusClass(order.status)]">
+            <span class="adm-badge" :class="statusBadgeClass" style="font-size:0.82rem; padding:0.3rem 0.9rem">
                 {{ order.status }}
             </span>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Grid -->
+        <div class="os-layout">
 
             <!-- ── Left / Main ── -->
-            <div class="lg:col-span-2 space-y-5">
+            <div class="os-main">
 
                 <!-- Items -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                        <h3 class="text-lg font-bold text-copy mb-4 border-b border-copy-light pb-2">
-                            Items ({{ order.items.length }})
-                        </h3>
-                        <div v-for="item in order.items" :key="item.id"
-                            class="flex items-center justify-between py-3 border-b border-copy-light/40 last:border-b-0 gap-4">
-                            <div class="min-w-0">
-                                <p class="font-semibold text-copy truncate">{{ item.product.name }}</p>
-                                <p class="text-xs text-copy-light mt-0.5">
-                                    MPN: {{ item.product.mpn }} · Unit: {{ fmt(item.product_cost) }}
-                                </p>
-                            </div>
-                            <div class="text-right flex-shrink-0">
-                                <p class="font-bold text-copy">{{ fmt(item.product_total) }}</p>
-                                <p class="text-xs text-copy-light">Qty: {{ item.quantity }}</p>
-                            </div>
+                <section class="adm-card adm-card--flush">
+                    <h2 class="os-section-title">Items ({{ order.items.length }})</h2>
+                    <div v-for="item in order.items" :key="item.id" class="os-item-row">
+                        <div class="os-item-info">
+                            <p class="os-item-name">{{ item.product.name }}</p>
+                            <p class="os-item-meta">
+                                MPN: {{ item.product.mpn }}
+                                <span class="os-sep">·</span>
+                                Unit: {{ fmtCurrency(item.product_cost) }}
+                            </p>
+                        </div>
+                        <div class="os-item-right">
+                            <p class="os-item-price">{{ fmtCurrency(item.product_total) }}</p>
+                            <p class="os-item-qty">Qty: {{ item.quantity }}</p>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- Customer details -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                        <h3 class="text-lg font-bold text-copy mb-4 border-b border-copy-light pb-2">Customer</h3>
-                        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                            <div>
-                                <dt class="text-copy-light font-medium">Name</dt>
-                                <dd class="text-copy font-semibold">{{ order.first_name }} {{ order.last_name }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-copy-light font-medium">Email</dt>
-                                <dd>
-                                    <a :href="`mailto:${order.email}`" class="text-primary hover:underline break-all">{{
-                                        order.email }}</a>
-                                </dd>
-                            </div>
-                            <div>
-                                <dt class="text-copy-light font-medium">Phone</dt>
-                                <dd class="text-copy">{{ order.telephone || '—' }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-copy-light font-medium">Account</dt>
-                                <dd>
-                                    <Link v-if="order.user" :href="route('admin.users.show', order.user_id!)"
-                                        class="text-primary hover:underline">
-                                    {{ order.user.name }} (#{{ order.user_id }})
-                                    </Link>
-                                    <span v-else class="text-copy-light italic">Guest</span>
-                                </dd>
-                            </div>
-                        </dl>
+                <!-- Customer -->
+                <section class="adm-card">
+                    <h2 class="adm-card-title">Customer</h2>
+                    <div class="os-dl">
+                        <div class="os-dl-item">
+                            <dt class="os-dt">Name</dt>
+                            <dd class="os-dd">{{ order.first_name }} {{ order.last_name }}</dd>
+                        </div>
+                        <div class="os-dl-item">
+                            <dt class="os-dt">Email</dt>
+                            <dd class="os-dd">
+                                <a :href="`mailto:${order.email}`" class="os-link">{{ order.email }}</a>
+                            </dd>
+                        </div>
+                        <div class="os-dl-item">
+                            <dt class="os-dt">Phone</dt>
+                            <dd class="os-dd">{{ order.telephone || '—' }}</dd>
+                        </div>
+                        <div class="os-dl-item">
+                            <dt class="os-dt">Account</dt>
+                            <dd class="os-dd">
+                                <Link v-if="order.user" :href="route('admin.users.show', order.user_id!)"
+                                    class="os-link">
+                                {{ order.user.name }} (#{{ order.user_id }})
+                                </Link>
+                                <span v-else style="color:var(--bb-muted); font-style:italic">Guest</span>
+                            </dd>
+                        </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- Addresses -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                        <h3 class="text-lg font-bold text-copy mb-4 border-b border-copy-light pb-2">
-                            Shipping &amp; Billing
-                        </h3>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm text-copy">
-                            <div>
-                                <p class="font-bold mb-1">Shipping Address</p>
-                                <address class="not-italic leading-relaxed text-copy-light">
-                                    <p>{{ order.shipping_line_1 }}</p>
-                                    <p v-if="order.shipping_line_2">{{ order.shipping_line_2 }}</p>
-                                    <p>{{ order.shipping_city }}<span v-if="order.shipping_county">, {{
-                                        order.shipping_county }}</span></p>
-                                    <p>{{ order.shipping_postcode }}</p>
-                                </address>
-                            </div>
-                            <div>
-                                <p class="font-bold mb-1">Billing Address</p>
-                                <address class="not-italic leading-relaxed text-copy-light">
-                                    <p>{{ order.billing_line_1 }}</p>
-                                    <p v-if="order.billing_line_2">{{ order.billing_line_2 }}</p>
-                                    <p>{{ order.billing_city }}<span v-if="order.billing_county">, {{
-                                        order.billing_county }}</span></p>
-                                    <p>{{ order.billing_postcode }}</p>
-                                </address>
-                            </div>
+                <section class="adm-card">
+                    <h2 class="adm-card-title">Shipping &amp; Billing</h2>
+                    <div class="os-address-grid">
+                        <div>
+                            <p class="os-address-label">Shipping Address</p>
+                            <address class="os-address">
+                                <span>{{ order.shipping_line_1 }}</span>
+                                <span v-if="order.shipping_line_2">{{ order.shipping_line_2 }}</span>
+                                <span>{{ order.shipping_city }}<template v-if="order.shipping_county">, {{
+                                        order.shipping_county }}</template></span>
+                                <span>{{ order.shipping_postcode }}</span>
+                            </address>
+                        </div>
+                        <div>
+                            <p class="os-address-label">Billing Address</p>
+                            <address class="os-address">
+                                <span>{{ order.billing_line_1 }}</span>
+                                <span v-if="order.billing_line_2">{{ order.billing_line_2 }}</span>
+                                <span>{{ order.billing_city }}<template v-if="order.billing_county">, {{
+                                        order.billing_county }}</template></span>
+                                <span>{{ order.billing_postcode }}</span>
+                            </address>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <!-- Payment info -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                        <h3 class="text-lg font-bold text-copy mb-4 border-b border-copy-light pb-2">Payment</h3>
-                        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                            <div>
-                                <dt class="text-copy-light font-medium">Method</dt>
-                                <dd class="text-copy font-semibold capitalize">{{ order.payment_type }}</dd>
-                            </div>
-                            <div class="sm:col-span-2">
-                                <dt class="text-copy-light font-medium">Stripe Payment Intent</dt>
-                                <dd class="text-copy font-mono text-xs break-all">{{ order.payment_intent_id }}</dd>
-                            </div>
-                        </dl>
+                <!-- Payment -->
+                <section class="adm-card">
+                    <h2 class="adm-card-title">Payment</h2>
+                    <div class="os-dl">
+                        <div class="os-dl-item">
+                            <dt class="os-dt">Method</dt>
+                            <dd class="os-dd" style="text-transform:capitalize">{{ order.payment_type }}</dd>
+                        </div>
+                        <div class="os-dl-item os-dl-item--full">
+                            <dt class="os-dt">Stripe Payment Intent</dt>
+                            <dd class="os-dd adm-td--mono" style="font-size:0.8rem; word-break:break-all">
+                                {{ order.payment_intent_id }}
+                            </dd>
+                        </div>
                     </div>
-                </div>
+                </section>
 
             </div>
 
             <!-- ── Right / Sidebar ── -->
-            <div class="space-y-5">
+            <div class="os-sidebar">
 
-                <!-- Financial summary -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                        <h3 class="text-lg font-bold text-copy mb-4 border-b border-copy-light pb-2">Order Total</h3>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between text-copy-light">
-                                <span>Subtotal</span>
-                                <span>{{ fmt(order.cost_total) }}</span>
-                            </div>
-                            <div class="flex justify-between text-copy-light">
-                                <span>Shipping</span>
-                                <span>{{ Number(order.shipping_total) === 0 ? 'FREE' : fmt(order.shipping_total)
-                                }}</span>
-                            </div>
-                            <div class="flex justify-between text-copy-light">
-                                <span>VAT (20%)</span>
-                                <span>{{ fmt(order.tax_total) }}</span>
-                            </div>
-                            <div v-if="Number(order.voucher_discount) > 0"
-                                class="flex justify-between text-green-700 font-medium">
-                                <span>Discount</span>
-                                <span>-{{ fmt(order.voucher_discount) }}</span>
-                            </div>
+                <!-- Totals — sticky on desktop -->
+                <section class="adm-card adm-card--sticky">
+                    <h2 class="adm-card-title">Order Total</h2>
+                    <div class="os-totals">
+                        <div class="os-total-row">
+                            <span class="os-total-lbl">Subtotal</span>
+                            <span>{{ fmtCurrency(order.cost_total) }}</span>
                         </div>
-                        <div class="mt-4 pt-3 border-t-2 border-copy-light flex justify-between items-center">
-                            <span class="font-black text-copy text-lg">Grand Total</span>
-                            <span class="font-black text-primary text-2xl">{{ fmt(order.grand_total) }}</span>
+                        <div class="os-total-row">
+                            <span class="os-total-lbl">Shipping</span>
+                            <span>{{ Number(order.shipping_total) === 0 ? 'FREE' : fmtCurrency(order.shipping_total)
+                                }}</span>
+                        </div>
+                        <div class="os-total-row">
+                            <span class="os-total-lbl">VAT (20%)</span>
+                            <span>{{ fmtCurrency(order.tax_total) }}</span>
+                        </div>
+                        <div v-if="Number(order.voucher_discount) > 0" class="os-total-row os-total-row--discount">
+                            <span>Discount</span>
+                            <span>−{{ fmtCurrency(order.voucher_discount) }}</span>
+                        </div>
+                        <div class="os-total-row os-total-grand">
+                            <span>Grand Total</span>
+                            <span class="os-grand-val">{{ fmtCurrency(order.grand_total) }}</span>
                         </div>
                     </div>
-                </div>
+                </section>
 
                 <!-- Status update -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                        <h3 class="text-lg font-bold text-copy mb-3 border-b border-copy-light pb-2">Update Status</h3>
-                        <select v-model="selectedStatus"
-                            class="w-full rounded-lg border-2 border-copy bg-foreground px-3 py-2 text-sm text-copy mb-3 focus:outline-none">
+                <section class="adm-card">
+                    <h2 class="adm-card-title">Update Status</h2>
+                    <div class="adm-field">
+                        <label class="adm-label" for="status-select">New Status</label>
+                        <select id="status-select" v-model="selectedStatus" class="adm-select">
                             <option v-for="(label, value) in statuses" :key="value" :value="value">
                                 {{ label }}
                             </option>
                         </select>
-                        <button @click="updateStatus" :disabled="updatingStatus || selectedStatus === order.status"
-                            class="w-full rounded-lg border-2 border-copy py-2 text-sm font-bold transition disabled:opacity-40"
-                            style="background-color: var(--primary); color: var(--primary-content);">
-                            {{ updatingStatus ? 'Updating…' : 'Save Status' }}
-                        </button>
                     </div>
-                </div>
+                    <button @click="updateStatus" :disabled="updatingStatus || selectedStatus === order.status"
+                        class="adm-submit">
+                        <svg v-if="updatingStatus" class="adm-spinner" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                        </svg>
+                        {{ updatingStatus ? 'Updating…' : 'Save Status' }}
+                    </button>
+                </section>
 
                 <!-- Email actions -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                        <h3 class="text-lg font-bold text-copy mb-3 border-b border-copy-light pb-2">Email Customer</h3>
-                        <div class="space-y-2">
-                            <div>
-                                <label class="block text-xs text-copy-light font-medium mb-1">
-                                    Tracking URL <span class="text-copy-light">(optional)</span>
-                                </label>
-                                <input v-model="trackingUrl" type="url" placeholder="https://track.royalmail.com/..."
-                                    class="w-full rounded-lg border border-copy-light bg-foreground px-3 py-1.5 text-xs text-copy focus:outline-none focus:border-copy mb-1" />
-                                <p class="text-xs text-copy-light">Used in both dispatch email and status update.</p>
-                            </div>
-                            <button @click="sendDispatch" :disabled="sendingDispatch"
-                                class="w-full rounded-lg border-2 border-copy py-2 text-sm font-bold transition hover:bg-secondary-light disabled:opacity-40">
-                                {{ sendingDispatch ? 'Sending…' : 'Send Dispatch Email' }}
-                            </button>
-                            <button @click="resendConfirmation" :disabled="sendingConfirmation"
-                                class="w-full rounded-lg border-2 border-copy py-2 text-sm font-medium text-copy-light hover:text-copy hover:bg-secondary-light transition disabled:opacity-40">
-                                {{ sendingConfirmation ? 'Sending…' : 'Resend Confirmation' }}
-                            </button>
-                        </div>
+                <section class="adm-card">
+                    <h2 class="adm-card-title">Email Customer</h2>
+                    <div class="adm-field">
+                        <label class="adm-label" for="tracking-url">
+                            Tracking URL
+                            <span class="adm-label-note">(optional)</span>
+                        </label>
+                        <input id="tracking-url" v-model="trackingUrl" type="url"
+                            placeholder="https://track.royalmail.com/…" class="adm-input" />
+                        <p class="os-hint">Used in both dispatch email and status update.</p>
                     </div>
-                </div>
+                    <button @click="sendDispatch" :disabled="sendingDispatch"
+                        class="adm-btn adm-btn--primary adm-btn--full">
+                        <svg v-if="sendingDispatch" class="adm-spinner" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                        </svg>
+                        <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 2 11 13" />
+                            <path d="M22 2 15 22 11 13 2 9l20-7z" />
+                        </svg>
+                        {{ sendingDispatch ? 'Sending…' : 'Send Dispatch Email' }}
+                    </button>
+                    <button @click="resendConfirmation" :disabled="sendingConfirmation"
+                        class="adm-btn adm-btn--ghost adm-btn--full">
+                        <svg v-if="sendingConfirmation" class="adm-spinner" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="rgba(26,26,46,0.15)" stroke-width="3" />
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke="#9b84d4" stroke-width="3"
+                                stroke-linecap="round" />
+                        </svg>
+                        {{ sendingConfirmation ? 'Sending…' : 'Resend Confirmation' }}
+                    </button>
+                </section>
 
                 <!-- Quick links -->
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-5">
-                        <h3 class="text-lg font-bold text-copy mb-3 border-b border-copy-light pb-2">Quick Links</h3>
-                        <div class="space-y-2 text-sm">
-                            <a :href="route('admin.batch-sheets.create', { order_id: order.id })"
-                                class="flex items-center gap-2 rounded-lg border border-copy-light px-3 py-2 text-copy hover:bg-secondary-light transition">
-                                Create Batch Sheet
-                            </a>
-                            <a v-if="order.user_id" :href="route('admin.users.show', order.user_id)"
-                                class="flex items-center gap-2 rounded-lg border border-copy-light px-3 py-2 text-copy hover:bg-secondary-light transition">
-                                View Customer Account
-                            </a>
-                            <a :href="route('admin.orders.index')"
-                                class="flex items-center gap-2 rounded-lg border border-copy-light px-3 py-2 text-copy-light hover:text-copy hover:bg-secondary-light transition">
-                                All Orders
-                            </a>
-                        </div>
+                <section class="adm-card">
+                    <h2 class="adm-card-title">Quick Links</h2>
+                    <div class="os-links">
+                        <a :href="route('admin.batch-sheets.create', { order_id: order.id })" class="os-link-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="12" y1="18" x2="12" y2="12" />
+                                <line x1="9" y1="15" x2="15" y2="15" />
+                            </svg>
+                            Create Batch Sheet
+                        </a>
+                        <a v-if="order.user_id" :href="route('admin.users.show', order.user_id)" class="os-link-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                            View Customer Account
+                        </a>
+                        <a :href="route('admin.orders.index')" class="os-link-item os-link-item--muted">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 12H5M12 19l-7-7 7-7" />
+                            </svg>
+                            All Orders
+                        </a>
                     </div>
-                </div>
+                </section>
 
             </div>
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+/*
+ * Page-specific styles only — prefix: os- (order show)
+ * All shared styles come from admin-design-system.css
+ */
+
+/* ── Two-column layout ── */
+.os-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .os-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.os-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.os-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* ── Flush card section title ── */
+.os-section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+    padding: 1rem 1.5rem 0.85rem;
+    border-bottom: 1px solid var(--bb-border);
+}
+
+/* ── Item rows ── */
+.os-item-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 1.5rem;
+    border-bottom: 1px solid var(--bb-border);
+}
+
+.os-item-row:last-child {
+    border-bottom: none;
+}
+
+.os-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.os-item-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--bb-text);
+}
+
+.os-item-meta {
+    font-size: 0.75rem;
+    color: var(--bb-muted);
+    margin-top: 0.15rem;
+}
+
+.os-sep {
+    margin: 0 0.25rem;
+    opacity: 0.5;
+}
+
+.os-item-right {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.os-item-price {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--bb-text);
+}
+
+.os-item-qty {
+    font-size: 0.75rem;
+    color: var(--bb-muted);
+    margin-top: 0.1rem;
+}
+
+/* ── Definition list ── */
+.os-dl {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.5rem;
+}
+
+@media (max-width: 640px) {
+    .os-dl {
+        grid-template-columns: 1fr;
+    }
+}
+
+.os-dl-item--full {
+    grid-column: 1 / -1;
+}
+
+.os-dt {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+    margin-bottom: 0.2rem;
+}
+
+.os-dd {
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: var(--bb-text);
+}
+
+.os-link {
+    color: var(--bb-lav-d);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.os-link:hover {
+    color: var(--bb-navy);
+    text-decoration: underline;
+}
+
+/* ── Addresses ── */
+.os-address-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 640px) {
+    .os-address-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.os-address-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--bb-muted);
+    margin-bottom: 0.5rem;
+}
+
+.os-address {
+    font-style: normal;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.88rem;
+    color: var(--bb-text);
+    line-height: 1.55;
+}
+
+/* ── Totals ── */
+.os-totals {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.os-total-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.os-total-lbl {
+    color: var(--bb-muted);
+}
+
+.os-total-row--discount {
+    color: var(--bb-sage-d);
+    font-weight: 600;
+}
+
+.os-total-grand {
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--bb-border);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--bb-text);
+}
+
+.os-grand-val {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--bb-lav-d);
+}
+
+/* ── Hint text ── */
+.os-hint {
+    font-size: 0.72rem;
+    color: var(--bb-muted);
+}
+
+/* ── Quick links ── */
+.os-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.os-link-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--bb-radius);
+    border: 1px solid var(--bb-border);
+    background: var(--bb-cream);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--bb-text);
+    text-decoration: none;
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.os-link-item:hover {
+    background: #faf8ff;
+    border-color: var(--bb-lav);
+}
+
+.os-link-item--muted {
+    color: var(--bb-muted);
+}
+
+.os-link-item--muted:hover {
+    color: var(--bb-text);
+}
+</style>
