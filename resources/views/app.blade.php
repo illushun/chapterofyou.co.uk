@@ -26,7 +26,7 @@
         <meta http-equiv="Content-Language" content="en">
 
         <!-- Favicon -->
-        <link rel="icon" href="{{ asset('storage/images/website_icon.ico') }}" type="image/x-icon">
+        <link rel="icon" href="/favicon.ico" type="image/x-icon">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         <!-- Fonts -->
