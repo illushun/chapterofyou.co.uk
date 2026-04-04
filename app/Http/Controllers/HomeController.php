@@ -7,6 +7,8 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ContactMessage;
 use App\Models\Product;
+use App\Mail\ContactMessageReceived;
+use Illuminate\Support\Facades\Mail;
 
 class HomeController extends Controller
 {
@@ -105,7 +107,11 @@ class HomeController extends Controller
             'message' => 'required|string|max:2000',
         ]);
 
-        ContactMessage::create($validated);
+        $contactMessage = ContactMessage::create($validated);
+
+        // Notify admin
+        Mail::to(config('mail.admin_address', config('mail.from.address')))
+            ->queue(new ContactMessageReceived($contactMessage));
 
         return redirect()->back()->with('success', 'Thank you for your message! I will get back to you soon.');
     }
