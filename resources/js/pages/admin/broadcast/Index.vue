@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import axios from 'axios';
+import { useAdmin } from '@/composables/useAdmin';
 
 interface Broadcast {
     id: number;
@@ -20,6 +21,8 @@ interface BroadcastsPaginated {
 
 defineProps<{ broadcasts: BroadcastsPaginated; totalOptedIn: number; waitlistCount: number }>();
 
+const { paginate } = useAdmin();
+
 const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString('en-GB', {
         day: 'numeric', month: 'short', year: 'numeric',
@@ -30,10 +33,6 @@ const audienceLabel: Record<string, string> = {
     all: 'All customers',
     ordered_last_90: 'Ordered last 90 days',
     never_ordered: 'Never ordered',
-};
-
-const paginate = (url: string | null) => {
-    if (url) router.get(url, {}, { preserveScroll: true });
 };
 
 // ── Waitlist launch ───────────────────────────────────────────────────────
@@ -60,15 +59,15 @@ async function sendWaitlistLaunch() {
 <template>
     <AdminLayout>
 
-        <Head title="Broadcast Emails" />
+        <Head title="Broadcast Emails — Admin" />
 
         <!-- Header -->
-        <div class="be-header">
+        <div class="adm-header">
             <div>
-                <h1 class="be-title">Broadcast Emails</h1>
-                <p class="be-sub">Send a message to a segment of your customers.</p>
+                <h1 class="adm-title">Broadcast Emails</h1>
+                <p class="adm-sub">Send a message to a segment of your customers.</p>
             </div>
-            <Link :href="route('admin.broadcasts.create')" class="be-compose-btn">
+            <Link :href="route('admin.broadcasts.create')" class="adm-btn adm-btn--primary">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 5v14M5 12h14" />
@@ -78,79 +77,75 @@ async function sendWaitlistLaunch() {
         </div>
 
         <!-- Opted-in stat bar -->
-        <div class="be-stat-bar">
-            <div class="be-stat">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-                <span><strong>{{ totalOptedIn.toLocaleString() }}</strong> opted-in customers in your mailing
-                    list</span>
-            </div>
+        <div class="bi-stat-bar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            <span><strong>{{ totalOptedIn.toLocaleString() }}</strong> opted-in customers in your mailing list</span>
         </div>
 
         <!-- History table -->
-        <div v-if="broadcasts.data.length" class="be-table-wrap">
+        <div v-if="broadcasts.data.length" class="adm-card adm-card--flush" style="margin-bottom:1.5rem">
 
-            <!-- Desktop -->
-            <table class="be-table">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Subject</th>
-                        <th>Audience</th>
-                        <th>Recipients</th>
-                        <th>Sent by</th>
-                        <th>Sent at</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="b in broadcasts.data" :key="b.id" class="be-row">
-                        <td class="be-td-id">#{{ b.id }}</td>
-                        <td class="be-td-subject">{{ b.subject }}</td>
-                        <td>
-                            <span class="be-audience-badge">
-                                {{ audienceLabel[b.audience] ?? b.audience }}
-                            </span>
-                        </td>
-                        <td class="be-td-count">
-                            <span class="be-count">{{ b.recipient_count.toLocaleString() }}</span>
-                        </td>
-                        <td class="be-td-sender">{{ b.sender?.name ?? '—' }}</td>
-                        <td class="be-td-date">{{ fmtDate(b.sent_at) }}</td>
-                        <td class="be-td-action">
-                            <Link :href="route('admin.broadcasts.show', b.id)" class="be-view-btn">
-                            View
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M5 12h14M12 5l7 7-7 7" />
-                            </svg>
-                            </Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <!-- Desktop table -->
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead>
+                        <tr class="adm-thead">
+                            <th class="adm-th">#</th>
+                            <th class="adm-th">Subject</th>
+                            <th class="adm-th">Audience</th>
+                            <th class="adm-th">Recipients</th>
+                            <th class="adm-th">Sent by</th>
+                            <th class="adm-th">Sent at</th>
+                            <th class="adm-th adm-th--right"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="b in broadcasts.data" :key="b.id" class="adm-row">
+                            <td class="adm-td adm-td--mono" style="font-size:0.8rem">#{{ b.id }}</td>
+                            <td class="adm-td" style="font-weight:600; max-width:240px">{{ b.subject }}</td>
+                            <td class="adm-td">
+                                <span class="adm-badge adm-badge--lav">
+                                    {{ audienceLabel[b.audience] ?? b.audience }}
+                                </span>
+                            </td>
+                            <td class="adm-td" style="font-weight:700">{{ b.recipient_count.toLocaleString() }}</td>
+                            <td class="adm-td" style="color:var(--bb-muted)">{{ b.sender?.name ?? '—' }}</td>
+                            <td class="adm-td" style="color:var(--bb-muted); white-space:nowrap; font-size:0.8rem">{{
+                                fmtDate(b.sent_at) }}</td>
+                            <td class="adm-td adm-td--actions">
+                                <Link :href="route('admin.broadcasts.show', b.id)" class="adm-action adm-action--edit">
+                                View
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12h14M12 5l7 7-7 7" />
+                                </svg>
+                                </Link>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
             <!-- Mobile cards -->
-            <div class="be-cards">
-                <div v-for="b in broadcasts.data" :key="b.id" class="be-card">
-                    <div class="be-card-head">
-                        <p class="be-card-subject">{{ b.subject }}</p>
-                        <span class="be-audience-badge">{{ audienceLabel[b.audience] ?? b.audience }}</span>
+            <div class="adm-mob-list">
+                <div v-for="b in broadcasts.data" :key="b.id" class="adm-mob-card">
+                    <div class="bi-mob-head">
+                        <p style="font-weight:600; font-size:0.95rem; color:var(--bb-text)">{{ b.subject }}</p>
+                        <span class="adm-badge adm-badge--lav">{{ audienceLabel[b.audience] ?? b.audience }}</span>
                     </div>
-                    <div class="be-card-meta">
-                        <span>{{ b.recipient_count.toLocaleString() }} recipients</span>
-                        <span>·</span>
-                        <span>{{ b.sender?.name ?? '—' }}</span>
-                        <span>·</span>
-                        <span>{{ fmtDate(b.sent_at) }}</span>
-                    </div>
-                    <div class="be-card-foot">
-                        <Link :href="route('admin.broadcasts.show', b.id)" class="be-view-btn">
+                    <p class="bi-mob-meta">
+                        {{ b.recipient_count.toLocaleString() }} recipients
+                        · {{ b.sender?.name ?? '—' }}
+                        · {{ fmtDate(b.sent_at) }}
+                    </p>
+                    <div style="display:flex; justify-content:flex-end">
+                        <Link :href="route('admin.broadcasts.show', b.id)" class="adm-action adm-action--edit">
                         View
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -163,30 +158,31 @@ async function sendWaitlistLaunch() {
         </div>
 
         <!-- Empty -->
-        <div v-else class="be-empty">
+        <div v-else class="adm-empty" style="margin-bottom:1.5rem">
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                 <polyline points="22,6 12,13 2,6" />
             </svg>
-            <p>No broadcasts sent yet.</p>
-            <Link :href="route('admin.broadcasts.create')" class="be-compose-btn">
-            Send your first broadcast
-            </Link>
+            <p class="adm-empty-title">No broadcasts sent yet</p>
+            <p class="adm-empty-sub">Compose your first broadcast to get started.</p>
+            <Link :href="route('admin.broadcasts.create')" class="adm-btn adm-btn--primary">Compose</Link>
         </div>
 
         <!-- Pagination -->
-        <div v-if="broadcasts.last_page > 1" class="be-pagination">
-            <button v-for="link in broadcasts.links" :key="link.label" @click.prevent="paginate(link.url)"
-                :disabled="!link.url" class="be-page-btn" :class="{ 'be-page-btn--active': link.active }"
-                v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')">
-            </button>
+        <div v-if="broadcasts.last_page > 1" class="adm-pagination">
+            <div class="adm-page-btns">
+                <button v-for="link in broadcasts.links" :key="link.label" @click.prevent="paginate(link.url)"
+                    :disabled="!link.url" class="adm-page-btn" :class="{ 'adm-page-btn--active': link.active }"
+                    v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')">
+                </button>
+            </div>
         </div>
 
         <!-- ── Waitlist Launch Email ── -->
-        <div class="be-waitlist-card">
-            <div class="be-waitlist-head">
-                <div class="be-waitlist-icon">
+        <div class="bi-waitlist-card">
+            <div class="bi-waitlist-head">
+                <div class="bi-waitlist-icon">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -196,36 +192,33 @@ async function sendWaitlistLaunch() {
                     </svg>
                 </div>
                 <div>
-                    <p class="be-waitlist-title">Waitlist Launch Email</p>
-                    <p class="be-waitlist-sub">
-                        Send the "we're live" email to all waitlist subscribers with their exclusive discount code.
-                    </p>
+                    <p class="bi-waitlist-title">Waitlist Launch Email</p>
+                    <p class="bi-waitlist-sub">Send the "we're live" email to all waitlist subscribers with their
+                        exclusive discount code.</p>
                 </div>
             </div>
 
-            <!-- Stats row -->
-            <div class="be-waitlist-stats">
-                <div class="be-waitlist-stat">
-                    <span class="be-waitlist-stat-val">{{ waitlistCount.toLocaleString() }}</span>
-                    <span class="be-waitlist-stat-label">Waitlist subscribers</span>
+            <!-- Stats -->
+            <div class="bi-waitlist-stats">
+                <div class="bi-waitlist-stat">
+                    <span class="bi-waitlist-val">{{ waitlistCount.toLocaleString() }}</span>
+                    <span class="bi-waitlist-label">Waitlist subscribers</span>
                 </div>
-                <div class="be-waitlist-stat">
-                    <span class="be-waitlist-stat-val be-waitlist-stat-val--code">CHAPTERONE</span>
-                    <span class="be-waitlist-stat-label">Discount code included</span>
+                <div class="bi-waitlist-stat">
+                    <span class="bi-waitlist-val bi-waitlist-val--code">CHAPTERONE</span>
+                    <span class="bi-waitlist-label">Discount code included</span>
                 </div>
             </div>
 
-            <!-- Success state -->
-            <div v-if="waitlistDone" class="be-waitlist-success">
+            <!-- Alerts — using shared adm-flash classes -->
+            <div v-if="waitlistDone" class="adm-flash adm-flash--success">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20 6 9 17l-5-5" />
                 </svg>
                 {{ waitlistDone }}
             </div>
-
-            <!-- Error state -->
-            <div v-if="waitlistError" class="be-waitlist-error">
+            <div v-if="waitlistError" class="adm-flash adm-flash--error">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -235,18 +228,18 @@ async function sendWaitlistLaunch() {
             </div>
 
             <!-- Confirm step -->
-            <div v-if="waitlistConfirming && !waitlistDone" class="be-waitlist-confirm">
-                <p class="be-waitlist-confirm-text">
+            <div v-if="waitlistConfirming && !waitlistDone" class="bi-waitlist-confirm">
+                <p class="bi-waitlist-confirm-text">
                     This will queue the launch email for
                     <strong>{{ waitlistCount.toLocaleString() }} subscriber{{ waitlistCount !== 1 ? 's' : ''
-                    }}</strong>.
+                        }}</strong>.
                     This cannot be undone.
                 </p>
-                <div class="be-waitlist-confirm-btns">
-                    <button @click="waitlistConfirming = false" class="adm-btn adm-btn--ghost adm-btn--sm">
-                        Cancel
-                    </button>
-                    <button @click="sendWaitlistLaunch" :disabled="waitlistSending" class="be-waitlist-send-btn">
+                <div class="bi-waitlist-confirm-btns">
+                    <!-- Cancel uses shared ghost button -->
+                    <button @click="waitlistConfirming = false"
+                        class="adm-btn adm-btn--ghost adm-btn--sm">Cancel</button>
+                    <button @click="sendWaitlistLaunch" :disabled="waitlistSending" class="bi-waitlist-send-btn">
                         <svg v-if="waitlistSending" class="adm-spinner" viewBox="0 0 24 24" fill="none">
                             <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
                             <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
@@ -258,7 +251,7 @@ async function sendWaitlistLaunch() {
 
             <!-- Trigger button -->
             <button v-if="!waitlistConfirming && !waitlistDone" @click="waitlistConfirming = true"
-                :disabled="waitlistCount === 0" class="be-waitlist-trigger-btn">
+                :disabled="waitlistCount === 0" class="bi-waitlist-trigger-btn">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 2 11 13" />
@@ -266,304 +259,60 @@ async function sendWaitlistLaunch() {
                 </svg>
                 Send Launch Email to Waitlist
             </button>
-            <p v-if="waitlistCount === 0 && !waitlistDone" class="be-waitlist-empty-note">No waitlist entries found.</p>
+            <p v-if="waitlistCount === 0 && !waitlistDone" class="bi-waitlist-empty-note">No waitlist entries found.</p>
         </div>
 
     </AdminLayout>
 </template>
 
 <style scoped>
-/* ── Header ── */
-.be-header {
+/*
+ * Only page-specific styles live here.
+ * Shared styles (adm-header, adm-title, adm-sub, adm-btn, adm-card, adm-table,
+ * adm-badge, adm-action, adm-empty, adm-pagination, adm-flash, adm-spinner)
+ * all come from admin-design-system.css.
+ */
+
+/* Opted-in stat bar */
+.bi-stat-bar {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.be-title {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: var(--copy);
-}
-
-.be-sub {
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 1rem;
+    border-radius: var(--bb-radius, 8px);
+    background: color-mix(in srgb, var(--bb-lav, #c9b8f0) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--bb-lav-d, #9b84d4) 30%, transparent);
+    color: var(--bb-muted, #7a7a9a);
     font-size: 0.85rem;
-    color: var(--copy-light);
-    margin-top: 0.15rem;
-}
-
-.be-compose-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.55rem 1.1rem;
-    border-radius: 8px;
-    border: 2px solid var(--copy);
-    background: var(--primary);
-    color: var(--primary-content);
-    font-size: 0.88rem;
-    font-weight: 700;
-    text-decoration: none;
-    transition: opacity 0.15s;
-    cursor: pointer;
-}
-
-.be-compose-btn:hover {
-    opacity: 0.85;
-}
-
-/* ── Stat bar ── */
-.be-stat-bar {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 0.75rem 1rem;
-    background: color-mix(in srgb, var(--primary) 8%, transparent);
-    border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
-    border-radius: 10px;
     margin-bottom: 1.25rem;
-    flex-wrap: wrap;
 }
 
-.be-stat {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: var(--copy-light);
-}
-
-.be-stat svg {
-    color: var(--primary);
+.bi-stat-bar svg {
+    color: var(--bb-lav-d, #9b84d4);
     flex-shrink: 0;
 }
 
-.be-stat strong {
-    color: var(--copy);
-}
-
-/* ── Table ── */
-.be-table-wrap {
-    border: 2px solid var(--copy);
-    border-radius: 12px;
-    overflow: hidden;
-    background: var(--primary-content);
-}
-
-.be-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
-    display: none;
-}
-
-@media (min-width: 768px) {
-    .be-table {
-        display: table;
-    }
-}
-
-.be-table thead tr {
-    background: var(--secondary-light);
-    border-bottom: 2px solid var(--copy);
-    text-transform: uppercase;
-    font-size: 0.72rem;
-    letter-spacing: 0.05em;
-}
-
-.be-table th {
-    padding: 0.75rem 1rem;
-    text-align: left;
+.bi-stat-bar strong {
+    color: var(--bb-text, #1a1a2e);
     font-weight: 700;
-    color: var(--copy);
 }
 
-.be-row {
-    border-bottom: 1px solid color-mix(in srgb, var(--copy-light) 30%, transparent);
-}
-
-.be-row:last-child {
-    border-bottom: none;
-}
-
-.be-row:hover {
-    background: var(--secondary-light);
-}
-
-.be-table td {
-    padding: 0.75rem 1rem;
-    vertical-align: middle;
-}
-
-.be-td-id {
-    font-weight: 700;
-    color: var(--copy-light);
-    font-size: 0.8rem;
-}
-
-.be-td-subject {
-    font-weight: 600;
-    color: var(--copy);
-    max-width: 240px;
-}
-
-.be-td-count {}
-
-.be-td-sender {
-    color: var(--copy-light);
-    font-size: 0.85rem;
-}
-
-.be-td-date {
-    color: var(--copy-light);
-    font-size: 0.8rem;
-    white-space: nowrap;
-}
-
-.be-td-action {
-    text-align: right;
-}
-
-.be-audience-badge {
-    display: inline-block;
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 0.18rem 0.6rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--primary) 12%, transparent);
-    color: var(--primary);
-    border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
-    white-space: nowrap;
-}
-
-.be-count {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--copy);
-}
-
-.be-view-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: var(--copy-light);
-    text-decoration: none;
-    transition: color 0.15s;
-}
-
-.be-view-btn:hover {
-    color: var(--primary);
-}
-
-/* ── Mobile cards ── */
-.be-cards {
-    display: flex;
-    flex-direction: column;
-}
-
-@media (min-width: 768px) {
-    .be-cards {
-        display: none;
-    }
-}
-
-.be-card {
-    padding: 1rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--copy-light) 25%, transparent);
-    background: var(--foreground);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.be-card:last-child {
-    border-bottom: none;
-}
-
-.be-card-head {
+/* Mobile card internals */
+.bi-mob-head {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 0.75rem;
 }
 
-.be-card-subject {
-    font-weight: 600;
-    color: var(--copy);
-    font-size: 0.95rem;
-}
-
-.be-card-meta {
+.bi-mob-meta {
     font-size: 0.78rem;
-    color: var(--copy-light);
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: wrap;
+    color: var(--bb-muted, #7a7a9a);
+    line-height: 1.5;
 }
 
-.be-card-foot {
-    display: flex;
-    justify-content: flex-end;
-}
-
-/* ── Empty ── */
-.be-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 3.5rem 2rem;
-    border: 2px dashed var(--border, #e5e7eb);
-    border-radius: 12px;
-    color: var(--copy-light);
-    text-align: center;
-    font-size: 0.95rem;
-}
-
-/* ── Pagination ── */
-.be-pagination {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.3rem;
-    margin-top: 1.5rem;
-}
-
-.be-page-btn {
-    min-width: 36px;
-    height: 36px;
-    padding: 0 0.5rem;
-    border-radius: 8px;
-    border: 2px solid var(--copy);
-    background: var(--foreground);
-    color: var(--copy-light);
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
-}
-
-.be-page-btn:hover:not(:disabled) {
-    background: var(--secondary-light);
-}
-
-.be-page-btn--active {
-    background: var(--primary);
-    color: var(--primary-content);
-}
-
-.be-page-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-/* ── Waitlist launch card ── */
-.be-waitlist-card {
+/* ── Waitlist card ── */
+.bi-waitlist-card {
     margin-top: 2rem;
     background: var(--bb-surface, #ffffff);
     border-radius: var(--bb-radius-lg, 14px);
@@ -575,13 +324,13 @@ async function sendWaitlistLaunch() {
     gap: 1rem;
 }
 
-.be-waitlist-head {
+.bi-waitlist-head {
     display: flex;
     align-items: flex-start;
     gap: 0.85rem;
 }
 
-.be-waitlist-icon {
+.bi-waitlist-icon {
     width: 40px;
     height: 40px;
     border-radius: 10px;
@@ -594,51 +343,50 @@ async function sendWaitlistLaunch() {
     flex-shrink: 0;
 }
 
-.be-waitlist-title {
+.bi-waitlist-title {
     font-size: 0.95rem;
     font-weight: 700;
     color: var(--bb-text, #1a1a2e);
     margin-bottom: 0.2rem;
 }
 
-.be-waitlist-sub {
+.bi-waitlist-sub {
     font-size: 0.82rem;
     color: var(--bb-muted, #7a7a9a);
     line-height: 1.5;
 }
 
-/* Stats row */
-.be-waitlist-stats {
+.bi-waitlist-stats {
     display: flex;
     gap: 2rem;
-    padding: 0.85rem 1rem;
-    background: #fff5f7;
-    border-radius: 8px;
-    border: 1px solid var(--bb-blush, #f2c4ce);
     flex-wrap: wrap;
+    padding: 0.85rem 1rem;
+    border-radius: var(--bb-radius, 8px);
+    background: #fff5f7;
+    border: 1px solid var(--bb-blush, #f2c4ce);
 }
 
-.be-waitlist-stat {
+.bi-waitlist-stat {
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
 }
 
-.be-waitlist-stat-val {
+.bi-waitlist-val {
     font-size: 1.3rem;
     font-weight: 700;
     color: var(--bb-text, #1a1a2e);
     letter-spacing: -0.02em;
 }
 
-.be-waitlist-stat-val--code {
-    font-family: monospace;
+.bi-waitlist-val--code {
+    font-family: var(--bb-mono, monospace);
     font-size: 1rem;
     letter-spacing: 0.1em;
     color: var(--bb-blush-d, #d4899a);
 }
 
-.be-waitlist-stat-label {
+.bi-waitlist-label {
     font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 0.06em;
@@ -646,67 +394,39 @@ async function sendWaitlistLaunch() {
     color: var(--bb-muted, #7a7a9a);
 }
 
-/* Alerts */
-.be-waitlist-success {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    background: var(--bb-green-bg, #eef7f2);
-    border: 1px solid var(--bb-green-border, #b8dfc8);
-    color: #2a7a50;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.be-waitlist-error {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    background: var(--bb-red-bg, #fdeef0);
-    border: 1px solid var(--bb-red-border, #f5b8c0);
-    color: var(--bb-red, #e05c6e);
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-/* Confirm step */
-.be-waitlist-confirm {
+.bi-waitlist-confirm {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
     padding: 1rem;
-    border-radius: 8px;
+    border-radius: var(--bb-radius, 8px);
     background: var(--bb-cream, #faf9f7);
     border: 1px solid var(--bb-border, #ece8e2);
 }
 
-.be-waitlist-confirm-text {
+.bi-waitlist-confirm-text {
     font-size: 0.85rem;
     color: var(--bb-muted, #7a7a9a);
     line-height: 1.5;
 }
 
-.be-waitlist-confirm-text strong {
+.bi-waitlist-confirm-text strong {
     color: var(--bb-text, #1a1a2e);
 }
 
-.be-waitlist-confirm-btns {
+.bi-waitlist-confirm-btns {
     display: flex;
     gap: 0.6rem;
     flex-wrap: wrap;
 }
 
-/* Send button */
-.be-waitlist-send-btn {
+/* Blush-coloured send button — unique to this page */
+.bi-waitlist-send-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
     padding: 0.6rem 1.1rem;
-    border-radius: 8px;
+    border-radius: var(--bb-radius, 8px);
     border: none;
     background: var(--bb-blush-d, #d4899a);
     color: #fff;
@@ -717,24 +437,23 @@ async function sendWaitlistLaunch() {
     transition: opacity 0.15s, transform 0.15s;
 }
 
-.be-waitlist-send-btn:hover:not(:disabled) {
+.bi-waitlist-send-btn:hover:not(:disabled) {
     opacity: 0.88;
     transform: translateY(-1px);
 }
 
-.be-waitlist-send-btn:disabled {
+.bi-waitlist-send-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-/* Trigger button */
-.be-waitlist-trigger-btn {
+.bi-waitlist-trigger-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
     align-self: flex-start;
     padding: 0.6rem 1.1rem;
-    border-radius: 8px;
+    border-radius: var(--bb-radius, 8px);
     border: 1px solid var(--bb-blush, #f2c4ce);
     background: #fff5f7;
     color: var(--bb-blush-d, #d4899a);
@@ -745,19 +464,19 @@ async function sendWaitlistLaunch() {
     transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
 }
 
-.be-waitlist-trigger-btn:hover:not(:disabled) {
+.bi-waitlist-trigger-btn:hover:not(:disabled) {
     background: var(--bb-blush-d, #d4899a);
     border-color: var(--bb-blush-d, #d4899a);
     color: #fff;
     transform: translateY(-1px);
 }
 
-.be-waitlist-trigger-btn:disabled {
+.bi-waitlist-trigger-btn:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
 
-.be-waitlist-empty-note {
+.bi-waitlist-empty-note {
     font-size: 0.78rem;
     color: var(--bb-muted, #7a7a9a);
     font-style: italic;
