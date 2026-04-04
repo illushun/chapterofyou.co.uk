@@ -69,6 +69,7 @@ class AdminProductController extends Controller
     {
         $products = Product::with('images:product_id,image,status')
             ->select('id', 'mpn', 'name', 'cost', 'stock_qty', 'status', 'parent_product_id')
+            ->orderBy('name', 'ASC')
             ->paginate(15);
 
         return Inertia::render('admin/product/Index', [
