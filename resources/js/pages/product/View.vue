@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import NavBar from '@/components/NavBar.vue';
 import { Head, router } from '@inertiajs/vue3';
-import { ref, watch, reactive, nextTick } from 'vue';
+import { ref, watch, reactive, nextTick, computed } from 'vue';
 import { debounce } from 'lodash';
 import axios from 'axios';
 import SeoHead from '@/components/SeoHead.vue';
