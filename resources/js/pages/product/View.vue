@@ -14,7 +14,7 @@ import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 
 interface Category { id: number; name: string; }
-interface Product { id: number; name: string; description: string; mpn: string; cost: number; stock_qty: number; parent_product_id: number; }
+interface Product { id: number; name: string; description: string; details: string; mpn: string; cost: number; stock_qty: number; parent_product_id: number; }
 interface ProductsPaginated {
     current_page: number; data: Product[]; last_page: number;
     links: { url: string | null; label: string; active: boolean }[]; total: number;
