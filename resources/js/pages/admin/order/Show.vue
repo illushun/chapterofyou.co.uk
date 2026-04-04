@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, reactive, watch, onMounted } from 'vue';
 import { useAdmin } from '@/composables/useAdmin';
 
 interface User { id: number; name: string; email: string; }
@@ -90,6 +90,130 @@ function resendConfirmation() {
         onFinish: () => { sendingConfirmation.value = false; },
     });
 }
+
+// ── Order Checklist ────────────────────────────────────────────────────────
+// Keyed by order ID so each order has independent state.
+// Persisted to localStorage — no backend required.
+
+interface ChecklistGroup {
+    id: string;
+    label: string;
+    colour: 'blush' | 'lav' | 'sage' | 'peach';
+    items: { id: string; label: string; link?: string }[];
+}
+
+const CHECKLIST: ChecklistGroup[] = [
+    {
+        id: 'equipment',
+        label: 'Equipment Check',
+        colour: 'lav',
+        items: [
+            { id: 'eq-apron', label: 'Get apron' },
+            { id: 'eq-bottles', label: 'Get diffuser bottle(s) required' },
+            { id: 'eq-caps', label: 'Get diffuser bottle cap(s) required' },
+            { id: 'eq-boxes', label: 'Make up diffuser box(es)' },
+            { id: 'eq-oils', label: 'Get required oil(s)' },
+            { id: 'eq-base', label: 'Get base oil' },
+            { id: 'eq-alcohol', label: 'Get rubbing alcohol' },
+            { id: 'eq-reeds', label: 'Get reed sticks (6 per diffuser)' },
+            { id: 'eq-gloves', label: 'Get gloves' },
+            { id: 'eq-tools', label: 'Get jugs / beakers / stirrers / pipettes / funnel' },
+            { id: 'eq-scales', label: 'Get scales' },
+        ],
+    },
+    {
+        id: 'making',
+        label: 'Diffuser Making',
+        colour: 'blush',
+        items: [
+            { id: 'mk-batch', label: 'Create Batch Sheet (1 per product) in Batch Sheets' },
+        ],
+    },
+    {
+        id: 'packaging',
+        label: 'Packaging',
+        colour: 'sage',
+        items: [
+            { id: 'pk-shipbox', label: 'Make up shipping box(es)' },
+            { id: 'pk-clp', label: 'Print CLP label for diffuser' },
+            { id: 'pk-scent', label: 'Print scent label for diffuser' },
+            { id: 'pk-picto', label: 'Get pictogram stickers for CLP label' },
+            { id: 'pk-warning', label: 'Get tactical warning label for diffuser' },
+            { id: 'pk-vellum', label: 'Get vellum paper to line shipping box' },
+            { id: 'pk-shred', label: 'Get shredded paper' },
+            { id: 'pk-cards', label: 'Get reed diffuser care card / business card / thank you card' },
+            { id: 'pk-sweets', label: 'Get sweets / chocolates' },
+            { id: 'pk-sticker-lg', label: 'Get large logo sticker for front of diffuser box' },
+            { id: 'pk-sticker-sm', label: 'Get small logo sticker for back of diffuser box' },
+            { id: 'pk-bubble', label: 'Get bubble wrap for diffuser box' },
+        ],
+    },
+    {
+        id: 'sending',
+        label: 'Sending Package',
+        colour: 'peach',
+        items: [
+            { id: 'sn-tape', label: 'Get fragile tape' },
+            { id: 'sn-label', label: 'Print shipping label from Royal Mail' },
+            { id: 'sn-postoffice', label: 'Take package to post office' },
+            { id: 'sn-dispatch', label: 'Send customer dispatch email' },
+        ],
+    },
+];
+
+const STORAGE_KEY = `order-checklist-${props.order.id}`;
+
+// checked: Set of item IDs that are ticked
+const checked = reactive(new Set<string>());
+// collapsed: Set of group IDs that are folded shut
+const collapsed = reactive(new Set<string>());
+
+// Total / completed counts
+const totalItems = computed(() => CHECKLIST.reduce((n, g) => n + g.items.length, 0));
+const completedItems = computed(() => checked.size);
+const progressPct = computed(() => Math.round((completedItems.value / totalItems.value) * 100));
+const allDone = computed(() => completedItems.value === totalItems.value);
+
+function groupCompleted(group: ChecklistGroup) {
+    return group.items.every(i => checked.has(i.id));
+}
+function groupProgress(group: ChecklistGroup) {
+    return group.items.filter(i => checked.has(i.id)).length;
+}
+
+function toggle(itemId: string) {
+    checked.has(itemId) ? checked.delete(itemId) : checked.add(itemId);
+    persist();
+}
+function toggleGroup(group: ChecklistGroup) {
+    const allChecked = groupCompleted(group);
+    group.items.forEach(i => allChecked ? checked.delete(i.id) : checked.add(i.id));
+    persist();
+}
+function toggleCollapse(groupId: string) {
+    collapsed.has(groupId) ? collapsed.delete(groupId) : collapsed.add(groupId);
+    // Don't persist collapse state — it resets on each visit intentionally
+}
+function resetChecklist() {
+    if (!confirm('Reset checklist for this order? All ticks will be cleared.')) return;
+    checked.clear();
+    persist();
+}
+
+function persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...checked]));
+}
+function load() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            const ids: string[] = JSON.parse(raw);
+            ids.forEach(id => checked.add(id));
+        }
+    } catch { /* ignore */ }
+}
+
+onMounted(load);
 </script>
 
 <template>
@@ -147,6 +271,91 @@ function resendConfirmation() {
                     </div>
                 </section>
 
+                <!-- ── Order Checklist ── -->
+                <section class="adm-card adm-card--flush">
+
+                    <!-- Checklist header -->
+                    <div class="cl-header">
+                        <div class="cl-header-left">
+                            <h2 class="cl-title">Production Checklist</h2>
+                            <span class="cl-progress-pill" :class="allDone ? 'cl-progress-pill--done' : ''">
+                                {{ completedItems }} / {{ totalItems }}
+                            </span>
+                        </div>
+                        <button v-if="completedItems > 0" @click="resetChecklist" class="cl-reset-btn"
+                            title="Reset checklist">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                                <path d="M3 3v5h5" />
+                            </svg>
+                            Reset
+                        </button>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="cl-bar-track">
+                        <div class="cl-bar-fill" :class="allDone ? 'cl-bar-fill--done' : ''"
+                            :style="{ width: progressPct + '%' }">
+                        </div>
+                    </div>
+
+                    <!-- All done banner -->
+                    <div v-if="allDone" class="cl-done-banner">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                        Order complete — all steps done! ✦
+                    </div>
+
+                    <!-- Groups -->
+                    <div v-for="group in CHECKLIST" :key="group.id" class="cl-group">
+
+                        <!-- Group header -->
+                        <button class="cl-group-header" :class="`cl-group-header--${group.colour}`"
+                            @click="toggleCollapse(group.id)">
+                            <div class="cl-group-left">
+                                <span class="cl-group-dot" :class="`cl-group-dot--${group.colour}`"></span>
+                                <span class="cl-group-label">{{ group.label }}</span>
+                                <span class="cl-group-count"
+                                    :class="groupCompleted(group) ? 'cl-group-count--done' : ''">
+                                    {{ groupProgress(group) }}/{{ group.items.length }}
+                                </span>
+                            </div>
+                            <div class="cl-group-right">
+                                <button class="cl-group-check-all"
+                                    :class="groupCompleted(group) ? 'cl-group-check-all--active' : ''"
+                                    @click.stop="toggleGroup(group)"
+                                    :title="groupCompleted(group) ? 'Uncheck all' : 'Check all'">
+                                    {{ groupCompleted(group) ? 'Uncheck all' : 'Check all' }}
+                                </button>
+                                <svg class="cl-chevron" :class="{ 'cl-chevron--open': !collapsed.has(group.id) }"
+                                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="m6 9 6 6 6-6" />
+                                </svg>
+                            </div>
+                        </button>
+
+                        <!-- Group items -->
+                        <div v-if="!collapsed.has(group.id)" class="cl-items">
+                            <label v-for="item in group.items" :key="item.id" class="cl-item"
+                                :class="{ 'cl-item--checked': checked.has(item.id) }">
+                                <span class="cl-checkbox-wrap" @click.prevent="toggle(item.id)">
+                                    <svg v-if="checked.has(item.id)" width="11" height="11" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M20 6 9 17l-5-5" />
+                                    </svg>
+                                </span>
+                                <span class="cl-item-label" @click="toggle(item.id)">{{ item.label }}</span>
+                            </label>
+                        </div>
+
+                    </div>
+                </section>
+
                 <!-- Customer -->
                 <section class="adm-card">
                     <h2 class="adm-card-title">Customer</h2>
@@ -188,7 +397,7 @@ function resendConfirmation() {
                                 <span>{{ order.shipping_line_1 }}</span>
                                 <span v-if="order.shipping_line_2">{{ order.shipping_line_2 }}</span>
                                 <span>{{ order.shipping_city }}<template v-if="order.shipping_county">, {{
-                                        order.shipping_county }}</template></span>
+                                    order.shipping_county }}</template></span>
                                 <span>{{ order.shipping_postcode }}</span>
                             </address>
                         </div>
@@ -198,7 +407,7 @@ function resendConfirmation() {
                                 <span>{{ order.billing_line_1 }}</span>
                                 <span v-if="order.billing_line_2">{{ order.billing_line_2 }}</span>
                                 <span>{{ order.billing_city }}<template v-if="order.billing_county">, {{
-                                        order.billing_county }}</template></span>
+                                    order.billing_county }}</template></span>
                                 <span>{{ order.billing_postcode }}</span>
                             </address>
                         </div>
@@ -238,7 +447,7 @@ function resendConfirmation() {
                         <div class="os-total-row">
                             <span class="os-total-lbl">Shipping</span>
                             <span>{{ Number(order.shipping_total) === 0 ? 'FREE' : fmtCurrency(order.shipping_total)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="os-total-row">
                             <span class="os-total-lbl">VAT (20%)</span>
@@ -596,5 +805,295 @@ function resendConfirmation() {
 
 .os-link-item--muted:hover {
     color: var(--bb-text);
+}
+
+/* ══════════════════════════════════════════════════════════
+   ORDER CHECKLIST  — prefix: cl-
+   ══════════════════════════════════════════════════════════ */
+
+/* Header row */
+.cl-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem 0.75rem;
+    border-bottom: 1px solid var(--bb-border);
+}
+
+.cl-header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.cl-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+}
+
+.cl-progress-pill {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.15rem 0.55rem;
+    border-radius: var(--bb-radius-pill);
+    background: #f0edf8;
+    color: var(--bb-lav-d);
+    border: 1px solid var(--bb-lav);
+    transition: background 0.2s, color 0.2s;
+}
+
+.cl-progress-pill--done {
+    background: var(--bb-green-bg);
+    color: var(--bb-sage-d);
+    border-color: var(--bb-green-border);
+}
+
+.cl-reset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--bb-font);
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--bb-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--bb-radius-sm);
+    transition: background 0.12s, color 0.12s;
+}
+
+.cl-reset-btn:hover {
+    background: var(--bb-red-bg);
+    color: var(--bb-red);
+}
+
+/* Progress bar */
+.cl-bar-track {
+    height: 4px;
+    background: var(--bb-border);
+    overflow: hidden;
+}
+
+.cl-bar-fill {
+    height: 100%;
+    background: var(--bb-lav-d);
+    transition: width 0.35s ease, background 0.35s ease;
+    min-width: 0;
+}
+
+.cl-bar-fill--done {
+    background: var(--bb-sage-d);
+}
+
+/* All done banner */
+.cl-done-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.65rem 1.5rem;
+    background: var(--bb-green-bg);
+    color: var(--bb-sage-d);
+    font-size: 0.82rem;
+    font-weight: 700;
+    border-bottom: 1px solid var(--bb-green-border);
+}
+
+/* Group */
+.cl-group {
+    border-bottom: 1px solid var(--bb-border);
+}
+
+.cl-group:last-child {
+    border-bottom: none;
+}
+
+.cl-group-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--bb-font);
+    text-align: left;
+    transition: background 0.12s;
+}
+
+.cl-group-header:hover {
+    background: var(--bb-cream);
+}
+
+/* Subtle left border accent per colour */
+.cl-group-header--lav:hover {
+    background: #f8f6ff;
+}
+
+.cl-group-header--blush:hover {
+    background: #fff8f9;
+}
+
+.cl-group-header--sage:hover {
+    background: #f4faf4;
+}
+
+.cl-group-header--peach:hover {
+    background: #fffbf5;
+}
+
+.cl-group-left {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+}
+
+.cl-group-right {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+.cl-group-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.cl-group-dot--lav {
+    background: var(--bb-lav-d);
+}
+
+.cl-group-dot--blush {
+    background: var(--bb-blush-d);
+}
+
+.cl-group-dot--sage {
+    background: var(--bb-sage-d);
+}
+
+.cl-group-dot--peach {
+    background: var(--bb-peach-d);
+}
+
+.cl-group-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--bb-text);
+}
+
+.cl-group-count {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--bb-muted);
+    background: var(--bb-cream);
+    border: 1px solid var(--bb-border);
+    padding: 0.1rem 0.4rem;
+    border-radius: var(--bb-radius-pill);
+}
+
+.cl-group-count--done {
+    background: var(--bb-green-bg);
+    color: var(--bb-sage-d);
+    border-color: var(--bb-green-border);
+}
+
+.cl-group-check-all {
+    font-family: var(--bb-font);
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--bb-muted);
+    background: none;
+    border: 1px solid var(--bb-border);
+    border-radius: var(--bb-radius-pill);
+    padding: 0.15rem 0.55rem;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    white-space: nowrap;
+}
+
+.cl-group-check-all:hover {
+    background: var(--bb-cream);
+    color: var(--bb-text);
+}
+
+.cl-group-check-all--active {
+    background: var(--bb-green-bg);
+    color: var(--bb-sage-d);
+    border-color: var(--bb-green-border);
+}
+
+.cl-chevron {
+    color: var(--bb-muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.cl-chevron--open {
+    transform: rotate(180deg);
+}
+
+/* Items list */
+.cl-items {
+    padding: 0.25rem 1.5rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.cl-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: var(--bb-radius-sm);
+    cursor: pointer;
+    transition: background 0.1s;
+    user-select: none;
+}
+
+.cl-item:hover {
+    background: var(--bb-cream);
+}
+
+.cl-item--checked .cl-item-label {
+    color: var(--bb-muted);
+    text-decoration: line-through;
+}
+
+/* Custom checkbox */
+.cl-checkbox-wrap {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    border-radius: var(--bb-radius-sm);
+    border: 1.5px solid var(--bb-border);
+    background: var(--bb-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: background 0.15s, border-color 0.15s;
+    cursor: pointer;
+}
+
+.cl-item--checked .cl-checkbox-wrap {
+    background: var(--bb-lav-d);
+    border-color: var(--bb-lav-d);
+    color: #fff;
+}
+
+.cl-item-label {
+    font-size: 0.85rem;
+    color: var(--bb-text);
+    line-height: 1.4;
+    flex: 1;
 }
 </style>
