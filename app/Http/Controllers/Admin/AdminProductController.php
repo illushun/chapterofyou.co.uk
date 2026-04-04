@@ -17,6 +17,7 @@ use App\Models\Product\Seo;
 use App\Models\Product\Image as ProductImage;
 use App\Models\Oil;
 use App\Models\Product\Material;
+use App\Models\Product\Faq as ProductFaq;
 
 class AdminProductController extends Controller
 {
@@ -123,10 +124,11 @@ class AdminProductController extends Controller
             'materials.*.oil_id'     => ['required_with:materials', 'exists:oil,id', 'distinct'],
             'materials.*.percentage' => ['required_with:materials', 'numeric', 'min:0.01', 'max:100'],
 
+
             'how_to_use' => ['nullable', 'string'],
-            'faqs'       => ['nullable', 'array'],
-            'faqs.*.question' => ['required_with:faqs', 'string', 'max:500'],
-            'faqs.*.answer'   => ['required_with:faqs', 'string', 'max:2000'],
+            'faqs'                  => ['nullable', 'array'],
+            'faqs.*.question'       => ['required_with:faqs', 'string', 'max:500'],
+            'faqs.*.answer'         => ['required_with:faqs', 'string', 'max:2000'],
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
@@ -135,6 +137,8 @@ class AdminProductController extends Controller
             if (!empty($validated['category_ids'])) {
                 $product->categories()->sync($validated['category_ids']);
             }
+
+            $this->syncFaqs($product, $validated['faqs'] ?? []);
 
             $product->courier()->create([
                 'product_id' => $product->id,
@@ -170,6 +174,11 @@ class AdminProductController extends Controller
         $categories   = Category::select('id', 'name')->get();
         $parentProducts = Product::where('id', '!=', $product->id)->select('id', 'name')->get();
         $oils         = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
+        $productFaqs = ProductFaq::where('product_id', $product->id)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get(['question', 'answer', 'sort_order'])
+            ->toArray();
 
         $productImages = $product->images()
             ->select('id', 'image', 'status')
@@ -207,6 +216,7 @@ class AdminProductController extends Controller
             'oils'              => $oils,
             'productMaterials'  => $productMaterials,
             'isEditing'         => true,
+            'productFaqs' => $productFaqs,
         ]);
     }
 
@@ -243,15 +253,17 @@ class AdminProductController extends Controller
             'materials.*.percentage' => ['required_with:materials', 'numeric', 'min:0.01', 'max:100'],
 
             'how_to_use' => ['nullable', 'string'],
-            'faqs'       => ['nullable', 'array'],
-            'faqs.*.question' => ['required_with:faqs', 'string', 'max:500'],
-            'faqs.*.answer'   => ['required_with:faqs', 'string', 'max:2000'],
+            'faqs'                  => ['nullable', 'array'],
+            'faqs.*.question'       => ['required_with:faqs', 'string', 'max:500'],
+            'faqs.*.answer'         => ['required_with:faqs', 'string', 'max:2000'],
         ]);
 
         return DB::transaction(function () use ($request, $validated, $product) {
             $product->update($validated);
 
             $product->categories()->sync($validated['category_ids'] ?? []);
+
+            $this->syncFaqs($product, $validated['faqs'] ?? []);
 
             if ($validated['courier_id'] === null) {
                 $product->courier()->delete();
@@ -377,4 +389,30 @@ class AdminProductController extends Controller
         return back()->with('success', 'Product removed from parent.');
     }
 
+    /**
+    * Replace all FAQ rows for this product with the submitted set.
+    * Preserves sort_order based on submission order.
+    */
+    private function syncFaqs(Product $product, array $faqs): void
+    {
+        // Wipe existing rows
+        ProductFaq::where('product_id', $product->id)->delete();
+
+        foreach ($faqs as $index => $faq) {
+            $question = trim($faq['question'] ?? '');
+            $answer   = trim($faq['answer']   ?? '');
+
+            // Skip entirely blank rows
+            if ($question === '' && $answer === '') {
+                continue;
+            }
+
+            ProductFaq::create([
+                'product_id' => $product->id,
+                'question'   => $question,
+                'answer'     => $answer,
+                'sort_order' => $index,
+            ]);
+        }
+    }
 }

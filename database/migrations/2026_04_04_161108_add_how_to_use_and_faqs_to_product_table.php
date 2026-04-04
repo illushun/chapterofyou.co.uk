@@ -12,7 +12,6 @@ return new class () extends Migration {
     {
         Schema::table('product', function (Blueprint $table) {
             $table->text('how_to_use')->nullable();
-            $table->json('faqs')->nullable();
         });
     }
 
@@ -22,7 +21,7 @@ return new class () extends Migration {
     public function down(): void
     {
         Schema::table('product', function (Blueprint $table) {
-            $table->dropColumn(['how_to_use', 'faqs']);
+            $table->dropColumn(['how_to_use']);
         });
     }
 };

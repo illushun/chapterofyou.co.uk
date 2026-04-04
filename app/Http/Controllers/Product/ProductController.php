@@ -104,7 +104,7 @@ class ProductController extends Controller
                 'categories:category.id,category.name',
                 'reviews.user:id,name',
                 'uniqueViews',
-                // Check if the product has variations (children)
+                'faqs',
                 'children' => function ($query) {
                     $query->select('id', 'parent_product_id', 'mpn', 'name', 'cost', 'stock_qty')
                         ->where('status', 'enabled')

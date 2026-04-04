@@ -14,7 +14,6 @@ interface Product {
     status: 'enabled' | 'disabled'; cost: number; stock_qty: number;
     parent_product_id: number | null;
     how_to_use: string | null;
-    faqs: { question: string; answer: string }[] | null;
     seo: { meta_title: string; meta_description: string; slug: string; };
 }
 interface Oil { id: number; name: string; supplier: string | null; cas_primary: string | null; }
@@ -31,6 +30,7 @@ const props = defineProps<{
     courierPerItem: string;
     oils: Oil[];
     productMaterials: ProductMaterial[];
+    productFaqs: FaqItem[];         // comes from its own DB table now
     productImages: ProductImage[];
     isEditing: boolean;
     errors: Record<string, string>;
@@ -43,7 +43,7 @@ const form = useForm({
     name: props.product?.name || '',
     description: props.product?.description || '',
     how_to_use: props.product?.how_to_use || '',
-    faqs: (props.product?.faqs ?? []) as FaqItem[],
+    faqs: (props.productFaqs ?? []) as FaqItem[],
     status: props.product?.status || 'enabled',
     cost: props.product?.cost?.toString() || '0.00',
     stock_qty: props.product?.stock_qty || 0,

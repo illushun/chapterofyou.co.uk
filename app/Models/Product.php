@@ -14,6 +14,7 @@ use App\Models\Product\Category as ProductCategory;
 use App\Models\Product\Image;
 use App\Models\Product\Seo;
 use App\Models\Product\View as ProductView;
+use App\Models\Product\Faq as ProductFaq;
 
 class Product extends Model
 {
@@ -29,8 +30,7 @@ class Product extends Model
         'cost',
         'stock_qty',
         'parent_product_id',
-        'how_to_use',
-        'faqs'
+        'how_to_use'
     ];
 
     protected $hidden = [];
@@ -169,5 +169,12 @@ class Product extends Model
 
         // Status Filter
         $query->where('status', 'enabled');
+    }
+
+    public function faqs()
+    {
+        return $this->hasMany(ProductFaq::class, 'product_id')
+                    ->orderBy('sort_order')
+                    ->orderBy('id');
     }
 }
