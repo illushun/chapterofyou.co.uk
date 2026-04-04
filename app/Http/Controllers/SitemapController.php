@@ -22,10 +22,8 @@ class SitemapController extends Controller
      */
     public function index(): Response
     {
-
+        $urls = collect();
         $xml = cache()->remember('sitemap.xml', now()->addHour(), function () use ($urls) {
-            $urls = collect();
-
             // ── Static pages ──────────────────────────────────────────────────
             $staticPages = [
                 [
