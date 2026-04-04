@@ -12,6 +12,7 @@ use App\Http\Controllers\Cart\VoucherController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MarketingOptInController;
 use App\Http\Controllers\Order\ConfirmationController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Cart\CartController;
@@ -165,9 +166,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
 
-// Signed unsubscribe routes — no auth required
 Route::get('/unsubscribe/{user}', [MarketingOptInController::class, 'unsubscribeShow'])->name('unsubscribe.show');
 Route::post('/unsubscribe/confirm/{user}', [MarketingOptInController::class, 'unsubscribeConfirm'])->name('unsubscribe.confirm');
+
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

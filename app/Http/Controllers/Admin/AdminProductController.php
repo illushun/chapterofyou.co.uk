@@ -160,6 +160,8 @@ class AdminProductController extends Controller
             // Sync oil formulation
             $this->syncMaterials($product, $validated['materials'] ?? []);
 
+            cache()->forget('sitemap.xml');
+
             return redirect()->route('admin.products.index')
                 ->with('success', "Product '{$product->name}' created successfully!");
         });
@@ -315,6 +317,8 @@ class AdminProductController extends Controller
             // Sync oil formulation
             $this->syncMaterials($product, $validated['materials'] ?? []);
 
+            cache()->forget('sitemap.xml');
+
             return redirect()->route('admin.products.index')
                 ->with('success', "Product '{$product->name}' updated successfully!");
         });
@@ -331,6 +335,8 @@ class AdminProductController extends Controller
             Storage::disk('public')->delete($image->image);
         });
         $product->delete();
+
+        cache()->forget('sitemap.xml');
 
         return redirect()->route('admin.products.index')
             ->with('success', "Product '{$productName}' deleted successfully.");

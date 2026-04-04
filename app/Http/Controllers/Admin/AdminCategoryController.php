@@ -68,6 +68,8 @@ class AdminCategoryController extends Controller
                 $this->handleImageUpload($category, $request->file('image'));
             }
 
+            cache()->forget('sitemap.xml');
+
             return redirect()->route('admin.categories.index')
                 ->with('success', "Category '{$category->name}' created successfully!");
         });
@@ -127,6 +129,8 @@ class AdminCategoryController extends Controller
                 $this->handleImageUpload($category, $request->file('new_image'));
             }
 
+            cache()->forget('sitemap.xml');
+
             return redirect()->route('admin.categories.index')
                 ->with('success', "Category '{$category->name}' updated successfully!");
         });
@@ -142,6 +146,8 @@ class AdminCategoryController extends Controller
             Storage::disk('public')->delete($category->image);
         }
         $category->delete();
+
+        cache()->forget('sitemap.xml');
 
         return redirect()->route('admin.categories.index')
             ->with('success', "Category '{$categoryName}' deleted successfully.");
