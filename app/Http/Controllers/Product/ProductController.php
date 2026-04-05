@@ -28,7 +28,7 @@ class ProductController extends Controller
 
     public function index(Request $request): \Inertia\Response
     {
-        if (!Auth::check()) {
+        /*if (!Auth::check()) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
@@ -39,7 +39,7 @@ class ProductController extends Controller
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
-        }
+        }*/
 
         $perPage = 12;
         $filters = $request->only([
@@ -85,7 +85,7 @@ class ProductController extends Controller
      */
     public function show(string $idOrSlug, Request $request)
     {
-        if (!Auth::check()) {
+        /*if (!Auth::check()) {
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
@@ -96,7 +96,7 @@ class ProductController extends Controller
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
             ]);
-        }
+        }*/
         logger()->channel('product_view')->info("Fetching product at URL {$idOrSlug}");
 
         $product = Product::with([

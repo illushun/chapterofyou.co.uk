@@ -20,7 +20,7 @@ class HomeController extends Controller
         $clientIp = $request->ip();
         logger()->channel('load_website')->info("[{$clientIp}] Recorded access attempt.");
 
-        if (!Auth::check()) {
+        /*if (!Auth::check()) {
             logger()->channel('load_website')->info("[{$clientIp}] Not logged in. Showing waitlist.");
             return Inertia::render('Welcome', [
                 'siteName' => 'Chapter of You',
@@ -36,7 +36,7 @@ class HomeController extends Controller
             ]);
         }
 
-        logger()->channel('load_website')->info("[{$clientIp}] Admin user. Loading landing page.");
+        logger()->channel('load_website')->info("[{$clientIp}] Admin user. Loading landing page.");*/
 
         // Fetch the 4 most-viewed enabled products for the "Hottest Products" section.
         $featuredProducts = Product::query()
@@ -76,9 +76,9 @@ class HomeController extends Controller
      */
     public function about(Request $request): \Inertia\Response
     {
-        if (!Auth::check() || !Auth::user()->is_admin) {
+        /*if (!Auth::check() || !Auth::user()->is_admin) {
             return Inertia::render('Welcome', ['siteName' => 'Chapter of You']);
-        }
+        }*/
 
         return Inertia::render('About', ['siteName' => 'Chapter of You']);
     }
@@ -88,9 +88,9 @@ class HomeController extends Controller
      */
     public function contact(Request $request): \Inertia\Response
     {
-        if (!Auth::check() || !Auth::user()->is_admin) {
+        /*if (!Auth::check() || !Auth::user()->is_admin) {
             return Inertia::render('Welcome', ['siteName' => 'Chapter of You']);
-        }
+        }*/
 
         return Inertia::render('Contact', ['siteName' => 'Chapter of You']);
     }
