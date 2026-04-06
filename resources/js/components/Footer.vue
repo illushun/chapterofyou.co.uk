@@ -92,7 +92,7 @@ const currentYear = new Date().getFullYear();
                     <p class="ft-nav-heading">Shop</p>
                     <ul class="ft-nav-list">
                         <li>
-                            <Link :href="route('products.index')" class="ft-nav-link">All Products</Link>
+                            <Link :href="route('products')" class="ft-nav-link">All Products</Link>
                         </li>
                         <li>
                             <Link :href="route('cart.view')" class="ft-nav-link">My Basket</Link>
