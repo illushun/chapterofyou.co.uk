@@ -69,28 +69,20 @@ const qualifications = [
             <div class="ab-intro-body" :ref="addReveal">
                 <h2 class="ab-section-title">Hello, I'm <em>glad you're here</em></h2>
                 <p>
-                    Welcome to Chapter of You — a small, independent business I built from
+                    Welcome to Chapter of You, a small, independent business I built from
                     something deeply personal: the belief that taking care of yourself is not
                     an indulgence. It is a necessity.
                 </p>
                 <p>
                     I started this brand because I wanted to create products that genuinely
-                    support the quiet moments — the ones where you light a diffuser, take a
-                    breath, and give yourself permission to just <em>be</em>.
+                    support the quiet moments, the ones where scent softly fills your space, you pause, breathe, and
+                    give yourself permission to simply <em>be</em>.
                 </p>
                 <p>
-                    Everything I make is handcrafted by me, in small batches, with ingredients
+                    Everything I make is handcrafted by me individually with ingredients
                     I have personally chosen for their quality. There is no factory, no
                     shortcuts, and no compromise. Just care, poured into every single bottle.
                 </p>
-            </div>
-            <!-- Decorative ink-stamp circle -->
-            <div class="ab-stamp" aria-hidden="true">
-                <div class="ab-stamp-inner">
-                    <span>Chapter</span>
-                    <span class="ab-stamp-of">of</span>
-                    <span>You</span>
-                </div>
             </div>
         </section>
 
@@ -105,7 +97,7 @@ const qualifications = [
                     <p class="ab-therapist-body">
                         I am a qualified complementary therapist with a deep passion for
                         wellbeing and self-care. My training spans aromatherapy, reflexology
-                        and Swedish massage — disciplines that inform every product I create,
+                        and Swedish massage, disciplines that inform every product I create,
                         from the oils I choose to the way I think about scent and its effect
                         on the body and mind.
                     </p>
@@ -135,11 +127,6 @@ const qualifications = [
                             <li>Reflexology</li>
                             <li>Swedish Massage</li>
                         </ul>
-                        <div class="ab-cred-seal">
-                            <div class="ab-seal-ring">
-                                <span>Chapter of You</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -155,7 +142,7 @@ const qualifications = [
                         <span class="ab-behind-glyph" aria-hidden="true">◇</span>
                         <h3>Small batch, always</h3>
                         <p>
-                            Every diffuser is blended and bottled in small batches so I can
+                            Every diffuser is blended and bottled individually so I can
                             give each one proper attention. Your order is never just a number
                             on a production line.
                         </p>
@@ -165,7 +152,7 @@ const qualifications = [
                         <h3>Scent as therapy</h3>
                         <p>
                             My aromatherapy training directly shapes how I blend. Fragrance
-                            is not just pleasant — it has a genuine effect on mood, memory
+                            is not just pleasant, it has a genuine effect on mood, memory
                             and wellbeing. I take that seriously.
                         </p>
                     </div>
@@ -188,11 +175,10 @@ const qualifications = [
                 <div class="ab-future-badge">Looking ahead ✦</div>
                 <blockquote class="ab-future-quote">
                     "The products you see today are just the beginning. My vision for
-                    Chapter of You extends into a full suite of beauty and wellness
-                    services — built on the same expertise and the same uncompromising
-                    care that goes into everything I do now."
+                    Chapter of You will extend into a full beauty and wellness
+                    experience, with self-care always remaining the main priority."
                 </blockquote>
-                <p class="ab-future-sig">— Founder, Chapter of You</p>
+                <p class="ab-future-sig">— Kacey, Chapter of You</p>
             </div>
         </section>
 
@@ -203,18 +189,45 @@ const qualifications = [
                 <h2 class="ab-close-title">Thank you for<br /><em>being here</em></h2>
                 <p class="ab-close-body">
                     Whether you found Chapter of You through a recommendation, a
-                    search, or a happy accident — I am genuinely glad you're here.
+                    search, or a happy accident, I am genuinely glad you're here.
                     Every order means the world to me, and I hope whatever you choose
                     brings a little calm and beauty into your everyday.
                 </p>
                 <p class="ab-close-body">
-                    If you ever want to get in touch — whether it's a question about a
-                    product, a custom request, or just to say hello — my inbox is always
-                    open.
+                    If you'd ever like to pop over and say hi, my socials are linked below.
+                    If you have any questions about a product or your order please don't hesitate to get
+                    in touch.
                 </p>
                 <a href="mailto:contact@chapterofyou.co.uk" class="ab-close-link">
                     contact@chapterofyou.co.uk
                 </a>
+
+                <!-- Social links -->
+                <div class="ab-socials">
+                    <p class="ab-socials-label">Follow along</p>
+                    <div class="ab-socials-row">
+                        <a href="https://www.instagram.com/thechapterofyou?igsh=cTM3dDhqdTNuN3Zu&utm_source=qr"
+                            target="_blank" rel="noopener noreferrer" class="ab-social-btn"
+                            aria-label="Chapter of You on Instagram">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                                <circle cx="12" cy="12" r="4" />
+                                <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
+                            </svg>
+                            <span>Instagram</span>
+                        </a>
+                        <a href="https://www.facebook.com/share/1Ar4e9QxF1/?mibextid=wwXIfr" target="_blank"
+                            rel="noopener noreferrer" class="ab-social-btn" aria-label="Chapter of You on Facebook">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                            </svg>
+                            <span>Facebook</span>
+                        </a>
+                    </div>
+                </div>
+
                 <div class="ab-close-sig" aria-hidden="true">
                     <span class="ab-sig-text">With love,</span>
                     <span class="ab-sig-name">Chapter of You</span>
