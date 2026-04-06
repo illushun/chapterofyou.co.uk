@@ -1,523 +1,526 @@
 <script setup lang="ts">
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { onMounted, ref, computed, nextTick } from 'vue';
+import axios from 'axios';
 import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { ref, computed, onMounted } from 'vue';
-import axios from 'axios';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
-interface CartItem {
-    id: number; product_id: number;
-    product: { id: number; name: string; cost: number; stock_qty: number; images: { image: string }[]; };
-    quantity: number;
-}
-interface Address {
-    id: number; line_1: string; line_2: string | null;
-    city: string; county: string | null; postcode: string; country: string; is_default: boolean;
-}
-interface Summary {
-    subtotal: number; shipping: number; tax: number; voucher_discount: number; total: number;
-}
-interface AppliedVoucher { code: string; discount: number; type: string; value: number; }
+declare const Stripe: any;
+declare const route: any;
 
-const props = defineProps<{
-    summary: Summary;
-    cartItems: CartItem[];
-    addresses: Address[];
-    appliedVoucher: AppliedVoucher | null;
-    isGuest: boolean;
-}>();
+const getRoute = (name: string, params: any = {}, absolute: boolean = true) => {
+    if (typeof window.route === 'function') return window.route(name, params, absolute);
+    return `/${name}`;
+};
 
-const page = usePage();
-const auth = computed(() => (page.props.auth as any) ?? {});
-
-// ── Form fields ────────────────────────────────────────────────────────────
-const email = ref(auth.value.user?.email ?? '');
-const fullName = ref(auth.value.user?.name ?? '');
-const addressLine1 = ref('');
-const addressLine2 = ref('');
-const city = ref('');
-const county = ref('');
-const postcode = ref('');
-const country = ref('United Kingdom');
-const telephone = ref('');
-const selectedAddressId = ref<number | null>(null);
-
-// Pre-fill saved address for logged-in users
-if (props.addresses.length) {
-    const def = props.addresses.find(a => a.is_default) ?? props.addresses[0];
-    selectedAddressId.value = def.id;
-    addressLine1.value = def.line_1;
-    addressLine2.value = def.line_2 ?? '';
-    city.value = def.city;
-    county.value = def.county ?? '';
-    postcode.value = def.postcode;
-    country.value = def.country;
-}
-
-function selectSavedAddress(addr: Address) {
-    selectedAddressId.value = addr.id;
-    addressLine1.value = addr.line_1;
-    addressLine2.value = addr.line_2 ?? '';
-    city.value = addr.city;
-    county.value = addr.county ?? '';
-    postcode.value = addr.postcode;
-    country.value = addr.country;
-}
-
-// ── Voucher ────────────────────────────────────────────────────────────────
-const voucherCode = ref('');
-const voucherLoading = ref(false);
-const voucherError = ref('');
-const voucherSuccess = ref('');
-const appliedVoucher = ref(props.appliedVoucher);
-
-async function applyVoucher() {
-    if (!voucherCode.value.trim()) return;
-    voucherLoading.value = true;
-    voucherError.value = '';
-    try {
-        const res = await axios.post(route('voucher.apply'), { code: voucherCode.value.trim() });
-        appliedVoucher.value = res.data;
-        voucherSuccess.value = res.data.message;
-        voucherCode.value = '';
-        router.reload({ only: ['summary'] });
-    } catch (e: any) {
-        voucherError.value = e?.response?.data?.error ?? 'Invalid voucher code.';
-    } finally {
-        voucherLoading.value = false;
-    }
-}
-async function removeVoucher() {
-    await axios.post(route('voucher.remove'));
-    appliedVoucher.value = null;
-    voucherSuccess.value = '';
-    router.reload({ only: ['summary'] });
-}
-
-// ── Stripe ─────────────────────────────────────────────────────────────────
-const stripeLoaded = ref(false);
-const cardElementMounted = ref(false);
-const paymentProcessing = ref(false);
-const paymentError = ref('');
-const prButtonAvailable = ref(false);
-
-let stripe: any = null;
-let elements: any = null;
-let cardElement: any = null;
-let paymentRequest: any = null;
-
-const fmt = (v: number) => `£${Number(v).toFixed(2)}`;
-
-onMounted(() => {
-    if ((window as any).Stripe) {
-        initStripe();
-    } else {
-        const script = document.createElement('script');
+const loadStripeScript = (): Promise<void> => new Promise((resolve) => {
+    if (typeof Stripe !== 'undefined') return resolve();
+    const scriptId = 'stripe-script';
+    let script = document.getElementById(scriptId) as HTMLScriptElement;
+    if (script) { script.onload = () => resolve(); }
+    else {
+        script = document.createElement('script');
         script.src = 'https://js.stripe.com/v3/';
-        script.async = true;
-        script.onload = initStripe;
+        script.id = scriptId;
+        script.onload = () => resolve();
         document.head.appendChild(script);
     }
 });
 
-function initStripe() {
-    stripe = (window as any).Stripe(import.meta.env.VITE_STRIPE_KEY);
-    elements = stripe.elements();
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-    // ── Standard card element ────────────────────────────────────────────
-    cardElement = elements.create('card', {
-        style: {
-            base: {
-                fontFamily: "'Nunito', sans-serif",
-                fontSize: '16px',
-                color: '#2d1a1a',
-                '::placeholder': { color: '#c9a4a4' },
-            },
-            invalid: { color: '#c84040' },
-        },
-        hidePostalCode: true,
-    });
-    cardElement.mount('#stripe-card-element');
-    cardElement.on('ready', () => { cardElementMounted.value = true; });
-    cardElement.on('change', (e: any) => { paymentError.value = e.error?.message ?? ''; });
-
-    // ── Payment Request Button — Apple Pay / Google Pay ──────────────────
-    paymentRequest = stripe.paymentRequest({
-        country: 'GB',
-        currency: 'gbp',
-        total: { label: 'Chapter of You', amount: Math.round(props.summary.total * 100) },
-        requestPayerName: true,
-        requestPayerEmail: true,
-    });
-
-    paymentRequest.canMakePayment().then((result: any) => {
-        if (!result) return;
-        prButtonAvailable.value = true;
-        const prButton = elements.create('paymentRequestButton', {
-            paymentRequest,
-            style: {
-                paymentRequestButton: { type: 'buy', theme: 'dark', height: '48px' },
-            },
-        });
-        prButton.mount('#stripe-pr-button');
-    });
-
-    // Handle Apple Pay / Google Pay confirmation
-    paymentRequest.on('paymentmethod', async (ev: any) => {
-        if (!validateForm(true)) {
-            ev.complete('fail');
-            return;
-        }
-        paymentProcessing.value = true;
-        paymentError.value = '';
-        try {
-            const { data } = await axios.get(route('checkout.payment-intent'));
-            const { paymentIntent, error } = await stripe.confirmCardPayment(
-                data.clientSecret,
-                { payment_method: ev.paymentMethod.id },
-                { handleActions: false }
-            );
-            if (error) {
-                ev.complete('fail');
-                paymentError.value = error.message;
-                paymentProcessing.value = false;
-                return;
-            }
-            ev.complete('success');
-            // Fill name/email from wallet if guest hasn't typed them
-            if (!fullName.value && ev.payerName) fullName.value = ev.payerName;
-            if (!email.value && ev.payerEmail) email.value = ev.payerEmail;
-            await submitOrder(paymentIntent.id, ev.paymentMethod.type);
-        } catch {
-            ev.complete('fail');
-            paymentError.value = 'Payment failed. Please try again.';
-            paymentProcessing.value = false;
-        }
-    });
-
-    stripeLoaded.value = true;
+interface CartItem {
+    id: number; product_id: number;
+    product: { name: string; cost: number; image_url: string; }
+    quantity: number;
+}
+interface Summary { subtotal: number; tax: number; shipping: number; total: number; voucher_discount: number; }
+interface Address {
+    id: number; user_id: number; type: string; is_default: boolean;
+    line_1: string; line_2: string; city: string; county: string; postcode: string; country: string;
 }
 
-// ── Card payment ───────────────────────────────────────────────────────────
-async function payWithCard() {
-    if (paymentProcessing.value) return;
-    if (!validateForm()) return;
-    paymentProcessing.value = true;
-    paymentError.value = '';
-    try {
-        const { data } = await axios.get(route('checkout.payment-intent'));
-        const { paymentIntent, error } = await stripe.confirmCardPayment(data.clientSecret, {
-            payment_method: { card: cardElement, billing_details: { name: fullName.value, email: email.value } },
-        });
-        if (error) {
-            paymentError.value = error.message;
-            paymentProcessing.value = false;
-            return;
-        }
-        await submitOrder(paymentIntent.id, 'card');
-    } catch {
-        paymentError.value = 'Payment failed. Please try again.';
-        paymentProcessing.value = false;
-    }
-}
+const props = defineProps<{
+    cartItems: CartItem[];
+    summary: Summary;
+    addresses: Address[];
+    appliedVoucher: { code: string; discount: number; type: string; value: number } | null;
+}>();
 
-async function submitOrder(paymentIntentId: string, paymentType: string) {
+const seo = useSeoHead({ noIndex: true });
+
+const isProcessing = ref(false);
+const paymentError = ref<string | null>(null);
+const hasClientSecret = ref(false);
+const isLoadingInitialData = ref(true);
+const selectedAddressId = ref<number | null>(null);
+const isManualAddressVisible = ref(false);
+
+const voucherCode = ref('');
+const voucherLoading = ref(false);
+const voucherError = ref<string | null>(null);
+const voucherSuccess = ref<string | null>(null);
+const activeVoucher = ref(props.appliedVoucher ?? null);
+
+const voucherDiscount = computed(() => activeVoucher.value?.discount ?? 0);
+const computedDiscountedSubtotal = computed(() => Math.max(0, Number(props.summary.subtotal) - voucherDiscount.value));
+const computedTax = computed(() => Math.round(computedDiscountedSubtotal.value * 0.20 * 100) / 100);
+const computedTotal = computed(() => Math.round((computedDiscountedSubtotal.value + computedTax.value + (Number(props.summary.shipping) || 0)) * 100) / 100);
+
+async function applyVoucher() {
+    if (!voucherCode.value.trim()) return;
+    voucherLoading.value = true; voucherError.value = null; voucherSuccess.value = null;
     try {
-        const res = await axios.post(route('checkout.process'), {
-            paymentIntentId,
-            paymentType,
-            email: email.value,
-            fullName: fullName.value,
-            addressLine1: addressLine1.value,
-            addressLine2: addressLine2.value,
-            city: city.value,
-            postcode: postcode.value,
-            county: county.value,
-            country: country.value,
-            telephone: telephone.value,
-        });
-        // Follow the Inertia redirect from the server
-        if (res.data?.redirect) {
-            window.location.href = res.data.redirect;
-        } else {
-            router.visit(route('home'));
-        }
+        const { data } = await axios.post(route('checkout.voucher.apply'), { code: voucherCode.value.trim() });
+        activeVoucher.value = data; voucherSuccess.value = data.message; voucherCode.value = '';
+        await initializeStripe();
     } catch (err: any) {
-        paymentError.value = err?.response?.data?.message ?? 'Order submission failed. Please try again.';
-        paymentProcessing.value = false;
-    }
+        const r = err.response;
+        voucherError.value = r?.data?.error || r?.data?.errors?.code?.[0] || r?.data?.message || `Server error (${r?.status ?? 'unknown'}).`;
+    } finally { voucherLoading.value = false; }
 }
 
-// ── Validation ─────────────────────────────────────────────────────────────
-const formErrors = ref<Record<string, string>>({});
-
-function validateForm(walletPay = false): boolean {
-    formErrors.value = {};
-    if (!fullName.value.trim()) formErrors.value.fullName = 'Name is required.';
-    if (!email.value.trim()) formErrors.value.email = 'Email is required.';
-    // Address not required for wallet pay — it's collected by Apple/Google Pay
-    if (!walletPay) {
-        if (!addressLine1.value.trim()) formErrors.value.addressLine1 = 'Address is required.';
-        if (!city.value.trim()) formErrors.value.city = 'City is required.';
-        if (!postcode.value.trim()) formErrors.value.postcode = 'Postcode is required.';
-    }
-    return Object.keys(formErrors.value).length === 0;
+async function removeVoucher() {
+    await axios.post(route('checkout.voucher.remove'));
+    activeVoucher.value = null; voucherSuccess.value = null; voucherError.value = null;
+    await initializeStripe();
 }
 
-const isFormValid = computed(() =>
-    fullName.value.trim() && email.value.trim() &&
-    addressLine1.value.trim() && city.value.trim() && postcode.value.trim()
-);
+const paymentContainer = ref<HTMLElement | null>(null);
+const stripe = ref<any>(null);
+const elements = ref<any>(null);
+const paymentElement = ref<any>(null);
+const clientSecret = ref('');
+const paymentIntentId = ref('');
+
+const addressForm = useForm({
+    email: '', fullName: '', telephone: '',
+    addressLine1: '', addressLine2: '',
+    city: '', county: '', postcode: '', country: 'United Kingdom',
+    saveInfo: false,
+});
+
+const formatAddress = (address: Address): string[] =>
+    [address.line_1, address.line_2, address.city, address.county, address.postcode, address.country].filter(Boolean);
+
+const hasItems = computed(() => props.cartItems.length > 0);
+const isShippingAddressVisible = computed(() => selectedAddressId.value !== null || isManualAddressVisible.value);
+
+const fmt = (amount: number | string): string => {
+    const n = Number(amount);
+    return isNaN(n) ? '£0.00' : `£${n.toFixed(2)}`;
+};
+
+const selectAddress = (address: Address) => {
+    selectedAddressId.value = address.id;
+    addressForm.addressLine1 = address.line_1; addressForm.addressLine2 = address.line_2;
+    addressForm.city = address.city; addressForm.county = address.county;
+    addressForm.postcode = address.postcode; addressForm.country = address.country;
+    isManualAddressVisible.value = true;
+};
+
+const clearAddressSelection = () => {
+    selectedAddressId.value = null;
+    addressForm.addressLine1 = ''; addressForm.addressLine2 = '';
+    addressForm.city = ''; addressForm.county = '';
+    addressForm.postcode = ''; addressForm.country = 'United Kingdom';
+    isManualAddressVisible.value = false;
+};
+
+const fetchPaymentIntent = async () => {
+    try {
+        const response = await fetch(getRoute('checkout.payment_intent'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+            },
+        });
+        const data = await response.json();
+        if (!response.ok || data.error) throw new Error(data.error || 'Failed to fetch payment intent.');
+        clientSecret.value = data.clientSecret;
+        paymentIntentId.value = data.paymentIntentId;
+    } catch (error: any) {
+        paymentError.value = 'Could not initialise payment: ' + error.message;
+    }
+};
+
+const initializeStripe = async () => {
+    await fetchPaymentIntent();
+    if (!clientSecret.value || paymentError.value) { isLoadingInitialData.value = false; return; }
+    hasClientSecret.value = true;
+    await nextTick();
+    stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
+    elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
+    paymentElement.value = elements.value.create('payment', {
+        layout: 'tabs',
+        appearance: { theme: 'stripe', variables: { colorPrimary: '#8c4a50', colorText: '#2d1a1a', colorBackground: '#fffafa' } },
+    });
+    const maxRetries = 10; let attempts = 0; let mounted = false;
+    while (attempts < maxRetries && !mounted) {
+        const container = paymentContainer.value;
+        if (container) {
+            try { paymentElement.value.mount(container); mounted = true; }
+            catch (e) { await delay(50); }
+        } else { await delay(50); }
+        attempts++;
+    }
+    if (!mounted) paymentError.value = 'Payment system failed to load.';
+    isLoadingInitialData.value = false;
+};
+
+const handleCardPayment = async () => {
+    if (!addressForm.email || !addressForm.addressLine1 || !addressForm.postcode || !addressForm.fullName) {
+        paymentError.value = 'Please complete all required fields.'; return;
+    }
+    isProcessing.value = true; paymentError.value = null;
+    if (!stripe.value || !paymentElement.value) {
+        paymentError.value = 'Payment system not loaded.'; isProcessing.value = false; return;
+    }
+    const { error: stripeError, paymentIntent } = await stripe.value.confirmPayment({
+        elements: elements.value,
+        confirmParams: {
+            return_url: window.location.origin + getRoute('checkout.index', {}, false),
+            payment_method_data: {
+                billing_details: {
+                    name: addressForm.fullName, email: addressForm.email,
+                    phone: addressForm.telephone || undefined,
+                    address: { line1: addressForm.addressLine1, line2: addressForm.addressLine2 || undefined, city: addressForm.city, state: addressForm.county || undefined, postal_code: addressForm.postcode, country: 'GB' }
+                }
+            }
+        },
+        redirect: 'if_required',
+    });
+    if (stripeError) { paymentError.value = stripeError.message || 'An error occurred.'; isProcessing.value = false; return; }
+    if (paymentIntent?.status === 'succeeded') {
+        router.post(getRoute('checkout.process_payment'), { ...addressForm.data(), paymentIntentId: paymentIntent.id, paymentType: 'card' }, {
+            onError: (errors) => { paymentError.value = Object.values(errors)[0] as string || 'Order failed.'; },
+            onFinish: () => { isProcessing.value = false; }
+        });
+    } else {
+        paymentError.value = 'Payment status: ' + paymentIntent?.status;
+        isProcessing.value = false;
+    }
+};
+
+onMounted(async () => {
+    const defaultAddress = props.addresses.find(a => a.is_default);
+    if (defaultAddress) { await nextTick(); selectAddress(defaultAddress); }
+    else if (props.addresses.length === 0) { isManualAddressVisible.value = true; }
+    if (hasItems.value) { await loadStripeScript(); await initializeStripe(); }
+    else { isLoadingInitialData.value = false; }
+});
 </script>
 
 <template>
     <NavBar />
 
-    <Head title="Checkout | Chapter of You" />
+    <SeoHead v-bind="seo" />
 
     <component :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
         rel="stylesheet" />
 
-    <main class="ck">
-        <div class="ck-wrap">
+    <main class="co">
+        <div class="co-wrap">
 
             <!-- Header -->
-            <header class="ck-header">
-                <h1 class="ck-title">Checkout</h1>
-                <p v-if="isGuest" class="ck-guest-note">
-                    Checking out as a guest.
-                    <a :href="route('login')" class="ck-guest-link">Sign in</a>
-                    to save your details for next time.
-                </p>
+            <header class="co-header">
+                <h1 class="co-title">Checkout</h1>
+                <a :href="getRoute('cart.view')" class="co-back">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                    Back to cart
+                </a>
             </header>
 
-            <div class="ck-grid">
+            <!-- Empty cart -->
+            <div v-if="!hasItems" class="co-empty">
+                <p>No items in your cart.</p>
+                <a :href="getRoute('products.index')" class="btn-rose">Browse Products</a>
+            </div>
 
-                <!-- ── Left: form ── -->
-                <div class="ck-form-col">
+            <div v-else class="co-grid">
 
-                    <!-- ── Express checkout ── -->
-                    <div v-if="prButtonAvailable" class="ck-card ck-express">
-                        <p class="ck-express-label">Express Checkout</p>
-                        <div id="stripe-pr-button"></div>
-                        <div class="ck-or-divider">
-                            <span class="ck-or-text">or pay with card</span>
-                        </div>
-                    </div>
+                <!-- ── Left column ── -->
+                <div class="co-left">
 
-                    <!-- Contact details -->
-                    <div class="ck-card">
-                        <h2 class="ck-card-title">Contact Details</h2>
-                        <div class="ck-field-row">
-                            <div class="ck-field">
-                                <label class="ck-label">Full Name</label>
-                                <input v-model="fullName" type="text" autocomplete="name" class="ck-input"
-                                    :class="{ 'ck-input--err': formErrors.fullName }" placeholder="Jane Smith" />
-                                <p v-if="formErrors.fullName" class="ck-err">{{ formErrors.fullName }}</p>
-                            </div>
-                            <div class="ck-field">
-                                <label class="ck-label">Email Address</label>
-                                <input v-model="email" type="email" autocomplete="email" class="ck-input"
-                                    :class="{ 'ck-input--err': formErrors.email }" placeholder="jane@example.com" />
-                                <p v-if="formErrors.email" class="ck-err">{{ formErrors.email }}</p>
-                            </div>
-                        </div>
-                        <div class="ck-field">
-                            <label class="ck-label">Phone <span class="ck-label-note">(optional)</span></label>
-                            <input v-model="telephone" type="tel" autocomplete="tel" class="ck-input"
-                                placeholder="+44 7700 900000" />
-                        </div>
-                    </div>
-
-                    <!-- Saved addresses (logged-in users only) -->
-                    <div v-if="!isGuest && addresses.length" class="ck-card">
-                        <h2 class="ck-card-title">Saved Addresses</h2>
-                        <div class="ck-address-list">
-                            <button v-for="addr in addresses" :key="addr.id" type="button"
-                                @click="selectSavedAddress(addr)" class="ck-address-option"
-                                :class="{ 'ck-address-option--active': selectedAddressId === addr.id }">
-                                <span class="ck-addr-radio">
-                                    <span v-if="selectedAddressId === addr.id" class="ck-addr-dot"></span>
-                                </span>
-                                <span>{{ addr.line_1 }}, {{ addr.city }}, {{ addr.postcode }}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Delivery address -->
-                    <div class="ck-card">
-                        <h2 class="ck-card-title">Delivery Address</h2>
-                        <div class="ck-field">
-                            <label class="ck-label">Address Line 1</label>
-                            <input v-model="addressLine1" type="text" autocomplete="address-line1" class="ck-input"
-                                :class="{ 'ck-input--err': formErrors.addressLine1 }" placeholder="12 Rose Lane" />
-                            <p v-if="formErrors.addressLine1" class="ck-err">{{ formErrors.addressLine1 }}</p>
-                        </div>
-                        <div class="ck-field">
-                            <label class="ck-label">Address Line 2 <span class="ck-label-note">(optional)</span></label>
-                            <input v-model="addressLine2" type="text" autocomplete="address-line2" class="ck-input"
-                                placeholder="Apartment, suite, etc." />
-                        </div>
-                        <div class="ck-field-row">
-                            <div class="ck-field">
-                                <label class="ck-label">Town / City</label>
-                                <input v-model="city" type="text" autocomplete="address-level2" class="ck-input"
-                                    :class="{ 'ck-input--err': formErrors.city }" placeholder="London" />
-                                <p v-if="formErrors.city" class="ck-err">{{ formErrors.city }}</p>
-                            </div>
-                            <div class="ck-field">
-                                <label class="ck-label">County <span class="ck-label-note">(optional)</span></label>
-                                <input v-model="county" type="text" autocomplete="address-level1" class="ck-input"
-                                    placeholder="Essex" />
-                            </div>
-                        </div>
-                        <div class="ck-field-row">
-                            <div class="ck-field">
-                                <label class="ck-label">Postcode</label>
-                                <input v-model="postcode" type="text" autocomplete="postal-code" class="ck-input"
-                                    :class="{ 'ck-input--err': formErrors.postcode }" placeholder="SW1A 1AA"
-                                    style="text-transform:uppercase" />
-                                <p v-if="formErrors.postcode" class="ck-err">{{ formErrors.postcode }}</p>
-                            </div>
-                            <div class="ck-field">
-                                <label class="ck-label">Country</label>
-                                <input v-model="country" type="text" autocomplete="country-name" class="ck-input" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card payment -->
-                    <div class="ck-card">
-                        <h2 class="ck-card-title">Pay by Card</h2>
-
-                        <div class="ck-stripe-wrap">
-                            <div id="stripe-card-element" class="ck-stripe-el">
-                                <div v-if="!cardElementMounted" class="ck-stripe-loading">
-                                    <span class="ck-pulse"></span>
-                                    Loading secure payment…
+                    <!-- Saved addresses -->
+                    <section v-if="addresses.length > 0" class="co-card">
+                        <h2 class="co-card-title">Saved Addresses</h2>
+                        <div class="co-address-grid">
+                            <div v-for="address in addresses" :key="address.id" @click="selectAddress(address)"
+                                class="co-address-card"
+                                :class="{ 'co-address-card--selected': selectedAddressId === address.id }">
+                                <div class="co-address-card-head">
+                                    <span class="co-address-type">{{ address.type }}</span>
+                                    <span v-if="address.is_default" class="co-address-default">Default</span>
+                                </div>
+                                <div class="co-address-lines">
+                                    <span v-for="line in formatAddress(address)" :key="line">{{ line }}</span>
                                 </div>
                             </div>
                         </div>
+                        <button v-if="selectedAddressId !== null" @click="clearAddressSelection" type="button"
+                            class="co-clear-btn">
+                            Clear &amp; enter manually
+                        </button>
+                    </section>
 
-                        <p v-if="paymentError" class="ck-pay-error">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <!-- Contact & shipping form -->
+                    <section class="co-card">
+                        <h2 class="co-card-title">
+                            <span class="co-step">1</span>
+                            Contact &amp; Shipping
+                        </h2>
+
+                        <form @submit.prevent="handleCardPayment" class="co-form">
+
+                            <!-- Contact fields -->
+                            <div class="co-field-row">
+                                <div class="field">
+                                    <label for="email" class="field-label">
+                                        Email <span class="field-required">*</span>
+                                    </label>
+                                    <input id="email" type="email" v-model="addressForm.email" required
+                                        class="field-input" :class="{ 'field-input--error': addressForm.errors.email }"
+                                        placeholder="you@example.com" />
+                                    <p v-if="addressForm.errors.email" class="field-error">{{ addressForm.errors.email
+                                    }}</p>
+                                </div>
+                                <div class="field">
+                                    <label for="fullName" class="field-label">
+                                        Full Name <span class="field-required">*</span>
+                                    </label>
+                                    <input id="fullName" type="text" v-model="addressForm.fullName" required
+                                        class="field-input"
+                                        :class="{ 'field-input--error': addressForm.errors.fullName }"
+                                        placeholder="Jane Smith" />
+                                    <p v-if="addressForm.errors.fullName" class="field-error">{{
+                                        addressForm.errors.fullName }}</p>
+                                </div>
+                            </div>
+
+                            <div class="field" style="max-width: 280px;">
+                                <label for="telephone" class="field-label">
+                                    Phone <span class="field-optional">(optional)</span>
+                                </label>
+                                <input id="telephone" type="tel" v-model="addressForm.telephone" class="field-input"
+                                    placeholder="07700 900000" />
+                            </div>
+
+                            <!-- Add address toggle -->
+                            <div v-if="!isShippingAddressVisible" class="co-add-address-btn-wrap">
+                                <button type="button" @click="isManualAddressVisible = true" class="co-add-address-btn">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 5v14M5 12h14" />
+                                    </svg>
+                                    Add Shipping Address
+                                </button>
+                            </div>
+
+                            <!-- Shipping address fields -->
+                            <div v-if="isShippingAddressVisible" class="co-address-fields">
+                                <h3 class="co-address-fields-title">Shipping Address</h3>
+
+                                <div class="field">
+                                    <label for="addressLine1" class="field-label">
+                                        Address Line 1 <span class="field-required">*</span>
+                                    </label>
+                                    <input id="addressLine1" type="text" v-model="addressForm.addressLine1" required
+                                        class="field-input"
+                                        :class="{ 'field-input--error': addressForm.errors.addressLine1 }"
+                                        placeholder="123 Example Street" />
+                                    <p v-if="addressForm.errors.addressLine1" class="field-error">{{
+                                        addressForm.errors.addressLine1 }}</p>
+                                </div>
+
+                                <div class="field">
+                                    <label for="addressLine2" class="field-label">
+                                        Address Line 2 <span class="field-optional">(optional)</span>
+                                    </label>
+                                    <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
+                                        class="field-input" placeholder="Apartment, suite, etc." />
+                                </div>
+
+                                <div class="co-field-row co-field-row--3">
+                                    <div class="field">
+                                        <label for="city" class="field-label">City <span
+                                                class="field-required">*</span></label>
+                                        <input id="city" type="text" v-model="addressForm.city" required
+                                            class="field-input"
+                                            :class="{ 'field-input--error': addressForm.errors.city }"
+                                            placeholder="London" />
+                                        <p v-if="addressForm.errors.city" class="field-error">{{ addressForm.errors.city
+                                        }}</p>
+                                    </div>
+                                    <div class="field">
+                                        <label for="postcode" class="field-label">Postcode <span
+                                                class="field-required">*</span></label>
+                                        <input id="postcode" type="text" v-model="addressForm.postcode" required
+                                            class="field-input"
+                                            :class="{ 'field-input--error': addressForm.errors.postcode }"
+                                            placeholder="SW1A 0AA" />
+                                        <p v-if="addressForm.errors.postcode" class="field-error">{{
+                                            addressForm.errors.postcode }}</p>
+                                    </div>
+                                    <div class="field">
+                                        <label for="county" class="field-label">
+                                            County <span class="field-optional">(optional)</span>
+                                        </label>
+                                        <input id="county" type="text" v-model="addressForm.county" class="field-input"
+                                            placeholder="Greater London" />
+                                    </div>
+                                </div>
+
+                                <div class="field" style="max-width: 200px;">
+                                    <label for="country" class="field-label">Country</label>
+                                    <input id="country" type="text" v-model="addressForm.country" readonly
+                                        class="field-input field-input--readonly" />
+                                </div>
+                            </div>
+
+                            <!-- Save info -->
+                            <label class="co-save-label">
+                                <input type="checkbox" v-model="addressForm.saveInfo" class="co-save-check" />
+                                <span>Save my details for faster checkout next time</span>
+                            </label>
+
+                        </form>
+                    </section>
+
+                    <!-- Payment section -->
+                    <section class="co-card">
+                        <h2 class="co-card-title">
+                            <span class="co-step">2</span>
+                            Payment
+                        </h2>
+
+                        <!-- Loading -->
+                        <div v-if="isLoadingInitialData" class="co-payment-loading">
+                            <svg class="co-spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <circle cx="12" cy="12" r="10" stroke="#e5c9c7" stroke-width="3" />
+                                <path d="M12 2a10 10 0 0 1 10 10" stroke="#8c4a50" stroke-width="3"
+                                    stroke-linecap="round" />
+                            </svg>
+                            <p>Connecting to payment gateway...</p>
+                        </div>
+
+                        <!-- Stripe element -->
+                        <div v-if="hasClientSecret" ref="paymentContainer" class="co-stripe-container"></div>
+
+                        <!-- Payment error -->
+                        <div v-if="paymentError" class="co-payment-error">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
                                 <circle cx="12" cy="12" r="10" />
                                 <path d="M12 8v4M12 16h.01" />
                             </svg>
                             {{ paymentError }}
-                        </p>
+                        </div>
 
-                        <button @click="payWithCard" :disabled="paymentProcessing || !isFormValid || !stripeLoaded"
-                            class="ck-pay-btn">
-                            <svg v-if="paymentProcessing" class="ck-spinner" viewBox="0 0 24 24" fill="none">
+                        <!-- Submit -->
+                        <button @click.prevent="handleCardPayment"
+                            :disabled="isProcessing || isLoadingInitialData || !hasClientSecret || !!paymentError"
+                            class="btn-rose btn-rose--full co-pay-btn"
+                            :class="{ 'btn-rose--disabled': isProcessing || isLoadingInitialData || !hasClientSecret || !!paymentError }">
+                            <svg v-if="isProcessing" class="co-spinner co-spinner--sm" viewBox="0 0 24 24" fill="none">
                                 <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
                                 <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3"
                                     stroke-linecap="round" />
                             </svg>
-                            <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="1" y="4" width="22" height="16" rx="2" />
-                                <line x1="1" y1="10" x2="23" y2="10" />
-                            </svg>
-                            {{ paymentProcessing ? 'Processing…' : `Pay ${fmt(summary.total)}` }}
+                            {{ isProcessing ? 'Processing...' : `Pay ${fmt(computedTotal)}` }}
                         </button>
 
-                        <div class="ck-trust">
+                        <p class="co-secure-note">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                stroke-width="2" stroke-linecap="round">
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
-                            Secured by Stripe — your card details are never stored.
-                        </div>
-                    </div>
+                            All transactions are secured and encrypted via Stripe
+                        </p>
+                    </section>
 
                 </div>
 
-                <!-- ── Right: order summary ── -->
-                <aside class="ck-summary-col">
-                    <div class="ck-card ck-summary">
+                <!-- ── Right column: order summary ── -->
+                <aside class="co-summary">
+                    <div class="co-summary-card">
+                        <h2 class="co-summary-title">Order Summary</h2>
 
-                        <h2 class="ck-card-title">Your Order</h2>
-
-                        <!-- Items -->
-                        <div class="ck-items">
-                            <div v-for="item in cartItems" :key="item.id" class="ck-item">
-                                <div class="ck-item-img">
-                                    <img :src="item.product.images?.[0]?.image || '/images/placeholder.jpg'"
-                                        :alt="item.product.name" />
-                                    <span class="ck-qty-badge">{{ item.quantity }}</span>
-                                </div>
-                                <p class="ck-item-name">{{ item.product.name }}</p>
-                                <p class="ck-item-price">{{ fmt(item.product.cost * item.quantity) }}</p>
+                        <!-- Cost breakdown -->
+                        <div class="co-summary-rows">
+                            <div class="co-summary-row">
+                                <span>Subtotal</span>
+                                <span>{{ fmt(summary.subtotal) }}</span>
+                            </div>
+                            <div class="co-summary-row">
+                                <span>VAT (20%)</span>
+                                <span>{{ fmt(computedTax) }}</span>
+                            </div>
+                            <div class="co-summary-row">
+                                <span>Shipping</span>
+                                <span :class="summary.shipping === 0 ? 'co-free-shipping' : ''">
+                                    {{ summary.shipping === 0 ? 'FREE' : fmt(summary.shipping) }}
+                                </span>
+                            </div>
+                            <div v-if="voucherDiscount > 0" class="co-summary-row co-summary-row--discount">
+                                <span>Discount ({{ activeVoucher?.code }})</span>
+                                <span>-{{ fmt(voucherDiscount) }}</span>
                             </div>
                         </div>
 
                         <!-- Voucher -->
-                        <div class="ck-voucher-wrap">
-                            <div v-if="!appliedVoucher" class="ck-voucher-row">
-                                <input v-model="voucherCode" type="text" class="ck-voucher-input"
-                                    placeholder="Discount code" :disabled="voucherLoading"
-                                    @keyup.enter="applyVoucher" />
+                        <div class="co-voucher-section">
+                            <p class="co-voucher-label">Discount Code</p>
+
+                            <div v-if="activeVoucher" class="co-voucher-active">
+                                <div>
+                                    <p class="co-voucher-code">{{ activeVoucher.code }}</p>
+                                    <p class="co-voucher-saved">Saving {{ fmt(activeVoucher.discount) }}</p>
+                                </div>
+                                <button @click="removeVoucher" class="co-voucher-remove">Remove</button>
+                            </div>
+
+                            <div v-else class="co-voucher-input">
+                                <input type="text" v-model="voucherCode" placeholder="Enter code..."
+                                    class="co-voucher-field" @keyup.enter="applyVoucher" />
                                 <button @click="applyVoucher" :disabled="voucherLoading || !voucherCode.trim()"
-                                    class="ck-voucher-btn">Apply</button>
+                                    class="btn-rose btn-rose--sm co-voucher-btn">
+                                    {{ voucherLoading ? '...' : 'Apply' }}
+                                </button>
                             </div>
-                            <p v-if="voucherError" class="ck-voucher-err">{{ voucherError }}</p>
-                            <div v-if="appliedVoucher" class="ck-voucher-applied">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20 6 9 17l-5-5" />
-                                </svg>
-                                {{ appliedVoucher.code }} — saved {{ fmt(appliedVoucher.discount) }}
-                                <button @click="removeVoucher" class="ck-voucher-rm">✕</button>
-                            </div>
+
+                            <p v-if="voucherSuccess" class="co-voucher-msg co-voucher-msg--success">{{ voucherSuccess }}
+                            </p>
+                            <p v-if="voucherError" class="co-voucher-msg co-voucher-msg--error">{{ voucherError }}</p>
                         </div>
 
-                        <!-- Totals -->
-                        <div class="ck-totals">
-                            <div class="ck-total-row">
-                                <span class="ck-total-lbl">Subtotal</span>
-                                <span>{{ fmt(summary.subtotal) }}</span>
-                            </div>
-                            <div class="ck-total-row">
-                                <span class="ck-total-lbl">Shipping</span>
-                                <span>{{ summary.shipping === 0 ? 'FREE' : fmt(summary.shipping) }}</span>
-                            </div>
-                            <div v-if="summary.voucher_discount > 0" class="ck-total-row ck-total-discount">
-                                <span>Discount</span>
-                                <span>−{{ fmt(summary.voucher_discount) }}</span>
-                            </div>
-                            <div class="ck-total-row">
-                                <span class="ck-total-lbl">VAT (20%)</span>
-                                <span>{{ fmt(summary.tax) }}</span>
-                            </div>
-                            <div class="ck-total-grand">
-                                <span>Total</span>
-                                <span class="ck-grand-val">{{ fmt(summary.total) }}</span>
-                            </div>
+                        <!-- Grand total -->
+                        <div class="co-total-row">
+                            <span class="co-total-label">Total</span>
+                            <span class="co-total-val">{{ fmt(computedTotal) }}</span>
                         </div>
 
-                        <!-- Free delivery nudge -->
-                        <p v-if="summary.subtotal < 50" class="ck-free-nudge">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="1" y="3" width="15" height="13" rx="1" />
-                                <path d="M16 8h4l3 3v5h-7V8z" />
-                                <circle cx="5.5" cy="18.5" r="2.5" />
-                                <circle cx="18.5" cy="18.5" r="2.5" />
-                            </svg>
-                            Spend {{ fmt(50 - summary.subtotal) }} more for free delivery
-                        </p>
-
-                        <!-- Policy links -->
-                        <div class="ck-policy-links">
-                            <a :href="route('returns')" class="ck-policy-link">Returns</a>
-                            <span>·</span>
-                            <a :href="route('privacy')" class="ck-policy-link">Privacy</a>
-                            <span>·</span>
-                            <a :href="route('terms')" class="ck-policy-link">Terms</a>
+                        <!-- Items in order -->
+                        <div class="co-items-section">
+                            <h3 class="co-items-title">Items in your order</h3>
+                            <div class="co-items-list">
+                                <div v-for="item in cartItems" :key="item.id" class="co-item-row">
+                                    <span class="co-item-name">
+                                        {{ item.product.name }}
+                                        <span class="co-item-qty">&times;{{ item.quantity }}</span>
+                                    </span>
+                                    <span class="co-item-price">{{ fmt(item.product.cost * item.quantity) }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </aside>
@@ -530,7 +533,8 @@ const isFormValid = computed(() =>
 </template>
 
 <style scoped>
-.ck {
+/* ── Page ── */
+.co {
     font-family: 'Nunito', sans-serif;
     min-height: 100vh;
     padding-top: 64px;
@@ -538,177 +542,286 @@ const isFormValid = computed(() =>
     color: #2d1a1a;
 }
 
-.ck-wrap {
-    max-width: 1060px;
+.co-wrap {
+    max-width: 1100px;
     margin: 0 auto;
     padding: 3rem 1.25rem 5rem;
 }
 
-.ck-header {
+/* ── Header ── */
+.co-header {
     margin-bottom: 2rem;
 }
 
-.ck-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(1.8rem, 4vw, 2.4rem);
+.co-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(2rem, 5vw, 2.8rem);
     font-style: italic;
     font-weight: 400;
     color: #2d1a1a;
+    margin-bottom: 0.4rem;
 }
 
-.ck-guest-note {
-    font-size: 0.85rem;
+.co-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.88rem;
     color: #6b4f4f;
-    margin-top: 0.4rem;
-}
-
-.ck-guest-link {
-    color: #8c4a50;
-    font-weight: 600;
     text-decoration: none;
+    transition: color 0.2s;
 }
 
-.ck-guest-link:hover {
-    text-decoration: underline;
+.co-back:hover {
+    color: #8c4a50;
 }
 
-/* Grid */
-.ck-grid {
+/* ── Empty ── */
+.co-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+    border: 1.5px dashed #e5c9c7;
+    border-radius: 20px;
+    background: #fffafa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.co-empty p {
+    font-size: 0.95rem;
+    color: #6b4f4f;
+    font-style: italic;
+}
+
+/* ── Grid ── */
+.co-grid {
     display: grid;
-    grid-template-columns: 1fr 360px;
+    grid-template-columns: 1fr 320px;
     gap: 2rem;
     align-items: start;
 }
 
-@media (max-width: 900px) {
-    .ck-grid {
+@media (max-width: 860px) {
+    .co-grid {
         grid-template-columns: 1fr;
     }
 }
 
-.ck-form-col {
+.co-left {
     display: flex;
     flex-direction: column;
     gap: 1.25rem;
 }
 
-.ck-summary-col {
-    display: flex;
-    flex-direction: column;
-}
-
-@media (min-width: 900px) {
-    .ck-summary-col {
-        position: sticky;
-        top: 84px;
-    }
-}
-
-/* Cards */
-.ck-card {
-    background: #fffafa;
+/* ── Cards ── */
+.co-card {
     border: 1px solid #e5c9c7;
     border-radius: 20px;
+    background: #fffafa;
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
     padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
     position: relative;
     overflow: hidden;
 }
 
-.ck-card::after {
+.co-card::before {
     content: '✿';
     position: absolute;
     bottom: -6px;
     right: 8px;
     font-size: 3.5rem;
-    color: #e5c9c7;
-    opacity: 0.12;
+    color: #c9a4a4;
+    opacity: 0.1;
     pointer-events: none;
     user-select: none;
     line-height: 1;
 }
 
-.ck-card-title {
+.co-card::after {
+    content: '✿';
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    font-size: 0.85rem;
+    color: #c9a4a4;
+    opacity: 0.22;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.co-card-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 1.1rem;
-    font-weight: 500;
+    font-size: 1.2rem;
+    font-style: italic;
+    font-weight: 400;
     color: #2d1a1a;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid #f0dcd8;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid #e5c9c7;
 }
 
-/* Express checkout */
-.ck-express {
+.co-step {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c47078, #a85058);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-style: normal;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+/* ── Saved addresses ── */
+.co-address-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 0.85rem;
+    margin-bottom: 0.75rem;
 }
 
-.ck-express-label {
+@media (max-width: 540px) {
+    .co-address-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.co-address-card {
+    border: 1px solid #e5c9c7;
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    background: #fdf4f3;
+    position: relative;
+    overflow: hidden;
+}
+
+.co-address-card:hover {
+    border-color: #c9a4a4;
+    background: #faeaea;
+}
+
+.co-address-card--selected {
+    border-color: #8c4a50;
+    background: #fff5f5;
+    box-shadow: 0 0 0 2px rgba(140, 74, 80, 0.12);
+}
+
+.co-address-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.4rem;
+}
+
+.co-address-type {
     font-size: 0.68rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: #c9a4a4;
-    text-align: center;
+    letter-spacing: 0.08em;
+    color: #8c4a50;
 }
 
-.ck-or-divider {
-    position: relative;
-    text-align: center;
-    border-top: 1px solid #f0dcd8;
-    margin-top: 0.25rem;
+.co-address-default {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(140, 74, 80, 0.1);
+    color: #8c4a50;
+    border: 1px solid rgba(140, 74, 80, 0.2);
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
 }
 
-.ck-or-text {
-    position: relative;
-    top: -0.55rem;
-    background: #fffafa;
-    padding: 0 0.75rem;
-    font-size: 0.72rem;
-    color: #c9a4a4;
-    font-style: italic;
+.co-address-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    font-size: 0.85rem;
+    color: #2d1a1a;
+    line-height: 1.45;
 }
 
-/* Fields */
-.ck-field-row {
+.co-clear-btn {
+    font-size: 0.8rem;
+    color: #8c4a50;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: color 0.2s;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.co-clear-btn:hover {
+    color: #6a3038;
+}
+
+/* ── Form ── */
+.co-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.co-field-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
 }
 
-@media (max-width: 560px) {
-    .ck-field-row {
+.co-field-row--3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 540px) {
+
+    .co-field-row,
+    .co-field-row--3 {
         grid-template-columns: 1fr;
     }
 }
 
-.ck-field {
+.field {
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
 }
 
-.ck-label {
-    font-size: 0.75rem;
+.field-label {
+    font-size: 0.78rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #6b4f4f;
-    display: flex;
-    align-items: center;
-    gap: 0.3rem;
 }
 
-.ck-label-note {
+.field-required {
+    color: #8c4a50;
+}
+
+.field-optional {
     font-weight: 400;
     text-transform: none;
     font-style: italic;
     color: #9a7070;
 }
 
-.ck-input {
-    padding: 0.68rem 0.9rem;
+.field-input {
+    padding: 0.65rem 0.9rem;
     border: 1px solid #e5c9c7;
     border-radius: 10px;
     background: #fdf4f3;
@@ -716,179 +829,112 @@ const isFormValid = computed(() =>
     font-family: 'Nunito', sans-serif;
     font-size: 0.92rem;
     outline: none;
-    width: 100%;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.ck-input:focus {
+.field-input:focus {
     border-color: #8c4a50;
     box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1);
 }
 
-.ck-input--err {
+.field-input--error {
     border-color: #c84040;
 }
 
-.ck-err {
-    font-size: 0.75rem;
-    color: #c84040;
-}
-
-/* Saved addresses */
-.ck-address-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
-
-.ck-address-option {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.65rem 0.9rem;
-    border-radius: 10px;
-    border: 1px solid #e5c9c7;
-    background: #fdf4f3;
-    cursor: pointer;
-    text-align: left;
-    width: 100%;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.85rem;
-    color: #6b4f4f;
-    transition: border-color 0.15s, background 0.15s;
-}
-
-.ck-address-option--active {
-    border-color: #8c4a50;
-    background: #fff5f5;
-    color: #2d1a1a;
-}
-
-.ck-addr-radio {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    border: 2px solid #e5c9c7;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color 0.15s;
-}
-
-.ck-address-option--active .ck-addr-radio {
-    border-color: #8c4a50;
-}
-
-.ck-addr-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #8c4a50;
-}
-
-/* Stripe element */
-.ck-stripe-wrap {
-    border: 1px solid #e5c9c7;
-    border-radius: 10px;
-    background: #fdf4f3;
-    padding: 0.75rem 0.9rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.ck-stripe-wrap:focus-within {
-    border-color: #8c4a50;
-    box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1);
-}
-
-.ck-stripe-el {
-    min-height: 24px;
-}
-
-.ck-stripe-loading {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.82rem;
-    color: #c9a4a4;
-    font-style: italic;
-}
-
-.ck-pulse {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #c9a4a4;
-    animation: ck-pulse 1s ease-in-out infinite;
-}
-
-@keyframes ck-pulse {
-
-    0%,
-    100% {
-        opacity: 0.3;
-    }
-
-    50% {
-        opacity: 1;
-    }
-}
-
-.ck-pay-error {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.82rem;
-    color: #c84040;
-    font-weight: 500;
-}
-
-/* Pay button */
-.ck-pay-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 100%;
-    padding: 0.9rem;
-    border-radius: 999px;
-    border: 1px solid #a85058;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(168, 80, 88, 0.25);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.ck-pay-btn:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(168, 80, 88, 0.32);
-}
-
-.ck-pay-btn:disabled {
-    opacity: 0.5;
+.field-input--readonly {
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
-.ck-trust {
+.field-error {
+    font-size: 0.78rem;
+    color: #b54040;
+}
+
+.co-add-address-btn-wrap {
+    padding-top: 0.25rem;
+}
+
+.co-add-address-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 999px;
+    border: 1px dashed #c9a4a4;
+    background: transparent;
+    color: #8c4a50;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.co-add-address-btn:hover {
+    background: #faeaea;
+    border-color: #8c4a50;
+}
+
+.co-address-fields {
+    border-top: 1px solid #e5c9c7;
+    padding-top: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.co-address-fields-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #8c4a50;
+    margin-bottom: 0.25rem;
+}
+
+.co-save-label {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    font-size: 0.72rem;
-    color: #9a7070;
-    justify-content: center;
+    gap: 0.6rem;
+    font-size: 0.88rem;
+    color: #6b4f4f;
+    cursor: pointer;
+    padding-top: 0.25rem;
 }
 
-.ck-spinner {
+.co-save-check {
+    width: 15px;
+    height: 15px;
+    accent-color: #8c4a50;
+    cursor: pointer;
+}
+
+/* ── Payment section ── */
+.co-payment-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2.5rem 1rem;
+    color: #6b4f4f;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.co-spinner {
+    width: 36px;
+    height: 36px;
+    animation: co-spin 0.9s linear infinite;
+}
+
+.co-spinner--sm {
     width: 16px;
     height: 16px;
-    animation: ck-spin 0.8s linear infinite;
 }
 
-@keyframes ck-spin {
+@keyframes co-spin {
     from {
         transform: rotate(0deg);
     }
@@ -898,229 +944,338 @@ const isFormValid = computed(() =>
     }
 }
 
-/* Summary */
-.ck-summary {
-    gap: 0;
+.co-stripe-container {
+    padding: 0.25rem 0;
+    min-height: 100px;
 }
 
-.ck-summary .ck-card-title {
-    margin-bottom: 1rem;
-}
-
-.ck-items {
+.co-payment-error {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid #f0dcd8;
-}
-
-.ck-item {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-}
-
-.ck-item-img {
-    position: relative;
-    width: 48px;
-    height: 48px;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
     border-radius: 10px;
-    border: 1px solid #e5c9c7;
-    overflow: hidden;
-    flex-shrink: 0;
+    background: #fff5f5;
+    border: 1px solid #e8a8a8;
+    color: #8c2a2a;
+    font-size: 0.88rem;
+    margin-top: 0.75rem;
 }
 
-.ck-item-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+.co-pay-btn {
+    margin-top: 1rem;
 }
 
-.ck-qty-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #8c4a50;
-    color: #fff;
-    font-size: 0.6rem;
-    font-weight: 700;
+.co-secure-note {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: #9a7070;
+    font-style: italic;
+    margin-top: 0.75rem;
+    text-align: center;
 }
 
-.ck-item-name {
-    flex: 1;
-    font-size: 0.85rem;
+/* ── Summary sidebar ── */
+.co-summary {
+    position: sticky;
+    top: 88px;
+}
+
+.co-summary-card {
+    border: 1px solid #e5c9c7;
+    border-radius: 20px;
+    background: #fffafa;
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.co-summary-card::before {
+    content: '✿';
+    position: absolute;
+    bottom: -6px;
+    right: 8px;
+    font-size: 3.5rem;
+    color: #c9a4a4;
+    opacity: 0.1;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.co-summary-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-style: italic;
+    font-weight: 400;
+    color: #2d1a1a;
+    margin-bottom: 1.1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5c9c7;
+}
+
+.co-summary-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+}
+
+.co-summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    color: #6b4f4f;
+}
+
+.co-summary-row span:last-child {
     font-weight: 600;
     color: #2d1a1a;
-    line-height: 1.3;
 }
 
-.ck-item-price {
-    font-size: 0.88rem;
+.co-summary-row--discount {
+    color: #2d7a3a;
+}
+
+.co-summary-row--discount span:last-child {
+    color: #2d7a3a;
+}
+
+.co-free-shipping {
+    color: #2d7a3a;
+    font-weight: 600;
+}
+
+/* ── Voucher ── */
+.co-voucher-section {
+    border-top: 1px dashed #e5c9c7;
+    padding-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.co-voucher-label {
+    font-size: 0.75rem;
     font-weight: 700;
-    color: #2d1a1a;
-    flex-shrink: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #8c4a50;
+    margin-bottom: 0.6rem;
 }
 
-/* Voucher */
-.ck-voucher-wrap {
-    padding: 0.85rem 0;
-    border-bottom: 1px solid #f0dcd8;
-}
-
-.ck-voucher-row {
+.co-voucher-active {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.85rem;
+    border-radius: 10px;
+    background: #f0faf0;
+    border: 1px solid #a8d8b0;
 }
 
-.ck-voucher-input {
-    flex: 1;
-    padding: 0.55rem 0.85rem;
-    border: 1px solid #e5c9c7;
-    border-right: none;
-    border-radius: 8px 0 0 8px;
-    background: #fdf4f3;
-    font-family: 'Nunito', sans-serif;
+.co-voucher-code {
     font-size: 0.85rem;
+    font-weight: 700;
+    color: #2d7a3a;
+    font-family: monospace;
+    letter-spacing: 0.05em;
+}
+
+.co-voucher-saved {
+    font-size: 0.75rem;
+    color: #2d7a3a;
+    margin-top: 0.1rem;
+}
+
+.co-voucher-remove {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #8c2a2a;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: color 0.2s;
+    text-decoration: underline;
+}
+
+.co-voucher-remove:hover {
+    color: #6a1a1a;
+}
+
+.co-voucher-input {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.co-voucher-field {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e5c9c7;
+    border-radius: 10px;
+    background: #fdf4f3;
     color: #2d1a1a;
+    font-family: monospace;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     outline: none;
     transition: border-color 0.2s;
 }
 
-.ck-voucher-input:focus {
+.co-voucher-field:focus {
     border-color: #8c4a50;
 }
 
-.ck-voucher-btn {
-    padding: 0.55rem 1rem;
-    border: 1px solid #e5c9c7;
-    border-radius: 0 8px 8px 0;
-    background: #2d1a1a;
-    color: #fffafa;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.82rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.15s;
-    white-space: nowrap;
+.co-voucher-btn {
+    flex-shrink: 0;
 }
 
-.ck-voucher-btn:hover:not(:disabled) {
-    background: #4a2828;
-}
-
-.ck-voucher-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-.ck-voucher-err {
-    font-size: 0.75rem;
-    color: #c84040;
+.co-voucher-msg {
+    font-size: 0.78rem;
     margin-top: 0.4rem;
+    font-style: italic;
 }
 
-.ck-voucher-applied {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.82rem;
+.co-voucher-msg--success {
     color: #2d7a3a;
-    font-weight: 600;
-    background: #f2faf2;
-    border: 1px solid #a8d8b0;
-    border-radius: 8px;
-    padding: 0.45rem 0.75rem;
 }
 
-.ck-voucher-rm {
-    margin-left: auto;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: #9a7070;
-    font-size: 0.75rem;
-    transition: color 0.15s;
+.co-voucher-msg--error {
+    color: #b54040;
 }
 
-.ck-voucher-rm:hover {
-    color: #c84040;
+/* ── Grand total ── */
+.co-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0.85rem 0;
+    border-top: 1px solid #e5c9c7;
+    border-bottom: 1px solid #e5c9c7;
+    margin-bottom: 1rem;
 }
 
-/* Totals */
-.ck-totals {
+.co-total-label {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-style: italic;
+    color: #2d1a1a;
+}
+
+.co-total-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: #8c4a50;
+}
+
+/* ── Items ── */
+.co-items-section {}
+
+.co-items-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #8c4a50;
+    margin-bottom: 0.65rem;
+}
+
+.co-items-list {
+    max-height: 200px;
+    overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    padding: 0.85rem 0;
+}
+
+.co-items-list::-webkit-scrollbar {
+    width: 3px;
+}
+
+.co-items-list::-webkit-scrollbar-thumb {
+    background: #e5c9c7;
+    border-radius: 999px;
+}
+
+.co-item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    padding-bottom: 0.4rem;
     border-bottom: 1px solid #f0dcd8;
 }
 
-.ck-total-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
+.co-item-row:last-child {
+    border-bottom: none;
 }
 
-.ck-total-lbl {
-    color: #6b4f4f;
-}
-
-.ck-total-discount {
-    color: #2d7a3a;
-    font-weight: 600;
-}
-
-.ck-total-grand {
-    display: flex;
-    justify-content: space-between;
-    font-size: 1rem;
-    font-weight: 700;
+.co-item-name {
     color: #2d1a1a;
-    padding-top: 0.6rem;
-    border-top: 1px solid #e5c9c7;
-    margin-top: 0.35rem;
+    flex: 1;
+    min-width: 0;
 }
 
-.ck-grand-val {
-    font-size: 1.2rem;
+.co-item-qty {
+    color: #6b4f4f;
+    font-size: 0.78rem;
+    margin-left: 0.3rem;
+}
+
+.co-item-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    font-weight: 500;
     color: #8c4a50;
-    font-weight: 800;
+    flex-shrink: 0;
 }
 
-.ck-free-nudge {
-    display: flex;
+/* ── Buttons ── */
+.btn-rose {
+    display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
-    font-size: 0.72rem;
-    color: #9a7070;
-    font-style: italic;
-    padding-top: 0.25rem;
-}
-
-.ck-policy-links {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    font-size: 0.72rem;
-    color: #c9a4a4;
     justify-content: center;
-    padding-top: 0.25rem;
-}
-
-.ck-policy-link {
-    color: #9a7070;
+    gap: 0.5rem;
+    padding: 0.72rem 1.5rem;
+    border-radius: 999px;
+    border: 1px solid #a85058;
+    background: linear-gradient(135deg, #c47078, #a85058);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
+    transition: transform 0.2s, box-shadow 0.2s;
     text-decoration: none;
 }
 
-.ck-policy-link:hover {
-    color: #8c4a50;
-    text-decoration: underline;
+.btn-rose:hover:not(:disabled):not(.btn-rose--disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 5px 18px rgba(168, 80, 88, 0.28);
+}
+
+.btn-rose--disabled,
+.btn-rose:disabled {
+    background: #f0dcd8;
+    border-color: #e5c9c7;
+    color: #9a7070;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-rose--full {
+    width: 100%;
+}
+
+.btn-rose--sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
 }
 </style>
