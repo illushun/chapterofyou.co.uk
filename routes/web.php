@@ -37,6 +37,8 @@ Route::get('/about-us', [HomeController::class, 'about'])->name('about');
 Route::get('/contact', [HomeController::class, 'contact'])->name('contact');
 Route::post('/contact', [HomeController::class, 'storeContact'])->name('contact.store');
 
+Route::get('/delivery', fn () => inertia('Delivery'))->name('delivery');
+
 Route::get('/products', [ProductController::class, 'index'])->name('products');
 Route::get('/product/{idOrSlug}', [ProductController::class, 'show'])->name('products.show');
 
@@ -170,6 +172,7 @@ Route::get('/unsubscribe/{user}', [MarketingOptInController::class, 'unsubscribe
 Route::post('/unsubscribe/confirm/{user}', [MarketingOptInController::class, 'unsubscribeConfirm'])->name('unsubscribe.confirm');
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

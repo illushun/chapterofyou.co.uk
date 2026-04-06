@@ -50,6 +50,12 @@ class SitemapController extends Controller
                     'changefreq' => 'monthly',
                     'lastmod'    => Carbon::now()->toAtomString(),
                 ],
+                [
+                    'loc'        => url('/delivery'),
+                    'priority'   => '0.6',
+                    'changefreq' => 'monthly',
+                    'lastmod'    => Carbon::now()->toAtomString(),
+                ],
             ];
 
             foreach ($staticPages as $page) {
