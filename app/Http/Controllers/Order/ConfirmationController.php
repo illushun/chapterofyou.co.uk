@@ -11,11 +11,18 @@ class ConfirmationController extends Controller
 {
     public function show(int $id)
     {
-        // Load the order with its items and products
-        $order = Order::with(['items.product'])
-            ->where('id', $id)
-            ->where('user_id', Auth::id()) // Security: users can only see their own orders
-            ->firstOrFail();
+        $query = Order::with(['items.product'])->where('id', $id);
+
+        if (Auth::check()) {
+            $query->where('user_id', Auth::id());
+        } else {
+            // Guests: verify via session token set during checkout
+            $guestOrderId = session('guest_order_id');
+            if ($guestOrderId !== $id) {
+                abort(403);
+            }
+        }
+        $order = $query->firstOrFail();
 
         $items = $order->items->map(fn ($item) => [
             'name'     => $item->product->name ?? 'Unknown Product',

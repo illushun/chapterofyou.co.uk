@@ -41,12 +41,10 @@ class CheckoutController extends Controller
      */
     public function index()
     {
-        if (!Auth::check()) {
-            return redirect()->route('login');
-        }
-
         $user               = Auth::user();
-        $shipping_addresses = $user->addresses()->where('type', 'shipping')->orderBy('is_default', 'desc')->get();
+        $shipping_addresses = $user
+            ? $user->addresses()->where('type', 'shipping')->orderBy('is_default', 'desc')->get()
+            : collect(); // empty collection for guests
         $cart               = $this->cartManager->getCurrentCart();
 
         if ($cart->items->isEmpty()) {
@@ -61,6 +59,7 @@ class CheckoutController extends Controller
             'cartItems'      => $cart->items->load('product'),
             'addresses'      => $shipping_addresses,
             'appliedVoucher' => $appliedVoucher, // null or ['code', 'discount', 'type', 'value']
+            'isGuest'        => !Auth::check(),
         ]);
     }
 
@@ -289,6 +288,11 @@ class CheckoutController extends Controller
 
         Mail::to($order->email)->send(new Confirmation($order));
         $this->cartManager->clearCart($cart);
+
+        // Store order ID in session so guests can view their confirmation page
+        if (!Auth::check()) {
+            session(['guest_order_id' => $order->id]);
+        }
 
         return $order;
     }
