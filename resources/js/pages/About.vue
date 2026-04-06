@@ -3,187 +3,222 @@ import { Head } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
 
-// Intersection observer for scroll-in reveals
-const reveals = ref<HTMLElement[]>([]);
-const addReveal = (el: any) => { if (el) reveals.value.push(el); };
+const seo = useSeoHead({
+    title: 'About Me',
+    description: 'Meet the founder of Chapter of You — a qualified complementary therapist with a passion for wellbeing, aromatherapy, reflexology and handcrafted luxury products.',
+    canonical: '/about',
+});
+
+// Scroll-in reveals
+const revealEls = ref<Element[]>([]);
+const addReveal = (el: any) => { if (el?.$el) revealEls.value.push(el.$el); else if (el) revealEls.value.push(el); };
 
 onMounted(() => {
     const io = new IntersectionObserver(
-        (entries) => entries.forEach(e => {
-            if (e.isIntersecting) {
-                e.target.classList.add('revealed');
-                io.unobserve(e.target);
-            }
+        entries => entries.forEach(e => {
+            if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
         }),
-        { threshold: 0.12 }
+        { threshold: 0.1 }
     );
-    reveals.value.forEach(el => io.observe(el));
+    revealEls.value.forEach(el => io.observe(el));
 });
+
+const qualifications = [
+    { label: 'Aromatherapy', icon: '◈' },
+    { label: 'Reflexology', icon: '◈' },
+    { label: 'Swedish Massage', icon: '◈' },
+];
 </script>
 
 <template>
     <NavBar />
+    <SeoHead v-bind="seo" />
 
-    <Head title="About Me" />
-
-    <!-- Google Fonts -->
-    <component :is="'link'" rel="preconnect" href="https://fonts.googleapis.com" />
-    <component :is="'link'" rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
     <component :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,700&family=Nunito:wght@300;400;500;600&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
         rel="stylesheet" />
 
-    <main class="about-page">
+    <main class="ab">
 
-        <!-- ── Hero ── -->
-        <section class="hero">
-            <div class="hero-bg" aria-hidden="true">
-                <!-- Decorative blobs -->
-                <div class="blob blob-1"></div>
-                <div class="blob blob-2"></div>
-                <div class="blob blob-3"></div>
-                <!-- Scattered petal marks -->
-                <svg class="petal-scatter" viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <ellipse cx="120" cy="80" rx="18" ry="7" fill="currentColor" opacity=".12"
-                        transform="rotate(-30 120 80)" />
-                    <ellipse cx="680" cy="120" rx="14" ry="5" fill="currentColor" opacity=".10"
-                        transform="rotate(40 680 120)" />
-                    <ellipse cx="200" cy="380" rx="22" ry="8" fill="currentColor" opacity=".09"
-                        transform="rotate(15 200 380)" />
-                    <ellipse cx="620" cy="350" rx="16" ry="6" fill="currentColor" opacity=".11"
-                        transform="rotate(-20 620 350)" />
-                    <ellipse cx="400" cy="460" rx="12" ry="4" fill="currentColor" opacity=".08"
-                        transform="rotate(5 400 460)" />
-                    <ellipse cx="740" cy="400" rx="20" ry="7" fill="currentColor" opacity=".07"
-                        transform="rotate(-45 740 400)" />
-                    <ellipse cx="60" cy="300" rx="15" ry="5" fill="currentColor" opacity=".09"
-                        transform="rotate(25 60 300)" />
-                </svg>
-            </div>
-            <div class="hero-content">
-                <p class="hero-eyebrow">Handcrafted with love</p>
-                <h1 class="hero-title">
-                    <em>Chapter</em><br />of You
-                </h1>
-                <p class="hero-tagline">Your chapter, your self-care.</p>
-                <div class="hero-divider" aria-hidden="true">
-                    <span></span><span class="dot">✦</span><span></span>
-                </div>
-            </div>
-        </section>
-
-        <!-- ── Intro pull-quote ── -->
-        <section class="container">
-            <div class="pullquote reveal" :ref="addReveal">
-                <span class="quote-mark" aria-hidden="true">"</span>
-                <blockquote>
-                    Every diffuser is poured, blended and finished by hand — because
-                    your space deserves something made with genuine care, not a factory line.
-                </blockquote>
-            </div>
-        </section>
-
-        <!-- ── Story section ── -->
-        <section class="container story-grid">
-            <div class="story-text reveal" :ref="addReveal">
-                <span class="section-label">The story</span>
-                <h2>A small business<br /><em>with a big heart</em></h2>
-                <p>
-                    Welcome to Chapter of You — a one-woman business built on
-                    a single belief: that proper self-care starts with the small, quiet
-                    moments you carve out for yourself.
-                </p>
-                <p>
-                    I founded Chapter of You on the commitment to give you beautiful,
-                    considered tools that encourage you to pause, breathe deeply, and
-                    intentionally put yourself first. No shortcuts, no compromise — just
-                    craftsmanship you can feel.
+        <!-- ── Masthead ── -->
+        <header class="ab-masthead">
+            <div class="ab-masthead-rule" aria-hidden="true"></div>
+            <div class="ab-masthead-content">
+                <p class="ab-kicker">A little about</p>
+                <h1 class="ab-heading">The person<br /><em>behind the brand</em></h1>
+                <p class="ab-subheading">
+                    Chapter of You is not a faceless business.<br />
+                    It is one person, one passion, and a genuine belief in the power of self-care.
                 </p>
             </div>
-            <div class="story-aside reveal" :ref="addReveal">
-                <div class="aside-card">
-                    <div class="aside-icon" aria-hidden="true"></div>
-                    <p class="aside-stat">100%</p>
-                    <p class="aside-label">Hand-poured &amp;<br />blended by me</p>
-                </div>
-                <div class="aside-card">
-                    <div class="aside-icon" aria-hidden="true"></div>
-                    <p class="aside-stat">Premium</p>
-                    <p class="aside-label">Ingredients<br />only</p>
-                </div>
-                <div class="aside-card">
-                    <div class="aside-icon" aria-hidden="true"></div>
-                    <p class="aside-stat">Made</p>
-                    <p class="aside-label">To order,<br />just for you</p>
+            <div class="ab-masthead-ornament" aria-hidden="true">
+                <span>✿</span>
+                <span class="ab-ornament-line"></span>
+                <span>✦</span>
+                <span class="ab-ornament-line"></span>
+                <span>✿</span>
+            </div>
+        </header>
+
+        <!-- ── Intro — two-column editorial ── -->
+        <section class="ab-intro ab-section">
+            <div class="ab-intro-number" aria-hidden="true">01</div>
+            <div class="ab-intro-body" :ref="addReveal">
+                <h2 class="ab-section-title">Hello, I'm <em>glad you're here</em></h2>
+                <p>
+                    Welcome to Chapter of You — a small, independent business I built from
+                    something deeply personal: the belief that taking care of yourself is not
+                    an indulgence. It is a necessity.
+                </p>
+                <p>
+                    I started this brand because I wanted to create products that genuinely
+                    support the quiet moments — the ones where you light a diffuser, take a
+                    breath, and give yourself permission to just <em>be</em>.
+                </p>
+                <p>
+                    Everything I make is handcrafted by me, in small batches, with ingredients
+                    I have personally chosen for their quality. There is no factory, no
+                    shortcuts, and no compromise. Just care, poured into every single bottle.
+                </p>
+            </div>
+            <!-- Decorative ink-stamp circle -->
+            <div class="ab-stamp" aria-hidden="true">
+                <div class="ab-stamp-inner">
+                    <span>Chapter</span>
+                    <span class="ab-stamp-of">of</span>
+                    <span>You</span>
                 </div>
             </div>
         </section>
 
-        <!-- ── Wavy divider ── -->
-        <div class="wave-divider" aria-hidden="true">
-            <svg viewBox="0 0 1200 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30 L1200,60 L0,60 Z" fill="currentColor" />
-            </svg>
-        </div>
-
-        <!-- ── Diffusers feature ── -->
-        <section class="feature-section">
-            <div class="container">
-                <div class="feature-header reveal" :ref="addReveal">
-                    <span class="section-label light">My collection</span>
-                    <h2 class="light">Reed Diffusers<br /><em>designed for your sanctuary</em></h2>
+        <!-- ── Therapist section — the standout ── -->
+        <section class="ab-therapist">
+            <div class="ab-therapist-inner">
+                <div class="ab-therapist-left" :ref="addReveal">
+                    <p class="ab-therapist-eyebrow">Qualifications &amp; expertise</p>
+                    <h2 class="ab-therapist-title">
+                        More than a<br /><em>product maker</em>
+                    </h2>
+                    <p class="ab-therapist-body">
+                        I am a qualified complementary therapist with a deep passion for
+                        wellbeing and self-care. My training spans aromatherapy, reflexology
+                        and Swedish massage — disciplines that inform every product I create,
+                        from the oils I choose to the way I think about scent and its effect
+                        on the body and mind.
+                    </p>
+                    <p class="ab-therapist-body">
+                        Through Chapter of You, I am currently focusing on creating luxury
+                        aromatherapy and wellness products, while working towards expanding
+                        further into the beauty and wellness industry. The products you buy
+                        today are the foundation of something much bigger.
+                    </p>
+                    <!-- Qualification badges -->
+                    <div class="ab-quals">
+                        <div v-for="q in qualifications" :key="q.label" class="ab-qual-badge">
+                            <span class="ab-qual-icon" aria-hidden="true">{{ q.icon }}</span>
+                            <span class="ab-qual-label">{{ q.label }}</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="feature-cards">
-                    <div v-for="(card, i) in featureCards" :key="i" class="feature-card reveal" :ref="addReveal"
-                        :style="{ animationDelay: `${i * 0.1}s` }">
-                        <div class="feature-card-accent" aria-hidden="true">✦</div>
-                        <h3>{{ card.title }}</h3>
-                        <p>{{ card.body }}</p>
+                <div class="ab-therapist-right" :ref="addReveal" aria-hidden="true">
+                    <div class="ab-credential-card">
+                        <div class="ab-cred-top">
+                            <span class="ab-cred-mark">✦</span>
+                            <p class="ab-cred-title">Qualified</p>
+                            <p class="ab-cred-subtitle">Complementary Therapist</p>
+                        </div>
+                        <ul class="ab-cred-list">
+                            <li>Aromatherapy</li>
+                            <li>Reflexology</li>
+                            <li>Swedish Massage</li>
+                        </ul>
+                        <div class="ab-cred-seal">
+                            <div class="ab-seal-ring">
+                                <span>Chapter of You</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- ── Second wavy divider (flipped) ── -->
-        <div class="wave-divider wave-divider--flip" aria-hidden="true">
-            <svg viewBox="0 0 1200 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30 L1200,60 L0,60 Z" fill="currentColor" />
-            </svg>
-        </div>
-
-        <!-- ── 2026 teaser ── -->
-        <section class="container teaser-section">
-            <div class="teaser reveal" :ref="addReveal">
-                <span class="teaser-badge">Coming 2026</span>
-                <h2>Something beautiful<br /><em>is on its way</em></h2>
-                <p>
-                    My mission to support your self-care journey is growing.
-                    In 2026 I'll be launching a curated range of dedicated beauty services —
-                    an expansion built on the same love and attention to detail you already know.
-                </p>
-                <p>
-                    Keep an eye on this space. The next chapter is going to be wonderful.
-                </p>
+        <!-- ── Behind the scenes ── -->
+        <section class="ab-section ab-behind">
+            <div class="ab-behind-number" aria-hidden="true">02</div>
+            <div class="ab-behind-content" :ref="addReveal">
+                <h2 class="ab-section-title">Made by hand,<br /><em>made with heart</em></h2>
+                <div class="ab-behind-grid">
+                    <div class="ab-behind-item">
+                        <span class="ab-behind-glyph" aria-hidden="true">◇</span>
+                        <h3>Small batch, always</h3>
+                        <p>
+                            Every diffuser is blended and bottled in small batches so I can
+                            give each one proper attention. Your order is never just a number
+                            on a production line.
+                        </p>
+                    </div>
+                    <div class="ab-behind-item">
+                        <span class="ab-behind-glyph" aria-hidden="true">◇</span>
+                        <h3>Scent as therapy</h3>
+                        <p>
+                            My aromatherapy training directly shapes how I blend. Fragrance
+                            is not just pleasant — it has a genuine effect on mood, memory
+                            and wellbeing. I take that seriously.
+                        </p>
+                    </div>
+                    <div class="ab-behind-item">
+                        <span class="ab-behind-glyph" aria-hidden="true">◇</span>
+                        <h3>Premium ingredients only</h3>
+                        <p>
+                            I research every ingredient. If I wouldn't feel comfortable
+                            using it in a therapeutic context, it doesn't go into a
+                            Chapter of You product.
+                        </p>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- ── Community CTA ── -->
-        <section class="container cta-section">
-            <div class="cta-card reveal" :ref="addReveal">
-                <div class="cta-petals" aria-hidden="true">
-                    <span>✿</span><span>✦</span><span>✿</span><span>✦</span><span>✿</span>
-                </div>
-                <h2>Join my little community</h2>
-                <p>
-                    At Chapter of You you're more than a customer — you're part of a community
-                    dedicated to intentional self-care. Explore my collection and let me
-                    bring a little calm to your corner of the world.
+        <!-- ── What's coming ── -->
+        <section class="ab-future" :ref="addReveal">
+            <div class="ab-future-inner">
+                <div class="ab-future-badge">Looking ahead ✦</div>
+                <blockquote class="ab-future-quote">
+                    "The products you see today are just the beginning. My vision for
+                    Chapter of You extends into a full suite of beauty and wellness
+                    services — built on the same expertise and the same uncompromising
+                    care that goes into everything I do now."
+                </blockquote>
+                <p class="ab-future-sig">— Founder, Chapter of You</p>
+            </div>
+        </section>
+
+        <!-- ── Personal close ── -->
+        <section class="ab-close">
+            <div class="ab-close-inner" :ref="addReveal">
+                <div class="ab-close-ornament" aria-hidden="true">✿</div>
+                <h2 class="ab-close-title">Thank you for<br /><em>being here</em></h2>
+                <p class="ab-close-body">
+                    Whether you found Chapter of You through a recommendation, a
+                    search, or a happy accident — I am genuinely glad you're here.
+                    Every order means the world to me, and I hope whatever you choose
+                    brings a little calm and beauty into your everyday.
                 </p>
-                <a href="/products" class="cta-btn">
-                    Explore the collection
-                    <span aria-hidden="true">→</span>
+                <p class="ab-close-body">
+                    If you ever want to get in touch — whether it's a question about a
+                    product, a custom request, or just to say hello — my inbox is always
+                    open.
+                </p>
+                <a href="mailto:contact@chapterofyou.co.uk" class="ab-close-link">
+                    contact@chapterofyou.co.uk
                 </a>
+                <div class="ab-close-sig" aria-hidden="true">
+                    <span class="ab-sig-text">With love,</span>
+                    <span class="ab-sig-name">Chapter of You</span>
+                </div>
             </div>
         </section>
 
@@ -192,529 +227,620 @@ onMounted(() => {
     <Footer />
 </template>
 
-<script lang="ts">
-export default {
-    data() {
-        return {
-            featureCards: [
-                {
-                    icon: '✿',
-                    title: 'Meticulously blended',
-                    body: 'Every scent is carefully crafted from premium fragrance oils, balanced by hand to fill your home with a gentle, lasting aroma.',
-                },
-                {
-                    icon: '✦',
-                    title: 'Poured with intention',
-                    body: 'Each diffuser is hand-finished individually — never rushed, never mass-produced. Your order is made to order, just for you.',
-                },
-                {
-                    icon: '◇',
-                    title: 'Quality ingredients',
-                    body: 'Only the highest quality reed diffuser base and fragrance oils make it into my products. Nothing unnecessary, nothing cheap.',
-                },
-            ],
-        };
-    },
-};
-</script>
-
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,700&family=Nunito:wght@300;400;500;600&display=swap');
-
-/* ── Base ── */
-.about-page {
+/* ── Base ────────────────────────────────────────────────────────────── */
+.ab {
     font-family: 'Nunito', sans-serif;
     color: #2d1a1a;
+    background: #fdf4f3;
     overflow-x: hidden;
     padding-top: 64px;
-    /* navbar height */
 }
 
-.container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 1.5rem;
-}
-
-/* ── Scroll reveal ── */
-.reveal {
+/* Scroll reveal */
+.ab-intro-body,
+.ab-therapist-left,
+.ab-therapist-right,
+.ab-behind-content,
+.ab-future,
+.ab-close-inner {
     opacity: 0;
-    transform: translateY(28px);
-    transition: opacity 0.75s cubic-bezier(.22, .68, 0, 1.2), transform 0.75s cubic-bezier(.22, .68, 0, 1.2);
+    transform: translateY(32px);
+    transition: opacity 0.8s cubic-bezier(.22, .68, 0, 1.1), transform 0.8s cubic-bezier(.22, .68, 0, 1.1);
 }
 
-.reveal.revealed {
-    opacity: 1;
-    transform: none;
+.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
 }
 
-/* ── Hero ── */
-.hero {
-    position: relative;
-    min-height: 92vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* ── Masthead ────────────────────────────────────────────────────────── */
+.ab-masthead {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 5rem 1.5rem 3rem;
     text-align: center;
-    overflow: hidden;
-    background: #fdf4f3;
 }
 
-.hero-bg {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    color: #8c4a50;
+.ab-masthead-rule {
+    width: 1px;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, #e5c9c7);
+    margin: 0 auto 2.5rem;
 }
 
-.blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(70px);
-    opacity: 0.55;
+.ab-kicker {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #c9a4a4;
+    margin-bottom: 1rem;
 }
 
-.blob-1 {
-    width: 500px;
-    height: 500px;
-    background: #e5c9c7;
-    top: -100px;
-    left: -120px;
-}
-
-.blob-2 {
-    width: 400px;
-    height: 400px;
-    background: #e5c9c7;
-    bottom: -80px;
-    right: -100px;
-}
-
-.blob-3 {
-    width: 300px;
-    height: 300px;
-    background: #e5c9c7;
-    top: 50%;
-    left: 55%;
-    transform: translate(-50%, -50%);
-    opacity: 0.25;
-}
-
-.petal-scatter {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.hero-content {
-    position: relative;
-    z-index: 1;
-    padding: 3rem 1.5rem;
-    max-width: 700px;
-}
-
-.hero-eyebrow {
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.95rem;
-    font-style: italic;
-    letter-spacing: 0.12em;
-    color: #8c4a50;
-    margin-bottom: 1.2rem;
-    animation: fadeUp 0.9s ease both;
-}
-
-.hero-title {
+.ab-heading {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: clamp(4rem, 12vw, 9rem);
-    font-weight: 900;
-    line-height: 0.92;
+    font-size: clamp(3rem, 8vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.05;
     color: #2d1a1a;
     margin-bottom: 1.5rem;
-    animation: fadeUp 0.9s 0.15s ease both;
+    letter-spacing: -0.01em;
 }
 
-.hero-title em {
+.ab-heading em {
     font-style: italic;
     color: #8c4a50;
 }
 
-.hero-tagline {
-    font-family: 'Nunito', sans-serif;
-    font-style: italic;
-    font-size: 1.25rem;
+.ab-subheading {
+    font-size: 1rem;
+    line-height: 1.8;
     color: #6b4f4f;
-    margin-bottom: 2.5rem;
-    animation: fadeUp 0.9s 0.3s ease both;
+    max-width: 520px;
+    margin: 0 auto 2.5rem;
 }
 
-.hero-divider {
+.ab-masthead-ornament {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    animation: fadeUp 0.9s 0.45s ease both;
+    color: #c9a4a4;
+    font-size: 0.7rem;
 }
 
-.hero-divider span:not(.dot) {
+.ab-ornament-line {
     display: block;
-    width: 80px;
-    height: 1.5px;
+    width: 48px;
+    height: 1px;
     background: #e5c9c7;
-    opacity: 0.4;
 }
 
-.hero-divider .dot {
-    color: #8c4a50;
-    font-size: 1rem;
+/* ── Shared section styles ─────────────────────────────────────────── */
+.ab-section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 5rem 1.5rem;
 }
 
-/* ── Pull-quote ── */
-.pullquote {
-    max-width: 760px;
-    margin: 5rem auto;
-    text-align: center;
-    position: relative;
-    padding: 2.5rem 2rem;
-}
-
-.pullquote::before,
-.pullquote::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60px;
-    height: 2px;
-    background: #e5c9c7;
-    opacity: 0.3;
-}
-
-.pullquote::before {
-    top: 0;
-}
-
-.pullquote::after {
-    bottom: 0;
-}
-
-.quote-mark {
-    display: block;
+.ab-section-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 6rem;
-    line-height: 0.6;
-    color: #8c4a50;
-    opacity: 0.25;
-    margin-bottom: 0.5rem;
-    user-select: none;
-}
-
-blockquote {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: clamp(1.3rem, 3vw, 1.75rem);
-    font-style: italic;
-    font-weight: 400;
-    line-height: 1.55;
-    color: #2d1a1a;
-    margin: 0;
-}
-
-/* ── Story grid ── */
-.story-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-    padding-top: 2rem;
-    padding-bottom: 5rem;
-}
-
-@media (max-width: 768px) {
-    .story-grid {
-        grid-template-columns: 1fr;
-        gap: 2.5rem;
-    }
-}
-
-.section-label {
-    display: inline-block;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.78rem;
-    font-style: italic;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: #8c4a50;
-    margin-bottom: 1rem;
-}
-
-.section-label.light {
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.story-text h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2rem, 4vw, 2.8rem);
-    font-weight: 700;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 300;
     line-height: 1.2;
     color: #2d1a1a;
     margin-bottom: 1.5rem;
 }
 
-.story-text h2 em {
+.ab-section-title em {
     font-style: italic;
     color: #8c4a50;
 }
 
-.story-text p {
-    font-size: 1.05rem;
-    line-height: 1.8;
+/* ── Intro ───────────────────────────────────────────────────────────── */
+.ab-intro {
+    display: grid;
+    grid-template-columns: 48px 1fr 180px;
+    gap: 3rem;
+    align-items: start;
+    border-top: 1px solid #f0dcd8;
+}
+
+@media (max-width: 760px) {
+    .ab-intro {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .ab-intro-number {
+        display: none;
+    }
+
+    .ab-stamp {
+        display: none;
+    }
+}
+
+.ab-intro-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4rem;
+    font-weight: 300;
+    color: #f0dcd8;
+    line-height: 1;
+    padding-top: 0.5rem;
+    user-select: none;
+}
+
+.ab-intro-body p {
+    font-size: 1rem;
+    line-height: 1.85;
     color: #6b4f4f;
     margin-bottom: 1rem;
 }
 
-.story-aside {
+.ab-intro-body em {
+    color: #8c4a50;
+    font-style: italic;
+}
+
+/* Stamp / seal */
+.ab-stamp {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 1.5px solid #e5c9c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.5rem;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.ab-stamp::before {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    border: 1px dashed #e5c9c7;
+}
+
+.ab-stamp-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #c9a4a4;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.ab-stamp-of {
+    font-style: italic;
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
+}
+
+/* ── Therapist section ───────────────────────────────────────────────── */
+.ab-therapist {
+    background: #2d1a1a;
+    padding: 6rem 1.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.ab-therapist::before {
+    content: '✿';
+    position: absolute;
+    top: -20px;
+    left: 40px;
+    font-size: 12rem;
+    color: #3d2424;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.ab-therapist::after {
+    content: '✿';
+    position: absolute;
+    bottom: -20px;
+    right: 40px;
+    font-size: 10rem;
+    color: #3d2424;
+    pointer-events: none;
+    user-select: none;
+    line-height: 1;
+}
+
+.ab-therapist-inner {
+    max-width: 1000px;
+    margin: 0 auto;
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    grid-template-columns: 1fr 300px;
+    gap: 4rem;
+    align-items: center;
+    position: relative;
+    z-index: 1;
 }
 
-.aside-card:first-child {
-    grid-column: 1 / -1;
+@media (max-width: 800px) {
+    .ab-therapist-inner {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+    }
 }
 
-.aside-card {
-    background: #fffafa;
-    border: 1px solid #e5c9c7;
-    border-radius: 16px;
-    padding: 1.75rem 1.25rem;
+.ab-therapist-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #c9a4a4;
+    margin-bottom: 1rem;
+}
+
+.ab-therapist-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 300;
+    line-height: 1.15;
+    color: #fffafa;
+    margin-bottom: 1.5rem;
+}
+
+.ab-therapist-title em {
+    font-style: italic;
+    color: #e5c9c7;
+}
+
+.ab-therapist-body {
+    font-size: 0.95rem;
+    line-height: 1.85;
+    color: #9a7070;
+    margin-bottom: 1rem;
+}
+
+/* Qualification badges */
+.ab-quals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.75rem;
+}
+
+.ab-qual-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid #4a2828;
+    border-radius: 999px;
+    background: rgba(255, 250, 250, 0.04);
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.ab-qual-badge:hover {
+    border-color: #c9a4a4;
+    background: rgba(255, 250, 250, 0.08);
+}
+
+.ab-qual-icon {
+    font-size: 0.6rem;
+    color: #c9a4a4;
+}
+
+.ab-qual-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #e5c9c7;
+    letter-spacing: 0.03em;
+}
+
+/* Credential card */
+.ab-credential-card {
+    background: rgba(255, 250, 250, 0.04);
+    border: 1px solid #4a2828;
+    border-radius: 20px;
+    padding: 2rem;
     text-align: center;
     position: relative;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
-    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
 }
 
-.aside-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 24px rgba(229, 201, 199, 0.5);
+.ab-credential-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #c47078, #a85058, #c47078);
 }
 
-.aside-stat {
+.ab-cred-top {
+    margin-bottom: 1.5rem;
+}
+
+.ab-cred-mark {
+    display: block;
+    font-size: 1.2rem;
+    color: #c9a4a4;
+    margin-bottom: 0.75rem;
+}
+
+.ab-cred-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 2rem;
-    font-weight: 900;
-    color: #8c4a50;
+    font-size: 1.75rem;
+    font-style: italic;
+    font-weight: 300;
+    color: #fffafa;
     line-height: 1;
     margin-bottom: 0.25rem;
 }
 
-.aside-label {
-    font-size: 0.85rem;
+.ab-cred-subtitle {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #c9a4a4;
+}
+
+.ab-cred-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    border-top: 1px solid #3d2424;
+    border-bottom: 1px solid #3d2424;
+    padding: 1rem 0;
+}
+
+.ab-cred-list li {
+    font-size: 0.88rem;
+    color: #9a7070;
     font-style: italic;
+}
+
+/* Seal */
+.ab-cred-seal {
+    display: flex;
+    justify-content: center;
+}
+
+.ab-seal-ring {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 1.5px solid #4a2828;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.45rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #5a3838;
+    text-align: center;
+    padding: 0 0.4rem;
+    line-height: 1.3;
+}
+
+/* ── Behind the scenes ───────────────────────────────────────────────── */
+.ab-behind {
+    position: relative;
+    border-top: 1px solid #f0dcd8;
+    border-bottom: 1px solid #f0dcd8;
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 3rem;
+}
+
+@media (max-width: 760px) {
+    .ab-behind {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .ab-behind-number {
+        display: none;
+    }
+}
+
+.ab-behind-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4rem;
+    font-weight: 300;
+    color: #f0dcd8;
+    line-height: 1;
+    padding-top: 0.5rem;
+    user-select: none;
+}
+
+.ab-behind-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+@media (max-width: 640px) {
+    .ab-behind-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+.ab-behind-item {
+    padding-top: 1rem;
+    border-top: 1px solid #f0dcd8;
+}
+
+.ab-behind-glyph {
+    display: block;
+    font-size: 0.6rem;
+    color: #c9a4a4;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.3em;
+}
+
+.ab-behind-item h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #2d1a1a;
+    margin-bottom: 0.6rem;
+}
+
+.ab-behind-item p {
+    font-size: 0.9rem;
+    line-height: 1.75;
     color: #6b4f4f;
-    line-height: 1.4;
 }
 
-/* ── Wave divider ── */
-.wave-divider {
+/* ── Future / quote ──────────────────────────────────────────────────── */
+.ab-future {
+    background: linear-gradient(135deg, #fff5f5, #fdf4f3);
+    border-top: 1px solid #f0dcd8;
+    border-bottom: 1px solid #f0dcd8;
+}
+
+.ab-future-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 6rem 1.5rem;
+    text-align: center;
+}
+
+.ab-future-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
     color: #8c4a50;
-    opacity: 0.12;
-    line-height: 0;
-    margin-bottom: -1px;
+    border: 1px solid #e5c9c7;
+    border-radius: 999px;
+    padding: 0.3rem 1rem;
+    margin-bottom: 2.5rem;
+    background: #fffafa;
 }
 
-.wave-divider svg {
-    width: 100%;
-    height: 50px;
+.ab-future-quote {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(1.2rem, 3vw, 1.7rem);
+    font-style: italic;
+    font-weight: 300;
+    line-height: 1.65;
+    color: #2d1a1a;
+    margin: 0 0 1.5rem;
+    position: relative;
+    padding: 0 1rem;
+}
+
+.ab-future-quote::before {
+    content: '"';
+    position: absolute;
+    left: -0.5rem;
+    top: -0.5rem;
+    font-size: 4rem;
+    line-height: 1;
+    color: #e5c9c7;
+    font-style: normal;
+    pointer-events: none;
+}
+
+.ab-future-sig {
+    font-size: 0.82rem;
+    font-style: italic;
+    color: #c9a4a4;
+    letter-spacing: 0.05em;
+}
+
+/* ── Close ───────────────────────────────────────────────────────────── */
+.ab-close {
+    padding: 6rem 1.5rem 8rem;
+}
+
+.ab-close-inner {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.ab-close-ornament {
+    font-size: 2rem;
+    color: #e5c9c7;
+    margin-bottom: 1.5rem;
     display: block;
 }
 
-.wave-divider--flip {
-    transform: scaleY(-1);
-    margin-top: -1px;
-    margin-bottom: 0;
-}
-
-/* ── Feature section ── */
-.feature-section {
-    background: #e5c9c7;
-    padding: 5rem 0;
-    margin: 0;
-}
-
-.feature-header {
-    text-align: center;
-    margin-bottom: 3.5rem;
-}
-
-.feature-header h2 {
+.ab-close-title {
     font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2rem, 4vw, 2.8rem);
-    font-weight: 700;
-    color: #fff;
-    line-height: 1.2;
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 300;
+    line-height: 1.15;
+    color: #2d1a1a;
+    margin-bottom: 1.75rem;
 }
 
-.feature-header h2 em {
+.ab-close-title em {
     font-style: italic;
-    opacity: 0.85;
+    color: #8c4a50;
 }
 
-.feature-cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+.ab-close-body {
+    font-size: 0.97rem;
+    line-height: 1.85;
+    color: #6b4f4f;
+    margin-bottom: 1rem;
 }
 
-@media (max-width: 768px) {
-    .feature-cards {
-        grid-template-columns: 1fr;
-    }
-}
-
-.feature-card {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1.5px solid rgba(255, 255, 255, 0.25);
-    border-radius: 16px;
-    padding: 2rem 1.5rem;
-    backdrop-filter: blur(4px);
-    transition: background 0.25s, transform 0.25s;
-}
-
-.feature-card:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-4px);
-}
-
-.feature-card h3 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #fff;
-    margin-bottom: 0.75rem;
-}
-
-.feature-card p {
-    font-size: 0.95rem;
-    line-height: 1.75;
-    color: rgba(255, 255, 255, 0.82);
-}
-
-/* ── Teaser ── */
-.teaser-section {
-    padding: 6rem 1.5rem;
-    max-width: 720px;
-    text-align: center;
-}
-
-.teaser-badge {
+.ab-close-link {
     display: inline-block;
-    background: #e5c9c7;
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
-    font-style: italic;
-    font-size: 0.9rem;
-    padding: 0.35rem 1.1rem;
-    border-radius: 999px;
-    margin-bottom: 1.5rem;
-    letter-spacing: 0.04em;
-}
-
-.teaser h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2rem, 4vw, 2.8rem);
+    margin: 1rem 0 2.5rem;
+    font-size: 0.95rem;
     font-weight: 700;
-    line-height: 1.2;
-    color: #2d1a1a;
-    margin-bottom: 1.5rem;
-}
-
-.teaser h2 em {
-    font-style: italic;
     color: #8c4a50;
-}
-
-.teaser p {
-    font-size: 1.05rem;
-    line-height: 1.8;
-    color: #6b4f4f;
-    margin-bottom: 1rem;
-}
-
-/* ── CTA ── */
-.cta-section {
-    padding-bottom: 7rem;
-}
-
-.cta-card {
-    text-align: center;
-    border: 1px solid #e5c9c7;
-    border-radius: 24px;
-    padding: 4rem 2.5rem;
-    position: relative;
-    background: #fffafa;
-    box-shadow: 0 6px 24px rgba(229, 201, 199, 0.5);
-    overflow: hidden;
-}
-
-.cta-petals {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    font-size: 1.5rem;
-    color: #8c4a50;
-    opacity: 0.3;
-    margin-bottom: 1.5rem;
-    letter-spacing: 0.5rem;
-}
-
-.cta-card h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(1.8rem, 3.5vw, 2.5rem);
-    font-weight: 700;
-    color: #2d1a1a;
-    margin-bottom: 1rem;
-}
-
-.cta-card p {
-    font-size: 1.05rem;
-    line-height: 1.8;
-    color: #6b4f4f;
-    max-width: 560px;
-    margin: 0 auto 2rem;
-}
-
-.cta-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    background: #e5c9c7;
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
-    font-size: 1rem;
-    font-weight: 500;
-    padding: 0.85rem 2.25rem;
-    border-radius: 999px;
-    border: 1px solid #e5c9c7;
-    box-shadow: 3px 3px 0 var(--copy);
     text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border-bottom: 1.5px solid #e5c9c7;
+    padding-bottom: 0.15rem;
+    transition: border-color 0.2s, color 0.2s;
 }
 
-.cta-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 5px 5px 0 var(--copy);
+.ab-close-link:hover {
+    color: #6a3038;
+    border-color: #8c4a50;
 }
 
-/* ── Keyframes ── */
-@keyframes fadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(24px);
-    }
+.ab-close-sig {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.15rem;
+    margin-top: 0.5rem;
+}
 
-    to {
-        opacity: 1;
-        transform: none;
-    }
+.ab-sig-text {
+    font-size: 0.82rem;
+    font-style: italic;
+    color: #c9a4a4;
+}
+
+.ab-sig-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-style: italic;
+    font-weight: 300;
+    color: #8c4a50;
+    letter-spacing: 0.03em;
 }
 </style>
