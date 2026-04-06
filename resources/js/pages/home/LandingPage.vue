@@ -91,7 +91,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
                         </svg>
                     </a>
                     <a href="/about-us" class="btn-ghost">
-                        Our Story
+                        My Story
                     </a>
                 </div>
             </div>

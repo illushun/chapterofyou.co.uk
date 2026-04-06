@@ -404,7 +404,7 @@
                 <div class="nav-links">
                     <a href="/" class="nav-link">Home</a>
                     <a href="/products" class="nav-link">Products</a>
-                    <a href="/about-us" class="nav-link">About Us</a>
+                    <a href="/about-us" class="nav-link">About Me</a>
                     <a href="/contact" class="nav-link">Contact</a>
                 </div>
 
@@ -496,7 +496,7 @@
                     <a v-else href="/login" class="nav-mobile-account">Sign in / Register</a>
 
                     <a href="/products" class="nav-mobile-link">Products</a>
-                    <a href="/about-us" class="nav-mobile-link">About Us</a>
+                    <a href="/about-us" class="nav-mobile-link">About Me</a>
                     <a href="/contact" class="nav-mobile-link">Contact</a>
 
                     <a href="/cart" class="nav-mobile-link nav-mobile-cart">

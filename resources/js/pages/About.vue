@@ -25,7 +25,7 @@ onMounted(() => {
 <template>
     <NavBar />
 
-    <Head title="About Us" />
+    <Head title="About Me" />
 
     <!-- Google Fonts -->
     <component :is="'link'" rel="preconnect" href="https://fonts.googleapis.com" />
