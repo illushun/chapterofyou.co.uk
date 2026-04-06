@@ -43,6 +43,8 @@ Route::get('/terms', fn () => inertia('Terms'))->name('terms');
 
 Route::get('/privacy', fn () => inertia('Privacy'))->name('privacy');
 
+Route::get('/returns', fn () => inertia('Returns'))->name('returns');
+
 Route::get('/products', [ProductController::class, 'index'])->name('products');
 Route::get('/product/{idOrSlug}', [ProductController::class, 'show'])->name('products.show');
 
