@@ -83,7 +83,7 @@ const confirm = () => {
                     You'll no longer receive newsletters, promotions, or updates.
                 </p>
                 <p class="us-note">
-                    You'll still receive order confirmation and dispatch emails — this only affects marketing.
+                    You'll still receive order confirmation and dispatch emails, this only affects marketing.
                 </p>
                 <div class="us-actions">
                     <button @click="confirm" class="btn-rose">

@@ -116,7 +116,7 @@ const remove = (productId: number) => {
                     <div v-if="!hasItems" class="cp-empty">
 
                         <h2>Your basket is empty</h2>
-                        <p>Nothing here yet — let's find you something lovely.</p>
+                        <p>Nothing here yet, let's find you something lovely.</p>
                         <a href="/products" class="btn-rose">Browse the collection</a>
                     </div>
 

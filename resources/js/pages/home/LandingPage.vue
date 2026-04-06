@@ -90,7 +90,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
-                    <a href="/about-us" class="btn-ghost">
+                    <a href="/about" class="btn-ghost">
                         My Story
                     </a>
                 </div>
@@ -147,15 +147,15 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
                     <p class="lp-section-eyebrow lp-section-eyebrow--light">The story</p>
                     <h2 class="lp-story-title">A small business<br><em>with a big heart</em></h2>
                     <p class="lp-story-body">
-                        Welcome to Chapter of You — a one-woman business built on a single belief: that proper self-care
+                        Welcome to Chapter of You, a one-woman business built on a single belief: that proper self-care
                         starts with the small, quiet moments you carve out for yourself.
                     </p>
                     <p class="lp-story-body">
-                        Every diffuser is poured, blended and finished by hand — because your space deserves something
+                        Every diffuser is poured, blended and finished by hand, because your space deserves something
                         made with genuine care, not a factory line.
                     </p>
-                    <a href="/about-us" class="lp-story-link">
-                        Read more about us
+                    <a href="/about" class="lp-story-link">
+                        Read more about me
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M5 12h14M12 5l7 7-7 7" />
@@ -196,7 +196,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
                     <div class="lp-feature-card">
                         <div class="lp-feature-icon" aria-hidden="true">✦</div>
                         <h3 class="lp-feature-title">Poured with intention</h3>
-                        <p class="lp-feature-body">Each diffuser is hand-finished individually — never rushed, never
+                        <p class="lp-feature-body">Each diffuser is hand-finished individually, never rushed, never
                             mass-produced. Your order is made to order, just for you.</p>
                     </div>
                     <div class="lp-feature-card">
@@ -269,7 +269,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
                 </div>
                 <h2 class="lp-cta-title">Join my little community</h2>
                 <p class="lp-cta-body">
-                    At Chapter of You you're more than a customer — you're part of a community dedicated to intentional
+                    At Chapter of You you're more than a customer, you're part of a community dedicated to intentional
                     self-care. Explore the collection and let me bring a little calm to your corner of the world.
                 </p>
                 <a href="/products" class="btn-rose btn-rose--lg">
