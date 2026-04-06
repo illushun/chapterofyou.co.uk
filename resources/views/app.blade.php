@@ -27,7 +27,13 @@
 
         <!-- Favicon -->
         <link rel="icon" href="/favicon.ico" type="image/x-icon">
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96">
+
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
+
+        <link rel="manifest" href="/site.webmanifest">
+
+        <meta name="theme-color" content="#8c4a50">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
