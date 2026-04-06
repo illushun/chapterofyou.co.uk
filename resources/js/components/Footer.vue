@@ -110,7 +110,7 @@ const currentYear = new Date().getFullYear();
                             <Link :href="route('account.index')" class="ft-nav-link">My Account</Link>
                         </li>
                         <li>
-                            <Link :href="route('account.orders')" class="ft-nav-link">My Orders</Link>
+                            <Link :href="route('account.orders.index')" class="ft-nav-link">My Orders</Link>
                         </li>
                         <li>
                             <Link :href="route('login')" class="ft-nav-link">Sign In</Link>
