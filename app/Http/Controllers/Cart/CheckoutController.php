@@ -33,7 +33,7 @@ class CheckoutController extends Controller
     {
         $this->cartManager = $cartManager;
         $this->voucherService = $voucherService;
-        Stripe::setApiKey(env('STRIPE_SECRET'));
+        Stripe::setApiKey(config('services.stripe.secret'));
     }
 
     /**

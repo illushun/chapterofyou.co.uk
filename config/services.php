@@ -47,4 +47,8 @@ return [
         'redirect' => env('FACEBOOK_REDIRECT_URI'),
     ],
 
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'key'    => env('VITE_STRIPE_KEY'),
+    ],
 ];
