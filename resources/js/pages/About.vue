@@ -856,4 +856,49 @@ const qualifications = [
     color: #8c4a50;
     letter-spacing: 0.03em;
 }
+
+.ab-socials {
+    margin: 0 0 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.ab-socials-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #c9a4a4;
+}
+
+.ab-socials-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.ab-social-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid #e5c9c7;
+    border-radius: 999px;
+    background: #fffafa;
+    color: #6b4f4f;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.ab-social-btn:hover {
+    border-color: #8c4a50;
+    background: #fff5f5;
+    color: #8c4a50;
+    transform: translateY(-1px);
+}
 </style>
