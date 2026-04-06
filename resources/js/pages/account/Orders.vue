@@ -2,6 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import Footer from '@/components/Footer.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 
@@ -123,6 +124,8 @@ const statusLabel = (s: string): string => {
 
         </div>
     </main>
+
+    <Footer />
 </template>
 
 <style scoped>

@@ -3,6 +3,7 @@ import { Head, router, useForm } from '@inertiajs/vue3';
 import { onMounted, ref, computed, nextTick } from 'vue';
 import axios from 'axios';
 import NavBar from '@/components/NavBar.vue';
+import Footer from '@/components/Footer.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 
@@ -290,7 +291,7 @@ onMounted(async () => {
                                         class="field-input" :class="{ 'field-input--error': addressForm.errors.email }"
                                         placeholder="you@example.com" />
                                     <p v-if="addressForm.errors.email" class="field-error">{{ addressForm.errors.email
-                                    }}</p>
+                                        }}</p>
                                 </div>
                                 <div class="field">
                                     <label for="fullName" class="field-label">
@@ -357,7 +358,7 @@ onMounted(async () => {
                                             :class="{ 'field-input--error': addressForm.errors.city }"
                                             placeholder="London" />
                                         <p v-if="addressForm.errors.city" class="field-error">{{ addressForm.errors.city
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                     <div class="field">
                                         <label for="postcode" class="field-label">Postcode <span
@@ -527,6 +528,8 @@ onMounted(async () => {
             </div>
         </div>
     </main>
+
+    <Footer />
 </template>
 
 <style scoped>

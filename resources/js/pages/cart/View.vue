@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import Footer from '@/components/Footer.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 
@@ -239,6 +240,8 @@ const remove = (productId: number) => {
         </div>
 
     </main>
+
+    <Footer />
 </template>
 
 <style scoped>

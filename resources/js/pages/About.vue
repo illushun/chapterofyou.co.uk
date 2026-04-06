@@ -2,6 +2,7 @@
 import { Head } from '@inertiajs/vue3';
 import { ref, onMounted } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import Footer from '@/components/Footer.vue';
 
 // Intersection observer for scroll-in reveals
 const reveals = ref<HTMLElement[]>([]);
@@ -187,6 +188,8 @@ onMounted(() => {
         </section>
 
     </main>
+
+    <Footer />
 </template>
 
 <script lang="ts">

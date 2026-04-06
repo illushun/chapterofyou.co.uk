@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import NavBar from '@/components/NavBar.vue';
+import Footer from '@/components/Footer.vue';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, watch, reactive, nextTick, computed } from 'vue';
 import { debounce } from 'lodash';
@@ -361,6 +362,8 @@ const productListSchema = computed(() => ({
     </Transition>
 
     <SuccessToast ref="successToastRef" />
+
+    <Footer />
 </template>
 
 <style scoped>

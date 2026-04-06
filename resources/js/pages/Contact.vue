@@ -2,6 +2,7 @@
 import { Head, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import Footer from '@/components/Footer.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
@@ -174,6 +175,8 @@ const seo = useSeoHead({
     </main>
 
     <SuccessToast ref="successToastRef" />
+
+    <Footer />
 </template>
 
 <style scoped>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import NavBar from '@/components/NavBar.vue';
+import Footer from '@/components/Footer.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 
@@ -130,6 +131,8 @@ const seo = useSeoHead({ noIndex: true });
 
         </div>
     </main>
+
+    <Footer />
 </template>
 
 <style scoped>

@@ -2,6 +2,7 @@
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import NavBar from '@/components/NavBar.vue';
+import Footer from '@/components/Footer.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 
@@ -430,7 +431,7 @@ const formatAddress = (a: Address): string[] =>
                                 <label for="m-postcode" class="field-label">Postcode</label>
                                 <input id="m-postcode" type="text" v-model="addressForm.postcode" class="field-input" />
                                 <p v-if="addressForm.errors.postcode" class="field-error">{{ addressForm.errors.postcode
-                                }}</p>
+                                    }}</p>
                             </div>
                         </div>
 
@@ -455,6 +456,8 @@ const formatAddress = (a: Address): string[] =>
             </div>
         </Transition>
     </Teleport>
+
+    <Footer />
 </template>
 
 <style scoped>

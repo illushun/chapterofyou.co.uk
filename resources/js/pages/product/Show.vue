@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import NavBar from '@/components/NavBar.vue';
+import Footer from '@/components/Footer.vue';
 import { Head, usePage, router, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import axios from 'axios';
@@ -512,6 +513,8 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
     <SuccessToast ref="successToastRef" />
     <ModalImageViewer :images="product.images || []" :initial-index="selectedImageIndex" :open="isModalOpen"
         @update:open="isModalOpen = $event" />
+
+    <Footer />
 </template>
 
 <style scoped>
