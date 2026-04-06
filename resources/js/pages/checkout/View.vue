@@ -47,6 +47,7 @@ const props = defineProps<{
     summary: Summary;
     addresses: Address[];
     appliedVoucher: { code: string; discount: number; type: string; value: number } | null;
+    isGuest: boolean;
 }>();
 
 const seo = useSeoHead({ noIndex: true });
@@ -207,9 +208,14 @@ const handleCardPayment = async () => {
 };
 
 onMounted(async () => {
-    const defaultAddress = props.addresses.find(a => a.is_default);
-    if (defaultAddress) { await nextTick(); selectAddress(defaultAddress); }
-    else if (props.addresses.length === 0) { isManualAddressVisible.value = true; }
+    // Guests always see the manual address form — no saved addresses
+    if (props.isGuest) {
+        isManualAddressVisible.value = true;
+    } else {
+        const defaultAddress = props.addresses.find(a => a.is_default);
+        if (defaultAddress) { await nextTick(); selectAddress(defaultAddress); }
+        else if (props.addresses.length === 0) { isManualAddressVisible.value = true; }
+    }
     if (hasItems.value) { await loadStripeScript(); await initializeStripe(); }
     else { isLoadingInitialData.value = false; }
 });
@@ -230,13 +236,21 @@ onMounted(async () => {
             <!-- Header -->
             <header class="co-header">
                 <h1 class="co-title">Checkout</h1>
-                <a :href="getRoute('cart.view')" class="co-back">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
-                    Back to cart
-                </a>
+                <div class="co-header-sub">
+                    <a :href="getRoute('cart.view')" class="co-back">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m15 18-6-6 6-6" />
+                        </svg>
+                        Back to cart
+                    </a>
+                    <!-- Guest notice -->
+                    <p v-if="isGuest" class="co-guest-note">
+                        Checking out as a guest.
+                        <a :href="getRoute('login')" class="co-guest-link">Sign in</a>
+                        to save your details for next time.
+                    </p>
+                </div>
             </header>
 
             <!-- Empty cart -->
@@ -247,11 +261,11 @@ onMounted(async () => {
 
             <div v-else class="co-grid">
 
-                <!-- ── Left column ── -->
+                <!-- Left column -->
                 <div class="co-left">
 
-                    <!-- Saved addresses -->
-                    <section v-if="addresses.length > 0" class="co-card">
+                    <!-- Saved addresses — logged-in users only -->
+                    <section v-if="!isGuest && addresses.length > 0" class="co-card">
                         <h2 class="co-card-title">Saved Addresses</h2>
                         <div class="co-address-grid">
                             <div v-for="address in addresses" :key="address.id" @click="selectAddress(address)"
@@ -281,40 +295,35 @@ onMounted(async () => {
 
                         <form @submit.prevent="handleCardPayment" class="co-form">
 
-                            <!-- Contact fields -->
                             <div class="co-field-row">
                                 <div class="field">
-                                    <label for="email" class="field-label">
-                                        Email <span class="field-required">*</span>
-                                    </label>
+                                    <label for="email" class="field-label">Email <span
+                                            class="field-required">*</span></label>
                                     <input id="email" type="email" v-model="addressForm.email" required
                                         class="field-input" :class="{ 'field-input--error': addressForm.errors.email }"
-                                        placeholder="you@example.com" />
+                                        placeholder="you@example.com" autocomplete="email" />
                                     <p v-if="addressForm.errors.email" class="field-error">{{ addressForm.errors.email
-                                    }}</p>
+                                        }}</p>
                                 </div>
                                 <div class="field">
-                                    <label for="fullName" class="field-label">
-                                        Full Name <span class="field-required">*</span>
-                                    </label>
+                                    <label for="fullName" class="field-label">Full Name <span
+                                            class="field-required">*</span></label>
                                     <input id="fullName" type="text" v-model="addressForm.fullName" required
                                         class="field-input"
                                         :class="{ 'field-input--error': addressForm.errors.fullName }"
-                                        placeholder="Jane Smith" />
+                                        placeholder="Jane Smith" autocomplete="name" />
                                     <p v-if="addressForm.errors.fullName" class="field-error">{{
                                         addressForm.errors.fullName }}</p>
                                 </div>
                             </div>
 
                             <div class="field" style="max-width: 280px;">
-                                <label for="telephone" class="field-label">
-                                    Phone <span class="field-optional">(optional)</span>
-                                </label>
+                                <label for="telephone" class="field-label">Phone <span
+                                        class="field-optional">(optional)</span></label>
                                 <input id="telephone" type="tel" v-model="addressForm.telephone" class="field-input"
-                                    placeholder="07700 900000" />
+                                    placeholder="07700 900000" autocomplete="tel" />
                             </div>
 
-                            <!-- Add address toggle -->
                             <div v-if="!isShippingAddressVisible" class="co-add-address-btn-wrap">
                                 <button type="button" @click="isManualAddressVisible = true" class="co-add-address-btn">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -325,28 +334,26 @@ onMounted(async () => {
                                 </button>
                             </div>
 
-                            <!-- Shipping address fields -->
                             <div v-if="isShippingAddressVisible" class="co-address-fields">
                                 <h3 class="co-address-fields-title">Shipping Address</h3>
 
                                 <div class="field">
-                                    <label for="addressLine1" class="field-label">
-                                        Address Line 1 <span class="field-required">*</span>
-                                    </label>
+                                    <label for="addressLine1" class="field-label">Address Line 1 <span
+                                            class="field-required">*</span></label>
                                     <input id="addressLine1" type="text" v-model="addressForm.addressLine1" required
                                         class="field-input"
                                         :class="{ 'field-input--error': addressForm.errors.addressLine1 }"
-                                        placeholder="123 Example Street" />
+                                        placeholder="123 Example Street" autocomplete="address-line1" />
                                     <p v-if="addressForm.errors.addressLine1" class="field-error">{{
                                         addressForm.errors.addressLine1 }}</p>
                                 </div>
 
                                 <div class="field">
-                                    <label for="addressLine2" class="field-label">
-                                        Address Line 2 <span class="field-optional">(optional)</span>
-                                    </label>
+                                    <label for="addressLine2" class="field-label">Address Line 2 <span
+                                            class="field-optional">(optional)</span></label>
                                     <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
-                                        class="field-input" placeholder="Apartment, suite, etc." />
+                                        class="field-input" placeholder="Apartment, suite, etc."
+                                        autocomplete="address-line2" />
                                 </div>
 
                                 <div class="co-field-row co-field-row--3">
@@ -356,9 +363,9 @@ onMounted(async () => {
                                         <input id="city" type="text" v-model="addressForm.city" required
                                             class="field-input"
                                             :class="{ 'field-input--error': addressForm.errors.city }"
-                                            placeholder="London" />
+                                            placeholder="London" autocomplete="address-level2" />
                                         <p v-if="addressForm.errors.city" class="field-error">{{ addressForm.errors.city
-                                        }}</p>
+                                            }}</p>
                                     </div>
                                     <div class="field">
                                         <label for="postcode" class="field-label">Postcode <span
@@ -366,31 +373,43 @@ onMounted(async () => {
                                         <input id="postcode" type="text" v-model="addressForm.postcode" required
                                             class="field-input"
                                             :class="{ 'field-input--error': addressForm.errors.postcode }"
-                                            placeholder="SW1A 0AA" />
+                                            placeholder="SW1A 0AA" autocomplete="postal-code" />
                                         <p v-if="addressForm.errors.postcode" class="field-error">{{
                                             addressForm.errors.postcode }}</p>
                                     </div>
                                     <div class="field">
-                                        <label for="county" class="field-label">
-                                            County <span class="field-optional">(optional)</span>
-                                        </label>
+                                        <label for="county" class="field-label">County <span
+                                                class="field-optional">(optional)</span></label>
                                         <input id="county" type="text" v-model="addressForm.county" class="field-input"
-                                            placeholder="Greater London" />
+                                            placeholder="Greater London" autocomplete="address-level1" />
                                     </div>
                                 </div>
 
                                 <div class="field" style="max-width: 200px;">
                                     <label for="country" class="field-label">Country</label>
                                     <input id="country" type="text" v-model="addressForm.country" readonly
-                                        class="field-input field-input--readonly" />
+                                        class="field-input field-input--readonly" autocomplete="country-name" />
                                 </div>
                             </div>
 
-                            <!-- Save info -->
-                            <label class="co-save-label">
+                            <!-- Save info — logged-in users only -->
+                            <label v-if="!isGuest" class="co-save-label">
                                 <input type="checkbox" v-model="addressForm.saveInfo" class="co-save-check" />
                                 <span>Save my details for faster checkout next time</span>
                             </label>
+
+                            <!-- Guest prompt -->
+                            <div v-if="isGuest" class="co-guest-prompt">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                </svg>
+                                <span>
+                                    Want to track your orders and save your details?
+                                    <a :href="getRoute('register')" class="co-guest-link">Create a free account</a>
+                                </span>
+                            </div>
 
                         </form>
                     </section>
@@ -402,7 +421,6 @@ onMounted(async () => {
                             Payment
                         </h2>
 
-                        <!-- Loading -->
                         <div v-if="isLoadingInitialData" class="co-payment-loading">
                             <svg class="co-spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <circle cx="12" cy="12" r="10" stroke="#e5c9c7" stroke-width="3" />
@@ -412,10 +430,8 @@ onMounted(async () => {
                             <p>Connecting to payment gateway...</p>
                         </div>
 
-                        <!-- Stripe element -->
                         <div v-if="hasClientSecret" ref="paymentContainer" class="co-stripe-container"></div>
 
-                        <!-- Payment error -->
                         <div v-if="paymentError" class="co-payment-error">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
@@ -425,7 +441,6 @@ onMounted(async () => {
                             {{ paymentError }}
                         </div>
 
-                        <!-- Submit -->
                         <button @click.prevent="handleCardPayment"
                             :disabled="isProcessing || isLoadingInitialData || !hasClientSecret || !!paymentError"
                             class="btn-rose btn-rose--full co-pay-btn"
@@ -450,12 +465,11 @@ onMounted(async () => {
 
                 </div>
 
-                <!-- ── Right column: order summary ── -->
+                <!-- Right column: order summary -->
                 <aside class="co-summary">
                     <div class="co-summary-card">
                         <h2 class="co-summary-title">Order Summary</h2>
 
-                        <!-- Cost breakdown -->
                         <div class="co-summary-rows">
                             <div class="co-summary-row">
                                 <span>Subtotal</span>
@@ -477,7 +491,6 @@ onMounted(async () => {
                             </div>
                         </div>
 
-                        <!-- Voucher -->
                         <div class="co-voucher-section">
                             <p class="co-voucher-label">Discount Code</p>
 
@@ -503,13 +516,11 @@ onMounted(async () => {
                             <p v-if="voucherError" class="co-voucher-msg co-voucher-msg--error">{{ voucherError }}</p>
                         </div>
 
-                        <!-- Grand total -->
                         <div class="co-total-row">
                             <span class="co-total-label">Total</span>
                             <span class="co-total-val">{{ fmt(computedTotal) }}</span>
                         </div>
 
-                        <!-- Items in order -->
                         <div class="co-items-section">
                             <h3 class="co-items-title">Items in your order</h3>
                             <div class="co-items-list">
@@ -533,7 +544,6 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-/* ── Page ── */
 .co {
     font-family: 'Nunito', sans-serif;
     min-height: 100vh;
@@ -548,7 +558,6 @@ onMounted(async () => {
     padding: 3rem 1.25rem 5rem;
 }
 
-/* ── Header ── */
 .co-header {
     margin-bottom: 2rem;
 }
@@ -560,6 +569,13 @@ onMounted(async () => {
     font-weight: 400;
     color: #2d1a1a;
     margin-bottom: 0.4rem;
+}
+
+.co-header-sub {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
 }
 
 .co-back {
@@ -576,7 +592,21 @@ onMounted(async () => {
     color: #8c4a50;
 }
 
-/* ── Empty ── */
+.co-guest-note {
+    font-size: 0.85rem;
+    color: #6b4f4f;
+}
+
+.co-guest-link {
+    color: #8c4a50;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.co-guest-link:hover {
+    text-decoration: underline;
+}
+
 .co-empty {
     text-align: center;
     padding: 4rem 2rem;
@@ -595,7 +625,6 @@ onMounted(async () => {
     font-style: italic;
 }
 
-/* ── Grid ── */
 .co-grid {
     display: grid;
     grid-template-columns: 1fr 320px;
@@ -615,7 +644,6 @@ onMounted(async () => {
     gap: 1.25rem;
 }
 
-/* ── Cards ── */
 .co-card {
     border: 1px solid #e5c9c7;
     border-radius: 20px;
@@ -682,7 +710,6 @@ onMounted(async () => {
     flex-shrink: 0;
 }
 
-/* ── Saved addresses ── */
 .co-address-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -770,7 +797,6 @@ onMounted(async () => {
     color: #6a3038;
 }
 
-/* ── Form ── */
 .co-form {
     display: flex;
     flex-direction: column;
@@ -910,7 +936,25 @@ onMounted(async () => {
     cursor: pointer;
 }
 
-/* ── Payment section ── */
+.co-guest-prompt {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    background: rgba(140, 74, 80, 0.04);
+    border: 1px solid #e5c9c7;
+    font-size: 0.85rem;
+    color: #6b4f4f;
+    margin-top: 0.25rem;
+}
+
+.co-guest-prompt svg {
+    flex-shrink: 0;
+    color: #8c4a50;
+    margin-top: 2px;
+}
+
 .co-payment-loading {
     display: flex;
     flex-direction: column;
@@ -978,7 +1022,6 @@ onMounted(async () => {
     text-align: center;
 }
 
-/* ── Summary sidebar ── */
 .co-summary {
     position: sticky;
     top: 88px;
@@ -1050,7 +1093,6 @@ onMounted(async () => {
     font-weight: 600;
 }
 
-/* ── Voucher ── */
 .co-voucher-section {
     border-top: 1px dashed #e5c9c7;
     padding-top: 1rem;
@@ -1148,7 +1190,6 @@ onMounted(async () => {
     color: #b54040;
 }
 
-/* ── Grand total ── */
 .co-total-row {
     display: flex;
     justify-content: space-between;
@@ -1172,9 +1213,6 @@ onMounted(async () => {
     font-weight: 500;
     color: #8c4a50;
 }
-
-/* ── Items ── */
-.co-items-section {}
 
 .co-items-title {
     font-size: 0.72rem;
@@ -1236,7 +1274,6 @@ onMounted(async () => {
     flex-shrink: 0;
 }
 
-/* ── Buttons ── */
 .btn-rose {
     display: inline-flex;
     align-items: center;
