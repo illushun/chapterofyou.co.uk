@@ -39,6 +39,8 @@ Route::post('/contact', [HomeController::class, 'storeContact'])->name('contact.
 
 Route::get('/delivery', fn () => inertia('Delivery'))->name('delivery');
 
+Route::get('/terms', fn () => inertia('Terms'))->name('terms');
+
 Route::get('/products', [ProductController::class, 'index'])->name('products');
 Route::get('/product/{idOrSlug}', [ProductController::class, 'show'])->name('products.show');
 
