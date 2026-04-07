@@ -48,6 +48,12 @@ const props = defineProps<{
     addresses: Address[];
     appliedVoucher: { code: string; discount: number; type: string; value: number } | null;
     isGuest: boolean;
+    giftVoucher: {
+        amount: number;
+        delivery_type: 'email' | 'physical';
+        recipient_name: string;
+        recipient_email: string | null;
+    } | null;
 }>();
 
 const seo = useSeoHead({ noIndex: true });
@@ -530,6 +536,16 @@ onMounted(async () => {
                                         <span class="co-item-qty">&times;{{ item.quantity }}</span>
                                     </span>
                                     <span class="co-item-price">{{ fmt(item.product.cost * item.quantity) }}</span>
+                                </div>
+
+                                <div v-if="giftVoucher" class="co-item-row co-item-row--gv">
+                                    <span class="co-item-name">
+                                        Gift Voucher
+                                        <span class="co-item-qty">
+                                            · {{ giftVoucher.delivery_type === 'email' ? 'E-Voucher' : 'Physical' }}
+                                        </span>
+                                    </span>
+                                    <span class="co-item-price">{{ fmt(giftVoucher.amount) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -1314,5 +1330,12 @@ onMounted(async () => {
 .btn-rose--sm {
     padding: 0.5rem 1rem;
     font-size: 0.85rem;
+}
+
+.co-item-row--gv {
+    background: rgba(201, 168, 76, 0.04);
+    border-radius: 4px;
+    padding: 4px 4px;
+    margin-top: 2px;
 }
 </style>

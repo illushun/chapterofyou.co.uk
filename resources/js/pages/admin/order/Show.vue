@@ -23,10 +23,11 @@ interface Order {
     status: string; created_at: string; items: OrderItem[];
 }
 
-const props = defineProps<{
+const props = defineProps < {
     order: Order;
     statuses: Record<string, string>;
-}>();
+    giftVoucherOrder: { ... } | null
+} > ();
 
 const { fmtCurrency } = useAdmin();
 
@@ -255,14 +256,40 @@ onMounted(load);
                 <!-- Items -->
                 <section class="adm-card adm-card--flush">
                     <h2 class="os-section-title">Items ({{ order.items.length }})</h2>
-                    <div v-for="item in order.items" :key="item.id" class="os-item-row">
+
+                    <div v-for="item in order.items" :key="item.id" class="os-item-row"
+                        :class="{ 'os-item-row--gv': item.product.mpn === 'GIFT-VOUCHER' }">
                         <div class="os-item-info">
-                            <p class="os-item-name">{{ item.product.name }}</p>
+                            <p class="os-item-name">
+                                <span v-if="item.product.mpn === 'GIFT-VOUCHER'">🎁 </span>
+                                {{ item.product.name }}
+                            </p>
                             <p class="os-item-meta">
                                 MPN: {{ item.product.mpn }}
                                 <span class="os-sep">·</span>
                                 Unit: {{ fmtCurrency(item.product_cost) }}
                             </p>
+                            <!-- Gift voucher details -->
+                            <template v-if="item.product.mpn === 'GIFT-VOUCHER' && giftVoucherOrder">
+                                <p class="os-item-meta" style="margin-top:4px; color: #8a6a5a;">
+                                    For: <strong>{{ giftVoucherOrder.recipient_name }}</strong>
+                                    <span class="os-sep">·</span>
+                                    {{ giftVoucherOrder.delivery_type === 'email' ? 'E-Voucher' : 'Physical Voucher' }}
+                                    <template v-if="giftVoucherOrder.recipient_email">
+                                        <span class="os-sep">·</span>
+                                        {{ giftVoucherOrder.recipient_email }}
+                                    </template>
+                                </p>
+                                <p class="os-item-meta" style="margin-top:2px;">
+                                    Code: <span style="font-family:monospace; font-weight:700;">
+                                        {{ giftVoucherOrder.voucher?.code ?? 'Pending' }}
+                                    </span>
+                                    <span class="os-sep">·</span>
+                                    <span :style="giftVoucherOrder.fulfilled_at ? 'color:#2d7a3a' : 'color:#a86414'">
+                                        {{ giftVoucherOrder.fulfilled_at ? 'Fulfilled' : 'Awaiting fulfilment' }}
+                                    </span>
+                                </p>
+                            </template>
                         </div>
                         <div class="os-item-right">
                             <p class="os-item-price">{{ fmtCurrency(item.product_total) }}</p>
@@ -447,7 +474,7 @@ onMounted(load);
                         <div class="os-total-row">
                             <span class="os-total-lbl">Shipping</span>
                             <span>{{ Number(order.shipping_total) === 0 ? 'FREE' : fmtCurrency(order.shipping_total)
-                                }}</span>
+                            }}</span>
                         </div>
                         <div class="os-total-row">
                             <span class="os-total-lbl">VAT (20%)</span>
@@ -1095,5 +1122,10 @@ onMounted(load);
     color: var(--bb-text);
     line-height: 1.4;
     flex: 1;
+}
+
+.os-item-row--gv {
+    background: rgba(201, 168, 76, 0.04);
+    border-left: 3px solid #c9a84c;
 }
 </style>

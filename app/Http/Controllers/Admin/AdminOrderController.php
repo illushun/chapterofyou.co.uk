@@ -50,6 +50,7 @@ class AdminOrderController extends Controller
         return Inertia::render('admin/order/Show', [
             'order'    => $order,
             'statuses' => self::STATUSES,
+            'giftVoucherOrder' => $order->giftVoucherOrder()->with('voucher')->first(),
         ]);
     }
 

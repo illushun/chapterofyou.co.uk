@@ -52,6 +52,10 @@ Route::get('/product/{idOrSlug}', [ProductController::class, 'show'])->name('pro
 
 Route::get('/gift-vouchers', [GiftVoucherController::class, 'index'])->name('gift-vouchers.index');
 Route::post('/gift-vouchers/checkout', [GiftVoucherController::class, 'checkout'])->name('gift-vouchers.checkout');
+Route::post('/gift-vouchers/remove-from-cart', function () {
+    session()->forget('pending_gift_voucher');
+    return back();
+})->name('gift-vouchers.remove-from-cart');
 
 Route::prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'view'])->name('cart.view');

@@ -43,12 +43,15 @@ class CartController extends Controller
             ];
         });
 
+        $giftVoucher = session('pending_gift_voucher');
+
         // Calculate the total cart value
-        $cartTotal = $cartData->sum('subtotal');
+        $cartTotal = $cartData->sum('subtotal') + ($giftVoucher ? $giftVoucher['amount'] : 0);
 
         return Inertia::render('cart/View', [
             'cartItems' => $cartData,
             'cartTotal' => $cartTotal,
+            'giftVoucher'  => $giftVoucher,
         ]);
     }
 
@@ -81,7 +84,7 @@ class CartController extends Controller
         $item = $this->cartManager->updateItem($cart, $productId, $request->quantity);
 
         if ($item === null && $request->quantity > 0) {
-             return response()->json(['error' => 'Cart item not found.'], 404);
+            return response()->json(['error' => 'Cart item not found.'], 404);
         }
 
         return redirect()->back(303); // Use 303 to trigger a GET request/Inertia refresh

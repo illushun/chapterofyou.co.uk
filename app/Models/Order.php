@@ -65,4 +65,9 @@ class Order extends Model
     {
         return $this->hasOne(OrderReview::class);
     }
+
+    public function giftVoucherOrder()
+    {
+        return $this->hasOne(\App\Models\GiftVoucherOrder::class);
+    }
 }

@@ -20,6 +20,12 @@ interface CartItem {
 const props = defineProps<{
     cartItems: CartItem[];
     cartTotal: number;
+    giftVoucher: {
+        amount: number;
+        delivery_type: 'email' | 'physical';
+        recipient_name: string;
+        recipient_email: string | null;
+    } | null;
 }>();
 
 const seo = useSeoHead({ noIndex: true });
@@ -56,6 +62,15 @@ const remove = (productId: number) => {
     router.delete(`/cart/remove/${productId}`, {
         preserveScroll: true,
         onFinish: () => delete removing.value[productId],
+    });
+};
+
+const removingGiftVoucher = ref(false);
+const removeGiftVoucher = () => {
+    removingGiftVoucher.value = true;
+    router.post(route('gift-vouchers.remove-from-cart'), {}, {
+        preserveScroll: true,
+        onFinish: () => { removingGiftVoucher.value = false; },
     });
 };
 </script>
@@ -167,6 +182,33 @@ const remove = (productId: number) => {
                                         </button>
                                     </div>
                                     <p class="ci-line-total">{{ fmt(n(item.cost) * n(item.quantity)) }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="giftVoucher" key="gift-voucher" class="item-card gv-cart-card">
+                            <div class="gv-cart-icon" aria-hidden="true">🎁</div>
+                            <div class="ci-body">
+                                <div class="ci-top">
+                                    <div>
+                                        <h2 class="ci-name">Gift Voucher</h2>
+                                        <p class="ci-unit">
+                                            {{ giftVoucher.delivery_type === 'email' ? 'E-Voucher' : 'Physical Voucher'
+                                            }}
+                                            · For: {{ giftVoucher.recipient_name }}
+                                        </p>
+                                    </div>
+                                    <button @click="removeGiftVoucher" :disabled="removingGiftVoucher" class="ci-remove"
+                                        aria-label="Remove gift voucher">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                            <path d="M18 6 6 18M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="ci-bottom">
+                                    <span class="gv-cart-badge">Valid 1 year · All products</span>
+                                    <p class="ci-line-total">{{ fmt(giftVoucher.amount) }}</p>
                                 </div>
                             </div>
                         </div>
@@ -771,5 +813,29 @@ const remove = (productId: number) => {
         width: 100%;
         height: 120px;
     }
+}
+
+.gv-cart-card {
+    background: linear-gradient(135deg, #fffafa 0%, #fff8f0 100%);
+    border-color: #c9a84c;
+}
+
+.gv-cart-icon {
+    font-size: 2.5rem;
+    width: 82px;
+    height: 82px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 14px;
+    border: 1px solid #e5c9c7;
+    background: #fdf4f3;
+}
+
+.gv-cart-badge {
+    font-size: 0.72rem;
+    font-style: italic;
+    color: #8a6a5a;
 }
 </style>

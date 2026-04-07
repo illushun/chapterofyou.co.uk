@@ -61,6 +61,7 @@ class CheckoutController extends Controller
             'addresses'      => $shipping_addresses,
             'appliedVoucher' => $appliedVoucher, // null or ['code', 'discount', 'type', 'value']
             'isGuest'        => !Auth::check(),
+            'giftVoucher' => session('pending_gift_voucher'),
         ]);
     }
 
@@ -106,6 +107,11 @@ class CheckoutController extends Controller
                     $shippingCost += $psp['cost'] * $psp['quantity'];
                 }
             }
+        }
+
+        $giftVoucher = session('pending_gift_voucher');
+        if ($giftVoucher) {
+            $subtotal += $giftVoucher['amount'];
         }
 
         if ($subtotal >= 50) {
@@ -287,21 +293,23 @@ class CheckoutController extends Controller
 
         $order->items()->saveMany($orderItems);
 
-        Mail::to($order->email)->send(new Confirmation($order));
-
         $pendingGiftVoucher = session('pending_gift_voucher');
         if ($pendingGiftVoucher) {
-            app(\App\Services\GiftVoucherService::class)->createFromOrder(
-                order:           $order,
-                amount:          $pendingGiftVoucher['amount'],
-                deliveryType:    $pendingGiftVoucher['delivery_type'],
-                recipientName:   $pendingGiftVoucher['recipient_name'],
-                recipientEmail:  $pendingGiftVoucher['recipient_email'] ?? null,
-                personalMessage: $pendingGiftVoucher['personal_message'] ?? null,
-            );
-            session()->forget('pending_gift_voucher');
+            // Find or create the Gift Voucher placeholder product
+            $gvProduct = \App\Models\Product::where('mpn', 'GIFT-VOUCHER')->first();
+
+            if ($gvProduct) {
+                $order->items()->create([
+                    'order_id'      => $order->id,
+                    'product_id'    => $gvProduct->id,
+                    'quantity'      => 1,
+                    'product_cost'  => $pendingGiftVoucher['amount'],
+                    'product_total' => $pendingGiftVoucher['amount'],
+                ]);
+            }
         }
 
+        Mail::to($order->email)->send(new Confirmation($order));
         Mail::to('contact@chapterofyou.co.uk')->send(new NewOrderAlert($order));
         $this->cartManager->clearCart($cart);
 
