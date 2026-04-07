@@ -28,7 +28,7 @@ const submit = () => {
 };
 
 const seo = useSeoHead({
-    title: 'Contact Us',
+    title: 'Contact Me',
     description: 'Get in touch with Chapter of You. I\'d love to hear from you and will respond within 1–2 working days.',
     canonical: '/contact',
 });

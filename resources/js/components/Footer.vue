@@ -52,37 +52,6 @@ const currentYear = new Date().getFullYear();
                     Luxurious hand-crafted reed diffusers, made with love and care for
                     your home and well-being.
                 </p>
-
-                <!-- Newsletter signup -->
-                <div class="ft-newsletter">
-                    <p class="ft-newsletter-label">Stay in the loop</p>
-                    <div v-if="!submitted" class="ft-newsletter-form">
-                        <input v-model="email" type="email" placeholder="your@email.co.uk" class="ft-newsletter-input"
-                            :disabled="submitting" @keyup.enter="submitNewsletter"
-                            aria-label="Email address for newsletter" />
-                        <button @click="submitNewsletter" :disabled="submitting || !email.trim()"
-                            class="ft-newsletter-btn" aria-label="Subscribe">
-                            <svg v-if="submitting" class="ft-spinner" viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
-                                <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3"
-                                    stroke-linecap="round" />
-                            </svg>
-                            <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M5 12h14M12 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                    </div>
-                    <p v-if="submitError" class="ft-newsletter-error">{{ submitError }}</p>
-                    <div v-if="submitted" class="ft-newsletter-success">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M20 6 9 17l-5-5" />
-                        </svg>
-                        Thank you — you're on the list! ✦
-                    </div>
-                    <p class="ft-newsletter-note">No spam, ever. Unsubscribe at any time.</p>
-                </div>
             </div>
 
             <!-- ── Links columns ── -->
@@ -137,7 +106,7 @@ const currentYear = new Date().getFullYear();
                             <Link :href="route('privacy')" class="ft-nav-link">Privacy Policy</Link>
                         </li>
                         <li>
-                            <Link :href="route('contact')" class="ft-nav-link">Contact Us</Link>
+                            <Link :href="route('contact')" class="ft-nav-link">Contact Me</Link>
                         </li>
                     </ul>
                 </div>
@@ -404,7 +373,7 @@ const currentYear = new Date().getFullYear();
 
 .ft-copyright {
     font-size: 0.75rem;
-    color: #5a3838;
+    color: #9a7070;
 }
 
 .ft-bottom-links {
@@ -415,7 +384,7 @@ const currentYear = new Date().getFullYear();
 
 .ft-bottom-link {
     font-size: 0.75rem;
-    color: #5a3838;
+    color: #9a7070;
     text-decoration: none;
     transition: color 0.15s;
 }
