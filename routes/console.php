@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('email:send:order-review')->dailyAt('10:00');
+Schedule::command('email:send:order-review')->dailyAt('10:00');
