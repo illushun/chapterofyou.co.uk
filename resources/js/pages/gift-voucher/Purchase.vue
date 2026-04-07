@@ -117,7 +117,7 @@ async function submit() {
                     <span></span><span class="gv-petal">✿</span><span></span>
                 </div>
                 <p class="gv-intro">
-                    Give the gift of self-care. Our gift vouchers can be used on
+                    Give the gift of self-care. My gift vouchers can be used on
                     any product in the collection and are valid for one year from purchase.
                 </p>
             </header>
@@ -305,7 +305,7 @@ async function submit() {
                                     <polyline points="22,6 12,13 2,6" />
                                 </svg>
                                 <span>{{ deliveryType === 'email' ? 'Sent instantly by email' : 'Posted to recipient'
-                                }}</span>
+                                    }}</span>
                             </div>
                             <div class="gv-preview-info-row">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"

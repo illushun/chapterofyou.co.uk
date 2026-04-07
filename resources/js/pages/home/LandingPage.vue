@@ -183,7 +183,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
         <section class="lp-section">
             <div class="lp-section-inner">
                 <div class="lp-section-header">
-                    <p class="lp-section-eyebrow">Our craft</p>
+                    <p class="lp-section-eyebrow">My craft</p>
                     <h2 class="lp-section-title">Reed diffusers <em>designed for your sanctuary</em></h2>
                 </div>
                 <div class="lp-features">
@@ -215,7 +215,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
                 <div class="lp-hot-header">
                     <div>
                         <p class="lp-section-eyebrow">Most loved</p>
-                        <h2 class="lp-section-title">Our <em>bestsellers</em></h2>
+                        <h2 class="lp-section-title">My <em>bestsellers</em></h2>
                     </div>
                     <a href="/products" class="lp-hot-see-all">
                         View all

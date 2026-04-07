@@ -376,7 +376,7 @@ const submit = () => {
                                     <label class="adm-label"
                                         style="font-size:0.7rem; letter-spacing:0.07em; text-transform:uppercase; color:var(--bb-muted)">Answer</label>
                                     <textarea v-model="faq.answer" rows="3" class="adm-textarea adm-input--sm"
-                                        placeholder="e.g. Our fragrances typically last 6–8 hours on skin..."></textarea>
+                                        placeholder="e.g. My fragrances typically last 6–8 hours on skin..."></textarea>
                                 </div>
                             </div>
                             <button type="button" @click="removeFaq(i)" class="pe-icon-remove" aria-label="Remove FAQ">
