@@ -30,7 +30,7 @@ const props = defineProps<{
 
 const seo = useSeoHead({ noIndex: true });
 
-const hasItems = computed(() => props.cartItems.length > 0);
+const hasItems = computed(() => props.cartItems.length > 0 || !!props.giftVoucher);
 const itemCount = computed(() => props.cartItems.reduce((s, i) => s + Number(i.quantity), 0));
 const n = (v: unknown) => Number(v) || 0;
 const fmt = (v: unknown) => `£${n(v).toFixed(2)}`;
