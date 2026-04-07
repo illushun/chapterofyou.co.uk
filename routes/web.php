@@ -102,8 +102,7 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
 });
 
 Route::get('/order/confirmation/{id}', [ConfirmationController::class, 'show'])
-    ->name('order.confirmation')
-    ->middleware('auth');
+    ->name('order.confirmation');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 
