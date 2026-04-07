@@ -299,9 +299,9 @@ class CheckoutController extends Controller
 
         $pendingGiftVoucher = session('pending_gift_voucher');
         if ($pendingGiftVoucher) {
-            // Find or create the Gift Voucher placeholder product
-            $gvProduct = \App\Models\Product::where('mpn', 'GIFT-VOUCHER')->first();
 
+            // Save as an order item so it shows in the order
+            $gvProduct = \App\Models\Product::where('mpn', 'GIFT-VOUCHER')->first();
             if ($gvProduct) {
                 $order->items()->create([
                     'order_id'      => $order->id,
@@ -311,6 +311,19 @@ class CheckoutController extends Controller
                     'product_total' => $pendingGiftVoucher['amount'],
                 ]);
             }
+
+            // Create the voucher record and send the e-voucher email
+            app(\App\Services\GiftVoucherService::class)->createFromOrder(
+                order:           $order,
+                amount:          (float) $pendingGiftVoucher['amount'],
+                deliveryType:    $pendingGiftVoucher['delivery_type'],
+                recipientName:   $pendingGiftVoucher['recipient_name'],
+                recipientEmail:  $pendingGiftVoucher['recipient_email'] ?? null,
+                personalMessage: $pendingGiftVoucher['personal_message'] ?? null,
+            );
+
+            // Clear the session
+            session()->forget('pending_gift_voucher');
         }
 
         Mail::to($order->email)->send(new Confirmation($order));
