@@ -288,6 +288,20 @@ class CheckoutController extends Controller
         $order->items()->saveMany($orderItems);
 
         Mail::to($order->email)->send(new Confirmation($order));
+
+        $pendingGiftVoucher = session('pending_gift_voucher');
+        if ($pendingGiftVoucher) {
+            app(\App\Services\GiftVoucherService::class)->createFromOrder(
+                order:           $order,
+                amount:          $pendingGiftVoucher['amount'],
+                deliveryType:    $pendingGiftVoucher['delivery_type'],
+                recipientName:   $pendingGiftVoucher['recipient_name'],
+                recipientEmail:  $pendingGiftVoucher['recipient_email'] ?? null,
+                personalMessage: $pendingGiftVoucher['personal_message'] ?? null,
+            );
+            session()->forget('pending_gift_voucher');
+        }
+
         Mail::to('contact@chapterofyou.co.uk')->send(new NewOrderAlert($order));
         $this->cartManager->clearCart($cart);
 

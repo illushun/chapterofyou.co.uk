@@ -69,6 +69,9 @@ const currentYear = new Date().getFullYear();
                         <li>
                             <Link :href="route('wishlist.index')" class="ft-nav-link">Wishlist</Link>
                         </li>
+                        <li>
+                            <Link :href="route('gift-vouchers.index')" class="ft-nav-link">Gift Vouchers</Link>
+                        </li>
                     </ul>
                 </div>
 

@@ -30,6 +30,8 @@ use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\GiftVoucherController;
+use App\Http\Controllers\Admin\AdminGiftVoucherController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
@@ -47,6 +49,9 @@ Route::get('/returns', fn () => inertia('Returns'))->name('returns');
 
 Route::get('/products', [ProductController::class, 'index'])->name('products');
 Route::get('/product/{idOrSlug}', [ProductController::class, 'show'])->name('products.show');
+
+Route::get('/gift-vouchers', [GiftVoucherController::class, 'index'])->name('gift-vouchers.index');
+Route::post('/gift-vouchers/checkout', [GiftVoucherController::class, 'checkout'])->name('gift-vouchers.checkout');
 
 Route::prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'view'])->name('cart.view');
@@ -170,6 +175,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('broadcasts/waitlist-launch', [AdminBroadcastEmailController::class, 'sendWaitlistLaunch'])
         ->name('broadcasts.waitlist-launch');
     Route::get('broadcasts/{broadcast}', [AdminBroadcastEmailController::class, 'show'])->name('broadcasts.show');
+
+    Route::get('gift-vouchers', [AdminGiftVoucherController::class, 'index'])->name('gift-vouchers.index');
+    Route::post('gift-vouchers/{giftVoucherOrder}/dispatch', [AdminGiftVoucherController::class, 'markDispatched'])->name('gift-vouchers.dispatch');
+    Route::post('gift-vouchers/{giftVoucherOrder}/resend', [AdminGiftVoucherController::class, 'resendEmail'])->name('gift-vouchers.resend');
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');
