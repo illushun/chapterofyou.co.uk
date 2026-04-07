@@ -21,7 +21,7 @@ class GiftVoucher extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Your Chapter of You Gift Voucher",
+            subject: "A little something, just for you 🤍",
         );
     }
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Your Chapter of You Gift Voucher</title>
+<title>A little something, just for you 🤍</title>
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -52,34 +52,40 @@
         background: #fff;
         border: 2px solid #c9a84c;
         border-radius: 12px;
-        padding: 28px 24px;
+        /* Enough bottom padding so content clears the flower */
+        padding: 28px 24px 36px;
         position: relative;
-        overflow: hidden;
+        /* overflow hidden removed — was clipping content */
+        overflow: visible;
     }
-    .voucher-card::before {
-        content: '✿';
+
+    /*
+     * Flowers repositioned to corners so they never overlap text.
+     * Reduced size and raised opacity slightly so they're decorative
+     * without being too faint or too intrusive.
+     * pointer-events: none means they don't interfere with clicks.
+     */
+    .voucher-flower {
         position: absolute;
-        top: -10px; left: 12px;
-        font-size: 80px;
-        color: #f9ece8;
+        font-size: 52px;
+        color: #f0d8d0;
         pointer-events: none;
+        user-select: none;
         line-height: 1;
+        z-index: 0;
     }
-    .voucher-card::after {
-        content: '✿';
-        position: absolute;
-        bottom: -10px; right: 12px;
-        font-size: 80px;
-        color: #f9ece8;
-        pointer-events: none;
-        line-height: 1;
-    }
+    .voucher-flower--tl { top: -4px;  left: 8px;  }
+    .voucher-flower--br { bottom: -4px; right: 8px; }
+
+    /* All direct children of voucher-card sit above the flowers */
+    .voucher-card > *:not(.voucher-flower) { position: relative; z-index: 1; }
+
     .voucher-label {
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 12px;
+        font-weight: 700;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: #c9a84c;
+        color: #a0742a;  /* darker gold — was #c9a84c, too light */
         margin-bottom: 8px;
     }
     .voucher-brand {
@@ -97,10 +103,11 @@
         margin-bottom: 16px;
     }
     .voucher-code-label {
-        font-size: 12px;
+        font-size: 13px;
+        font-weight: 600;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #8a6a5a;
+        color: #6b4f3a;  /* darker — was #8a6a5a */
         margin-bottom: 6px;
     }
     .voucher-code {
@@ -117,13 +124,13 @@
         margin-bottom: 14px;
     }
     .voucher-expiry {
-        font-size: 13px;
+        font-size: 14px;
         font-style: italic;
-        color: #8a6a5a;
+        color: #5a3d2b;  /* darker — was #8a6a5a */
     }
     .voucher-terms {
-        font-size: 12px;
-        color: #a08070;
+        font-size: 13px;
+        color: #7a5a48;  /* darker — was #a08070 */
         margin-top: 10px;
         line-height: 1.5;
     }
@@ -139,11 +146,11 @@
         border-radius: 0 6px 6px 0;
     }
     .message-box-label {
-        font-size: 11px;
-        font-weight: 600;
+        font-size: 12px;
+        font-weight: 700;
         letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: #c9a84c;
+        color: #a0742a;  /* darker gold */
         margin-bottom: 6px;
     }
     .message-box-text {
@@ -178,10 +185,19 @@
     .tagline {
         font-style: italic;
         font-size: 15px;
-        color: #8a6a5a;
+        color: #6b4f4f;  /* darker — was #8a6a5a */
         margin-top: 6px;
         letter-spacing: 0.02em;
     }
+
+    /* Small print — darkened for legibility */
+    .small-print {
+        font-size: 13px;
+        color: #7a5a48;  /* was #a08070 */
+        margin-top: 12px;
+        line-height: 1.6;
+    }
+    .small-print a { color: #7a5a48; }
 
     @media only screen and (max-width: 480px) {
         .body { padding: 32px 20px 28px; }
@@ -198,7 +214,7 @@
 
     <div class="greeting-script">Hello {{ $recipientName }},</div>
     <div class="greeting-script" style="font-size:34px; margin-top:-4px;">
-        You've received a gift!
+        You've received a gift! 🎁
     </div>
 
     <hr class="gold-divider" />
@@ -217,6 +233,10 @@
 
     {{-- ── Voucher card ── --}}
     <div class="voucher-card">
+        {{-- Flowers as real elements so they don't overlap content --}}
+        <span class="voucher-flower voucher-flower--tl" aria-hidden="true">✿</span>
+        <span class="voucher-flower voucher-flower--br" aria-hidden="true">✿</span>
+
         <div class="voucher-label">Gift Voucher</div>
         <div class="voucher-brand">Chapter of You</div>
         <div class="voucher-amount">£{{ number_format($amount, 2) }}</div>
@@ -224,7 +244,7 @@
         <div class="voucher-code">{{ $voucherCode }}</div>
         <div class="voucher-expiry">Valid until {{ $validUntil }}</div>
         <div class="voucher-terms">
-            Single use · All products · Cannot be combined with other offers
+            Single use &middot; All products &middot; Cannot be combined with other offers
         </div>
     </div>
 
@@ -232,7 +252,7 @@
         Simply enter your code at checkout to redeem your voucher.
     </p>
 
-    <a href="{{ $shopUrl }}" class="cta-btn">Shop the Collection →</a>
+    <a href="{{ $shopUrl }}" class="cta-btn">Shop the Collection &rarr;</a>
 
     <hr class="gold-divider" style="margin-top: 28px;" />
 
@@ -243,9 +263,9 @@
     </div>
 
     <hr class="gold-divider" style="margin-top: 28px;" />
-    <p style="font-size:12px; color:#a08070; margin-top:12px; line-height:1.5;">
+    <p class="small-print">
         If you have any questions please contact
-        <a href="mailto:contact@chapterofyou.co.uk" style="color:#a08070;">contact@chapterofyou.co.uk</a>
+        <a href="mailto:contact@chapterofyou.co.uk">contact@chapterofyou.co.uk</a>
     </p>
 
 </div>
