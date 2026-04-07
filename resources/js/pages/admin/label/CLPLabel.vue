@@ -102,8 +102,8 @@ async function exportPictogramsPdf() {
         }
 
         // 15 cols × 21 rows = 315 pictograms per A4 sheet
-        const COLS = 15;
-        const ROWS = 21;
+        const COLS = 2;
+        const ROWS = 1;
         const COUNT = COLS * ROWS;
 
         // One <section> per pictogram — each gets its own @page via page-break-after

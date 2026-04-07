@@ -285,6 +285,8 @@ const activeAccent = computed(() => {
     padding: 1rem 0.8rem 0.5rem;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    min-height: 0;
 }
 
 .al-group-label {
