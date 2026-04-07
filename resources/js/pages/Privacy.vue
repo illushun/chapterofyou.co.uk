@@ -304,7 +304,7 @@ const lastUpdated = '6 April 2026';
                                     class="pp-ext-link">
                                     Information Commissioner's Office (ICO)
                                 </a>
-                                — the UK's independent data protection authority.
+                                , the UK's independent data protection authority.
                             </p>
                         </div>
                     </div>

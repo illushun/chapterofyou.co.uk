@@ -203,7 +203,7 @@ const lastUpdated = '6 April 2026';
                                 provided with your order.
                             </p>
                             <p>
-                                Reed diffusers contain fragrance oils — keep out of reach of children
+                                Reed diffusers contain fragrance oils, keep out of reach of children
                                 and pets, and away from polished or painted surfaces.
                             </p>
                             <p>

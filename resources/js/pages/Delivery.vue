@@ -50,7 +50,7 @@ const seo = useSeoHead({
                     <p class="dv-card-body">
                         I aim to prepare and dispatch all orders as quickly as possible. Orders are typically processed
                         within
-                        <strong>2–3 working days</strong>. During busier periods, this may take slightly longer — I
+                        <strong>2–3 working days</strong>. During busier periods, this may take slightly longer, I
                         appreciate your patience.
                     </p>
                 </div>

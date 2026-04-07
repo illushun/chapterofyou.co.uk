@@ -98,8 +98,8 @@ const qualifications = [
                         I am a qualified complementary therapist with a deep passion for
                         wellbeing and self-care. My training spans aromatherapy, reflexology
                         and Swedish massage, disciplines that inform every product I create,
-                        from the oils I choose to the way I think about scent and its effect
-                        on the body and mind.
+                        from the oils I choose to the way I think about scent and its connection to memory, mood and the
+                        atmosphere it creates.
                     </p>
                     <p class="ab-therapist-body">
                         Through Chapter of You, I am currently focusing on creating luxury
@@ -140,7 +140,7 @@ const qualifications = [
                 <div class="ab-behind-grid">
                     <div class="ab-behind-item">
                         <span class="ab-behind-glyph" aria-hidden="true">◇</span>
-                        <h3>Small batch, always</h3>
+                        <h3>Made to order, always</h3>
                         <p>
                             Every diffuser is blended and bottled individually so I can
                             give each one proper attention. Your order is never just a number
@@ -151,18 +151,16 @@ const qualifications = [
                         <span class="ab-behind-glyph" aria-hidden="true">◇</span>
                         <h3>Scent as therapy</h3>
                         <p>
-                            My aromatherapy training directly shapes how I blend. Fragrance
-                            is not just pleasant, it has a genuine effect on mood, memory
-                            and wellbeing. I take that seriously.
+                            Scent has a unique way of shaping a space, connecting to memory and mood while bringing a
+                            sense of calm, comfort and quiet intention to your surroundings.
                         </p>
                     </div>
                     <div class="ab-behind-item">
                         <span class="ab-behind-glyph" aria-hidden="true">◇</span>
                         <h3>Premium ingredients only</h3>
                         <p>
-                            I research every ingredient. If I wouldn't feel comfortable
-                            using it in a therapeutic context, it doesn't go into a
-                            Chapter of You product.
+                            I carefully research every ingredient I use. Only ingredients I trust and feel confident in
+                            are selected for Chapter of You products.
                         </p>
                     </div>
                 </div>

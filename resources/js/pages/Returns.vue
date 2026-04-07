@@ -35,7 +35,7 @@ const lastUpdated = '6 April 2026';
                 </div>
                 <p class="rr-intro">
                     I want you to love your order. If something isn't right, please don't
-                    hesitate to get in touch, I'll always do my best to help. 🤍
+                    hesitate to get in touch, I'll always do my best to help.
                 </p>
                 <p class="rr-updated">Last updated: {{ lastUpdated }}</p>
             </header>
@@ -93,7 +93,7 @@ const lastUpdated = '6 April 2026';
                             </p>
                             <p>
                                 If you have any questions about a product before you buy, please feel
-                                free to <a :href="route('contact')" class="rr-inline-link">get in touch</a> —
+                                free to <a :href="route('contact')" class="rr-inline-link">get in touch</a>,
                                 I'm always happy to help.
                             </p>
                         </div>
@@ -214,7 +214,7 @@ const lastUpdated = '6 April 2026';
                             <p>
                                 I am not responsible for damage caused by misuse, improper handling,
                                 or failure to follow the care and usage instructions provided with
-                                your order. Reed diffusers contain fragrance oils — please handle
+                                your order. Reed diffusers contain fragrance oils, please handle
                                 with care and keep upright during storage and transit.
                             </p>
                         </div>
@@ -230,7 +230,7 @@ const lastUpdated = '6 April 2026';
                     <h2 class="rr-contact-title">Got an issue with your order?</h2>
                     <p class="rr-contact-body">
                         I want every Chapter of You order to be something you love. If anything
-                        isn't right, please reach out — I'll always do my best to make it right.
+                        isn't right, please reach out, I'll always do my best to make it right.
                     </p>
                     <a href="mailto:contact@chapterofyou.co.uk" class="rr-contact-btn">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
