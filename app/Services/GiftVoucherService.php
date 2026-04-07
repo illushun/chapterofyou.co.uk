@@ -7,29 +7,21 @@ use App\Models\Order;
 use App\Models\Voucher;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class GiftVoucherService
 {
-    /**
-     * After a gift voucher is purchased, create the Voucher record
-     * and a GiftVoucherOrder tracking row.
-     *
-     * For e-vouchers the code is sent immediately.
-     * For physical vouchers the admin must trigger fulfilment manually.
-     */
     public function createFromOrder(
         Order $order,
         float $amount,
-        string $deliveryType,      // 'email' or 'physical'
+        string $deliveryType,
         string $recipientName,
         ?string $recipientEmail,
         ?string $personalMessage,
     ): GiftVoucherOrder {
 
-        // Generate a unique, readable voucher code
         $code = $this->generateCode();
 
-        // Create the Voucher — fixed value, 1-year expiry, single use, all products
         $voucher = Voucher::create([
             'code'                    => $code,
             'description'             => "Gift Voucher — purchased by {$order->first_name} {$order->last_name}",
@@ -39,7 +31,7 @@ class GiftVoucherService
             'applies_to_all_products' => true,
             'stackable'               => false,
             'new_customers_only'      => false,
-            'single_use_per_user'     => false,   // enforced by max_uses=1 instead
+            'single_use_per_user'     => false,
             'max_uses'                => 1,
             'uses_count'              => 0,
             'valid_from'              => now(),
@@ -47,7 +39,6 @@ class GiftVoucherService
             'is_active'               => true,
         ]);
 
-        // Create the tracking record
         $giftVoucherOrder = GiftVoucherOrder::create([
             'order_id'         => $order->id,
             'voucher_id'       => $voucher->id,
@@ -56,10 +47,16 @@ class GiftVoucherService
             'recipient_name'   => $recipientName,
             'recipient_email'  => $recipientEmail,
             'personal_message' => $personalMessage,
-            'fulfilled_at'     => null,  // set when code is sent
+            'fulfilled_at'     => null,
         ]);
 
-        // Send immediately for e-vouchers
+        Log::info('[GiftVoucher] Record created', [
+            'order_id'        => $order->id,
+            'voucher_code'    => $code,
+            'delivery_type'   => $deliveryType,
+            'recipient_email' => $recipientEmail,
+        ]);
+
         if ($deliveryType === 'email' && $recipientEmail) {
             $this->sendEVoucher($giftVoucherOrder);
         }
@@ -67,30 +64,53 @@ class GiftVoucherService
         return $giftVoucherOrder;
     }
 
-    /**
-     * Send the e-voucher email to the recipient.
-     * Also called by the admin when manually fulfilling a physical voucher.
-     */
     public function sendEVoucher(GiftVoucherOrder $giftVoucherOrder): void
     {
-        Mail::to($giftVoucherOrder->recipient_email)
-            ->send(new \App\Mail\GiftVoucher($giftVoucherOrder));
+        $giftVoucherOrder->load(['voucher', 'order']);
 
-        $giftVoucherOrder->update(['fulfilled_at' => now()]);
+        if (!$giftVoucherOrder->recipient_email) {
+            Log::error('[GiftVoucher] No recipient email on record', [
+                'id' => $giftVoucherOrder->id,
+            ]);
+            return;
+        }
+
+        if (!$giftVoucherOrder->voucher) {
+            Log::error('[GiftVoucher] Voucher relationship not found', [
+                'id' => $giftVoucherOrder->id,
+            ]);
+            return;
+        }
+
+        try {
+            Log::info('[GiftVoucher] Attempting to send e-voucher email', [
+                'to'           => $giftVoucherOrder->recipient_email,
+                'voucher_code' => $giftVoucherOrder->voucher->code,
+            ]);
+
+            Mail::to($giftVoucherOrder->recipient_email)
+                ->send(new \App\Mail\GiftVoucher($giftVoucherOrder));
+
+            $giftVoucherOrder->update(['fulfilled_at' => now()]);
+
+            Log::info('[GiftVoucher] E-voucher email sent successfully', [
+                'to' => $giftVoucherOrder->recipient_email,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('[GiftVoucher] Failed to send e-voucher email', [
+                'to'    => $giftVoucherOrder->recipient_email,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 
-    /**
-     * Mark a physical voucher as dispatched (admin action).
-     */
     public function markPhysicalDispatched(GiftVoucherOrder $giftVoucherOrder): void
     {
         $giftVoucherOrder->update(['fulfilled_at' => now()]);
     }
 
-    /**
-     * Generate a clean, readable voucher code.
-     * Format: GIFT-XXXX-XXXX-XXXX
-     */
     private function generateCode(): string
     {
         do {
