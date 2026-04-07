@@ -229,7 +229,7 @@
     {{-- ── Small print ── --}}
     <hr class="gold-divider" style="margin-top: 28px;" />
     <p style="font-size:12px; color:#a08070; margin-top:12px; line-height:1.5;">
-        Order #COY-0000{{ $orderId }} · Sent to {{ $shippingAddress['name'] }}<br />
+        Order #COY-{{ $orderId }} · Sent to {{ $shippingAddress['name'] }}<br />
         {{ $shippingAddress['line1'] }}@if($shippingAddress['line2']), {{ $shippingAddress['line2'] }}@endif,
         {{ $shippingAddress['city'] }}, {{ $shippingAddress['zip'] }}<br /><br />
         If you have any questions please email contact@chapterofyou.co.uk

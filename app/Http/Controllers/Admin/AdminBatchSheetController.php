@@ -58,7 +58,7 @@ class AdminBatchSheetController extends Controller
 
         // Auto-generate a batch number
         $nextId      = (BatchSheet::max('id') ?? 0) + 1;
-        $batchNumber = 'COY-' . str_pad($nextId, 3, '0', STR_PAD_LEFT) . '-' . strtoupper(Str::random(2));
+        $batchNumber = 'COY-' . $nextId . '-' . strtoupper(Str::random(2));
 
         return Inertia::render('admin/batch-sheet/CreateEdit', [
             'orders'      => $orders,

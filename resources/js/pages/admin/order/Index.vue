@@ -98,7 +98,7 @@ const paginate = (url: string | null) => {
                     </thead>
                     <tbody class="divide-y divide-copy-light/50">
                         <tr v-for="order in orders.data" :key="order.id" class="hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-semibold">COY-0000{{ order.id }}</td>
+                            <td class="px-4 py-3 font-semibold">COY-{{ order.id }}</td>
                             <td class="px-4 py-3">
                                 <span v-if="order.user">
                                     <Link :href="route('admin.users.show', order.user.id)" class="hover:underline">{{
@@ -167,7 +167,7 @@ const paginate = (url: string | null) => {
                             <div>
                                 <div class="text-xs text-copy-light uppercase font-medium">Total</div>
                                 <div class="font-bold text-lg text-primary-content">{{ formatCurrency(order.grand_total)
-                                    }}
+                                }}
                                 </div>
                             </div>
                             <div class="text-xs text-copy-light italic">

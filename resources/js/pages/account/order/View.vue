@@ -88,7 +88,7 @@ const statusMessage: Record<string, string> = {
             <!-- Page header -->
             <header class="ov-header">
                 <div>
-                    <h1 class="ov-title">#COY-{{ String(order.id).padStart(5, '0') }}</h1>
+                    <h1 class="ov-title">#COY-{{ order.id }}</h1>
                     <p class="ov-date">Placed {{ fmtDate(order.created_at) }}</p>
                 </div>
                 <span :class="['status-badge', statusStyle(order.status)]">

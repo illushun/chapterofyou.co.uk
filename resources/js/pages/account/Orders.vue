@@ -93,7 +93,7 @@ const statusLabel = (s: string): string => {
                         <!-- Order ref + date -->
                         <div class="order-ref">
                             <p class="order-label">Order</p>
-                            <p class="order-number">#COY-{{ String(order.id).padStart(5, '0') }}</p>
+                            <p class="order-number">#COY-{{ order.id }}</p>
                             <p class="order-date">{{ fmtDate(order.date) }}</p>
                         </div>
 

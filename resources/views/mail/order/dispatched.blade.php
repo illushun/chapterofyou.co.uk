@@ -103,7 +103,7 @@
 
     <hr class="gold-divider" style="margin-top: 28px;" />
     <p style="font-size:12px; color:#a08070; margin-top:12px; line-height:1.5;">
-        Order #{{ $orderId }}
+        Order #COY-{{ $orderId }}
     </p>
 
 </div>

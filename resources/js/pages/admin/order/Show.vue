@@ -45,7 +45,7 @@ const fmtDate = (d: string) =>
         hour: '2-digit', minute: '2-digit',
     });
 
-const orderId = computed(() => `COY-${String(props.order.id).padStart(6, '0')}`);
+const orderId = computed(() => `COY-${props.order.id}`);
 
 const statusBadgeClass = computed(() => {
     const map: Record<string, string> = {
@@ -447,7 +447,7 @@ onMounted(load);
                         <div class="os-total-row">
                             <span class="os-total-lbl">Shipping</span>
                             <span>{{ Number(order.shipping_total) === 0 ? 'FREE' : fmtCurrency(order.shipping_total)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="os-total-row">
                             <span class="os-total-lbl">VAT (20%)</span>

@@ -22,19 +22,20 @@ class Review extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "I’d love your thoughts 🤍 — #COY-0000{$this->order->id}",
+            subject: "I'd love your thoughts 🤍 — #COY-{$this->order->id}",
         );
     }
 
     public function content(): Content
     {
-        $order = $this->order->load('items.product');
+        $order = $this->order->load('items.product.seo');
 
         $items = $order->items->map(fn ($item) => [
-            'name'     => $item->product->name ?? 'Unknown Product',
-            'quantity' => $item->quantity,
-            'price'    => $item->product_cost,
-            'total'    => $item->product_total,
+            'name'      => $item->product->name ?? 'Unknown Product',
+            'quantity'  => $item->quantity,
+            'price'     => $item->product_cost,
+            'total'     => $item->product_total,
+            'url'       => url('/product/' . ($item->product->seo?->slug ?? $item->product_id)),
         ])->toArray();
 
         return new Content(

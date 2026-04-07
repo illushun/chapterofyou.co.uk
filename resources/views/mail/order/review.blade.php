@@ -20,11 +20,6 @@
         max-width: 600px;
         margin: 0 auto;
         background-color: #fdf5f2;
-        /*
-         * Blush/rose background gradient to evoke the image.
-         * Email clients that don't support gradients fall back
-         * to the solid background-color above.
-         */
         background-image:
             radial-gradient(ellipse at 10% 15%, rgba(212,160,140,0.35) 0%, transparent 55%),
             radial-gradient(ellipse at 90% 80%, rgba(212,160,140,0.28) 0%, transparent 55%),
@@ -36,7 +31,6 @@
         text-align: center;
     }
 
-    /* ── Greeting ── */
     .greeting-script {
         font-family: 'Great Vibes', cursive;
         font-size: 42px;
@@ -45,7 +39,6 @@
         margin-bottom: 6px;
     }
 
-    /* ── Gold divider ── */
     .gold-divider {
         border: none;
         border-top: 1.5px solid #c9a84c;
@@ -54,7 +47,6 @@
         width: 80%;
     }
 
-    /* ── Section heading ── */
     .section-heading {
         font-family: 'Great Vibes', cursive;
         font-size: 38px;
@@ -62,7 +54,6 @@
         margin-bottom: 14px;
     }
 
-    /* ── Items list ── */
     .items-table {
         margin: 0 auto 12px;
         width: 80%;
@@ -86,7 +77,6 @@
         margin-top: 4px;
     }
 
-    /* ── Body paragraphs ── */
     .body-para {
         font-size: 17px;
         line-height: 1.65;
@@ -94,11 +84,43 @@
         max-width: 420px;
         margin: 0 auto;
     }
-    .body-para em {
+    .body-para em { font-style: italic; }
+
+    /* ── Review button ── */
+    .review-btn {
+        display: inline-block;
+        margin: 6px 0;
+        padding: 10px 24px;
+        background: #b85050;
+        color: #fff !important;
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+        border-radius: 4px;
+        letter-spacing: 0.03em;
+    }
+
+    /* ── Product link row ── */
+    .product-link-row {
+        padding: 10px 8px;
+        border-bottom: 1px solid rgba(201,168,76,0.25);
+    }
+    .product-link-row:last-child { border-bottom: none; }
+
+    .product-name {
+        font-size: 16px;
+        color: #3d2b2b;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .product-qty {
+        font-size: 14px;
+        color: #8a6a5a;
         font-style: italic;
     }
 
-    /* ── Sign-off ── */
     .signoff-script {
         font-family: 'Great Vibes', cursive;
         font-size: 38px;
@@ -115,7 +137,6 @@
         letter-spacing: 0.02em;
     }
 
-    /* ── Order detail box ── */
     .order-detail {
         background: rgba(255,255,255,0.5);
         border: 1px solid rgba(201,168,76,0.3);
@@ -129,7 +150,6 @@
     }
     .order-detail strong { color: #3d2b2b; }
 
-    /* ── Responsive ── */
     @media only screen and (max-width: 480px) {
         .email-body { padding: 32px 20px 28px; }
         .greeting-script { font-size: 34px; }
@@ -150,25 +170,37 @@
     <hr class="gold-divider" />
 
     <p class="body-para">
-        I just wanted to check in and see how you're getting on. I'd love to hear your thoughts.
+        I just wanted to check in and see how you're getting on with your Chapter of You order.
+        Your feedback means the world to me and helps my small business grow. 🤍
     </p>
 
-    <p class="body-para" style="margin-bottom: 0;">
-        If you have a moment, you can leave a quick review on the product page here:
-    </p>
+    <hr class="gold-divider" />
 
-    {{-- ── Items ── --}}
+    {{-- ── Items with review links ── --}}
     <div class="section-heading">Your Chosen Scents</div>
+
+    <p class="body-para" style="margin-bottom: 16px;">
+        Click on any product below to visit its page and leave a review:
+    </p>
 
     <table class="items-table">
         <tbody>
             @foreach($items as $item)
-            <tr>
-                <td>{{ $item['name'] }} &times; {{ $item['quantity'] }}</td>
+            <tr class="product-link-row">
+                <td style="text-align: center; padding: 12px 8px;">
+                    <span class="product-name">{{ $item['name'] }}</span>
+                    <span class="product-qty">Quantity: {{ $item['quantity'] }}</span>
+                    <br />
+                    <a href="{{ $item['url'] }}#reviews" class="review-btn" style="margin-top: 8px;">
+                        Leave a Review ✦
+                    </a>
+                </td>
             </tr>
             @endforeach
         </tbody>
     </table>
+
+    <hr class="gold-divider" />
 
     {{-- ── Order cost breakdown ── --}}
     <table class="items-table" style="margin-top: 8px;">
@@ -205,14 +237,8 @@
 
     <hr class="gold-divider" />
 
-    <p class="body-para" style="margin-bottom: 0;">
-        Your feedback is incredibly appreciated and helps my small buisness grow!
-    </p>
-
-    <hr class="gold-divider" />
-
     <p class="body-para">
-    Thank you again for supporting Chapter of You.
+        Thank you again for supporting Chapter of You. It truly means everything.
     </p>
 
     <hr class="gold-divider" />
@@ -227,10 +253,11 @@
     {{-- ── Small print ── --}}
     <hr class="gold-divider" style="margin-top: 28px;" />
     <p style="font-size:12px; color:#a08070; margin-top:12px; line-height:1.5;">
-        Order #COY-0000{{ $orderId }} · Sent to {{ $shippingAddress['name'] }}<br />
+        Order #COY-{{ $orderId }} · Sent to {{ $shippingAddress['name'] }}<br />
         {{ $shippingAddress['line1'] }}@if($shippingAddress['line2']), {{ $shippingAddress['line2'] }}@endif,
         {{ $shippingAddress['city'] }}, {{ $shippingAddress['zip'] }}<br /><br />
-        If you have any questions please email contact@chapterofyou.co.uk
+        If you have any questions please email
+        <a href="mailto:contact@chapterofyou.co.uk" style="color:#a08070;">contact@chapterofyou.co.uk</a>
     </p>
 
 </div>

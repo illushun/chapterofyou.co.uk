@@ -23,7 +23,7 @@ class Dispatched extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Your self-care is on its way 🤍 — #COY-0000{$this->order->id}",
+            subject: "Your self-care is on its way 🤍 — #COY-{$this->order->id}",
         );
     }
 
