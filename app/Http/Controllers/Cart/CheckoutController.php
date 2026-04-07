@@ -93,6 +93,7 @@ class CheckoutController extends Controller
             ];
         }
 
+
         if (!$has_per_items) {
             $lowestShipping = null;
             foreach ($product_shipping_prices as $psp) {
@@ -118,6 +119,11 @@ class CheckoutController extends Controller
 
         if ($subtotal >= 50) {
             $shippingCost = 0.00;
+        }
+
+        // Add gift voucher amount to subtotal, and add shipping for physical vouchers
+        if ($giftVoucher && $giftVoucher['delivery_type'] === 'physical') {
+            $shippingCost += 2.99;
         }
 
         // Apply voucher discount to subtotal (never below zero)
