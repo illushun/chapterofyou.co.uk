@@ -227,7 +227,8 @@ const activeAccent = computed(() => {
     position: fixed;
     inset-y: 0;
     left: 0;
-    overflow-y: auto;
+    height: 100vh;
+    overflow: hidden;
     z-index: 30;
     background-image:
         repeating-linear-gradient(135deg,
