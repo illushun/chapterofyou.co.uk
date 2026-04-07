@@ -48,7 +48,9 @@ class CheckoutController extends Controller
             : collect(); // empty collection for guests
         $cart               = $this->cartManager->getCurrentCart();
 
-        if ($cart->items->isEmpty()) {
+        $hasPendingGiftVoucher = session('pending_gift_voucher') !== null;
+
+        if ($cart->items->isEmpty() && !$hasPendingGiftVoucher) {
             return redirect()->route('cart.view')->with('error', 'Your cart is empty.');
         }
 
@@ -142,7 +144,9 @@ class CheckoutController extends Controller
         $appliedVoucher = $this->voucherService->getFromSession();
         $discount       = $appliedVoucher['discount'] ?? 0.0;
 
-        if ($cart->items->isEmpty()) {
+        $hasPendingGiftVoucher = session('pending_gift_voucher') !== null;
+
+        if ($cart->items->isEmpty() && !$hasPendingGiftVoucher) {
             return response()->json(['error' => 'Cannot create payment intent for empty cart.'], 400);
         }
 
