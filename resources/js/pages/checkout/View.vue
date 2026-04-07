@@ -112,7 +112,7 @@ const addressForm = useForm({
 const formatAddress = (address: Address): string[] =>
     [address.line_1, address.line_2, address.city, address.county, address.postcode, address.country].filter(Boolean);
 
-const hasItems = computed(() => props.cartItems.length > 0);
+const hasItems = computed(() => props.cartItems.length > 0 || !!props.giftVoucher);
 const isShippingAddressVisible = computed(() => selectedAddressId.value !== null || isManualAddressVisible.value);
 
 const fmt = (amount: number | string): string => {
@@ -262,7 +262,7 @@ onMounted(async () => {
             <!-- Empty cart -->
             <div v-if="!hasItems" class="co-empty">
                 <p>No items in your cart.</p>
-                <a :href="getRoute('products.index')" class="btn-rose">Browse Products</a>
+                <a :href="getRoute('products')" class="btn-rose">Browse Products</a>
             </div>
 
             <div v-else class="co-grid">
