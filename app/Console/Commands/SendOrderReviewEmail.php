@@ -2,11 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Mail\Order\Review;
 use App\Models\Order;
 use App\Models\OrderReview;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\TestConfirmation;
 
 class SendOrderReviewEmail extends Command
 {
@@ -39,7 +39,7 @@ class SendOrderReviewEmail extends Command
 
 
         foreach ($orders as $order) {
-            Mail::to($order->email)->send(new TestConfirmation());
+            Mail::to($order->email)->send(new Review($order));
             OrderReview::create([
                 'order_id' => $order->id,
                 'email' => $order->email,
