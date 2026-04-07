@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Cart;
 
+use App\Mail\Order\NewOrderAlert;
 use App\Http\Controllers\Controller;
 use App\Models\Cart\Item;
 use App\Services\CartManager;
@@ -287,6 +288,7 @@ class CheckoutController extends Controller
         $order->items()->saveMany($orderItems);
 
         Mail::to($order->email)->send(new Confirmation($order));
+        Mail::to('contact@chapterofyou.co.uk')->send(new NewOrderAlert($order));
         $this->cartManager->clearCart($cart);
 
         // Store order ID in session so guests can view their confirmation page
