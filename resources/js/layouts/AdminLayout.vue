@@ -530,13 +530,14 @@ const activeAccent = computed(() => {
     inset-y: 0;
     left: 0;
     width: 256px;
+    height: 100vh;
+    overflow: hidden;
     background: var(--bb-navy);
     background-image: repeating-linear-gradient(135deg,
             transparent 0px, transparent 30px,
             rgba(255, 255, 255, 0.018) 30px, rgba(255, 255, 255, 0.018) 60px);
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
 }
 
 .al-drawer-head {
