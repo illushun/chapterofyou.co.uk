@@ -23,11 +23,20 @@ interface Order {
     status: string; created_at: string; items: OrderItem[];
 }
 
-const props = defineProps < {
+const props = defineProps<{
     order: Order;
     statuses: Record<string, string>;
-    giftVoucherOrder: { ... } | null
-} > ();
+    giftVoucherOrder: {
+        id: number;
+        delivery_type: 'email' | 'physical';
+        amount: string;
+        recipient_name: string;
+        recipient_email: string | null;
+        personal_message: string | null;
+        fulfilled_at: string | null;
+        voucher: { code: string; valid_until: string; } | null;
+    } | null;
+}>();
 
 const { fmtCurrency } = useAdmin();
 
@@ -474,7 +483,7 @@ onMounted(load);
                         <div class="os-total-row">
                             <span class="os-total-lbl">Shipping</span>
                             <span>{{ Number(order.shipping_total) === 0 ? 'FREE' : fmtCurrency(order.shipping_total)
-                            }}</span>
+                                }}</span>
                         </div>
                         <div class="os-total-row">
                             <span class="os-total-lbl">VAT (20%)</span>
