@@ -214,7 +214,7 @@
 
     <div class="greeting-script">Hello {{ $recipientName }},</div>
     <div class="greeting-script" style="font-size:34px; margin-top:-4px;">
-        You've received a gift! 🎁
+        You've received a gift!
     </div>
 
     <hr class="gold-divider" />

@@ -217,6 +217,19 @@ async function submit() {
                                 placeholder="Write a short message to include with the voucher…"
                                 maxlength="500"></textarea>
                             <p class="gv-char-count">{{ personalMessage.length }}/500</p>
+                            <div class="gv-message-hint">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 20h9" />
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                </svg>
+                                <span>
+                                    If left blank, I'll include the message below for you:<br />
+                                    <em>"A little moment of self-care, chosen just for you 🤍"</em><br />
+                                    <span class="gv-message-hint-note">Messages are handwritten for a personal
+                                        touch</span>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
@@ -850,5 +863,36 @@ async function submit() {
 .gv-preview-info-row svg {
     flex-shrink: 0;
     color: #8c4a50;
+}
+
+.gv-message-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.75rem 0.9rem;
+    background: rgba(140, 74, 80, 0.04);
+    border: 1px solid #e5c9c7;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    color: #6b4f4f;
+    line-height: 1.6;
+}
+
+.gv-message-hint svg {
+    flex-shrink: 0;
+    color: #8c4a50;
+    margin-top: 2px;
+}
+
+.gv-message-hint em {
+    color: #2d1a1a;
+    font-style: italic;
+}
+
+.gv-message-hint-note {
+    font-size: 0.76rem;
+    color: #9a7070;
+    font-style: italic;
 }
 </style>
