@@ -97,11 +97,11 @@ function save(status: 'draft' | 'published') {
     form.status = status;
     submitting.value = true;
     if (props.isEditing) {
-        form.post(route('admin.journal.update', props.post!.id), {
-            method: 'put' as any,
-            forceFormData: true,
-            onFinish: () => { submitting.value = false; },
-        });
+        form.transform(d => ({ ...d, _method: 'PUT' }))
+            .post(route('admin.journal.update', props.post!.id), {
+                forceFormData: true,
+                onFinish: () => { submitting.value = false; },
+            });
     } else {
         form.post(route('admin.journal.store'), {
             forceFormData: true,
