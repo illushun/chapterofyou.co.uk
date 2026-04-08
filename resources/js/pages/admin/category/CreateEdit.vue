@@ -122,8 +122,8 @@ const submit = () => {
                     <span>{{ isEditing ? 'Edit' : 'New' }}</span>
                 </div>
                 <h1 class="cc-title">{{ title }}</h1>
-                <p class="cc-sub">{{ isEditing ? 'Update category details and SEO.' : 'Fill in the details for a new
-                    category.' }}</p>
+                <p class="cc-sub">{{ isEditing ? 'Update category details and SEO.' :
+                    'Fill in the details for a new category.' }}</p>
             </div>
             <div v-if="form.isDirty" class="cc-unsaved">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
