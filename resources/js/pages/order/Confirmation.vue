@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
 import SeoHead from '@/components/SeoHead.vue';
@@ -43,6 +45,8 @@ const fmt = (v: number | string): string => {
     const n = Number(v);
     return isNaN(n) ? '£0.00' : `£${n.toFixed(2)}`;
 };
+
+const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 </script>
 
 <template>
@@ -124,7 +128,7 @@ const fmt = (v: number | string): string => {
                             <span class="cf-total-lbl">Shipping</span>
                             <span>{{ Number(order.shipping) === 0 ? 'FREE' : fmt(order.shipping) }}</span>
                         </div>
-                        <div class="cf-total-row">
+                        <div v-if="vatRegistered" class="cf-total-row">
                             <span class="cf-total-lbl">VAT</span>
                             <span
                                 style="font-style:italic; color:#9a7070; font-weight:400; font-size:0.82rem;">Included</span>

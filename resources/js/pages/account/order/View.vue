@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
 import SeoHead from '@/components/SeoHead.vue';
@@ -62,6 +63,8 @@ const statusMessage: Record<string, string> = {
     cancelled: 'This order has been cancelled.',
     failed: 'This order encountered a problem.',
 };
+
+const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 </script>
 
 <template>
@@ -139,7 +142,7 @@ const statusMessage: Record<string, string> = {
                             <span>Shipping</span>
                             <span>{{ Number(order.shipping_total) === 0 ? 'Free' : fmt(order.shipping_total) }}</span>
                         </div>
-                        <div class="totals-row">
+                        <div v-if="vatRegistered" class="totals-row">
                             <span>VAT</span>
                             <span
                                 style="font-style:italic; color:#9a7070; font-weight:400; font-size:0.82rem;">Included</span>

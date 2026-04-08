@@ -392,10 +392,12 @@
                 <td>Shipping</td>
                 <td>{{ $order->shipping_total == 0 ? 'FREE' : '£' . number_format($order->shipping_total, 2) }}</td>
             </tr>
-            <tr class="row-vat">
-                <td>VAT included (20%)</td>
-                <td>£{{ number_format($order->tax_total, 2) }}</td>
-            </tr>
+            @if($vatNumber)
+                <tr class="row-vat">
+                    <td>VAT included (20%)</td>
+                    <td>£{{ number_format($order->tax_total, 2) }}</td>
+                </tr>
+            @endif
             <tr class="row-grand">
                 <td>Total Paid</td>
                 <td>£{{ number_format($order->grand_total, 2) }}</td>
@@ -406,17 +408,13 @@
     <div style="clear:both;"></div>
 
     {{-- VAT notice --}}
-    <div class="vat-notice">
-        @if($vatNumber)
+    @if($vatNumber)
+        <div class="vat-notice">
             <strong>VAT Receipt:</strong> All prices include VAT at the standard UK rate of 20%.
             VAT included in this invoice: <strong>£{{ number_format($order->tax_total, 2) }}</strong>.
             Chapter of You — VAT Registration No: <strong>{{ $vatNumber }}</strong>
-        @else
-            <strong>VAT Note:</strong> All prices include VAT at the standard UK rate of 20%.
-            VAT included in this invoice: <strong>£{{ number_format($order->tax_total, 2) }}</strong>.
-            Chapter of You is not currently VAT registered, VAT is paid under the Making Tax Digital flat rate scheme.
-        @endif
-    </div>
+        </div>
+    @endif
 
     {{-- Footer --}}
     <div class="footer clearfix">

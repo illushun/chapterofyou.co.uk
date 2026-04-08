@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
@@ -71,6 +71,8 @@ const removeGiftVoucher = () => {
         onFinish: () => { removingGiftVoucher.value = false; },
     });
 };
+
+const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 </script>
 
 <template>
@@ -237,7 +239,7 @@ const removeGiftVoucher = () => {
                                 <span>Subtotal</span>
                                 <span>{{ fmt(cartTotal) }}</span>
                             </div>
-                            <div class="sum-row">
+                            <div v-if="vatRegistered" class="sum-row">
                                 <span>VAT</span>
                                 <span class="sum-vat-note">Included</span>
                             </div>

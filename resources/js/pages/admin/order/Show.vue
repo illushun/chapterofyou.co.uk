@@ -224,6 +224,8 @@ function load() {
 }
 
 onMounted(load);
+
+const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 </script>
 
 <template>
@@ -485,8 +487,8 @@ onMounted(load);
                             <span>{{ Number(order.shipping_total) === 0 ? 'FREE' : fmtCurrency(order.shipping_total)
                                 }}</span>
                         </div>
-                        <div class="os-total-row">
-                            <span class="os-total-lbl">VAT (20%)</span>
+                        <div v-if="vatRegistered" class="os-total-row">
+                            <span class="os-total-lbl">VAT (20% inc.)</span>
                             <span>{{ fmtCurrency(order.tax_total) }}</span>
                         </div>
                         <div v-if="Number(order.voucher_discount) > 0" class="os-total-row os-total-row--discount">

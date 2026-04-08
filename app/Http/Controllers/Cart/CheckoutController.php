@@ -131,8 +131,11 @@ class CheckoutController extends Controller
         // Apply voucher discount to subtotal (never below zero)
         $discountedSubtotal = max(0, $subtotal - $voucherDiscount);
 
+        $isVatRegistered = (bool) config('app.vat_number');
         $vatRate       = 0.20;
-        $vatComponent  = round($discountedSubtotal * ($vatRate / (1 + $vatRate)), 2); // VAT included in price
+        $vatComponent    = $isVatRegistered
+            ? round($discountedSubtotal * ($vatRate / (1 + $vatRate)), 2)
+            : 0.00;
         $finalTotal    = round($discountedSubtotal + $shippingCost, 2);
 
         return [

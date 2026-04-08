@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, useForm } from '@inertiajs/vue3';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
 import { onMounted, ref, computed, nextTick } from 'vue';
 import axios from 'axios';
 import NavBar from '@/components/NavBar.vue';
@@ -225,6 +225,8 @@ onMounted(async () => {
     if (hasItems.value) { await loadStripeScript(); await initializeStripe(); }
     else { isLoadingInitialData.value = false; }
 });
+
+const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 </script>
 
 <template>
@@ -481,7 +483,7 @@ onMounted(async () => {
                                 <span>Subtotal</span>
                                 <span>{{ fmt(summary.subtotal) }}</span>
                             </div>
-                            <div class="co-summary-row co-summary-row--vat-note">
+                            <div v-if="vatRegistered" class="co-summary-row co-summary-row--vat-note">
                                 <span>VAT</span>
                                 <span>Included in price</span>
                             </div>

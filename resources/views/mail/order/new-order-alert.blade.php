@@ -258,10 +258,12 @@
                 <td class="discount">−£{{ number_format($voucherDiscount, 2) }}</td>
             </tr>
             @endif
-            <tr>
-                <td style="text-align:left; color:#6b4f4f; font-size:16px;">VAT</td>
-                <td style="text-align:right; color:#9a7070; font-size:15px; font-style:italic;">Included in price</td>
-            </tr>
+            @if(config('app.vat_number'))
+                <tr>
+                    <td style="text-align:left; color:#6b4f4f; font-size:16px;">VAT (inc.)</td>
+                    <td style="text-align:right; color:#6b4f4f; font-size:16px;">£{{ number_format($tax, 2) }}</td>
+                </tr>
+            @endif
             <tr>
                 <td>Shipping</td>
                 <td>{{ $shipping == 0 ? 'FREE' : '£' . number_format($shipping, 2) }}</td>

@@ -85,6 +85,7 @@ class HandleInertiaRequests extends Middleware
                     'published_at' => $p->published_at->format('d M Y'),
                     'reading_time' => $p->reading_time,
                 ]),
+            'vatRegistered' => (bool) config('app.vat_number'),
         ];
     }
 }
