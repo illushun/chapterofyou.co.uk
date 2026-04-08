@@ -7,7 +7,6 @@ use App\Models\Product;
 use App\Models\Category;
 use Carbon\Carbon;
 use App\Models\JournalPost;
-use App\Models\Category;
 
 class SitemapController extends Controller
 {
