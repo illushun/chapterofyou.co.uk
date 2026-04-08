@@ -59,7 +59,7 @@ const schemas = computed(() => [
 ]);
 
 const fmt = (v: number) => `£${Number(v).toFixed(2)}`;
-const imgSrc = (img: string | null) => !img ? null : img.startsWith('http') ? img : `/storage/${img}`;
+const imgSrc = (img: string | null) => !img ? null : img.startsWith('http') ? img : `${img}`;
 </script>
 
 <template>
