@@ -227,8 +227,8 @@ const titleCharCount = computed(() => form.meta_title.length);
                             <p class="je-serp-label">Google preview</p>
                             <p class="je-serp-title">{{ form.meta_title || form.title || 'Post title' }}</p>
                             <p class="je-serp-url">chapterofyou.co.uk › journal › {{ form.slug || 'post-slug' }}</p>
-                            <p class="je-serp-desc">{{ form.meta_description || form.excerpt || 'Post excerpt or meta
-                                description will appear here.' }}</p>
+                            <p class="je-serp-desc">{{ form.meta_description || form.excerpt ||
+                                'Post excerpt or meta description will appear here.' }}</p>
                         </div>
                     </div>
                 </div>
