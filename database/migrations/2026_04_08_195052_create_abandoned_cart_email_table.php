@@ -9,7 +9,7 @@ return new class () extends Migration {
     {
         Schema::create('abandoned_cart_email', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('cart_id')->constrained('carts')->onDelete('cascade');
+            $table->foreignId('cart_id')->constrained('cart')->onDelete('cascade');
             $table->string('email');
             $table->timestamp('sent_at')->nullable();
             $table->timestamps();
