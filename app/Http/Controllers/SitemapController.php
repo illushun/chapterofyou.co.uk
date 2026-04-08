@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\Category;
 use Carbon\Carbon;
 use App\Models\JournalPost;
+use App\Models\Category;
 
 class SitemapController extends Controller
 {
@@ -104,19 +105,18 @@ class SitemapController extends Controller
                 ]);
             }
 
-            // ── Categories ────────────────────────────────────────────────────
-            $categories = Category::query()
-                ->select('id', 'name', 'updated_at')
-                ->where('status', 'enabled')
-                ->orderByDesc('updated_at')
+            // Category landing pages
+            $categories = Category::where('status', 'enabled')
+                ->whereNotNull('slug')
+                ->select('slug', 'updated_at')
                 ->get();
 
-            foreach ($categories as $category) {
+            foreach ($categories as $cat) {
                 $urls->push([
-                    'loc'        => url("/products?categories={$category->id}"),
+                    'loc'        => url("/category/{$cat->slug}"),
                     'priority'   => '0.7',
                     'changefreq' => 'weekly',
-                    'lastmod'    => $category->updated_at->toAtomString(),
+                    'lastmod'    => $cat->updated_at->toAtomString(),
                 ]);
             }
 

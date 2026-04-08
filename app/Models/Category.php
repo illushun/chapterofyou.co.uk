@@ -2,30 +2,39 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Category extends Model
 {
-    use HasFactory;
-
     protected $table = 'category';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
+        'slug',
+        'description',
+        'meta_title',
+        'meta_description',
         'image',
         'status',
     ];
 
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'category_product', 'category_id', 'product_id');
+    }
+
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
+     * Handles both old full-URL format and new relative storage path format.
      */
-    protected $hidden = [];
+    public function getImageUrlAttribute(): ?string
+    {
+        if (!$this->image) {
+            return null;
+        }
+        if (str_starts_with($this->image, 'http')) {
+            return $this->image;
+        }
+        return asset('storage/' . $this->image);
+    }
 }

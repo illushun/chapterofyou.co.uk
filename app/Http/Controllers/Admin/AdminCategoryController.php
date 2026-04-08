@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use App\Models\Category;
 use Illuminate\Support\Facades\DB;
@@ -12,37 +13,30 @@ use Illuminate\Validation\Rule;
 
 class AdminCategoryController extends Controller
 {
-    /**
-     * Helper to store uploaded images and create database records.
-     */
-    private function handleImageUpload(Category $category, string $image): void
+    private function handleImageUpload(Category $category, $file): void
     {
-        $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+        if ($category->image) {
+            Storage::disk('public')->delete($category->image);
+        }
 
-        // Store file in the 'category_images' directory within the 'public' disk
-        $path = $file->storeAs('category_images', $fileName, 'public');
-        $category->update(['image' => Storage::url($path)]);
+        $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+        $path     = $file->storeAs('category_images', $fileName, 'public');
+
+        $category->update(['image' => $path]);
     }
 
-    /**
-     * Display a listing of categories.
-     */
     public function index()
     {
         $categories = Category::query()
-            ->select('id', 'name', 'image', 'status', 'created_at')
+            ->select('id', 'name', 'slug', 'image', 'status', 'created_at')
             ->orderByDesc('created_at')
             ->paginate(15);
-
 
         return Inertia::render('admin/category/Index', [
             'categories' => $categories,
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource. (Create)
-     */
     public function create()
     {
         return Inertia::render('admin/category/CreateEdit', [
@@ -50,22 +44,30 @@ class AdminCategoryController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage. (Store)
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'image' => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,webp'],
-            'status' => ['required', Rule::in(['enabled', 'disabled'])],
+            'name'             => ['required', 'string', 'max:255'],
+            'slug'             => ['nullable', 'string', 'max:255', Rule::unique('category', 'slug')],
+            'description'      => ['nullable', 'string'],
+            'meta_title'       => ['nullable', 'string', 'max:255'],
+            'meta_description' => ['nullable', 'string', 'max:500'],
+            'status'           => ['required', Rule::in(['enabled', 'disabled'])],
+            'new_image'        => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,webp'],
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
+            if (empty($validated['slug'])) {
+                $validated['slug'] = Str::slug($validated['name']);
+            }
+
+            $imageFile = $request->file('new_image');
+            unset($validated['new_image']);
+
             $category = Category::create($validated);
 
-            if ($request->hasFile('image')) {
-                $this->handleImageUpload($category, $request->file('image'));
+            if ($imageFile) {
+                $this->handleImageUpload($category, $imageFile);
             }
 
             cache()->forget('sitemap.xml');
@@ -75,58 +77,47 @@ class AdminCategoryController extends Controller
         });
     }
 
-    /**
-     * Show the form for editing the specified resource. (Edit)
-     */
     public function edit(Category $category)
     {
         return Inertia::render('admin/category/CreateEdit', [
-            'category' => $category,
+            'category'  => $category,
             'isEditing' => true,
         ]);
     }
 
-    /**
-     * Update the specified resource in storage. (Update)
-     */
     public function update(Request $request, Category $category)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'image' => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,webp'],
-            'status' => ['required', Rule::in(['enabled', 'disabled'])],
-
-            'new_image' => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,webp'],
-
-            'images_to_delete' => ['nullable', 'array'],
-            'images_to_toggle' => ['nullable', 'array'],
+            'name'             => ['required', 'string', 'max:255'],
+            'slug'             => ['nullable', 'string', 'max:255',
+                                   Rule::unique('category', 'slug')->ignore($category->id)],
+            'description'      => ['nullable', 'string'],
+            'meta_title'       => ['nullable', 'string', 'max:255'],
+            'meta_description' => ['nullable', 'string', 'max:500'],
+            'status'           => ['required', Rule::in(['enabled', 'disabled'])],
+            'new_image'        => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,webp'],
+            'remove_image'     => ['boolean'],
         ]);
 
         return DB::transaction(function () use ($request, $validated, $category) {
+            $imageFile   = $request->file('new_image');
+            $removeImage = $request->boolean('remove_image');
+
+            unset($validated['new_image'], $validated['remove_image']);
+
+            if (empty($validated['slug'])) {
+                $validated['slug'] = Str::slug($validated['name']);
+            }
+
             $category->update($validated);
 
-            if (!empty($validated['images_to_delete'])) {
-
-                dd($validated['images_to_delete']);
-
-                /*foreach ($validated['images_to_delete'] as $image) {
-                    Storage::disk('public')->delete($image->image);
-                    $image->delete();
-                }*/
+            if ($removeImage && $category->image) {
+                Storage::disk('public')->delete($category->image);
+                $category->update(['image' => null]);
             }
 
-            if (!empty($validated['images_to_toggle'])) {
-
-                dd($validated['images_to_toggle']);
-
-                /*foreach ($validated['images_to_toggle'] as $image) {
-                    $newStatus = $image->status === 'enabled' ? 'disabled' : 'enabled';
-                    $image->update(['status' => $newStatus]);
-                }*/
-            }
-
-            if ($request->hasFile('new_image')) {
-                $this->handleImageUpload($category, $request->file('new_image'));
+            if ($imageFile) {
+                $this->handleImageUpload($category, $imageFile);
             }
 
             cache()->forget('sitemap.xml');
@@ -136,17 +127,15 @@ class AdminCategoryController extends Controller
         });
     }
 
-    /**
-     * Remove the specified resource from storage. (Destroy)
-     */
     public function destroy(Category $category)
     {
         $categoryName = $category->name;
+
         if ($category->image) {
             Storage::disk('public')->delete($category->image);
         }
-        $category->delete();
 
+        $category->delete();
         cache()->forget('sitemap.xml');
 
         return redirect()->route('admin.categories.index')

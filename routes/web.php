@@ -17,6 +17,7 @@ use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Cart\CartController;
 use App\Http\Controllers\Cart\CheckoutController;
+use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Account\AccountController;
 use App\Http\Controllers\Account\OrderController;
 use App\Http\Controllers\Admin\AdminDashboardController;
@@ -51,6 +52,7 @@ Route::get('/returns', fn () => inertia('Returns'))->name('returns');
 
 Route::get('/products', [ProductController::class, 'index'])->name('products');
 Route::get('/product/{idOrSlug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('category.show');
 
 Route::get('/gift-vouchers', [GiftVoucherController::class, 'index'])->name('gift-vouchers.index');
 Route::post('/gift-vouchers/checkout', [GiftVoucherController::class, 'checkout'])->name('gift-vouchers.checkout');

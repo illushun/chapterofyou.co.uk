@@ -1,42 +1,87 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface Category {
     id: number;
     name: string;
-    image: string;
+    slug: string | null;
+    description: string | null;
+    image: string | null;
+    meta_title: string | null;
+    meta_description: string | null;
     status: 'enabled' | 'disabled';
 }
 
 const props = defineProps<{
     category?: Category;
     isEditing: boolean;
-    errors: Record<string, string>;
 }>();
 
 const form = useForm({
-    name: props.category?.name || '',
-    status: props.category?.status || 'enabled',
+    name: props.category?.name ?? '',
+    slug: props.category?.slug ?? '',
+    description: props.category?.description ?? '',
+    meta_title: props.category?.meta_title ?? '',
+    meta_description: props.category?.meta_description ?? '',
+    status: props.category?.status ?? 'enabled' as 'enabled' | 'disabled',
     new_image: null as File | null,
-    images_to_delete: [] as string[],
-    images_to_toggle: [] as number[],
+    remove_image: false,
 });
 
 const title = computed(() => props.isEditing ? `Edit: ${props.category?.name}` : 'New Category');
 const submitLabel = computed(() => props.isEditing ? 'Save Changes' : 'Create Category');
 
+// Auto-generate slug from name when creating
+const slugEdited = ref(props.isEditing);
+watch(() => form.name, (val) => {
+    if (!slugEdited.value) {
+        form.slug = val.toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .trim();
+    }
+});
+
+const showSeo = ref(false);
+const metaDescCount = computed(() => form.meta_description.length);
+const metaTitleCount = computed(() => form.meta_title.length);
+
+// Image handling
+const imagePreview = ref<string | null>(
+    props.category?.image
+        ? (props.category.image.startsWith('http') ? props.category.image : `/storage/${props.category.image}`)
+        : null
+);
+
 const handleFileUpload = (e: Event) => {
     const t = e.target as HTMLInputElement;
-    if (t.files?.[0]) { form.new_image = t.files[0]; }
+    if (t.files?.[0]) {
+        form.new_image = t.files[0];
+        form.remove_image = false;
+        imagePreview.value = URL.createObjectURL(t.files[0]);
+    }
     t.value = '';
 };
 
-const removeNewImage = () => { form.new_image = null; };
+const removeNewImage = () => {
+    form.new_image = null;
+    imagePreview.value = null;
+};
 
-const deleteExistingImage = (path: string) => {
-    if (!form.images_to_delete.includes(path)) form.images_to_delete.push(path);
+const markImageForRemoval = () => {
+    form.remove_image = true;
+    form.new_image = null;
+    imagePreview.value = null;
+};
+
+const undoRemoval = () => {
+    form.remove_image = false;
+    imagePreview.value = props.category?.image
+        ? (props.category.image.startsWith('http') ? props.category.image : `/storage/${props.category.image}`)
+        : null;
 };
 
 const fmtSize = (b: number) => {
@@ -49,13 +94,15 @@ const submit = () => {
     if (props.isEditing && props.category) {
         form.transform(d => ({ ...d, _method: 'put' }))
             .post(route('admin.categories.update', props.category.id), {
+                forceFormData: true,
                 preserveScroll: true,
-                onSuccess: () => { form.new_image = null; form.images_to_delete = []; },
+                onSuccess: () => { form.new_image = null; },
             });
     } else {
         form.post(route('admin.categories.store'), {
+            forceFormData: true,
             preserveScroll: true,
-            onSuccess: () => { form.new_image = null; form.images_to_delete = []; },
+            onSuccess: () => { form.new_image = null; },
         });
     }
 };
@@ -75,8 +122,8 @@ const submit = () => {
                     <span>{{ isEditing ? 'Edit' : 'New' }}</span>
                 </div>
                 <h1 class="cc-title">{{ title }}</h1>
-                <p class="cc-sub">{{ isEditing ? 'Update category details and image.' :
-                    'Fill in the details for a new category.' }}</p>
+                <p class="cc-sub">{{ isEditing ? 'Update category details and SEO.' : 'Fill in the details for a new
+                    category.' }}</p>
             </div>
             <div v-if="form.isDirty" class="cc-unsaved">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -96,11 +143,33 @@ const submit = () => {
                 <!-- General info -->
                 <section class="cc-card">
                     <h2 class="cc-card-title">General Information</h2>
+
                     <div class="cc-field">
                         <label class="cc-label" for="name">Category Name</label>
                         <input id="name" type="text" v-model="form.name" required class="cc-input"
                             :class="{ 'cc-input--err': form.errors.name }" />
                         <p v-if="form.errors.name" class="cc-err">{{ form.errors.name }}</p>
+                    </div>
+
+                    <!-- Slug -->
+                    <div class="cc-field">
+                        <label class="cc-label cc-label--sm">URL Slug</label>
+                        <div class="cc-slug-wrap">
+                            <span class="cc-slug-prefix">/category/</span>
+                            <input v-model="form.slug" type="text" class="cc-slug-input" @input="slugEdited = true"
+                                placeholder="auto-generated-from-name" />
+                        </div>
+                        <p v-if="form.errors.slug" class="cc-err">{{ form.errors.slug }}</p>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="cc-field">
+                        <label class="cc-label cc-label--sm">
+                            Description
+                            <span class="cc-label-note">(shown on category landing page — helps SEO)</span>
+                        </label>
+                        <textarea v-model="form.description" rows="4" class="cc-textarea"
+                            placeholder="Describe this category. What makes these products special? Who are they for?&#10;&#10;This text appears on the public category page and helps Google understand what the page is about."></textarea>
                     </div>
                 </section>
 
@@ -111,8 +180,46 @@ const submit = () => {
                         <span class="cc-card-title-note">max 2 MB</span>
                     </h2>
 
-                    <!-- Upload zone -->
-                    <label for="file-upload" class="cc-upload-zone">
+                    <!-- Removal notice -->
+                    <div v-if="form.remove_image" class="cc-del-notice">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                        Current image will be removed on save.
+                        <button type="button" @click="undoRemoval" class="cc-del-undo">Undo</button>
+                    </div>
+
+                    <!-- Current image preview -->
+                    <div v-else-if="imagePreview" class="cc-existing">
+                        <p class="cc-existing-label">{{ form.new_image ? 'New image' : 'Current image' }}</p>
+                        <div class="cc-img-card">
+                            <img :src="imagePreview" alt="Category image preview" class="cc-img-thumb" />
+                            <div class="cc-img-actions">
+                                <button type="button" @click="form.new_image ? removeNewImage() : markImageForRemoval()"
+                                    class="cc-img-btn cc-img-btn--del" title="Remove image">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 6h18" />
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- Allow replacing image even when one is already queued/shown -->
+                        <label for="file-upload-replace" class="cc-replace-link">
+                            Replace image
+                            <input type="file" id="file-upload-replace" accept="image/jpeg,image/png,image/webp"
+                                @change="handleFileUpload" class="cc-upload-input" />
+                        </label>
+                    </div>
+
+                    <!-- Upload zone — shown when no image -->
+                    <label v-else for="file-upload" class="cc-upload-zone">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -124,10 +231,11 @@ const submit = () => {
                         <input type="file" id="file-upload" accept="image/jpeg,image/png,image/webp"
                             @change="handleFileUpload" class="cc-upload-input" />
                     </label>
-                    <p v-if="form.errors['new_image']" class="cc-err">{{ form.errors['new_image'] }}</p>
 
-                    <!-- Queued new image -->
-                    <div v-if="form.new_image" class="cc-queue-item">
+                    <p v-if="form.errors.new_image" class="cc-err">{{ form.errors.new_image }}</p>
+
+                    <!-- New file queued info -->
+                    <div v-if="form.new_image && !imagePreview" class="cc-queue-item">
                         <div class="cc-queue-thumb">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -147,40 +255,57 @@ const submit = () => {
                             </svg>
                         </button>
                     </div>
+                </section>
 
-                    <!-- Existing image -->
-                    <div v-if="category?.image && !form.images_to_delete.includes(category.image)" class="cc-existing">
-                        <p class="cc-existing-label">Current image</p>
-                        <div class="cc-img-card">
-                            <img :src="category.image" alt="Category image" class="cc-img-thumb"
-                                onerror="this.src='https://placehold.co/200x120/f0f0f0/999?text=No+Image'" />
-                            <div class="cc-img-actions">
-                                <button type="button" @click="deleteExistingImage(category.image)"
-                                    class="cc-img-btn cc-img-btn--del" title="Remove image">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M3 6h18" />
-                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Marked for deletion notice -->
-                    <div v-if="category?.image && form.images_to_delete.includes(category.image)" class="cc-del-notice">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path
-                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                            <line x1="12" y1="9" x2="12" y2="13" />
-                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                <!-- SEO -->
+                <section class="cc-card">
+                    <button type="button" class="cc-seo-toggle" @click="showSeo = !showSeo">
+                        <span>SEO Settings</span>
+                        <svg :style="showSeo ? 'transform:rotate(180deg)' : ''" width="14" height="14"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m6 9 6 6 6-6" />
                         </svg>
-                        Current image will be removed on save.
-                        <button type="button"
-                            @click="form.images_to_delete = form.images_to_delete.filter(p => p !== category?.image)"
-                            class="cc-del-undo">Undo</button>
+                    </button>
+
+                    <div v-if="showSeo" class="cc-seo-body">
+                        <div class="cc-field">
+                            <label class="cc-label cc-label--sm">
+                                Meta Title
+                                <span class="cc-label-note" :class="{ 'cc-label-note--warn': metaTitleCount > 55 }">
+                                    {{ metaTitleCount }}/60
+                                </span>
+                            </label>
+                            <input v-model="form.meta_title" type="text" class="cc-input" maxlength="60"
+                                :placeholder="form.name ? `${form.name} | Chapter of You` : 'Auto-filled from name'" />
+                            <p v-if="form.errors.meta_title" class="cc-err">{{ form.errors.meta_title }}</p>
+                        </div>
+
+                        <div class="cc-field">
+                            <label class="cc-label cc-label--sm">
+                                Meta Description
+                                <span class="cc-label-note" :class="{ 'cc-label-note--warn': metaDescCount > 155 }">
+                                    {{ metaDescCount }}/160
+                                </span>
+                            </label>
+                            <textarea v-model="form.meta_description" rows="3" class="cc-textarea" maxlength="160"
+                                :placeholder="form.description ? form.description.slice(0, 155) + '…' : 'Describe this category for search engines…'"></textarea>
+                            <p v-if="form.errors.meta_description" class="cc-err">{{ form.errors.meta_description }}</p>
+                        </div>
+
+                        <!-- Live Google SERP preview -->
+                        <div class="cc-serp">
+                            <p class="cc-serp-label">Google preview</p>
+                            <p class="cc-serp-title">
+                                {{ form.meta_title || (form.name ? `${form.name} | Chapter of You` : 'Category name') }}
+                            </p>
+                            <p class="cc-serp-url">
+                                chapterofyou.co.uk › category › {{ form.slug || 'category-slug' }}
+                            </p>
+                            <p class="cc-serp-desc">
+                                {{ form.meta_description || form.description || 'Meta description will appear here.' }}
+                            </p>
+                        </div>
                     </div>
                 </section>
 
@@ -213,8 +338,14 @@ const submit = () => {
                             <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
                             <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
                         </svg>
-                        {{ form.processing ? 'Saving...' : submitLabel }}
+                        {{ form.processing ? 'Saving…' : submitLabel }}
                     </button>
+
+                    <!-- View live page (edit mode, published) -->
+                    <a v-if="isEditing && category?.slug && category?.status === 'enabled'"
+                        :href="`/category/${category.slug}`" target="_blank" class="cc-view-live-btn">
+                        ↗ View Category Page
+                    </a>
 
                     <p v-if="form.isDirty" class="cc-unsaved-inline">Unsaved changes</p>
                 </section>
@@ -241,7 +372,7 @@ const submit = () => {
     font-family: 'DM Sans', sans-serif;
 }
 
-/* ── Header ── */
+/* Header */
 .cc-header {
     display: flex;
     align-items: flex-start;
@@ -300,7 +431,7 @@ const submit = () => {
     font-weight: 600;
 }
 
-/* ── Layout ── */
+/* Layout */
 .cc-grid {
     display: grid;
     grid-template-columns: 1fr 300px;
@@ -333,7 +464,7 @@ const submit = () => {
     }
 }
 
-/* ── Cards ── */
+/* Cards */
 .cc-card {
     background: var(--bb-surface);
     border-radius: 14px;
@@ -368,7 +499,7 @@ const submit = () => {
     opacity: 0.75;
 }
 
-/* ── Fields ── */
+/* Fields */
 .cc-field {
     display: flex;
     flex-direction: column;
@@ -379,6 +510,23 @@ const submit = () => {
     font-size: 0.78rem;
     font-weight: 600;
     color: var(--bb-text);
+}
+
+.cc-label--sm {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--bb-text);
+}
+
+.cc-label-note {
+    font-weight: 400;
+    font-style: italic;
+    color: var(--bb-muted);
+    margin-left: 0.25rem;
+}
+
+.cc-label-note--warn {
+    color: var(--bb-red) !important;
 }
 
 .cc-input {
@@ -403,12 +551,62 @@ const submit = () => {
     border-color: var(--bb-red);
 }
 
+.cc-textarea {
+    width: 100%;
+    padding: 0.62rem 0.85rem;
+    border-radius: 8px;
+    border: 1px solid var(--bb-border);
+    background: var(--bb-cream);
+    color: var(--bb-text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.cc-textarea:focus {
+    border-color: var(--bb-lav-d);
+    box-shadow: 0 0 0 3px rgba(201, 184, 240, 0.2);
+}
+
 .cc-err {
     font-size: 0.75rem;
     color: var(--bb-red);
 }
 
-/* ── Upload zone ── */
+/* Slug */
+.cc-slug-wrap {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--bb-border);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bb-cream);
+}
+
+.cc-slug-prefix {
+    padding: 0.62rem 0.75rem;
+    background: var(--bb-border);
+    font-size: 0.82rem;
+    color: var(--bb-muted);
+    font-family: monospace;
+    white-space: nowrap;
+    border-right: 1px solid var(--bb-border);
+}
+
+.cc-slug-input {
+    flex: 1;
+    padding: 0.62rem 0.75rem;
+    border: none;
+    background: transparent;
+    color: var(--bb-text);
+    font-family: monospace;
+    font-size: 0.85rem;
+    outline: none;
+}
+
+/* Upload */
 .cc-upload-zone {
     display: flex;
     flex-direction: column;
@@ -442,7 +640,22 @@ const submit = () => {
     display: none;
 }
 
-/* ── Queued file ── */
+.cc-replace-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--bb-lav-d);
+    cursor: pointer;
+    margin-top: 0.25rem;
+}
+
+.cc-replace-link:hover {
+    text-decoration: underline;
+}
+
+/* Queue */
 .cc-queue-item {
     display: flex;
     align-items: center;
@@ -503,7 +716,7 @@ const submit = () => {
     color: var(--bb-red);
 }
 
-/* ── Existing image ── */
+/* Existing image */
 .cc-existing {
     display: flex;
     flex-direction: column;
@@ -566,7 +779,7 @@ const submit = () => {
     background: var(--bb-red);
 }
 
-/* ── Deletion notice ── */
+/* Deletion notice */
 .cc-del-notice {
     display: flex;
     align-items: center;
@@ -592,7 +805,75 @@ const submit = () => {
     font-family: 'DM Sans', sans-serif;
 }
 
-/* ── Status buttons ── */
+/* SEO */
+.cc-seo-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--bb-text);
+    padding: 0;
+}
+
+.cc-seo-toggle svg {
+    transition: transform 0.2s;
+}
+
+.cc-seo-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--bb-border);
+}
+
+.cc-serp {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: Arial, sans-serif;
+}
+
+.cc-serp-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--bb-muted);
+    margin-bottom: 0.5rem;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.cc-serp-title {
+    font-size: 1rem;
+    color: #1a0dab;
+    margin-bottom: 0.1rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.cc-serp-url {
+    font-size: 0.78rem;
+    color: #006621;
+    margin-bottom: 0.25rem;
+}
+
+.cc-serp-desc {
+    font-size: 0.82rem;
+    color: #545454;
+    line-height: 1.5;
+}
+
+/* Status */
 .cc-status-btns {
     display: flex;
     gap: 0.5rem;
@@ -644,7 +925,7 @@ const submit = () => {
     background: #b0b0c0;
 }
 
-/* ── Submit ── */
+/* Submit */
 .cc-submit-btn {
     width: 100%;
     display: flex;
@@ -673,6 +954,27 @@ const submit = () => {
     cursor: not-allowed;
 }
 
+.cc-view-live-btn {
+    display: block;
+    text-align: center;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--bb-border);
+    background: var(--bb-cream);
+    color: var(--bb-muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s;
+    margin-top: 0.25rem;
+}
+
+.cc-view-live-btn:hover {
+    border-color: var(--bb-lav-d);
+    color: var(--bb-text);
+}
+
 .cc-unsaved-inline {
     text-align: center;
     font-size: 0.75rem;
@@ -680,7 +982,6 @@ const submit = () => {
     font-weight: 500;
 }
 
-/* ── Spinner ── */
 .cc-spinner {
     width: 15px;
     height: 15px;
