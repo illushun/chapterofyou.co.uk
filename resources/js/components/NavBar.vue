@@ -405,6 +405,7 @@
                     <a href="/" class="nav-link">Home</a>
                     <a href="/products" class="nav-link">Products</a>
                     <a href="/about" class="nav-link">About Me</a>
+                    <a href="/journal" class="nav-link">My Journal</a>
                     <a href="/contact" class="nav-link">Contact</a>
                 </div>
 
@@ -497,7 +498,10 @@
 
                     <a href="/products" class="nav-mobile-link">Products</a>
                     <a href="/about" class="nav-mobile-link">About Me</a>
-                    <a href="/contact" class="nav-mobile-link">Contact</a>
+                    <a href="/journal" class="nav-mobile-link">My Journal</a>
+                    <a href="/contact" class="nav-mobile-link">Contact Me</a>
+                    <a v-if="$page.props.auth.user" href="/account/orders" class="nav-mobile-link">My Orders</a>
+                    <a v-if="$page.props.auth.user" href="/account/wishlist" class="nav-mobile-link">Wishtlist</a>
 
                     <a href="/cart" class="nav-mobile-link nav-mobile-cart">
                         <span>Cart</span>
