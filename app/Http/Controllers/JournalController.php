@@ -77,7 +77,7 @@ class JournalController extends Controller
                 'reading_time'     => $post->reading_time,
                 'meta_title'       => $post->meta_title ?: $post->title,
                 'meta_description' => $post->meta_description ?: $post->excerpt,
-                'author'           => $post->author?->name,
+                'author'           => 'Chapter of You', // $post->author?->name
             ],
             'related' => $related,
         ]);
