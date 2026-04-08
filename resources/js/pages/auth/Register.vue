@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import RegisteredUserController from '@/actions/App/Http/Controllers/Auth/RegisteredUserController';
-import InputError from '@/components/InputError.vue';
-import TextLink from '@/components/TextLink.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import AuthBase from '@/layouts/AuthLayout.vue';
-import { login } from '@/routes';
-import { Form, Head } from '@inertiajs/vue3';
-import { LoaderCircle } from 'lucide-vue-next';
 import NavBar from '@/components/NavBar.vue';
+import { Head, useForm } from '@inertiajs/vue3';
+import { Link } from '@inertiajs/vue3';
+import { LoaderCircle } from 'lucide-vue-next';
+
+const form = useForm({
+    name: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+    marketing_opt_in: false,
+});
+
+const submit = () => {
+    form.post(route('register'), {
+        onFinish: () => form.reset('password', 'password_confirmation'),
+    });
+};
 </script>
 
 <template>
@@ -21,86 +28,82 @@ import NavBar from '@/components/NavBar.vue';
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
         rel="stylesheet" />
 
-    <AuthBase title="Create an account" description="Enter your details below to create your account" class="!p-0">
-        <main class="rp">
-            <div class="rp-card">
+    <main class="rp">
+        <div class="rp-card">
 
-                <!-- Header -->
-                <div class="rp-header">
-                    <h1 class="rp-title">Create an account</h1>
-                    <p class="rp-sub">Join Chapter of You and start your self-care journey</p>
+            <!-- Header -->
+            <div class="rp-header">
+                <h1 class="rp-title">Create an account</h1>
+                <p class="rp-sub">Join Chapter of You and start your self-care journey</p>
+            </div>
+
+            <form @submit.prevent="submit" class="rp-form">
+
+                <!-- Name -->
+                <div class="field">
+                    <label for="name" class="field-label">Full Name</label>
+                    <input id="name" v-model="form.name" type="text" required autofocus autocomplete="name"
+                        placeholder="Your name" class="field-input"
+                        :class="{ 'field-input--error': form.errors.name }" />
+                    <p v-if="form.errors.name" class="field-error">{{ form.errors.name }}</p>
                 </div>
 
-                <Form v-bind="RegisteredUserController.store.form()"
-                    :reset-on-success="['password', 'password_confirmation']" v-slot="{ errors, processing }"
-                    class="rp-form">
-                    <!-- Name -->
-                    <div class="field">
-                        <Label for="name" class="field-label">Full Name</Label>
-                        <Input id="name" type="text" required autofocus :tabindex="1" autocomplete="name" name="name"
-                            placeholder="Your name" class="field-input" />
-                        <InputError :message="errors.name" class="field-error" />
-                    </div>
+                <!-- Email -->
+                <div class="field">
+                    <label for="email" class="field-label">Email Address</label>
+                    <input id="email" v-model="form.email" type="email" required autocomplete="email"
+                        placeholder="you@example.com" class="field-input"
+                        :class="{ 'field-input--error': form.errors.email }" />
+                    <p v-if="form.errors.email" class="field-error">{{ form.errors.email }}</p>
+                </div>
 
-                    <!-- Email -->
-                    <div class="field">
-                        <Label for="email" class="field-label">Email Address</Label>
-                        <Input id="email" type="email" required :tabindex="2" autocomplete="email" name="email"
-                            placeholder="you@example.com" class="field-input" />
-                        <InputError :message="errors.email" class="field-error" />
-                    </div>
+                <!-- Password -->
+                <div class="field">
+                    <label for="password" class="field-label">Password</label>
+                    <input id="password" v-model="form.password" type="password" required autocomplete="new-password"
+                        placeholder="••••••••" class="field-input"
+                        :class="{ 'field-input--error': form.errors.password }" />
+                    <p v-if="form.errors.password" class="field-error">{{ form.errors.password }}</p>
+                </div>
 
-                    <!-- Password -->
-                    <div class="field">
-                        <Label for="password" class="field-label">Password</Label>
-                        <Input id="password" type="password" required :tabindex="3" autocomplete="new-password"
-                            name="password" placeholder="••••••••" class="field-input" />
-                        <InputError :message="errors.password" class="field-error" />
-                    </div>
-
-                    <!-- Confirm password -->
-                    <div class="field">
-                        <Label for="password_confirmation" class="field-label">Confirm Password</Label>
-                        <Input id="password_confirmation" type="password" required :tabindex="4"
-                            autocomplete="new-password" name="password_confirmation" placeholder="••••••••"
-                            class="field-input" />
-                        <InputError :message="errors.password_confirmation" class="field-error" />
-                    </div>
-
-                    <!-- Marketing opt-in -->
-                    <label class="rp-optin">
-                        <input type="checkbox" name="marketing_opt_in" v-model="form.marketing_opt_in"
-                            class="rp-optin-check" />
-                        <span>
-                            I'd like to receive updates, news and exclusive offers from Chapter of You.
-                            <span class="rp-optin-note">(Optional — you can change this in your account at any
-                                time)</span>
-                        </span>
-                    </label>
-
-                    <!-- Submit -->
-                    <Button type="submit" tabindex="5" :disabled="processing" class="btn-rose btn-rose--full"
-                        data-test="register-user-button">
-                        <LoaderCircle v-if="processing" class="rp-spinner" />
-                        {{ processing ? 'Creating account...' : 'Create account' }}
-                    </Button>
-
-                    <!-- Login link -->
-                    <p class="rp-login">
-                        Already have an account?
-                        <TextLink :href="login()" :tabindex="6" class="rp-login-link">
-                            Sign in
-                        </TextLink>
+                <!-- Confirm password -->
+                <div class="field">
+                    <label for="password_confirmation" class="field-label">Confirm Password</label>
+                    <input id="password_confirmation" v-model="form.password_confirmation" type="password" required
+                        autocomplete="new-password" placeholder="••••••••" class="field-input"
+                        :class="{ 'field-input--error': form.errors.password_confirmation }" />
+                    <p v-if="form.errors.password_confirmation" class="field-error">
+                        {{ form.errors.password_confirmation }}
                     </p>
-                </Form>
+                </div>
 
-            </div>
-        </main>
-    </AuthBase>
+                <!-- Marketing opt-in -->
+                <label class="rp-optin">
+                    <input type="checkbox" v-model="form.marketing_opt_in" class="rp-optin-check" />
+                    <span>
+                        I'd like to receive updates, news and exclusive offers from Chapter of You.
+                        <span class="rp-optin-note">(Optional, you can change this in your account at any time)</span>
+                    </span>
+                </label>
+
+                <!-- Submit -->
+                <button type="submit" :disabled="form.processing" class="btn-rose btn-rose--full">
+                    <LoaderCircle v-if="form.processing" class="rp-spinner" />
+                    {{ form.processing ? 'Creating account…' : 'Create account' }}
+                </button>
+
+                <!-- Login link -->
+                <p class="rp-login">
+                    Already have an account?
+                    <Link :href="route('login')" class="rp-login-link">Sign in</Link>
+                </p>
+
+            </form>
+        </div>
+    </main>
 </template>
 
 <style scoped>
-/* ── Page ── */
 .rp {
     font-family: 'Nunito', sans-serif;
     min-height: 100vh;
@@ -114,7 +117,6 @@ import NavBar from '@/components/NavBar.vue';
     padding-bottom: 3rem;
 }
 
-/* ── Card ── */
 .rp-card {
     width: 100%;
     max-width: 420px;
@@ -154,7 +156,6 @@ import NavBar from '@/components/NavBar.vue';
     z-index: 0;
 }
 
-/* ── Header band ── */
 .rp-header {
     padding: 2rem 2rem 1.5rem;
     text-align: center;
@@ -176,7 +177,6 @@ import NavBar from '@/components/NavBar.vue';
     color: #6b4f4f;
 }
 
-/* ── Form ── */
 .rp-form {
     padding: 1.5rem 2rem 2rem;
     display: flex;
@@ -186,7 +186,6 @@ import NavBar from '@/components/NavBar.vue';
     z-index: 1;
 }
 
-/* ── Fields ── */
 .field {
     display: flex;
     flex-direction: column;
@@ -194,33 +193,33 @@ import NavBar from '@/components/NavBar.vue';
 }
 
 .field-label {
-    font-size: 0.78rem !important;
-    font-weight: 700 !important;
+    font-size: 0.78rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #6b4f4f !important;
+    color: #6b4f4f;
 }
 
-:deep(input[type="text"]),
-:deep(input[type="email"]),
-:deep(input[type="password"]) {
-    padding: 0.65rem 0.9rem !important;
-    border: 1px solid #e5c9c7 !important;
-    border-radius: 10px !important;
-    background: #fdf4f3 !important;
-    color: #2d1a1a !important;
-    font-family: 'Nunito', sans-serif !important;
-    font-size: 0.92rem !important;
-    outline: none !important;
-    transition: border-color 0.2s, box-shadow 0.2s !important;
-    box-shadow: none !important;
+.field-input {
+    padding: 0.65rem 0.9rem;
+    border: 1px solid #e5c9c7;
+    border-radius: 10px;
+    background: #fdf4f3;
+    color: #2d1a1a;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
 }
 
-:deep(input[type="text"]:focus),
-:deep(input[type="email"]:focus),
-:deep(input[type="password"]:focus) {
-    border-color: #8c4a50 !important;
-    box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1) !important;
+.field-input:focus {
+    border-color: #8c4a50;
+    box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1);
+}
+
+.field-input--error {
+    border-color: #c84040;
 }
 
 .field-error {
@@ -228,7 +227,6 @@ import NavBar from '@/components/NavBar.vue';
     color: #b54040;
 }
 
-/* ── Opt-in ── */
 .rp-optin {
     display: flex;
     align-items: flex-start;
@@ -265,7 +263,6 @@ import NavBar from '@/components/NavBar.vue';
     margin-top: 0.15rem;
 }
 
-/* ── Button ── */
 .btn-rose {
     display: inline-flex;
     align-items: center;
@@ -273,23 +270,22 @@ import NavBar from '@/components/NavBar.vue';
     gap: 0.5rem;
     padding: 0.72rem 1.5rem;
     border-radius: 999px;
-    border: 1px solid #a85058 !important;
-    background: linear-gradient(135deg, #c47078, #a85058) !important;
-    color: #fff !important;
+    border: 1px solid #a85058;
+    background: linear-gradient(135deg, #c47078, #a85058);
+    color: #fff;
     font-family: 'Nunito', sans-serif;
     font-size: 0.92rem;
     font-weight: 600;
     letter-spacing: 0.02em;
     cursor: pointer;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s !important;
-    height: auto !important;
+    transition: transform 0.2s, box-shadow 0.2s;
     margin-top: 0.5rem;
 }
 
 .btn-rose:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 5px 18px rgba(168, 80, 88, 0.28) !important;
+    box-shadow: 0 5px 18px rgba(168, 80, 88, 0.28);
 }
 
 .btn-rose:disabled {
@@ -317,7 +313,6 @@ import NavBar from '@/components/NavBar.vue';
     }
 }
 
-/* ── Login link ── */
 .rp-login {
     text-align: center;
     font-size: 0.88rem;
@@ -327,14 +322,14 @@ import NavBar from '@/components/NavBar.vue';
 }
 
 .rp-login-link {
-    color: #8c4a50 !important;
+    color: #8c4a50;
     font-weight: 600;
     text-decoration: none;
     transition: color 0.2s;
 }
 
 .rp-login-link:hover {
-    color: #6a3038 !important;
+    color: #6a3038;
     text-decoration: underline;
 }
 </style>
