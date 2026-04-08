@@ -55,11 +55,11 @@ function loadAnalytics() {
         <div v-if="visible" class="cc-banner" role="dialog" aria-label="Cookie consent" aria-live="polite">
             <div class="cc-inner">
                 <div class="cc-text">
-                    <p class="cc-title">We use cookies</p>
+                    <p class="cc-title">I use cookies</p>
                     <p class="cc-body">
                         I like to use analytics cookies to understand how you use our site so I can
                         make it better. I won't set them without your permission.
-                        Read our
+                        Read my
                         <a href="/privacy" class="cc-link">Privacy Policy</a>.
                     </p>
                 </div>
