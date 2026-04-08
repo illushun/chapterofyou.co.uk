@@ -10,6 +10,7 @@ use App\Models\JournalPost;
 
 class SitemapController extends Controller
 {
+    private $WEBSITE_URL = "https://www.chapterofyou.co.uk";
     /**
      * Generate and return the XML sitemap.
      *
@@ -28,49 +29,49 @@ class SitemapController extends Controller
             // ── Static pages ──────────────────────────────────────────────────
             $staticPages = [
                 [
-                    'loc'        => env("APP_URL") . "/",
+                    'loc'        => "{$this->WEBSITE_URL}/",
                     'priority'   => '1.0',
                     'changefreq' => 'weekly',
                     'lastmod'    => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => env("APP_URL") . "/products",
+                    'loc'        => "{$this->WEBSITE_URL}/products",
                     'priority'   => '0.9',
                     'changefreq' => 'daily',
                     'lastmod'    => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => env("APP_URL") . "/contact",
+                    'loc'        => "{$this->WEBSITE_URL}/contact",
                     'priority'   => '0.5',
                     'changefreq' => 'monthly',
                     'lastmod'    => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => env("APP_URL") . "/about",
+                    'loc'        => "{$this->WEBSITE_URL}/about",
                     'priority'   => '0.5',
                     'changefreq' => 'monthly',
                     'lastmod'    => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => env("APP_URL") . "/delivery",
+                    'loc'        => "{$this->WEBSITE_URL}/delivery",
                     'priority'   => '0.6',
                     'changefreq' => 'monthly',
                     'lastmod'    => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => env("APP_URL") . "/terms",
+                    'loc'        => "{$this->WEBSITE_URL}/terms",
                     'priority'   => '0.4',
                     'changefreq' => 'yearly',
                     'lastmod'    => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => env("APP_URL") . "/privacy",
+                    'loc'        => "{$this->WEBSITE_URL}/privacy",
                     'priority'   => '0.4',
                     'changefreq' => 'yearly',
                     'lastmod'    => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => env("APP_URL") . "/returns",
+                    'loc'        => "{$this->WEBSITE_URL}/returns",
                     'priority'   => '0.5',
                     'changefreq' => 'yearly',
                     'lastmod'    => Carbon::now()->toAtomString(),
@@ -97,7 +98,7 @@ class SitemapController extends Controller
             foreach ($products as $product) {
                 $slug = $product->seo->slug;
                 $urls->push([
-                    'loc'        => env("APP_URL") . "/product/{$slug}",
+                    'loc'        => "{$this->WEBSITE_URL}/product/{$slug}",
                     'priority'   => '0.8',
                     'changefreq' => 'weekly',
                     'lastmod'    => $product->updated_at->toAtomString(),
@@ -112,7 +113,7 @@ class SitemapController extends Controller
 
             foreach ($categories as $cat) {
                 $urls->push([
-                    'loc'        => env("APP_URL") . "/category/{$cat->slug}",
+                    'loc'        => "{$this->WEBSITE_URL}/category/{$cat->slug}",
                     'priority'   => '0.7',
                     'changefreq' => 'weekly',
                     'lastmod'    => $cat->updated_at->toAtomString(),
@@ -122,6 +123,7 @@ class SitemapController extends Controller
             // Journal listing page
             $urls->push([
                 'loc'        => env("APP_URL") . "/journal",
+                'loc'        => "{$this->WEBSITE_URL}/journal",
                 'priority'   => '0.7',
                 'changefreq' => 'weekly',
                 'lastmod'    => Carbon::now()->toAtomString(),
@@ -135,7 +137,7 @@ class SitemapController extends Controller
 
             foreach ($journalPosts as $post) {
                 $urls->push([
-                    'loc'        => env("APP_URL") . "/journal/{$post->slug}",
+                    'loc'        => "{$this->WEBSITE_URL}/journal/{$post->slug}",
                     'priority'   => '0.6',
                     'changefreq' => 'monthly',
                     'lastmod'    => $post->updated_at->toAtomString(),
