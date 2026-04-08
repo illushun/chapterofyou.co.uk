@@ -36,7 +36,7 @@ interface CartItem {
     product: { name: string; cost: number; image_url: string; }
     quantity: number;
 }
-interface Summary { subtotal: number; tax: number; shipping: number; total: number; voucher_discount: number; }
+interface Summary { subtotal: number; vat_component: number; shipping: number; total: number; voucher_discount: number; }
 interface Address {
     id: number; user_id: number; type: string; is_default: boolean;
     line_1: string; line_2: string; city: string; county: string; postcode: string; country: string;
@@ -72,9 +72,9 @@ const voucherSuccess = ref<string | null>(null);
 const activeVoucher = ref(props.appliedVoucher ?? null);
 
 const voucherDiscount = computed(() => activeVoucher.value?.discount ?? 0);
-const computedDiscountedSubtotal = computed(() => Math.max(0, Number(props.summary.subtotal) - voucherDiscount.value));
-const computedTax = computed(() => Math.round(computedDiscountedSubtotal.value * 0.20 * 100) / 100);
-const computedTotal = computed(() => Math.round((computedDiscountedSubtotal.value + computedTax.value + (Number(props.summary.shipping) || 0)) * 100) / 100);
+const computedTotal = computed(() =>
+    Math.max(0, Number(props.summary.subtotal) - voucherDiscount.value) + (Number(props.summary.shipping) || 0)
+);
 
 async function applyVoucher() {
     if (!voucherCode.value.trim()) return;
@@ -481,9 +481,9 @@ onMounted(async () => {
                                 <span>Subtotal</span>
                                 <span>{{ fmt(summary.subtotal) }}</span>
                             </div>
-                            <div class="co-summary-row">
-                                <span>VAT (20%)</span>
-                                <span>{{ fmt(computedTax) }}</span>
+                            <div class="co-summary-row co-summary-row--vat-note">
+                                <span>VAT</span>
+                                <span>Included in price</span>
                             </div>
                             <div class="co-summary-row">
                                 <span>Shipping</span>
@@ -1337,5 +1337,12 @@ onMounted(async () => {
     border-radius: 4px;
     padding: 4px 4px;
     margin-top: 2px;
+}
+
+.co-summary-row--vat-note span:last-child {
+    font-weight: 400 !important;
+    color: #9a7070 !important;
+    font-style: italic;
+    font-size: 0.82rem;
 }
 </style>

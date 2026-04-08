@@ -93,7 +93,7 @@ class CheckoutController extends Controller
             ];
         }
 
-
+        // shipping
         if (!$has_per_items) {
             $lowestShipping = null;
             foreach ($product_shipping_prices as $psp) {
@@ -112,11 +112,13 @@ class CheckoutController extends Controller
             }
         }
 
+        // Add gift voucher amount if present
         $giftVoucher = session('pending_gift_voucher');
         if ($giftVoucher) {
             $subtotal += $giftVoucher['amount'];
         }
 
+        // free shipping over 50
         if ($subtotal >= 50) {
             $shippingCost = 0.00;
         }
@@ -129,13 +131,14 @@ class CheckoutController extends Controller
         // Apply voucher discount to subtotal (never below zero)
         $discountedSubtotal = max(0, $subtotal - $voucherDiscount);
 
-        $tax        = round($discountedSubtotal * 0.20, 2);
-        $finalTotal = round($discountedSubtotal + $shippingCost + $tax, 2);
+        $vatRate       = 0.20;
+        $vatComponent  = round($discountedSubtotal * ($vatRate / (1 + $vatRate)), 2); // VAT included in price
+        $finalTotal    = round($discountedSubtotal + $shippingCost, 2);
 
         return [
             'subtotal'         => round($subtotal, 2),
             'voucher_discount' => round($voucherDiscount, 2),
-            'tax'              => $tax,
+            'vat_component'    => $vatComponent,   // informational only — already included in prices
             'shipping'         => $shippingCost,
             'total'            => $finalTotal,
         ];
@@ -203,7 +206,7 @@ class CheckoutController extends Controller
         $appliedVoucher = $this->voucherService->getFromSession();
         $discount       = $appliedVoucher['discount'] ?? 0.0;
         $summary        = $this->calculateFinalTotal($cart, $discount);
-        $subtotalBefore = $summary['subtotal'] + $summary['shipping'] + ($summary['subtotal'] * 0.20);
+        $subtotalBefore = $summary['subtotal'] + $summary['shipping'];
         $finalTotalInPence = (int) ($summary['total'] * 100);
 
         return DB::transaction(function () use ($request, $cart, $summary, $finalTotalInPence, $appliedVoucher, $discount, $subtotalBefore) {
@@ -267,7 +270,7 @@ class CheckoutController extends Controller
             'cost_total' => $summary['subtotal'],
             'shipping_total' => $summary['shipping'],
             'voucher_discount' => $summary['voucher_discount'],
-            'tax_total' => $summary['tax'],
+            'tax_total'        => $summary['vat_component'],
             'grand_total' => $summary['total'],
 
             'billing_line_1' => $formData['addressLine1'],

@@ -259,8 +259,8 @@
             </tr>
             @endif
             <tr>
-                <td>VAT (20%)</td>
-                <td>£{{ number_format($tax, 2) }}</td>
+                <td style="text-align:left; color:#6b4f4f; font-size:16px;">VAT</td>
+                <td style="text-align:right; color:#9a7070; font-size:15px; font-style:italic;">Included in price</td>
             </tr>
             <tr>
                 <td>Shipping</td>

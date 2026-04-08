@@ -125,8 +125,9 @@ const fmt = (v: number | string): string => {
                             <span>{{ Number(order.shipping) === 0 ? 'FREE' : fmt(order.shipping) }}</span>
                         </div>
                         <div class="cf-total-row">
-                            <span class="cf-total-lbl">VAT (20%)</span>
-                            <span>{{ fmt(order.tax) }}</span>
+                            <span class="cf-total-lbl">VAT</span>
+                            <span
+                                style="font-style:italic; color:#9a7070; font-weight:400; font-size:0.82rem;">Included</span>
                         </div>
                         <div v-if="Number(order.voucher_discount) > 0" class="cf-total-row cf-total-row--discount">
                             <span>Discount applied</span>
@@ -145,7 +146,7 @@ const fmt = (v: number | string): string => {
                         <span>{{ order.shipping_address.line_1 }}</span>
                         <span v-if="order.shipping_address.line_2">{{ order.shipping_address.line_2 }}</span>
                         <span>{{ order.shipping_address.city }}<template v-if="order.shipping_address.county">, {{
-                                order.shipping_address.county }}</template></span>
+                            order.shipping_address.county }}</template></span>
                         <span>{{ order.shipping_address.postcode }}</span>
                         <span>{{ order.shipping_address.country }}</span>
                     </address>

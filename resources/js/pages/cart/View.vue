@@ -35,9 +35,7 @@ const itemCount = computed(() => props.cartItems.reduce((s, i) => s + Number(i.q
 const n = (v: unknown) => Number(v) || 0;
 const fmt = (v: unknown) => `£${n(v).toFixed(2)}`;
 
-const TAX = 0.20;
-const vat = computed(() => Math.round(n(props.cartTotal) * TAX * 100) / 100);
-const finalTotal = computed(() => Math.round((n(props.cartTotal) + vat.value) * 100) / 100);
+const finalTotal = computed(() => n(props.cartTotal));
 const remaining = computed(() => Math.max(0, 50 - n(props.cartTotal)));
 const freeShip = computed(() => n(props.cartTotal) >= 50);
 const progress = computed(() => Math.min(100, (n(props.cartTotal) / 50) * 100));
@@ -240,8 +238,8 @@ const removeGiftVoucher = () => {
                                 <span>{{ fmt(cartTotal) }}</span>
                             </div>
                             <div class="sum-row">
-                                <span>VAT (20%)</span>
-                                <span>{{ fmt(vat) }}</span>
+                                <span>VAT</span>
+                                <span class="sum-vat-note">Included</span>
                             </div>
                             <div class="sum-row">
                                 <span>Shipping</span>
@@ -837,5 +835,12 @@ const removeGiftVoucher = () => {
     font-size: 0.72rem;
     font-style: italic;
     color: #8a6a5a;
+}
+
+.sum-vat-note {
+    font-weight: 400 !important;
+    font-style: italic;
+    color: #9a7070 !important;
+    font-size: 0.82rem;
 }
 </style>
