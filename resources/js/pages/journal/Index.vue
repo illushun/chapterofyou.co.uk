@@ -39,7 +39,7 @@ const seo = useSeoHead({
             <!-- Header -->
             <header class="jl-header">
                 <p class="jl-eyebrow">Chapter of You</p>
-                <h1 class="jl-title">The <em>Journal</em></h1>
+                <h1 class="jl-title">My <em>Journal</em></h1>
                 <div class="jl-rule">
                     <span></span><span class="jl-petal">✿</span><span></span>
                 </div>
@@ -51,7 +51,7 @@ const seo = useSeoHead({
             <!-- Empty state -->
             <div v-if="!posts.data.length" class="jl-empty">
                 <p class="jl-petal" style="font-size:2rem;">✿</p>
-                <p>No articles yet — check back soon.</p>
+                <p>No articles yet, check back soon.</p>
             </div>
 
             <!-- Grid -->
