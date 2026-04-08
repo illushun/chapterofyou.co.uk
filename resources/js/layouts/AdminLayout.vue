@@ -49,8 +49,9 @@ const navGroups = [
             { name: 'Messages', route: 'admin.messages.index', icon: MessagesIcon },
             { name: 'Wishlists', route: 'admin.wishlists.index', icon: OrdersIcon },
             { name: 'Vouchers', route: 'admin.vouchers.index', icon: OrdersIcon },
-            { name: 'Broadcast', route: 'admin.broadcasts.index', icon: MessagesIcon },
             { name: 'Gift Vouchers', route: 'admin.gift-vouchers.index', icon: OrdersIcon },
+            { name: 'Broadcast', route: 'admin.broadcasts.index', icon: MessagesIcon },
+            { name: 'Journal', route: 'admin.journal.index', icon: MessagesIcon },
         ],
     },
     {

@@ -32,6 +32,8 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\GiftVoucherController;
 use App\Http\Controllers\Admin\AdminGiftVoucherController;
+use App\Http\Controllers\JournalController;
+use App\Http\Controllers\Admin\AdminJournalController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
@@ -56,6 +58,9 @@ Route::post('/gift-vouchers/remove-from-cart', function () {
     session()->forget('pending_gift_voucher');
     return back();
 })->name('gift-vouchers.remove-from-cart');
+
+Route::get('/journal', [JournalController::class, 'index'])->name('journal.index');
+Route::get('/journal/{slug}', [JournalController::class, 'show'])->name('journal.show');
 
 Route::prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'view'])->name('cart.view');
@@ -182,6 +187,18 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('gift-vouchers', [AdminGiftVoucherController::class, 'index'])->name('gift-vouchers.index');
     Route::post('gift-vouchers/{giftVoucherOrder}/dispatch', [AdminGiftVoucherController::class, 'markDispatched'])->name('gift-vouchers.dispatch');
     Route::post('gift-vouchers/{giftVoucherOrder}/resend', [AdminGiftVoucherController::class, 'resendEmail'])->name('gift-vouchers.resend');
+
+    Route::resource('journal', AdminJournalController::class)
+        ->except(['index'])
+        ->names([
+            'create'  => 'journal.create',
+            'store'   => 'journal.store',
+            'show'    => 'journal.show',
+            'edit'    => 'journal.edit',
+            'update'  => 'journal.update',
+            'destroy' => 'journal.destroy',
+        ]);
+    Route::get('journal', [AdminJournalController::class, 'index'])->name('journal.index');
 });
 
 Route::post('/waitlist', WaitlistController::class)->name('waitlist.store');

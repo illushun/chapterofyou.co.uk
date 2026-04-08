@@ -111,6 +111,9 @@ const currentYear = new Date().getFullYear();
                         <li>
                             <Link :href="route('contact')" class="ft-nav-link">Contact Me</Link>
                         </li>
+                        <li>
+                            <Link :href="route('journal.index')" class="ft-nav-link">My Journal</Link>
+                        </li>
                     </ul>
                 </div>
 

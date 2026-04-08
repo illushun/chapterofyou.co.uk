@@ -6,6 +6,7 @@ use Illuminate\Http\Response;
 use App\Models\Product;
 use App\Models\Category;
 use Carbon\Carbon;
+use App\Models\JournalPost;
 
 class SitemapController extends Controller
 {
@@ -116,6 +117,29 @@ class SitemapController extends Controller
                     'priority'   => '0.7',
                     'changefreq' => 'weekly',
                     'lastmod'    => $category->updated_at->toAtomString(),
+                ]);
+            }
+
+            // Journal listing page
+            $urls->push([
+                'loc'        => url('/journal'),
+                'priority'   => '0.7',
+                'changefreq' => 'weekly',
+                'lastmod'    => Carbon::now()->toAtomString(),
+            ]);
+
+            // Individual journal posts
+            $journalPosts = JournalPost::published()
+                ->select('slug', 'updated_at')
+                ->latest('published_at')
+                ->get();
+
+            foreach ($journalPosts as $post) {
+                $urls->push([
+                    'loc'        => url("/journal/{$post->slug}"),
+                    'priority'   => '0.6',
+                    'changefreq' => 'monthly',
+                    'lastmod'    => $post->updated_at->toAtomString(),
                 ]);
             }
 
