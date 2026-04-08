@@ -130,7 +130,7 @@ class AdminJournalController extends Controller
         return $request->validate([
             'title'            => ['required', 'string', 'max:255'],
             'slug'             => ['nullable', 'string', 'max:255',
-                                   \Illuminate\Validation\Rule::unique('journal_posts', 'slug')->ignore($ignoreId)],
+                                   \Illuminate\Validation\Rule::unique('journal_post', 'slug')->ignore($ignoreId)],
             'excerpt'          => ['nullable', 'string', 'max:500'],
             'body'             => ['required', 'string'],
             'cover_image'      => ['nullable', 'image', 'max:4096', 'mimes:jpeg,png,webp'],
