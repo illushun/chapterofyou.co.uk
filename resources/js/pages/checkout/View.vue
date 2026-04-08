@@ -311,7 +311,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                                         class="field-input" :class="{ 'field-input--error': addressForm.errors.email }"
                                         placeholder="you@example.com" autocomplete="email" />
                                     <p v-if="addressForm.errors.email" class="field-error">{{ addressForm.errors.email
-                                        }}</p>
+                                    }}</p>
                                 </div>
                                 <div class="field">
                                     <label for="fullName" class="field-label">Full Name <span
@@ -373,7 +373,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                                             :class="{ 'field-input--error': addressForm.errors.city }"
                                             placeholder="London" autocomplete="address-level2" />
                                         <p v-if="addressForm.errors.city" class="field-error">{{ addressForm.errors.city
-                                            }}</p>
+                                        }}</p>
                                     </div>
                                     <div class="field">
                                         <label for="postcode" class="field-label">Postcode <span
@@ -488,7 +488,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                                 <span>Included in price</span>
                             </div>
                             <div class="co-summary-row">
-                                <span>Shipping</span>
+                                <span>Shipping (48 Tracked)</span>
                                 <span :class="summary.shipping === 0 ? 'co-free-shipping' : ''">
                                     {{ summary.shipping === 0 ? 'FREE' : fmt(summary.shipping) }}
                                 </span>
