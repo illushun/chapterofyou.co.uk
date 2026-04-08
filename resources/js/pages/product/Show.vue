@@ -31,7 +31,7 @@ interface ProductDetailData {
     cost: number; stock_qty: number; total_unique_views: number;
     average_rating: number; approved_reviews_count: number;
     images: ProductImage[]; reviews: ProductReview[];
-    categories: { id: number; name: string }[];
+    categories: { id: number; name: string; slug: string | null }[];
     children: ProductVariation[];
     details: string;
     how_to_use?: string | null;
@@ -84,7 +84,7 @@ const breadcrumbSchema = computed(() => {
     // Add category if the product has one
     if (props.product.categories?.length) {
         const cat = props.product.categories[0];
-        crumbs.push({ name: cat.name, url: `/products?categories=${cat.id}` });
+        crumbs.push({ name: cat.name, url: cat.slug ? `/category/${cat.slug}` : `/products?categories=${cat.id}` });
     }
 
     crumbs.push({
@@ -234,7 +234,8 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
                         <a href="/products" class="pd-crumb">Products</a>
                         <template v-for="cat in product.categories" :key="cat.id">
                             <span class="pd-crumb-sep" aria-hidden="true">/</span>
-                            <a :href="`/products?categories=${cat.id}`" class="pd-crumb">{{ cat.name }}</a>
+                            <a :href="cat.slug ? `/category/${cat.slug}` : `/products?categories=${cat.id}`"
+                                class="pd-crumb">{{ cat.name }}</a>
                         </template>
                     </nav>
 

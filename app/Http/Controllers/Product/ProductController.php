@@ -101,7 +101,7 @@ class ProductController extends Controller
 
         $product = Product::with([
                 'images:product_id,image',
-                'categories:category.id,category.name',
+                'categories:category.id,category.name,category.slug',
                 'reviews.user:id,name',
                 'uniqueViews',
                 'faqs',
