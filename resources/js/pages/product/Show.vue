@@ -8,6 +8,7 @@ import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
 import { useProductSchema, useBreadcrumbSchema } from '@/composables/useProductSchema';
+import RecentJournalPosts from '@/components/RecentJournalPosts.vue';
 
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
@@ -49,6 +50,7 @@ interface ProductProps {
 
 const props = defineProps<ProductProps>();
 const page = usePage();
+const recentPosts = computed(() => (page.props.recentJournalPosts as any[]) ?? []);
 const auth = computed(() => page.props.auth as any);
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 const isModalOpen = ref(false);
@@ -494,6 +496,8 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
                 </div>
                 <p v-else class="pd-no-reviews">No reviews yet. Be the first!</p>
             </section>
+
+            <RecentJournalPosts :posts="recentPosts" heading="From the Journal" />
 
         </div>
 

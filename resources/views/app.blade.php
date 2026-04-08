@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
-        <!-- Google Analytics -->
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-HKD85XSYN0"></script>
-        <script @if(function_exists('csp_nonce')) nonce="{{ csp_nonce() }}" @endif>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-HKD85XSYN0');
-        </script>
-
         <!-- Charset & viewport — truly global, never overridden -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">

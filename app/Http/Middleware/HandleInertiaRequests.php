@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\JournalPost;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -71,6 +72,19 @@ class HandleInertiaRequests extends Middleware
                     ? (int) $cart->items()->sum('quantity')
                     : 0;
             },
+            'recentJournalPosts' => fn () => JournalPost::published()
+                ->select('title', 'slug', 'excerpt', 'cover_image', 'published_at')
+                ->latest('published_at')
+                ->limit(3)
+                ->get()
+                ->map(fn ($p) => [
+                    'title'        => $p->title,
+                    'slug'         => $p->slug,
+                    'excerpt'      => $p->excerpt,
+                    'cover_image'  => $p->cover_image ? asset('storage/' . $p->cover_image) : null,
+                    'published_at' => $p->published_at->format('d M Y'),
+                    'reading_time' => $p->reading_time,
+                ]),
         ];
     }
 }

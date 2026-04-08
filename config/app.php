@@ -123,4 +123,5 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'vat_number' => env('VAT_NUMBER', null),
 ];

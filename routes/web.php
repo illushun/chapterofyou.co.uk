@@ -35,6 +35,7 @@ use App\Http\Controllers\GiftVoucherController;
 use App\Http\Controllers\Admin\AdminGiftVoucherController;
 use App\Http\Controllers\JournalController;
 use App\Http\Controllers\Admin\AdminJournalController;
+use App\Http\Controllers\InvoiceController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
@@ -93,6 +94,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/account/wishlist', [WishlistController::class, 'index'])->name('wishlist.index');
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle'])->name('wishlist.toggle');
     Route::delete('/wishlist/{id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
+
+    Route::get('/orders/{order}/invoice', [InvoiceController::class, 'download'])
+    ->name('orders.invoice');
 });
 
 Route::get('sl/{provider}', [SocialiteController::class, 'redirectToProvider'])->name('socialite.redirect');
@@ -110,6 +114,9 @@ Route::prefix('checkout')->name('checkout.')->group(function () {
 
 Route::get('/order/confirmation/{id}', [ConfirmationController::class, 'show'])
     ->name('order.confirmation');
+
+Route::get('/orders/{order}/invoice/download', [InvoiceController::class, 'download'])
+    ->name('orders.invoice.download');
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
 

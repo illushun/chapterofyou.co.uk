@@ -519,11 +519,14 @@
             </div>
         </Transition>
     </nav>
+
+    <CookieConsent />
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { usePage, Link } from '@inertiajs/vue3';
+import CookieConsent from '@/components/CookieConsent.vue';
 
 declare const route: (name: string) => string;
 

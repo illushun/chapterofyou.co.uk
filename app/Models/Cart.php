@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User;
-
 use App\Models\Cart\Item as CartItem;
 
 class Cart extends Model
@@ -40,5 +39,10 @@ class Cart extends Model
     public function items(): HasMany
     {
         return $this->hasMany(CartItem::class);
+    }
+
+    public function abandonedCartEmail()
+    {
+        return $this->hasOne(\App\Models\AbandonedCartEmail::class);
     }
 }

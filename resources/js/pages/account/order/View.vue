@@ -140,8 +140,9 @@ const statusMessage: Record<string, string> = {
                             <span>{{ Number(order.shipping_total) === 0 ? 'Free' : fmt(order.shipping_total) }}</span>
                         </div>
                         <div class="totals-row">
-                            <span>VAT (20%)</span>
-                            <span>{{ fmt(order.tax_total) }}</span>
+                            <span>VAT</span>
+                            <span
+                                style="font-style:italic; color:#9a7070; font-weight:400; font-size:0.82rem;">Included</span>
                         </div>
                         <div v-if="Number(order.voucher_discount) > 0" class="totals-row totals-row--discount">
                             <span>Discount</span>
@@ -181,6 +182,18 @@ const statusMessage: Record<string, string> = {
                         </div>
                     </div>
                 </section>
+
+                <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #e5c9c7;">
+                    <a :href="`/orders/${order.id}/invoice/download`" target="_blank" class="ov-invoice-btn">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        Download Invoice (PDF)
+                    </a>
+                </div>
 
                 <!-- Help -->
                 <section class="ov-card">
@@ -547,5 +560,27 @@ const statusMessage: Record<string, string> = {
 
 .help-link:hover {
     color: #6a3038;
+}
+
+.ov-invoice-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.6rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid #e5c9c7;
+    background: #fdf4f3;
+    color: #6b4f4f;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.ov-invoice-btn:hover {
+    border-color: #8c4a50;
+    color: #8c4a50;
+    background: #faeaea;
 }
 </style>
