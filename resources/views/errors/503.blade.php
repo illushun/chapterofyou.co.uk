@@ -342,8 +342,8 @@
         </div>
 
         <p class="body-text">
-            We're giving the site a little care and attention right now.
-            We won't be long — please check back in a few minutes.
+            I'm giving the site a little care and attention right now.
+            I won't be long, please check back in a few minutes.
         </p>
 
         <!-- Animated loading dots -->
@@ -361,7 +361,7 @@
             </svg>
             <span>
                 If you were placing an order, please don't retry payment until the
-                site is back — your order may have gone through. Check your email
+                site is back, your order may have gone through. Check your email
                 for a confirmation.
             </span>
         </div>

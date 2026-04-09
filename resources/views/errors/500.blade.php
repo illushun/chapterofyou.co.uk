@@ -272,8 +272,7 @@
         </div>
 
         <p class="body-text">
-            Our server hit an unexpected snag. This is entirely on our end
-            — not yours. We've been notified and are looking into it.
+            My server hit an unexpected snag. This is entirely on my end, not yours. I've been notified and I'm looking into it.
         </p>
 
         <div class="apology">
@@ -284,7 +283,7 @@
             </svg>
             <span>
                 If you were in the middle of placing an order, please don't retry payment
-                until you've checked your email — your order may have gone through.
+                until you've checked your email, your order may have gone through.
             </span>
         </div>
 
