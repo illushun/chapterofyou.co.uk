@@ -427,12 +427,13 @@ const formatAddress = (a: Address): string[] =>
                                         class="field-optional">(optional)</span></label>
                                 <input id="m-county" type="text" v-model="addressForm.county" class="field-input" />
                             </div>
-                            <div class="field">
-                                <label for="m-postcode" class="field-label">Postcode</label>
-                                <input id="m-postcode" type="text" v-model="addressForm.postcode" class="field-input" />
-                                <p v-if="addressForm.errors.postcode" class="field-error">{{ addressForm.errors.postcode
-                                    }}</p>
-                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label for="m-postcode" class="field-label">Postcode</label>
+                            <input id="m-postcode" type="text" v-model="addressForm.postcode" class="field-input" />
+                            <p v-if="addressForm.errors.postcode" class="field-error">{{ addressForm.errors.postcode
+                            }}</p>
                         </div>
 
                         <div class="field">
