@@ -276,7 +276,7 @@
 
         <!-- View in admin -->
         <div class="cta-wrap">
-            <a href="{{ $adminUrl }}" class="cta-btn">View Order in Admina>
+            <a href="{{ $adminUrl }}" class="cta-btn">View Order in Admin</a>
         </div>
 
     </div>
