@@ -175,10 +175,12 @@
                 <td style="text-align:right; color:#7a9a6a; font-size:16px;">&minus;£{{ number_format($voucherDiscount, 2) }}</td>
             </tr>
             @endif
+            @if(config('app.vat_number'))
             <tr>
                 <td style="text-align:left; color:#6b4f4f; font-size:16px;">VAT (20%)</td>
                 <td style="text-align:right; color:#6b4f4f; font-size:16px;">£{{ number_format($tax, 2) }}</td>
             </tr>
+            @endif
             <tr>
                 <td style="text-align:left; color:#6b4f4f; font-size:16px;">Shipping</td>
                 <td style="text-align:right; color:#6b4f4f; font-size:16px;">
