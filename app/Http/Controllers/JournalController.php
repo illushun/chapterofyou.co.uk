@@ -14,7 +14,7 @@ class JournalController extends Controller
     public function index()
     {
         $posts = JournalPost::published()
-            ->select('id', 'title', 'slug', 'excerpt', 'cover_image', 'tags', 'published_at', 'author_id')
+            ->select('id', 'title', 'slug', 'excerpt', 'cover_image', 'tags', 'views', 'published_at', 'author_id')
             ->with('author:id,name')
             ->latest('published_at')
             ->paginate(12);
@@ -30,6 +30,7 @@ class JournalController extends Controller
                                     : null,
                 'tags'         => $p->tags_array,
                 'published_at' => $p->published_at->format('d M Y'),
+                'views'        => $p->views,
                 'reading_time' => $p->reading_time,
             ]),
         ]);
