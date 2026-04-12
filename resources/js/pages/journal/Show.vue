@@ -15,6 +15,7 @@ const props = defineProps<{
         published_at: string; reading_time: number;
         meta_title: string | null; meta_description: string | null;
         author: string | null;
+        views: number;
     };
     related: Array<{
         id: number; title: string; slug: string;
@@ -95,6 +96,16 @@ const articleSchema = computed(() => ({
                     <span>{{ post.reading_time }} min read</span>
                     <span v-if="post.author" class="js-meta-sep" aria-hidden="true">·</span>
                     <span v-if="post.author">By {{ post.author }}</span>
+                    <span class="js-meta-sep" aria-hidden="true">·</span>
+                    <span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            style="display:inline; vertical-align:-1px;">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                        {{ post.views.toLocaleString() }}
+                    </span>
                 </div>
 
                 <p v-if="post.excerpt" class="js-excerpt">{{ post.excerpt }}</p>

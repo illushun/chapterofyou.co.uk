@@ -13,6 +13,7 @@ defineProps<{
             published_at: string | null;
             created_at: string;
             author: { name: string } | null;
+            views: number;
         }>;
         links: any[];
         meta: any;
@@ -72,6 +73,7 @@ function deletePost(id: number, title: string) {
                         <th class="adm-th">Title</th>
                         <th class="adm-th">Status</th>
                         <th class="adm-th">Published</th>
+                        <th class="adm-th">Views</th>
                         <th class="adm-th">Author</th>
                         <th class="adm-th">Actions</th>
                     </tr>
@@ -81,7 +83,7 @@ function deletePost(id: number, title: string) {
                         <td class="adm-td">
                             <div style="font-weight:600; color: var(--bb-text);">{{ post.title }}</div>
                             <div style="font-size:0.75rem; color: var(--bb-muted); font-family: monospace;">{{ post.slug
-                            }}</div>
+                                }}</div>
                         </td>
                         <td class="adm-td">
                             <span :class="post.status === 'published' ? 'adm-badge--on' : 'adm-badge--warn'">
@@ -90,6 +92,9 @@ function deletePost(id: number, title: string) {
                         </td>
                         <td class="adm-td" style="font-size:0.82rem; color: var(--bb-muted);">
                             {{ post.published_at ?? '—' }}
+                        </td>
+                        <td class="adm-td" style="font-size:0.82rem; color:var(--bb-muted);">
+                            {{ post.views.toLocaleString() }}
                         </td>
                         <td class="adm-td" style="font-size:0.82rem;">
                             {{ post.author?.name ?? '—' }}

@@ -22,6 +22,7 @@ class JournalPost extends Model
         'status',
         'published_at',
         'author_id',
+        'views',
     ];
 
     protected $casts = [

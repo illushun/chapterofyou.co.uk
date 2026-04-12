@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\JournalPost;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class JournalController extends Controller
 {
@@ -44,6 +45,13 @@ class JournalController extends Controller
             ->with('author:id,name')
             ->firstOrFail();
 
+        try {
+            if (!Auth::check() || !Auth::user()->is_admin) {
+                $post->increment('views');
+            }
+        } catch (\Exception $e) {
+        }
+
         // Related posts — same tags, exclude current
         $related = JournalPost::published()
             ->where('id', '!=', $post->id)
@@ -74,6 +82,7 @@ class JournalController extends Controller
                                         : null,
                 'tags'             => $post->tags_array,
                 'published_at'     => $post->published_at->format('d M Y'),
+                'views'            => $post->views,
                 'reading_time'     => $post->reading_time,
                 'meta_title'       => $post->meta_title ?: $post->title,
                 'meta_description' => $post->meta_description ?: $post->excerpt,
