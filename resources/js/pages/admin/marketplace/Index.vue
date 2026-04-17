@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { useAdmin } from '@/composables/useAdmin';
 
 interface Connection {
     shop_name: string | null;
@@ -20,6 +22,9 @@ const props = defineProps<{
     stats: Stats | null;
 }>();
 
+const page = usePage();
+const flash = computed(() => (page.props as any).flash ?? {});
+
 const formatDate = (iso: string | null) =>
     iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never';
 
@@ -32,69 +37,72 @@ const disconnect = () => {
 
 <template>
     <AdminLayout>
-        <Head title="Marketplaces" />
+        <Head title="Marketplaces — Admin" />
 
-        <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">Marketplaces</h2>
+        <div class="adm-header">
+            <div>
+                <h1 class="adm-title">Marketplaces</h1>
+                <p class="adm-sub">Connect external platforms to sync products and import orders</p>
+            </div>
+        </div>
+
+        <!-- Flash -->
+        <div v-if="flash.success" class="adm-flash adm-flash--success" style="margin-bottom:1.25rem">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+            {{ flash.success }}
+        </div>
+        <div v-if="flash.error" class="adm-flash adm-flash--error" style="margin-bottom:1.25rem">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            {{ flash.error }}
         </div>
 
         <!-- Etsy card -->
-        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] p-6 max-w-2xl">
+        <div class="adm-card mkp-etsy-card">
 
-            <div class="flex items-center gap-4 mb-5">
-                <!-- Etsy logo mark -->
-                <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-xl"
-                    style="background: #F56400;">
-                    e
+            <!-- Card header -->
+            <div class="mkp-card-head">
+                <div class="mkp-logo">e</div>
+                <div class="mkp-card-meta">
+                    <h2 class="mkp-card-title">Etsy</h2>
+                    <p class="mkp-card-desc">Export products &amp; import orders from your Etsy shop</p>
                 </div>
-                <div>
-                    <h3 class="text-xl font-bold">Etsy</h3>
-                    <p class="text-sm text-copy-light">Export products &amp; import orders from your Etsy shop</p>
-                </div>
-                <span v-if="connection"
-                    class="ml-auto px-3 py-1 rounded-full text-xs font-semibold bg-green-500/20 text-green-700 border border-green-700">
-                    Connected
-                </span>
-                <span v-else
-                    class="ml-auto px-3 py-1 rounded-full text-xs font-semibold bg-gray-500/20 text-gray-600 border border-gray-400">
-                    Not connected
-                </span>
+                <span v-if="connection" class="adm-badge adm-badge--on mkp-status-badge">Connected</span>
+                <span v-else class="adm-badge adm-badge--off mkp-status-badge">Not connected</span>
             </div>
 
             <!-- Connected state -->
             <template v-if="connection">
-                <div class="grid grid-cols-3 gap-4 mb-5">
-                    <div class="bg-secondary-light rounded-lg p-3 text-center border border-copy-light/30">
-                        <div class="text-2xl font-black">{{ stats?.listings_count ?? 0 }}</div>
-                        <div class="text-xs text-copy-light mt-0.5">Listings</div>
+
+                <!-- Stats -->
+                <div class="adm-stats mkp-stats">
+                    <div class="adm-stat adm-stat--lav">
+                        <div class="adm-stat-val">{{ stats?.listings_count ?? 0 }}</div>
+                        <div class="adm-stat-label">Listings</div>
                     </div>
-                    <div class="bg-secondary-light rounded-lg p-3 text-center border border-copy-light/30">
-                        <div class="text-2xl font-black">{{ stats?.orders_count ?? 0 }}</div>
-                        <div class="text-xs text-copy-light mt-0.5">Orders imported</div>
+                    <div class="adm-stat adm-stat--sage">
+                        <div class="adm-stat-val">{{ stats?.orders_count ?? 0 }}</div>
+                        <div class="adm-stat-label">Orders imported</div>
                     </div>
-                    <div class="bg-secondary-light rounded-lg p-3 text-center border border-copy-light/30">
-                        <div class="text-xs font-semibold">Last import</div>
-                        <div class="text-xs text-copy-light mt-0.5">{{ formatDate(stats?.last_import ?? null) }}</div>
+                    <div class="adm-stat">
+                        <div class="adm-stat-val mkp-import-date">{{ formatDate(stats?.last_import ?? null) }}</div>
+                        <div class="adm-stat-label">Last import</div>
                     </div>
                 </div>
 
-                <div class="text-sm text-copy-light mb-5">
-                    <span class="font-semibold text-copy">Shop:</span>
+                <p class="mkp-shop-line">
+                    <span class="mkp-shop-label">Shop</span>
                     {{ connection.shop_name ?? 'Unknown' }}
-                    <span v-if="connection.shop_id" class="ml-2 text-xs">(#{{ connection.shop_id }})</span>
-                </div>
+                    <span v-if="connection.shop_id" class="mkp-shop-id">#{{ connection.shop_id }}</span>
+                </p>
 
-                <div class="flex flex-wrap gap-3">
-                    <Link :href="route('admin.marketplace.etsy.products')"
-                        class="px-4 py-2 text-sm font-semibold border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-sm transition">
+                <div class="mkp-actions">
+                    <Link :href="route('admin.marketplace.etsy.products')" class="adm-btn adm-btn--primary">
                         Manage Products
                     </Link>
-                    <Link :href="route('admin.marketplace.etsy.orders')"
-                        class="px-4 py-2 text-sm font-semibold border-2 border-copy bg-foreground hover:bg-secondary-light rounded-lg shadow-sm transition">
+                    <Link :href="route('admin.marketplace.etsy.orders')" class="adm-btn adm-btn--ghost">
                         View Orders
                     </Link>
-                    <button @click="disconnect"
-                        class="px-4 py-2 text-sm font-semibold border-2 border-red-400 text-red-600 hover:bg-red-50 rounded-lg transition ml-auto">
+                    <button @click="disconnect" class="adm-btn adm-btn--danger mkp-disconnect-btn">
                         Disconnect
                     </button>
                 </div>
@@ -102,17 +110,97 @@ const disconnect = () => {
 
             <!-- Disconnected state -->
             <template v-else>
-                <p class="text-sm text-copy-light mb-5">
-                    Connect your Etsy shop to start exporting products and importing orders. You'll be redirected to
-                    Etsy to authorise access.
+                <p class="mkp-connect-desc">
+                    Connect your Etsy shop to export products as draft listings and automatically import
+                    new orders. You'll be redirected to Etsy to authorise access.
                 </p>
-                <Link :href="route('admin.marketplace.etsy.connect')"
-                    class="inline-block px-5 py-2.5 text-sm font-bold border-2 border-copy text-white rounded-lg shadow-sm transition"
-                    style="background: #F56400;">
+                <Link :href="route('admin.marketplace.etsy.connect')" class="adm-btn mkp-connect-btn">
                     Connect Etsy Shop
                 </Link>
             </template>
+
         </div>
 
     </AdminLayout>
 </template>
+
+<style scoped>
+.mkp-etsy-card { max-width: 640px; }
+
+.mkp-card-head {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.mkp-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--bb-radius-md);
+    background: #f56400;
+    color: #fff;
+    font-size: 1.4rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-style: italic;
+}
+
+.mkp-card-meta { flex: 1; min-width: 0; }
+.mkp-card-title { font-size: 1rem; font-weight: 700; color: var(--bb-text); }
+.mkp-card-desc  { font-size: 0.8rem; color: var(--bb-muted); margin-top: 0.1rem; }
+.mkp-status-badge { flex-shrink: 0; }
+
+.mkp-stats {
+    grid-template-columns: repeat(3, 1fr);
+    margin-bottom: 1rem;
+}
+
+.mkp-import-date { font-size: 0.85rem; letter-spacing: 0; }
+
+.mkp-shop-line {
+    font-size: 0.85rem;
+    color: var(--bb-text);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.mkp-shop-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+}
+.mkp-shop-id { font-size: 0.78rem; color: var(--bb-muted); }
+
+.mkp-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.mkp-disconnect-btn { margin-left: auto; }
+
+.mkp-connect-desc {
+    font-size: 0.875rem;
+    color: var(--bb-muted);
+    line-height: 1.55;
+    margin-bottom: 1.25rem;
+    max-width: 480px;
+}
+
+.mkp-connect-btn {
+    background: #f56400;
+    color: #fff;
+    font-weight: 700;
+}
+.mkp-connect-btn:hover:not(:disabled) { opacity: 0.88; }
+</style>

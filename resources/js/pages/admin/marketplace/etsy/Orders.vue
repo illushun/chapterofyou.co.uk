@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { useAdmin } from '@/composables/useAdmin';
 
 interface Order {
     id: number;
@@ -17,7 +18,9 @@ interface Order {
 interface Paginated {
     data: Order[];
     links: { url: string | null; label: string; active: boolean }[];
+    current_page: number;
     last_page: number;
+    total: number;
 }
 
 interface Connection {
@@ -32,8 +35,12 @@ const props = defineProps<{
     connection: Connection | null;
 }>();
 
-const search = ref(props.filters.search ?? '');
-const status = ref(props.filters.status ?? '');
+const { paginate, fmtCurrency } = useAdmin();
+const page = usePage();
+const flash = computed(() => (page.props as any).flash ?? {});
+
+const search   = ref(props.filters.search ?? '');
+const status   = ref(props.filters.status ?? '');
 const importing = ref(false);
 
 const applyFilters = () => {
@@ -50,119 +57,112 @@ const triggerImport = () => {
     });
 };
 
-const paginate = (url: string | null) => {
-    if (url) router.get(url, {}, { preserveState: true, preserveScroll: true });
-};
-
-const formatCurrency = (v: number) => `£${Number(v).toFixed(2)}`;
-
 const formatDate = (iso: string) =>
     new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' });
 
-const statusClasses = (s: string) => {
+const statusBadgeClass = (s: string) => {
     switch (s) {
-        case 'successful': return 'bg-green-500/20 text-green-700 border border-green-700';
-        case 'processing': return 'bg-blue-500/20 text-blue-700 border border-blue-700';
+        case 'successful': return 'adm-badge adm-badge--on';
+        case 'processing': return 'adm-badge adm-badge--lav';
         case 'cancelled':
-        case 'failed':     return 'bg-red-500/20 text-red-700 border border-red-700';
-        default:           return 'bg-gray-500/20 text-gray-600 border border-gray-400';
+        case 'failed':     return 'adm-badge adm-badge--red';
+        case 'refunded':   return 'adm-badge adm-badge--warn';
+        default:           return 'adm-badge adm-badge--off';
     }
 };
-
-const etsyReceiptUrl = (receiptId: string, shopId: string | null) =>
-    shopId ? `https://www.etsy.com/your/shops/${shopId}/orders/${receiptId}` : null;
 </script>
 
 <template>
     <AdminLayout>
-        <Head title="Etsy Orders" />
+        <Head title="Etsy Orders — Admin" />
 
         <!-- Header -->
-        <div class="flex flex-wrap justify-between items-center mb-6 border-b-2 border-copy pb-2 gap-3">
+        <div class="adm-header">
             <div>
-                <div class="flex items-center gap-2 text-xs text-copy-light mb-1">
-                    <Link :href="route('admin.marketplace.etsy.index')" class="hover:underline">Marketplaces</Link>
-                    <span>/</span>
+                <div class="adm-breadcrumb">
+                    <Link :href="route('admin.marketplace.etsy.index')">Marketplaces</Link>
+                    <span class="adm-breadcrumb-sep">/</span>
                     <span>Etsy Orders</span>
                 </div>
-                <h2 class="text-3xl font-black">Etsy Orders</h2>
-                <p v-if="connection?.shop_name" class="text-sm text-copy-light mt-0.5">
-                    Shop: <span class="font-semibold text-copy">{{ connection.shop_name }}</span>
+                <h1 class="adm-title">Etsy Orders</h1>
+                <p class="adm-sub">
+                    <template v-if="connection?.shop_name">
+                        Shop: <strong>{{ connection.shop_name }}</strong> &nbsp;·&nbsp;
+                    </template>
+                    {{ orders.total }} orders imported
                 </p>
             </div>
-            <div class="flex gap-3">
-                <Link :href="route('admin.marketplace.etsy.products')"
-                    class="px-4 py-2 text-sm font-semibold border-2 border-copy bg-foreground hover:bg-secondary-light rounded-lg transition">
+            <div class="eo-header-actions">
+                <Link :href="route('admin.marketplace.etsy.products')" class="adm-btn adm-btn--ghost adm-btn--sm">
                     Products
                 </Link>
-                <button @click="triggerImport" :disabled="importing"
-                    class="px-4 py-2 text-sm font-bold border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-sm transition disabled:opacity-50">
+                <button @click="triggerImport" :disabled="importing" class="adm-btn adm-btn--primary">
+                    <svg v-if="importing" class="adm-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
                     {{ importing ? 'Importing…' : 'Import Now' }}
                 </button>
             </div>
         </div>
 
+        <!-- Flash -->
+        <div v-if="flash.success" class="adm-flash adm-flash--success">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+            {{ flash.success }}
+        </div>
+        <div v-if="flash.error" class="adm-flash adm-flash--error">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            {{ flash.error }}
+        </div>
+
         <!-- Filters -->
-        <div class="mb-4 flex flex-wrap gap-2">
-            <input v-model="search" type="text" placeholder="Search by email, name or receipt ID…"
-                class="border-2 border-copy rounded-lg px-3 py-2 text-sm bg-foreground w-72"
-                @keydown.enter="applyFilters" />
-            <select v-model="status" @change="applyFilters"
-                class="border-2 border-copy rounded-lg px-3 py-2 text-sm bg-foreground">
+        <div class="eo-filters">
+            <input v-model="search" type="text" placeholder="Search email, name or receipt ID…"
+                class="adm-input adm-input--sm eo-search-input" @keydown.enter="applyFilters" />
+            <select v-model="status" @change="applyFilters" class="adm-select adm-select--sm eo-status-select">
                 <option value="">All statuses</option>
                 <option v-for="(label, key) in statuses" :key="key" :value="key">{{ label }}</option>
             </select>
-            <button @click="applyFilters"
-                class="px-4 py-2 text-sm font-semibold border-2 border-copy bg-primary text-primary-content rounded-lg hover:bg-primary-dark transition">
-                Filter
-            </button>
+            <button @click="applyFilters" class="adm-btn adm-btn--ghost adm-btn--sm">Filter</button>
         </div>
 
-        <!-- Table -->
-        <div v-if="orders.data.length"
-            class="rounded-lg border-2 border-copy bg-[var(--primary-content)] overflow-hidden">
-            <div class="hidden md:block overflow-x-auto">
-                <table class="min-w-full text-sm divide-y divide-copy-light/50">
+        <!-- Table card -->
+        <div class="adm-card adm-card--flush" style="margin-bottom:1.5rem">
+
+            <!-- Desktop table -->
+            <div class="adm-table-wrap">
+                <table class="adm-table">
                     <thead>
-                        <tr class="bg-secondary-light text-left font-bold text-copy uppercase text-xs border-b-2 border-copy">
-                            <th class="px-4 py-3">Receipt #</th>
-                            <th class="px-4 py-3">Customer</th>
-                            <th class="px-4 py-3">Date</th>
-                            <th class="px-4 py-3">Total</th>
-                            <th class="px-4 py-3">Status</th>
-                            <th class="px-4 py-3 text-right">Actions</th>
+                        <tr class="adm-thead">
+                            <th class="adm-th">Order</th>
+                            <th class="adm-th">Customer</th>
+                            <th class="adm-th">Date</th>
+                            <th class="adm-th">Total</th>
+                            <th class="adm-th">Status</th>
+                            <th class="adm-th adm-th--right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-copy-light/50">
-                        <tr v-for="order in orders.data" :key="order.id" class="hover:bg-secondary-light/40 transition">
-                            <td class="px-4 py-3">
-                                <div class="font-semibold">COY-{{ order.id }}</div>
-                                <div class="text-xs text-copy-light">Etsy #{{ order.marketplace_order_id }}</div>
+                    <tbody>
+                        <tr v-for="o in orders.data" :key="o.id" class="adm-row">
+                            <td class="adm-td">
+                                <div class="eo-order-id">COY-{{ o.id }}</div>
+                                <div class="adm-td--mono" style="font-size:0.7rem; margin-top:1px">
+                                    Etsy #{{ o.marketplace_order_id }}
+                                </div>
                             </td>
-                            <td class="px-4 py-3">
-                                <div>{{ order.first_name }} {{ order.last_name }}</div>
-                                <div class="text-xs text-copy-light">{{ order.email }}</div>
+                            <td class="adm-td">
+                                <div class="eo-customer-name">{{ o.first_name }} {{ o.last_name }}</div>
+                                <div class="adm-td--mono" style="font-size:0.75rem; margin-top:1px">{{ o.email }}</div>
                             </td>
-                            <td class="px-4 py-3 text-xs">{{ formatDate(order.created_at) }}</td>
-                            <td class="px-4 py-3 font-bold">{{ formatCurrency(order.grand_total) }}</td>
-                            <td class="px-4 py-3">
-                                <span :class="['px-2.5 py-1 rounded-full text-xs font-semibold uppercase', statusClasses(order.status)]">
-                                    {{ order.status }}
+                            <td class="adm-td adm-td--mono" style="font-size:0.78rem">{{ formatDate(o.created_at) }}</td>
+                            <td class="adm-td adm-td--price">{{ fmtCurrency(o.grand_total) }}</td>
+                            <td class="adm-td">
+                                <span :class="statusBadgeClass(o.status)">
+                                    {{ statuses[o.status] ?? o.status }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <div class="flex items-center justify-end gap-2">
-                                    <Link :href="route('admin.orders.show', order.id)"
-                                        class="text-blue-500 hover:text-blue-700 font-semibold text-xs">
-                                        View
-                                    </Link>
-                                    <a v-if="etsyReceiptUrl(order.marketplace_order_id, connection?.shop_id ?? null)"
-                                        :href="etsyReceiptUrl(order.marketplace_order_id, connection?.shop_id ?? null)!"
-                                        target="_blank" rel="noopener"
-                                        class="text-xs text-copy-light hover:text-copy transition">
-                                        Etsy ↗
-                                    </a>
-                                </div>
+                            <td class="adm-td adm-td--actions">
+                                <Link :href="route('admin.orders.show', o.id)" class="adm-action adm-action--edit">
+                                    View
+                                </Link>
                             </td>
                         </tr>
                     </tbody>
@@ -170,49 +170,111 @@ const etsyReceiptUrl = (receiptId: string, shopId: string | null) =>
             </div>
 
             <!-- Mobile cards -->
-            <div class="md:hidden divide-y divide-copy-light/50">
-                <div v-for="order in orders.data" :key="order.id" class="p-4">
-                    <div class="flex justify-between items-start mb-2">
+            <div class="adm-mob-list">
+                <div v-for="o in orders.data" :key="o.id" class="adm-mob-card">
+                    <div class="eo-mob-head">
                         <div>
-                            <div class="font-bold">COY-{{ order.id }}</div>
-                            <div class="text-xs text-copy-light">Etsy #{{ order.marketplace_order_id }}</div>
+                            <div class="eo-order-id">COY-{{ o.id }}</div>
+                            <div class="adm-td--mono" style="font-size:0.7rem">Etsy #{{ o.marketplace_order_id }}</div>
                         </div>
-                        <span :class="['px-2.5 py-1 rounded-full text-xs font-semibold uppercase', statusClasses(order.status)]">
-                            {{ order.status }}
-                        </span>
+                        <span :class="statusBadgeClass(o.status)">{{ statuses[o.status] ?? o.status }}</span>
                     </div>
-                    <div class="text-sm mb-1">{{ order.first_name }} {{ order.last_name }}</div>
-                    <div class="text-xs text-copy-light mb-3">{{ order.email }}</div>
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold">{{ formatCurrency(order.grand_total) }}</span>
-                        <Link :href="route('admin.orders.show', order.id)"
-                            class="px-3 py-1.5 text-xs font-semibold border-2 border-copy bg-foreground hover:bg-secondary-light rounded-lg transition">
+                    <div class="eo-mob-meta">
+                        <div>
+                            <p class="eo-stat-label">Customer</p>
+                            <p class="eo-stat-val">{{ o.first_name }} {{ o.last_name }}</p>
+                            <p class="adm-td--mono" style="font-size:0.72rem">{{ o.email }}</p>
+                        </div>
+                        <div>
+                            <p class="eo-stat-label">Total</p>
+                            <p class="eo-stat-val">{{ fmtCurrency(o.grand_total) }}</p>
+                        </div>
+                    </div>
+                    <div class="eo-mob-foot">
+                        <span class="adm-td--mono" style="font-size:0.72rem; color:var(--bb-muted)">
+                            {{ formatDate(o.created_at) }}
+                        </span>
+                        <Link :href="route('admin.orders.show', o.id)" class="adm-btn adm-btn--ghost adm-btn--sm">
                             View Order
                         </Link>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-secondary-light/50">
-            <p class="text-xl font-semibold text-copy mb-2">No Etsy orders imported yet.</p>
-            <p class="text-sm text-copy-light mb-4">Click "Import Now" to pull in your latest Etsy orders.</p>
-            <button @click="triggerImport" :disabled="importing"
-                class="px-5 py-2.5 text-sm font-bold border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-sm transition disabled:opacity-50">
-                {{ importing ? 'Importing…' : 'Import Now' }}
-            </button>
+            <div v-if="!orders.data.length" class="adm-empty">
+                <div class="adm-empty-icon">📦</div>
+                <p class="adm-empty-title">No Etsy orders imported yet</p>
+                <p class="adm-empty-sub">Click "Import Now" to pull in your latest Etsy orders.</p>
+                <button @click="triggerImport" :disabled="importing" class="adm-btn adm-btn--primary">
+                    {{ importing ? 'Importing…' : 'Import Now' }}
+                </button>
+            </div>
         </div>
 
         <!-- Pagination -->
-        <div v-if="orders.last_page > 1" class="mt-6 flex justify-center">
-            <ol class="flex gap-2 text-sm font-medium">
-                <li v-for="link in orders.links" :key="link.label">
-                    <button @click.prevent="paginate(link.url)" :disabled="!link.url"
-                        :class="{ 'px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold': true, 'bg-primary text-primary-content shadow-md': link.active, 'bg-foreground hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed': !link.active }"
-                        v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')">
-                    </button>
-                </li>
-            </ol>
+        <div v-if="orders.last_page > 1" class="adm-pagination">
+            <p class="adm-page-info">Page <strong>{{ orders.current_page }}</strong> of <strong>{{ orders.last_page }}</strong></p>
+            <div class="adm-page-btns">
+                <button v-for="link in orders.links" :key="link.label"
+                    @click.prevent="paginate(link.url)" :disabled="!link.url"
+                    class="adm-page-btn" :class="{ 'adm-page-btn--active': link.active }"
+                    v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')">
+                </button>
+            </div>
         </div>
+
     </AdminLayout>
 </template>
+
+<style scoped>
+.eo-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+}
+.eo-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    align-items: center;
+}
+.eo-search-input { width: 260px; }
+.eo-status-select { width: 160px; }
+
+.eo-order-id   { font-size: 0.88rem; font-weight: 700; color: var(--bb-text); }
+.eo-customer-name { font-size: 0.88rem; font-weight: 500; color: var(--bb-text); }
+
+/* Mobile */
+.eo-mob-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+.eo-mob-meta {
+    display: flex;
+    gap: 2rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--bb-border);
+    flex-wrap: wrap;
+}
+.eo-mob-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.eo-stat-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+}
+.eo-stat-val {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--bb-text);
+}
+</style>
