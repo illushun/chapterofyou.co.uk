@@ -18,7 +18,13 @@ import ViewWebsiteIcon from '@/components/icons/ViewWebsiteIcon.vue'
 
 declare const route: Route;
 
-const isRouteActive = (name: string): boolean => route().current(name);
+const isRouteActive = (name: string): boolean => {
+    if (route().current(name)) return true;
+    if (name === 'admin.marketplace.etsy.index') {
+        return !!(route().current('admin.marketplace.etsy.*'));
+    }
+    return false;
+};
 
 const navGroups = [
     {
@@ -61,6 +67,13 @@ const navGroups = [
             { name: 'Oils', route: 'admin.oils.index', icon: ClpLabelsIcon },
             { name: 'CLP Labels', route: 'admin.clp-labels.index', icon: ClpLabelsIcon },
             { name: 'Batch Sheets', route: 'admin.batch-sheets.index', icon: ClpLabelsIcon },
+        ],
+    },
+    {
+        label: 'Marketplaces',
+        accent: '#f56400',
+        links: [
+            { name: 'Etsy', route: 'admin.marketplace.etsy.index', icon: OrdersIcon },
         ],
     },
 ];

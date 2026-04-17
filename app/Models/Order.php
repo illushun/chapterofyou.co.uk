@@ -41,6 +41,8 @@ class Order extends Model
         'shipping_postcode',
         'shipping_country',
         'status',
+        'source',
+        'marketplace_order_id',
     ];
 
     protected $casts = [

@@ -6,3 +6,4 @@ use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('email:send:order-review')->dailyAt('10:00');
 Schedule::command('email:send:abandoned-cart')->hourly();
+Schedule::command('etsy:sync-orders')->hourly();

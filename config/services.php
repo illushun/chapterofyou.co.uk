@@ -51,4 +51,10 @@ return [
         'secret' => env('STRIPE_SECRET'),
         'key'    => env('VITE_STRIPE_KEY'),
     ],
+
+    'etsy' => [
+        'client_id'           => env('ETSY_CLIENT_ID'),
+        'redirect'            => env('ETSY_REDIRECT_URI', '/admin/marketplace/etsy/callback'),
+        'default_taxonomy_id' => env('ETSY_DEFAULT_TAXONOMY_ID', 1622),
+    ],
 ];

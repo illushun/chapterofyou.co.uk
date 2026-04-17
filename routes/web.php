@@ -35,6 +35,7 @@ use App\Http\Controllers\GiftVoucherController;
 use App\Http\Controllers\Admin\AdminGiftVoucherController;
 use App\Http\Controllers\JournalController;
 use App\Http\Controllers\Admin\AdminJournalController;
+use App\Http\Controllers\Admin\Marketplace\EtsyController;
 use App\Http\Controllers\InvoiceController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -196,6 +197,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('gift-vouchers', [AdminGiftVoucherController::class, 'index'])->name('gift-vouchers.index');
     Route::post('gift-vouchers/{giftVoucherOrder}/dispatch', [AdminGiftVoucherController::class, 'markDispatched'])->name('gift-vouchers.dispatch');
     Route::post('gift-vouchers/{giftVoucherOrder}/resend', [AdminGiftVoucherController::class, 'resendEmail'])->name('gift-vouchers.resend');
+
+    // Marketplace — Etsy
+    Route::prefix('marketplace')->name('marketplace.')->group(function () {
+        Route::get('etsy', [EtsyController::class, 'index'])->name('etsy.index');
+        Route::get('etsy/connect', [EtsyController::class, 'connect'])->name('etsy.connect');
+        Route::get('etsy/callback', [EtsyController::class, 'callback'])->name('etsy.callback');
+        Route::post('etsy/disconnect', [EtsyController::class, 'disconnect'])->name('etsy.disconnect');
+        Route::get('etsy/products', [EtsyController::class, 'products'])->name('etsy.products');
+        Route::post('etsy/products/{product}/export', [EtsyController::class, 'exportProduct'])->name('etsy.products.export');
+        Route::post('etsy/products/{product}/sync', [EtsyController::class, 'syncProduct'])->name('etsy.products.sync');
+        Route::delete('etsy/products/{product}/unlink', [EtsyController::class, 'unlinkProduct'])->name('etsy.products.unlink');
+        Route::get('etsy/orders', [EtsyController::class, 'orders'])->name('etsy.orders');
+        Route::post('etsy/orders/import', [EtsyController::class, 'importOrders'])->name('etsy.orders.import');
+    });
 
     Route::resource('journal', AdminJournalController::class)
         ->except(['index'])
