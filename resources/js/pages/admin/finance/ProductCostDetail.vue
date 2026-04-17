@@ -12,8 +12,6 @@ interface AttachedItem {
     category: string;
     supplier_name: string | null;
     supplier_url: string | null;
-    purchase_price: number;
-    purchase_qty: number;
     unit_cost: number;
     qty_per_unit: number;
     contribution: number;
@@ -42,7 +40,7 @@ const props = defineProps<{
     categories: Record<string, string>;
 }>();
 
-const { fmtCurrency, confirmDelete } = useAdmin();
+const { fmtCurrency } = useAdmin();
 const page  = usePage();
 const flash = computed(() => (page.props as any).flash ?? {});
 
@@ -51,30 +49,30 @@ const totalCost = computed(() =>
     props.costItems.reduce((sum, i) => sum + i.contribution, 0)
 );
 const profit = computed(() => props.product.cost - totalCost.value);
-const margin = computed(() => {
-    if (!props.product.cost) return null;
+const margin = computed((): string | null => {
+    if (!props.product.cost || props.costItems.length === 0) return null;
     return ((profit.value / props.product.cost) * 100).toFixed(1);
 });
 
-// ── Add item panel ─────────────────────────────────────────────────────────
-const showAdd   = ref(false);
-const addForm   = useForm({ cost_item_id: '', qty_per_unit: '' as string | number });
-const attachedIds = computed(() => new Set(props.costItems.map(i => i.id)));
+// ── Add item form ──────────────────────────────────────────────────────────
+const showAdd = ref(false);
+const addForm = useForm({ cost_item_id: '', qty_per_unit: '' as string | number });
 
-const availableItems = computed(() =>
-    props.allItems.filter(i => !attachedIds.value.has(i.id))
-);
+const attachedIds = computed(() => new Set(props.costItems.map(i => i.id)));
+const availableItems = computed(() => props.allItems.filter(i => !attachedIds.value.has(i.id)));
 
 const selectedItem = computed(() =>
     props.allItems.find(i => i.id === parseInt(String(addForm.cost_item_id))) ?? null
 );
 
+const addPreview = computed(() => {
+    if (!selectedItem.value || !addForm.qty_per_unit) return null;
+    return selectedItem.value.unit_cost * parseFloat(String(addForm.qty_per_unit));
+});
+
 const submitAdd = () => {
     addForm.post(route('admin.finance.products.costs.add', props.product.id), {
-        onSuccess: () => {
-            addForm.reset();
-            showAdd.value = false;
-        },
+        onSuccess: () => { addForm.reset(); showAdd.value = false; },
     });
 };
 
@@ -86,26 +84,21 @@ const startEditQty = (item: AttachedItem) => {
     editingQty.value = item.id;
     qtyValue.value   = String(item.qty_per_unit);
 };
-
 const saveQty = (item: AttachedItem) => {
     router.put(route('admin.finance.products.costs.update', [props.product.id, item.id]), {
         qty_per_unit: parseFloat(qtyValue.value),
-    }, {
-        onSuccess: () => { editingQty.value = null; },
-    });
+    }, { onSuccess: () => { editingQty.value = null; } });
 };
-
 const cancelEditQty = () => { editingQty.value = null; };
 
 // ── Remove ─────────────────────────────────────────────────────────────────
 const removeItem = (item: AttachedItem) => {
-    confirmDelete(`Remove "${item.name}" from this product's costs?`, () => {
-        router.delete(route('admin.finance.products.costs.remove', [props.product.id, item.id]));
-    });
+    if (!confirm(`Remove "${item.name}" from this cost breakdown?`)) return;
+    router.delete(route('admin.finance.products.costs.remove', [props.product.id, item.id]));
 };
 
-// ── Category colour ────────────────────────────────────────────────────────
-const categoryColour: Record<string, string> = {
+// ── Helpers ────────────────────────────────────────────────────────────────
+const categoryBadge: Record<string, string> = {
     packaging: 'adm-badge--lav',
     fragrance: 'adm-badge--on',
     material:  'adm-badge--warn',
@@ -114,13 +107,13 @@ const categoryColour: Record<string, string> = {
     other:     'adm-badge--off',
 };
 
-const marginClass = (m: string | null): string => {
-    if (m === null) return 'fi-margin fi-margin--none';
+const marginBadgeClass = (m: string | null): string => {
+    if (m === null) return 'adm-badge adm-badge--off';
     const n = parseFloat(m);
-    if (n >= 60) return 'fi-margin fi-margin--great';
-    if (n >= 40) return 'fi-margin fi-margin--good';
-    if (n >= 20) return 'fi-margin fi-margin--ok';
-    return 'fi-margin fi-margin--low';
+    if (n >= 60) return 'adm-badge pcd-margin--great';
+    if (n >= 40) return 'adm-badge pcd-margin--good';
+    if (n >= 20) return 'adm-badge pcd-margin--ok';
+    return 'adm-badge pcd-margin--low';
 };
 
 const coverImage = computed(() =>
@@ -128,6 +121,9 @@ const coverImage = computed(() =>
     ?? props.product.images?.[0]?.image
     ?? null
 );
+
+const categoryTotal = (key: string) =>
+    props.costItems.filter(i => i.category === key).reduce((s, i) => s + i.contribution, 0);
 </script>
 
 <template>
@@ -145,10 +141,11 @@ const coverImage = computed(() =>
                     <span>{{ product.name }}</span>
                 </div>
                 <h1 class="adm-title">{{ product.name }}</h1>
-                <p class="adm-sub">MPN: {{ product.mpn }} &nbsp;·&nbsp; Selling price: {{ fmtCurrency(product.cost) }}</p>
+                <p class="adm-sub">{{ product.mpn }} &nbsp;·&nbsp; Selling price: {{ fmtCurrency(product.cost) }}</p>
             </div>
             <button @click="showAdd = !showAdd" class="adm-btn adm-btn--primary adm-btn--sm">
-                {{ showAdd ? 'Cancel' : '+ Add Cost' }}
+                <svg v-if="!showAdd" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                {{ showAdd ? 'Cancel' : 'Add Cost' }}
             </button>
         </div>
 
@@ -162,18 +159,28 @@ const coverImage = computed(() =>
             {{ flash.error }}
         </div>
 
-        <div class="pcd-layout">
-            <!-- Left: cost breakdown -->
-            <div class="pcd-main">
+        <div class="adm-form-grid pcd-grid">
+
+            <!-- Main column -->
+            <div class="adm-form-left">
 
                 <!-- Add item panel -->
-                <div v-if="showAdd" class="adm-card pcd-add-panel">
-                    <h3 class="pcd-panel-title">Add a cost item</h3>
-                    <form @submit.prevent="submitAdd" class="pcd-add-form">
+                <div v-if="showAdd" class="adm-card adm-card--sm">
+                    <p class="adm-card-title">Add a cost item</p>
+
+                    <div v-if="availableItems.length === 0" class="adm-empty" style="padding:1.5rem 0 0">
+                        <p class="adm-empty-sub">All cost items are already added.</p>
+                        <Link :href="route('admin.finance.index')" class="adm-btn adm-btn--ghost adm-btn--sm" style="margin-top:.5rem">
+                            Manage cost items →
+                        </Link>
+                    </div>
+
+                    <form v-else @submit.prevent="submitAdd">
                         <div class="pcd-add-row">
-                            <div class="fi-field" style="flex:3">
-                                <label class="fi-label">Cost Item <span class="fi-req">*</span></label>
-                                <select v-model="addForm.cost_item_id" class="adm-select">
+                            <div class="adm-field" style="flex:3">
+                                <label class="adm-label">Item <span class="pcd-req">*</span></label>
+                                <select v-model="addForm.cost_item_id" class="adm-select"
+                                    :class="{ 'adm-select--err': addForm.errors.cost_item_id }">
                                     <option value="">Select an item…</option>
                                     <optgroup v-for="(label, key) in categories" :key="key" :label="label">
                                         <option v-for="item in availableItems.filter(i => i.category === key)"
@@ -182,109 +189,152 @@ const coverImage = computed(() =>
                                         </option>
                                     </optgroup>
                                 </select>
-                                <p v-if="addForm.errors.cost_item_id" class="fi-error">{{ addForm.errors.cost_item_id }}</p>
+                                <p v-if="addForm.errors.cost_item_id" class="adm-err">{{ addForm.errors.cost_item_id }}</p>
                             </div>
-                            <div class="fi-field" style="flex:1">
-                                <label class="fi-label">Qty per product <span class="fi-req">*</span></label>
+                            <div class="adm-field" style="flex:1">
+                                <label class="adm-label">Qty / product <span class="pcd-req">*</span></label>
                                 <input v-model="addForm.qty_per_unit" type="number" step="0.0001" min="0.0001"
-                                    class="adm-input" placeholder="e.g. 1" />
-                                <p v-if="addForm.errors.qty_per_unit" class="fi-error">{{ addForm.errors.qty_per_unit }}</p>
+                                    class="adm-input"
+                                    :class="{ 'adm-input--err': addForm.errors.qty_per_unit }"
+                                    placeholder="1" />
+                                <p v-if="addForm.errors.qty_per_unit" class="adm-err">{{ addForm.errors.qty_per_unit }}</p>
                             </div>
-                            <div class="fi-field pcd-add-preview">
-                                <label class="fi-label">Cost contribution</label>
-                                <div class="fi-unit-preview">
-                                    <template v-if="selectedItem && addForm.qty_per_unit">
-                                        {{ fmtCurrency(selectedItem.unit_cost * parseFloat(String(addForm.qty_per_unit))) }}
-                                    </template>
-                                    <template v-else>—</template>
+                            <div class="adm-field pcd-add-preview">
+                                <label class="adm-label">Contribution</label>
+                                <div class="pcd-preview-box">
+                                    {{ addPreview !== null ? fmtCurrency(addPreview) : '—' }}
                                 </div>
                             </div>
                         </div>
-                        <div style="display:flex;gap:.75rem;justify-content:flex-end">
+                        <div style="display:flex;justify-content:flex-end;gap:.6rem;margin-top:.85rem">
                             <button type="button" @click="showAdd = false" class="adm-btn adm-btn--ghost adm-btn--sm">Cancel</button>
-                            <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm" :disabled="addForm.processing">
-                                Add
-                            </button>
+                            <button type="submit" class="adm-btn adm-btn--primary adm-btn--sm" :disabled="addForm.processing">Add</button>
                         </div>
                     </form>
-
-                    <div v-if="availableItems.length === 0" class="adm-empty" style="padding:1rem 0 0">
-                        <p>All cost items are already added. <Link :href="route('admin.finance.index')" class="pcd-link">Add more items →</Link></p>
-                    </div>
                 </div>
 
-                <!-- Cost items table -->
-                <div class="adm-card" style="padding:0">
-                    <table class="adm-table" v-if="costItems.length">
-                        <thead>
-                            <tr>
-                                <th>Item</th>
-                                <th class="adm-table-num">Unit Cost</th>
-                                <th class="adm-table-num">Qty / Product</th>
-                                <th class="adm-table-num">Contribution</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="item in costItems" :key="item.id">
-                                <td>
-                                    <div class="fi-item-name">{{ item.name }}</div>
-                                    <div style="display:flex;gap:.5rem;align-items:center;margin-top:.2rem">
-                                        <span class="adm-badge" :class="categoryColour[item.category] ?? 'adm-badge--off'" style="font-size:.7rem">
-                                            {{ categories[item.category] ?? item.category }}
-                                        </span>
-                                        <a v-if="item.supplier_url" :href="item.supplier_url" target="_blank"
-                                            rel="noopener" class="fi-supplier-link" style="font-size:.75rem">
-                                            {{ item.supplier_name || 'Supplier →' }}
-                                        </a>
-                                    </div>
-                                </td>
-                                <td class="adm-table-num">{{ fmtCurrency(item.unit_cost) }}</td>
-                                <td class="adm-table-num">
-                                    <template v-if="editingQty === item.id">
-                                        <div style="display:flex;gap:.4rem;align-items:center;justify-content:flex-end">
-                                            <input v-model="qtyValue" type="number" step="0.0001" min="0.0001"
-                                                class="adm-input adm-input--sm pcd-qty-input" @keydown.enter="saveQty(item)" @keydown.escape="cancelEditQty" />
-                                            <button @click="saveQty(item)" class="adm-btn adm-btn--primary adm-btn--xs">✓</button>
-                                            <button @click="cancelEditQty" class="adm-btn adm-btn--ghost adm-btn--xs">✕</button>
+                <!-- Cost breakdown table -->
+                <div class="adm-card adm-card--flush">
+
+                    <div class="adm-table-wrap">
+                        <table class="adm-table">
+                            <thead class="adm-thead">
+                                <tr>
+                                    <th class="adm-th">Item</th>
+                                    <th class="adm-th adm-th--right">Unit Cost</th>
+                                    <th class="adm-th adm-th--right">Qty / Product</th>
+                                    <th class="adm-th adm-th--right">Contribution</th>
+                                    <th class="adm-th adm-th--right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="item in costItems" :key="item.id" class="adm-row">
+                                    <td class="adm-td">
+                                        <p class="pcd-item-name">{{ item.name }}</p>
+                                        <div style="display:flex;gap:.4rem;align-items:center;margin-top:.2rem">
+                                            <span class="adm-badge" :class="categoryBadge[item.category] ?? 'adm-badge--off'"
+                                                style="font-size:.68rem">
+                                                {{ categories[item.category] ?? item.category }}
+                                            </span>
+                                            <a v-if="item.supplier_url" :href="item.supplier_url" target="_blank"
+                                                rel="noopener" class="pcd-supplier-link">
+                                                {{ item.supplier_name || 'Supplier →' }}
+                                            </a>
                                         </div>
-                                    </template>
-                                    <template v-else>
-                                        <button @click="startEditQty(item)" class="pcd-qty-display">
+                                    </td>
+                                    <td class="adm-td adm-td--right" style="font-size:.875rem;color:var(--bb-muted)">
+                                        {{ fmtCurrency(item.unit_cost) }}
+                                    </td>
+                                    <td class="adm-td adm-td--right">
+                                        <template v-if="editingQty === item.id">
+                                            <div class="pcd-qty-edit">
+                                                <input v-model="qtyValue" type="number" step="0.0001" min="0.0001"
+                                                    class="adm-input adm-input--sm pcd-qty-input"
+                                                    @keydown.enter="saveQty(item)"
+                                                    @keydown.escape="cancelEditQty" />
+                                                <button @click="saveQty(item)" class="adm-action adm-action--edit" title="Save">✓</button>
+                                                <button @click="cancelEditQty" class="adm-action adm-action--del" title="Cancel">✕</button>
+                                            </div>
+                                        </template>
+                                        <button v-else @click="startEditQty(item)" class="pcd-qty-btn">
                                             {{ item.qty_per_unit }}
                                         </button>
-                                    </template>
-                                </td>
-                                <td class="adm-table-num pcd-contribution">{{ fmtCurrency(item.contribution) }}</td>
-                                <td class="adm-table-actions">
-                                    <button @click="removeItem(item)" class="adm-btn adm-btn--danger adm-btn--xs">Remove</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr class="pcd-totals-row">
-                                <td colspan="3" style="text-align:right;font-weight:700">Total COGS</td>
-                                <td class="adm-table-num pcd-total-cost">{{ fmtCurrency(totalCost) }}</td>
-                                <td></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <div v-else class="adm-empty">
-                        <p>No cost items added yet.</p>
-                        <button @click="showAdd = true" class="adm-btn adm-btn--primary adm-btn--sm" style="margin-top:.75rem">
-                            Add your first cost
-                        </button>
+                                    </td>
+                                    <td class="adm-td adm-td--right adm-td--price pcd-contribution">
+                                        {{ fmtCurrency(item.contribution) }}
+                                    </td>
+                                    <td class="adm-td adm-td--actions">
+                                        <button @click="removeItem(item)" class="adm-action adm-action--del">Remove</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot v-if="costItems.length">
+                                <tr class="pcd-totals-row">
+                                    <td colspan="3" class="adm-td" style="text-align:right;font-weight:700;font-size:.82rem;letter-spacing:.04em;text-transform:uppercase;color:var(--bb-muted)">
+                                        Total COGS
+                                    </td>
+                                    <td class="adm-td adm-td--right pcd-total">{{ fmtCurrency(totalCost) }}</td>
+                                    <td class="adm-td"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
+
+                    <!-- Mobile cards -->
+                    <div class="adm-mob-list">
+                        <div v-for="item in costItems" :key="item.id" class="adm-mob-card">
+                            <div class="pcd-mob-head">
+                                <div style="flex:1;min-width:0">
+                                    <p class="pcd-item-name">{{ item.name }}</p>
+                                    <span class="adm-badge" :class="categoryBadge[item.category] ?? 'adm-badge--off'"
+                                        style="font-size:.68rem;margin-top:.2rem">
+                                        {{ categories[item.category] ?? item.category }}
+                                    </span>
+                                </div>
+                                <p class="pcd-contribution" style="font-size:1rem">{{ fmtCurrency(item.contribution) }}</p>
+                            </div>
+                            <div class="pcd-mob-meta">
+                                <div>
+                                    <p class="pcd-mob-label">Unit Cost</p>
+                                    <p class="pcd-mob-val">{{ fmtCurrency(item.unit_cost) }}</p>
+                                </div>
+                                <div>
+                                    <p class="pcd-mob-label">Qty / Product</p>
+                                    <p class="pcd-mob-val">{{ item.qty_per_unit }}</p>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:.5rem">
+                                <button @click="startEditQty(item)" class="adm-btn adm-btn--ghost adm-btn--sm">Edit Qty</button>
+                                <button @click="removeItem(item)" class="adm-btn adm-btn--danger adm-btn--sm">Remove</button>
+                            </div>
+                        </div>
+                        <div v-if="costItems.length" class="adm-mob-card" style="background:var(--bb-cream)">
+                            <div style="display:flex;justify-content:space-between;font-weight:700">
+                                <span>Total COGS</span>
+                                <span class="pcd-total">{{ fmtCurrency(totalCost) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="!costItems.length" class="adm-empty">
+                        <div class="adm-empty-icon">🧮</div>
+                        <p class="adm-empty-title">No costs added yet</p>
+                        <p class="adm-empty-sub">Add the supplies that go into this product.</p>
+                        <button @click="showAdd = true" class="adm-btn adm-btn--primary">Add First Cost</button>
+                    </div>
+
                 </div>
             </div>
 
-            <!-- Right: summary card -->
-            <div class="pcd-sidebar">
-                <div class="adm-card pcd-summary">
-                    <img v-if="coverImage" :src="`/storage/${coverImage}`"
-                        :alt="product.name" class="pcd-product-img" />
+            <!-- Sidebar -->
+            <div class="adm-form-right">
 
-                    <h3 class="pcd-summary-title">Summary</h3>
+                <!-- Product card -->
+                <div class="adm-card adm-card--sm adm-card--sticky">
+                    <img v-if="coverImage" :src="`/storage/${coverImage}`"
+                        :alt="product.name" class="pcd-cover" />
+
+                    <p class="adm-card-title">Summary</p>
 
                     <div class="pcd-summary-row">
                         <span>Selling Price</span>
@@ -292,107 +342,101 @@ const coverImage = computed(() =>
                     </div>
                     <div class="pcd-summary-row">
                         <span>Total COGS</span>
-                        <strong :class="totalCost > 0 ? 'pcd-cost-val' : ''">{{ fmtCurrency(totalCost) }}</strong>
+                        <strong :style="totalCost > 0 ? 'color:var(--bb-red)' : ''">
+                            {{ fmtCurrency(totalCost) }}
+                        </strong>
                     </div>
-                    <div class="pcd-summary-divider"></div>
+                    <div class="pcd-divider"></div>
                     <div class="pcd-summary-row">
                         <span>Gross Profit</span>
-                        <strong :class="profit >= 0 ? 'pcd-profit-pos' : 'pcd-profit-neg'">
+                        <strong :style="profit >= 0 ? 'color:var(--bb-sage-d)' : 'color:var(--bb-red)'">
                             {{ fmtCurrency(profit) }}
                         </strong>
                     </div>
-                    <div class="pcd-summary-row" style="margin-top:.35rem">
+                    <div class="pcd-summary-row" style="margin-top:.3rem">
                         <span>Margin</span>
-                        <span :class="marginClass(margin)">
+                        <span :class="marginBadgeClass(margin)">
                             {{ margin !== null ? `${margin}%` : '—' }}
                         </span>
                     </div>
 
-                    <div v-if="costItems.length === 0" class="pcd-summary-hint">
+                    <div v-if="!costItems.length" class="pcd-hint">
                         Add cost items to see your margin.
                     </div>
-                    <div v-else-if="margin !== null && parseFloat(margin) < 30" class="adm-flash adm-flash--warn" style="margin-top:1rem;font-size:.8rem">
-                        Margin is below 30%. Consider reviewing your costs or pricing.
+                    <div v-else-if="margin !== null && parseFloat(margin) < 30"
+                        class="adm-flash adm-flash--warn" style="margin-top:1rem;font-size:.78rem;margin-bottom:0">
+                        Margin is below 30% — consider reviewing your costs or pricing.
                     </div>
                 </div>
 
-                <div class="adm-card pcd-breakdown-legend">
-                    <h4 class="pcd-legend-title">By Category</h4>
-                    <template v-if="costItems.length">
-                        <div v-for="(label, key) in categories" :key="key">
-                            <template v-if="costItems.filter(i => i.category === key).length">
-                                <div class="pcd-legend-row">
-                                    <span class="adm-badge" :class="categoryColour[key] ?? 'adm-badge--off'" style="font-size:.7rem">{{ label }}</span>
-                                    <strong>{{ fmtCurrency(costItems.filter(i => i.category === key).reduce((s, i) => s + i.contribution, 0)) }}</strong>
-                                </div>
-                            </template>
+                <!-- By category -->
+                <div v-if="costItems.length" class="adm-card adm-card--sm">
+                    <p class="adm-card-title">By Category</p>
+                    <template v-for="(label, key) in categories" :key="key">
+                        <div v-if="costItems.some(i => i.category === key)" class="pcd-summary-row">
+                            <span class="adm-badge" :class="categoryBadge[key] ?? 'adm-badge--off'"
+                                style="font-size:.68rem">{{ label }}</span>
+                            <strong>{{ fmtCurrency(categoryTotal(key)) }}</strong>
                         </div>
                     </template>
-                    <p v-else class="adm-muted" style="font-size:.8rem">No items yet.</p>
                 </div>
+
             </div>
         </div>
+
     </AdminLayout>
 </template>
 
 <style scoped>
-.pcd-layout {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 1.5rem;
-    align-items: start;
-}
+/* Override form-grid right column width for this page */
+.pcd-grid { grid-template-columns: 1fr 280px; }
+@media (max-width: 1024px) { .pcd-grid { grid-template-columns: 1fr; } }
 
-.pcd-main { display: flex; flex-direction: column; gap: 1.25rem; }
-
-.pcd-add-panel { padding: 1.25rem; }
-.pcd-panel-title { font-size: .95rem; font-weight: 700; margin: 0 0 1rem; }
-.pcd-add-form { display: flex; flex-direction: column; gap: 1rem; }
-.pcd-add-row { display: flex; gap: 1rem; align-items: flex-end; }
-
-.fi-field { display: flex; flex-direction: column; gap: .35rem; }
-.fi-label { font-size: .8rem; font-weight: 600; color: #555; }
-.fi-req { color: #e05555; }
-.fi-error { font-size: .75rem; color: #e05555; margin: 0; }
-
-.fi-unit-preview {
-    height: 2.4rem;
+/* Add item row */
+.pcd-add-row { display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap; }
+.pcd-add-preview { min-width: 110px; }
+.pcd-preview-box {
+    height: 2.5rem;
     display: flex;
     align-items: center;
-    padding: 0 .75rem;
-    background: #f7faf8;
-    border: 1px solid #d0e8da;
-    border-radius: 8px;
+    padding: 0 .85rem;
+    border: 1px solid var(--bb-green-border);
+    border-radius: var(--bb-radius);
+    background: var(--bb-green-bg);
     font-weight: 700;
-    color: #2e7d52;
+    color: var(--bb-sage-d);
     font-size: .9rem;
 }
 
-.fi-item-name { font-weight: 600; font-size: .875rem; }
-.fi-supplier-link { color: #6b5ce7; text-decoration: underline; }
+/* Table */
+.pcd-item-name   { font-size: .875rem; font-weight: 600; color: var(--bb-text); }
+.pcd-supplier-link { font-size: .72rem; color: var(--bb-lav-d); text-decoration: underline; }
+.pcd-contribution { font-weight: 700; color: var(--bb-text); }
+.pcd-total { font-weight: 800; font-size: 1rem; color: var(--bb-text); }
 
-.pcd-qty-input { width: 80px; text-align: center; }
-.pcd-qty-display {
+.pcd-totals-row td { border-top: 2px solid var(--bb-border) !important; }
+
+/* Inline qty edit */
+.pcd-qty-edit { display: flex; gap: .3rem; align-items: center; justify-content: flex-end; }
+.pcd-qty-input { width: 72px; text-align: center; }
+.pcd-qty-btn {
     background: none;
-    border: 1px dashed #ccc;
-    border-radius: 6px;
-    padding: .2rem .6rem;
+    border: 1px dashed var(--bb-border);
+    border-radius: var(--bb-radius-sm);
+    padding: .2rem .55rem;
     font-size: .85rem;
     cursor: pointer;
-    color: inherit;
+    color: var(--bb-text);
+    font-family: var(--bb-font);
+    transition: border-color .12s, background .12s;
 }
-.pcd-qty-display:hover { border-color: #6b5ce7; background: #f5f2ff; }
-
-.pcd-contribution { font-weight: 600; color: #444; }
-
-.pcd-totals-row td { padding-top: .75rem; padding-bottom: .75rem; border-top: 2px solid #e8e8e8 !important; }
-.pcd-total-cost { font-weight: 800; font-size: 1rem; color: #1a1a1a; }
+.pcd-qty-btn:hover { border-color: var(--bb-lav-d); background: #faf8ff; }
 
 /* Sidebar */
-.pcd-sidebar { display: flex; flex-direction: column; gap: 1rem; }
-
-.pcd-summary { padding: 1.25rem; }
-.pcd-summary-title { font-size: .95rem; font-weight: 700; margin: 0 0 .85rem; }
+.pcd-cover {
+    width: 100%; border-radius: var(--bb-radius-md);
+    object-fit: cover; height: 130px; margin-bottom: 1rem;
+}
 .pcd-summary-row {
     display: flex;
     justify-content: space-between;
@@ -400,50 +444,20 @@ const coverImage = computed(() =>
     font-size: .875rem;
     padding: .3rem 0;
 }
-.pcd-summary-divider { border-top: 1px solid #eee; margin: .5rem 0; }
-.pcd-cost-val { color: #c0392b; }
-.pcd-profit-pos { color: #2e7d52; }
-.pcd-profit-neg { color: #c0392b; }
+.pcd-divider { border-top: 1px solid var(--bb-border); margin: .5rem 0; }
+.pcd-hint { font-size: .78rem; color: var(--bb-muted); margin-top: 1rem; text-align: center; }
 
-.pcd-summary-hint { font-size: .8rem; color: #888; margin-top: 1rem; text-align: center; }
+/* Mobile */
+.pcd-mob-head { display: flex; align-items: flex-start; gap: .75rem; }
+.pcd-mob-meta { display: flex; gap: 2rem; padding-top: .5rem; border-top: 1px solid var(--bb-border); }
+.pcd-mob-label { font-size: .65rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--bb-muted); }
+.pcd-mob-val   { font-size: .875rem; font-weight: 600; color: var(--bb-text); margin-top: .1rem; }
 
-.pcd-product-img {
-    width: 100%;
-    border-radius: 10px;
-    object-fit: cover;
-    height: 140px;
-    margin-bottom: 1rem;
-}
+/* Margin badge colours */
+.pcd-margin--great { background: var(--bb-green-bg); color: #1a6b35; }
+.pcd-margin--good  { background: #d6ead8; color: var(--bb-sage-d); }
+.pcd-margin--ok    { background: var(--bb-warn-bg); color: var(--bb-warn-text); }
+.pcd-margin--low   { background: var(--bb-red-bg); color: var(--bb-red); }
 
-.pcd-breakdown-legend { padding: 1.25rem; }
-.pcd-legend-title { font-size: .85rem; font-weight: 700; margin: 0 0 .75rem; color: #555; }
-.pcd-legend-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: .3rem 0;
-    font-size: .85rem;
-}
-
-.pcd-add-preview { min-width: 120px; }
-
-.pcd-link { color: #6b5ce7; text-decoration: underline; }
-
-.fi-margin {
-    display: inline-block;
-    padding: .2rem .6rem;
-    border-radius: 20px;
-    font-size: .78rem;
-    font-weight: 700;
-}
-.fi-margin--none  { background: #f0f0f0; color: #888; }
-.fi-margin--great { background: #d4edda; color: #1a6b35; }
-.fi-margin--good  { background: #d6ead8; color: #2e7d52; }
-.fi-margin--ok    { background: #fff3cd; color: #856404; }
-.fi-margin--low   { background: #fde2e2; color: #c0392b; }
-
-@media (max-width: 860px) {
-    .pcd-layout { grid-template-columns: 1fr; }
-    .pcd-add-row { flex-direction: column; }
-}
+.pcd-req { color: var(--bb-red); }
 </style>

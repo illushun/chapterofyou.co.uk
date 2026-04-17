@@ -43,12 +43,12 @@ const applyFilters = () => {
     }, { preserveState: true, replace: true });
 };
 
-const marginClass = (m: number | null): string => {
-    if (m === null) return 'fi-margin fi-margin--none';
-    if (m >= 60) return 'fi-margin fi-margin--great';
-    if (m >= 40) return 'fi-margin fi-margin--good';
-    if (m >= 20) return 'fi-margin fi-margin--ok';
-    return 'fi-margin fi-margin--low';
+const marginBadgeClass = (m: number | null): string => {
+    if (m === null) return 'adm-badge adm-badge--off';
+    if (m >= 60)   return 'adm-badge pc-margin--great';
+    if (m >= 40)   return 'adm-badge pc-margin--good';
+    if (m >= 20)   return 'adm-badge pc-margin--ok';
+    return 'adm-badge pc-margin--low';
 };
 </script>
 
@@ -65,7 +65,7 @@ const marginClass = (m: number | null): string => {
                     <span>Product Costs</span>
                 </div>
                 <h1 class="adm-title">Product Costs</h1>
-                <p class="adm-sub">See the cost of goods and profit margin for each product.</p>
+                <p class="adm-sub">{{ products.total }} products &mdash; see cost of goods and profit margin per product.</p>
             </div>
             <Link :href="route('admin.finance.index')" class="adm-btn adm-btn--ghost adm-btn--sm">
                 Cost Items
@@ -79,9 +79,9 @@ const marginClass = (m: number | null): string => {
         </div>
 
         <!-- Filters -->
-        <div class="fi-filters">
+        <div class="pc-filters">
             <input v-model="search" type="text" placeholder="Search name or MPN…"
-                class="adm-input adm-input--sm" style="flex:1;min-width:180px"
+                class="adm-input adm-input--sm pc-search"
                 @keydown.enter="applyFilters" />
             <select v-model="filter" @change="applyFilters" class="adm-select adm-select--sm">
                 <option value="">All products</option>
@@ -91,88 +91,142 @@ const marginClass = (m: number | null): string => {
             <button @click="applyFilters" class="adm-btn adm-btn--ghost adm-btn--sm">Filter</button>
         </div>
 
-        <!-- Table -->
-        <div class="adm-card" style="padding:0">
-            <table class="adm-table" v-if="products.data.length">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th class="adm-table-num">Selling Price</th>
-                        <th class="adm-table-num">COGS</th>
-                        <th class="adm-table-num">Gross Profit</th>
-                        <th class="adm-table-num">Margin</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="product in products.data" :key="product.id">
-                        <td>
-                            <div class="fi-item-name">{{ product.name }}</div>
-                            <div class="fi-item-note">{{ product.mpn }}</div>
-                        </td>
-                        <td class="adm-table-num">{{ fmtCurrency(product.cost) }}</td>
-                        <td class="adm-table-num">
-                            <template v-if="product.total_cost > 0">{{ fmtCurrency(product.total_cost) }}</template>
-                            <span v-else class="adm-muted">—</span>
-                        </td>
-                        <td class="adm-table-num">
-                            <template v-if="product.total_cost > 0">
-                                {{ fmtCurrency(product.cost - product.total_cost) }}
-                            </template>
-                            <span v-else class="adm-muted">—</span>
-                        </td>
-                        <td class="adm-table-num">
-                            <span :class="marginClass(product.margin)">
-                                {{ product.margin !== null ? `${product.margin}%` : '—' }}
-                            </span>
-                        </td>
-                        <td class="adm-table-actions">
-                            <Link :href="route('admin.finance.products.detail', product.id)"
-                                class="adm-btn adm-btn--ghost adm-btn--xs">
-                                Build →
-                            </Link>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <div v-else class="adm-empty">
-                <p>No products found.</p>
+        <!-- Table card -->
+        <div class="adm-card adm-card--flush" style="margin-bottom:1.5rem">
+
+            <!-- Desktop table -->
+            <div class="adm-table-wrap">
+                <table class="adm-table">
+                    <thead class="adm-thead">
+                        <tr>
+                            <th class="adm-th">Product</th>
+                            <th class="adm-th adm-th--right">Selling Price</th>
+                            <th class="adm-th adm-th--right">COGS</th>
+                            <th class="adm-th adm-th--right">Gross Profit</th>
+                            <th class="adm-th adm-th--right">Margin</th>
+                            <th class="adm-th adm-th--right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="product in products.data" :key="product.id" class="adm-row">
+                            <td class="adm-td">
+                                <p class="pc-name">{{ product.name }}</p>
+                                <p class="adm-td--mono" style="font-size:.72rem">{{ product.mpn }}</p>
+                            </td>
+                            <td class="adm-td adm-td--right adm-td--price">{{ fmtCurrency(product.cost) }}</td>
+                            <td class="adm-td adm-td--right">
+                                <template v-if="product.total_cost > 0">
+                                    <span class="pc-cogs">{{ fmtCurrency(product.total_cost) }}</span>
+                                </template>
+                                <span v-else style="color:var(--bb-muted)">—</span>
+                            </td>
+                            <td class="adm-td adm-td--right adm-td--price"
+                                :style="product.total_cost > 0 ? (product.cost - product.total_cost >= 0 ? 'color:var(--bb-sage-d)' : 'color:var(--bb-red)') : ''">
+                                <template v-if="product.total_cost > 0">{{ fmtCurrency(product.cost - product.total_cost) }}</template>
+                                <span v-else style="color:var(--bb-muted)">—</span>
+                            </td>
+                            <td class="adm-td adm-td--right">
+                                <span :class="marginBadgeClass(product.margin)">
+                                    {{ product.margin !== null ? `${product.margin}%` : '—' }}
+                                </span>
+                            </td>
+                            <td class="adm-td adm-td--actions">
+                                <Link :href="route('admin.finance.products.detail', product.id)"
+                                    class="adm-action adm-action--edit">
+                                    Build →
+                                </Link>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+
+            <!-- Mobile cards -->
+            <div class="adm-mob-list">
+                <div v-for="product in products.data" :key="product.id" class="adm-mob-card">
+                    <div class="pc-mob-head">
+                        <div style="flex:1;min-width:0">
+                            <p class="pc-name">{{ product.name }}</p>
+                            <p class="adm-td--mono" style="font-size:.7rem">{{ product.mpn }}</p>
+                        </div>
+                        <span :class="marginBadgeClass(product.margin)">
+                            {{ product.margin !== null ? `${product.margin}%` : '—' }}
+                        </span>
+                    </div>
+                    <div class="pc-mob-meta">
+                        <div>
+                            <p class="pc-mob-label">Selling Price</p>
+                            <p class="pc-mob-val">{{ fmtCurrency(product.cost) }}</p>
+                        </div>
+                        <div>
+                            <p class="pc-mob-label">COGS</p>
+                            <p class="pc-mob-val pc-cogs">{{ product.total_cost > 0 ? fmtCurrency(product.total_cost) : '—' }}</p>
+                        </div>
+                        <div>
+                            <p class="pc-mob-label">Profit</p>
+                            <p class="pc-mob-val" :style="product.total_cost > 0 ? (product.cost - product.total_cost >= 0 ? 'color:var(--bb-sage-d)' : 'color:var(--bb-red)') : ''">
+                                {{ product.total_cost > 0 ? fmtCurrency(product.cost - product.total_cost) : '—' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <Link :href="route('admin.finance.products.detail', product.id)"
+                            class="adm-btn adm-btn--ghost adm-btn--sm">
+                            Build breakdown →
+                        </Link>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty -->
+            <div v-if="!products.data.length" class="adm-empty">
+                <div class="adm-empty-icon">📊</div>
+                <p class="adm-empty-title">No products found</p>
+                <p class="adm-empty-sub">Try adjusting your filters.</p>
+            </div>
+
         </div>
 
         <!-- Pagination -->
         <div v-if="products.last_page > 1" class="adm-pagination">
-            <template v-for="link in products.links" :key="link.label">
-                <button v-if="link.url" @click="paginate(link.url)"
-                    class="adm-page-btn" :class="{ 'adm-page-btn--active': link.active }"
-                    v-html="link.label" />
-                <span v-else class="adm-page-btn adm-page-btn--disabled" v-html="link.label" />
-            </template>
+            <p class="adm-page-info">
+                Page <strong>{{ products.current_page }}</strong> of <strong>{{ products.last_page }}</strong>
+            </p>
+            <div class="adm-page-btns">
+                <button v-for="link in products.links" :key="link.label"
+                    @click.prevent="paginate(link.url)"
+                    :disabled="!link.url"
+                    class="adm-page-btn"
+                    :class="{ 'adm-page-btn--active': link.active }"
+                    v-html="link.label.replace('&laquo; Previous','←').replace('Next &raquo;','→')">
+                </button>
+            </div>
         </div>
+
     </AdminLayout>
 </template>
 
 <style scoped>
-.fi-filters {
+.pc-filters {
     display: flex;
     gap: .6rem;
     margin-bottom: 1.25rem;
     flex-wrap: wrap;
 }
+.pc-search { flex: 1; min-width: 180px; }
 
-.fi-item-name { font-weight: 600; font-size: .875rem; }
-.fi-item-note { font-size: .75rem; color: #888; margin-top: .15rem; }
+.pc-name { font-size: .875rem; font-weight: 600; color: var(--bb-text); }
+.pc-cogs { color: var(--bb-red); font-weight: 600; }
 
-.fi-margin {
-    display: inline-block;
-    padding: .2rem .6rem;
-    border-radius: 20px;
-    font-size: .78rem;
-    font-weight: 700;
-}
-.fi-margin--none    { background: #f0f0f0; color: #888; }
-.fi-margin--great   { background: #d4edda; color: #1a6b35; }
-.fi-margin--good    { background: #d6ead8; color: #2e7d52; }
-.fi-margin--ok      { background: #fff3cd; color: #856404; }
-.fi-margin--low     { background: #fde2e2; color: #c0392b; }
+/* Mobile */
+.pc-mob-head { display: flex; align-items: flex-start; gap: .75rem; }
+.pc-mob-meta { display: flex; gap: 1.5rem; padding-top: .5rem; border-top: 1px solid var(--bb-border); }
+.pc-mob-label { font-size: .65rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--bb-muted); }
+.pc-mob-val   { font-size: .875rem; font-weight: 600; color: var(--bb-text); margin-top: .1rem; }
+
+/* Margin badge colours (extend adm-badge) */
+.pc-margin--great { background: var(--bb-green-bg); color: #1a6b35; }
+.pc-margin--good  { background: #d6ead8; color: var(--bb-sage-d); }
+.pc-margin--ok    { background: var(--bb-warn-bg); color: var(--bb-warn-text); }
+.pc-margin--low   { background: var(--bb-red-bg); color: var(--bb-red); }
 </style>
