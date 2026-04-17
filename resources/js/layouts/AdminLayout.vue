@@ -23,6 +23,9 @@ const isRouteActive = (name: string): boolean => {
     if (name === 'admin.marketplace.etsy.index') {
         return !!(route().current('admin.marketplace.etsy.*'));
     }
+    if (name === 'admin.finance.index') {
+        return !!(route().current('admin.finance.*'));
+    }
     return false;
 };
 
@@ -67,6 +70,14 @@ const navGroups = [
             { name: 'Oils', route: 'admin.oils.index', icon: ClpLabelsIcon },
             { name: 'CLP Labels', route: 'admin.clp-labels.index', icon: ClpLabelsIcon },
             { name: 'Batch Sheets', route: 'admin.batch-sheets.index', icon: ClpLabelsIcon },
+        ],
+    },
+    {
+        label: 'Finance',
+        accent: '#4caf85',
+        links: [
+            { name: 'Cost Items', route: 'admin.finance.index', icon: ClpLabelsIcon },
+            { name: 'Product Costs', route: 'admin.finance.products', icon: ProductsIcon },
         ],
     },
     {

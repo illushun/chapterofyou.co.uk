@@ -190,4 +190,11 @@ class Product extends Model
         return $this->hasOne(\App\Models\MarketplaceListing::class)
                     ->where('marketplace', 'etsy');
     }
+
+    public function costItems()
+    {
+        return $this->belongsToMany(\App\Models\Finance\CostItem::class, 'finance_product_cost', 'product_id', 'cost_item_id')
+                    ->withPivot('qty_per_unit')
+                    ->withTimestamps();
+    }
 }

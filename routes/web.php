@@ -37,6 +37,7 @@ use App\Http\Controllers\JournalController;
 use App\Http\Controllers\Admin\AdminJournalController;
 use App\Http\Controllers\Admin\Marketplace\EtsyController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\Admin\AdminFinanceController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
@@ -213,6 +214,19 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('etsy/products/{product}/unlink', [EtsyController::class, 'unlinkProduct'])->name('etsy.products.unlink');
         Route::get('etsy/orders', [EtsyController::class, 'orders'])->name('etsy.orders');
         Route::post('etsy/orders/import', [EtsyController::class, 'importOrders'])->name('etsy.orders.import');
+    });
+
+    // Finance
+    Route::prefix('finance')->name('finance.')->group(function () {
+        Route::get('/', [AdminFinanceController::class, 'index'])->name('index');
+        Route::post('/cost-items', [AdminFinanceController::class, 'storeCostItem'])->name('cost-items.store');
+        Route::put('/cost-items/{costItem}', [AdminFinanceController::class, 'updateCostItem'])->name('cost-items.update');
+        Route::delete('/cost-items/{costItem}', [AdminFinanceController::class, 'destroyCostItem'])->name('cost-items.destroy');
+        Route::get('/products', [AdminFinanceController::class, 'productCosts'])->name('products');
+        Route::get('/products/{product}', [AdminFinanceController::class, 'productCostDetail'])->name('products.detail');
+        Route::post('/products/{product}/costs', [AdminFinanceController::class, 'addProductCost'])->name('products.costs.add');
+        Route::put('/products/{product}/costs/{costItem}', [AdminFinanceController::class, 'updateProductCost'])->name('products.costs.update');
+        Route::delete('/products/{product}/costs/{costItem}', [AdminFinanceController::class, 'removeProductCost'])->name('products.costs.remove');
     });
 
     Route::resource('journal', AdminJournalController::class)
