@@ -27,8 +27,8 @@ class EtsyService
 
     public function __construct()
     {
-        $this->clientId   = config('services.etsy.client_id');
-        $this->redirectUri = config('services.etsy.redirect');
+        $this->clientId   = config('services.etsy.client_id', '');
+        $this->redirectUri = config('services.etsy.redirect', '');
     }
 
     // ──────────────────────────────────────────────────
