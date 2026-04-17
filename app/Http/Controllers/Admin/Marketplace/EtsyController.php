@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ImportEtsyOrders;
 use App\Models\MarketplaceConnection;
 use App\Models\MarketplaceListing;
+use App\Models\MarketplaceProductSetting;
 use App\Models\Order;
 use App\Models\Product;
 use App\Services\Etsy\EtsyService;
@@ -32,6 +33,7 @@ class EtsyController extends Controller
             $stats = [
                 'listings_count' => MarketplaceListing::where('marketplace', 'etsy')->count(),
                 'orders_count'   => Order::where('source', 'etsy')->count(),
+                'enabled_count'  => MarketplaceProductSetting::where('marketplace', 'etsy')->where('enabled', true)->count(),
                 'last_import'    => $connection->last_order_import_at?->toISOString(),
             ];
         }
@@ -84,7 +86,7 @@ class EtsyController extends Controller
     }
 
     // ──────────────────────────────────────────────────
-    // Products
+    // Products list
     // ──────────────────────────────────────────────────
 
     public function products(Request $request): Response
@@ -102,30 +104,142 @@ class EtsyController extends Controller
             });
         }
 
+        if ($request->filled('filter')) {
+            match ($request->filter) {
+                'enabled'      => $query->whereHas('etsySetting', fn ($q) => $q->where('enabled', true)),
+                'not_exported' => $query->whereHas('etsySetting', fn ($q) => $q->where('enabled', true))
+                                        ->whereDoesntHave('etsyListing'),
+                'exported'     => $query->whereHas('etsyListing'),
+                default        => null,
+            };
+        }
+
         $products = $query->paginate(20)->withQueryString();
+        $ids      = $products->pluck('id');
 
         $listingMap = MarketplaceListing::where('marketplace', 'etsy')
-            ->whereIn('product_id', $products->pluck('id'))
-            ->get()
-            ->keyBy('product_id');
+            ->whereIn('product_id', $ids)->get()->keyBy('product_id');
 
-        $products->getCollection()->transform(function ($product) use ($listingMap) {
+        $settingMap = MarketplaceProductSetting::where('marketplace', 'etsy')
+            ->whereIn('product_id', $ids)->get()->keyBy('product_id');
+
+        $products->getCollection()->transform(function ($product) use ($listingMap, $settingMap) {
             $listing = $listingMap->get($product->id);
+            $setting = $settingMap->get($product->id);
+
             $product->etsy_listing = $listing ? [
                 'listing_id'     => $listing->listing_id,
                 'status'         => $listing->status,
                 'last_synced_at' => $listing->last_synced_at?->toISOString(),
                 'sync_error'     => $listing->sync_error,
             ] : null;
+
+            $product->etsy_setting = $setting ? [
+                'enabled'              => $setting->enabled,
+                'has_overrides'        => (bool) ($setting->override_title || $setting->override_description || $setting->override_price),
+                'override_title'       => $setting->override_title,
+                'override_price'       => $setting->override_price,
+            ] : null;
+
             return $product;
         });
 
         return Inertia::render('admin/marketplace/etsy/Products', [
             'products'   => $products,
-            'filters'    => $request->only('search'),
+            'filters'    => $request->only(['search', 'filter']),
             'connection' => $this->connectionSummary(),
         ]);
     }
+
+    // ──────────────────────────────────────────────────
+    // Product enable / disable
+    // ──────────────────────────────────────────────────
+
+    public function toggleProduct(Product $product): RedirectResponse
+    {
+        $setting = MarketplaceProductSetting::firstOrCreate(
+            ['product_id' => $product->id, 'marketplace' => 'etsy'],
+            ['enabled' => false]
+        );
+
+        $setting->update(['enabled' => ! $setting->enabled]);
+
+        $state = $setting->enabled ? 'enabled' : 'disabled';
+
+        return back()->with('success', "'{$product->name}' {$state} for Etsy.");
+    }
+
+    // ──────────────────────────────────────────────────
+    // Product settings (overrides)
+    // ──────────────────────────────────────────────────
+
+    public function productSettings(Product $product): Response
+    {
+        $product->load(['images:product_id,image,status']);
+
+        $setting = MarketplaceProductSetting::firstOrCreate(
+            ['product_id' => $product->id, 'marketplace' => 'etsy'],
+            ['enabled' => true]
+        );
+
+        $listing = MarketplaceListing::where('product_id', $product->id)
+            ->where('marketplace', 'etsy')
+            ->first();
+
+        return Inertia::render('admin/marketplace/etsy/ProductSettings', [
+            'product' => [
+                'id'          => $product->id,
+                'mpn'         => $product->mpn,
+                'name'        => $product->name,
+                'description' => $product->description,
+                'cost'        => $product->cost,
+                'stock_qty'   => $product->stock_qty,
+                'images'      => $product->images,
+            ],
+            'setting' => [
+                'enabled'              => $setting->enabled,
+                'override_title'       => $setting->override_title ?? '',
+                'override_description' => $setting->override_description ?? '',
+                'override_price'       => $setting->override_price,
+                'override_tags'        => $setting->override_tags ?? '',
+            ],
+            'listing' => $listing ? [
+                'listing_id'     => $listing->listing_id,
+                'status'         => $listing->status,
+                'last_synced_at' => $listing->last_synced_at?->toISOString(),
+                'sync_error'     => $listing->sync_error,
+            ] : null,
+            'connection' => $this->connectionSummary(),
+        ]);
+    }
+
+    public function saveProductSettings(Request $request, Product $product): RedirectResponse
+    {
+        $data = $request->validate([
+            'enabled'              => ['required', 'boolean'],
+            'override_title'       => ['nullable', 'string', 'max:140'],
+            'override_description' => ['nullable', 'string'],
+            'override_price'       => ['nullable', 'numeric', 'min:0'],
+            'override_tags'        => ['nullable', 'string', 'max:500'],
+        ]);
+
+        MarketplaceProductSetting::updateOrCreate(
+            ['product_id' => $product->id, 'marketplace' => 'etsy'],
+            [
+                'enabled'              => $data['enabled'],
+                'override_title'       => $data['override_title'] ?: null,
+                'override_description' => $data['override_description'] ?: null,
+                'override_price'       => $data['override_price'] ?: null,
+                'override_tags'        => $data['override_tags'] ?: null,
+            ]
+        );
+
+        return back()->with('success', 'Etsy settings saved.');
+    }
+
+    // ──────────────────────────────────────────────────
+    // Export / Sync / Unlink
+    // ──────────────────────────────────────────────────
 
     public function exportProduct(Product $product): RedirectResponse
     {
@@ -220,9 +334,6 @@ class EtsyController extends Controller
         $c = MarketplaceConnection::where('marketplace', 'etsy')->first();
         if (! $c) return null;
 
-        return [
-            'shop_name' => $c->shop_name,
-            'shop_id'   => $c->shop_id,
-        ];
+        return ['shop_name' => $c->shop_name, 'shop_id' => $c->shop_id];
     }
 }

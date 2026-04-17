@@ -205,6 +205,9 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('etsy/callback', [EtsyController::class, 'callback'])->name('etsy.callback');
         Route::post('etsy/disconnect', [EtsyController::class, 'disconnect'])->name('etsy.disconnect');
         Route::get('etsy/products', [EtsyController::class, 'products'])->name('etsy.products');
+        Route::post('etsy/products/{product}/toggle', [EtsyController::class, 'toggleProduct'])->name('etsy.products.toggle');
+        Route::get('etsy/products/{product}/settings', [EtsyController::class, 'productSettings'])->name('etsy.products.settings');
+        Route::put('etsy/products/{product}/settings', [EtsyController::class, 'saveProductSettings'])->name('etsy.products.settings.save');
         Route::post('etsy/products/{product}/export', [EtsyController::class, 'exportProduct'])->name('etsy.products.export');
         Route::post('etsy/products/{product}/sync', [EtsyController::class, 'syncProduct'])->name('etsy.products.sync');
         Route::delete('etsy/products/{product}/unlink', [EtsyController::class, 'unlinkProduct'])->name('etsy.products.unlink');

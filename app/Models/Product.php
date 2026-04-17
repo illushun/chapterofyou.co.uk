@@ -178,4 +178,16 @@ class Product extends Model
                     ->orderBy('sort_order')
                     ->orderBy('id');
     }
+
+    public function etsySetting()
+    {
+        return $this->hasOne(\App\Models\MarketplaceProductSetting::class)
+                    ->where('marketplace', 'etsy');
+    }
+
+    public function etsyListing()
+    {
+        return $this->hasOne(\App\Models\MarketplaceListing::class)
+                    ->where('marketplace', 'etsy');
+    }
 }

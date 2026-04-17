@@ -4,6 +4,7 @@ namespace App\Services\Etsy;
 
 use App\Models\MarketplaceConnection;
 use App\Models\MarketplaceListing;
+use App\Models\MarketplaceProductSetting;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -145,12 +146,16 @@ class EtsyService
     public function exportProduct(Product $product): MarketplaceListing
     {
         $connection = $this->requireConnection();
+        $setting    = MarketplaceProductSetting::where('product_id', $product->id)
+                        ->where('marketplace', 'etsy')
+                        ->first();
 
-        $title       = Str::limit($product->name, 140, '');
-        $description = strip_tags($product->description ?? $product->name);
-        $price       = number_format((float) $product->cost, 2, '.', '');
+        $title       = Str::limit($setting?->effectiveTitle($product) ?? $product->name, 140, '');
+        $description = $setting ? $setting->effectiveDescription($product) : strip_tags($product->description ?? $product->name);
+        $price       = number_format($setting ? $setting->effectivePrice($product) : (float) $product->cost, 2, '.', '');
         $quantity    = max(1, (int) $product->stock_qty);
         $taxonomyId  = config('services.etsy.default_taxonomy_id', 1622);
+        $tags        = $setting?->tagsArray() ?? [];
 
         $payload = [
             'title'       => $title,
@@ -162,6 +167,10 @@ class EtsyService
             'taxonomy_id' => $taxonomyId,
             'state'       => 'draft',
         ];
+
+        if (! empty($tags)) {
+            $payload['tags'] = array_slice($tags, 0, 13);
+        }
 
         $response = $this->client($connection)->post("/shops/{$connection->shop_id}/listings", $payload);
         $this->assertOk($response, 'Failed to create Etsy listing');
@@ -188,12 +197,21 @@ class EtsyService
                         ->where('marketplace', 'etsy')
                         ->firstOrFail();
 
+        $setting = MarketplaceProductSetting::where('product_id', $product->id)
+                    ->where('marketplace', 'etsy')
+                    ->first();
+
+        $tags    = $setting?->tagsArray() ?? [];
         $payload = [
-            'title'       => Str::limit($product->name, 140, ''),
-            'description' => strip_tags($product->description ?? $product->name),
-            'price'       => number_format((float) $product->cost, 2, '.', ''),
+            'title'       => Str::limit($setting?->effectiveTitle($product) ?? $product->name, 140, ''),
+            'description' => $setting ? $setting->effectiveDescription($product) : strip_tags($product->description ?? $product->name),
+            'price'       => number_format($setting ? $setting->effectivePrice($product) : (float) $product->cost, 2, '.', ''),
             'quantity'    => max(0, (int) $product->stock_qty),
         ];
+
+        if (! empty($tags)) {
+            $payload['tags'] = array_slice($tags, 0, 13);
+        }
 
         $response = $this->client($connection)
             ->patch("/listings/{$listing->listing_id}", $payload);
