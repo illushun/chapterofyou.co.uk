@@ -114,9 +114,9 @@ const disconnect = () => {
                     Connect your Etsy shop to export products as draft listings and automatically import
                     new orders. You'll be redirected to Etsy to authorise access.
                 </p>
-                <Link :href="route('admin.marketplace.etsy.connect')" class="adm-btn mkp-connect-btn">
+                <a :href="route('admin.marketplace.etsy.connect')" class="adm-btn mkp-connect-btn">
                     Connect Etsy Shop
-                </Link>
+                </a>
             </template>
 
         </div>
