@@ -114,6 +114,7 @@ const reviewForm = useForm({ rating: 0, message: '', images: [] as File[] });
 
 const submitReview = () => {
     reviewForm.post(route('products.review.store', props.product.id), {
+        forceFormData: true,
         onSuccess: () => {
             successToastRef.value?.show('Review submitted! Awaiting approval.', 'star');
             reviewForm.reset('rating', 'message', 'images');
@@ -1425,13 +1426,12 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
 }
 
 .pd-file-hidden {
-    position: absolute;
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
     width: 1px;
     height: 1px;
     opacity: 0;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
 }
 
 .pd-rf-footer {
