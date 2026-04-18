@@ -97,6 +97,13 @@ const removeItem = (item: AttachedItem) => {
     router.delete(route('admin.finance.products.costs.remove', [props.product.id, item.id]));
 };
 
+// ── Ideal Selling Price ────────────────────────────────────────────────────
+const targetMargin = ref(50);
+const idealSellingPrice = computed(() => {
+    if (!props.costItems.length || targetMargin.value <= 0 || targetMargin.value >= 100) return null;
+    return totalCost.value / (1 - targetMargin.value / 100);
+});
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 const categoryBadge: Record<string, string> = {
     packaging: 'adm-badge--lav',
@@ -369,6 +376,35 @@ const categoryTotal = (key: string) =>
                     </div>
                 </div>
 
+                <!-- Ideal Selling Price -->
+                <div v-if="costItems.length" class="adm-card adm-card--sm">
+                    <p class="adm-card-title">Ideal Selling Price</p>
+                    <p class="pcd-hint" style="margin-top:0;margin-bottom:.75rem;text-align:left">
+                        What to charge to hit your target margin.
+                    </p>
+                    <div class="pcd-summary-row">
+                        <label class="pcd-target-label" for="targetMargin">Target margin</label>
+                        <div class="pcd-target-input-wrap">
+                            <input id="targetMargin" v-model.number="targetMargin" type="number"
+                                min="1" max="99" step="1" class="adm-input adm-input--sm pcd-target-input" />
+                            <span class="pcd-target-pct">%</span>
+                        </div>
+                    </div>
+                    <div class="pcd-divider"></div>
+                    <div class="pcd-summary-row">
+                        <span>Ideal Price</span>
+                        <strong class="pcd-ideal-price">
+                            {{ idealSellingPrice !== null ? fmtCurrency(idealSellingPrice) : '—' }}
+                        </strong>
+                    </div>
+                    <div v-if="idealSellingPrice !== null" class="pcd-summary-row" style="margin-top:.1rem">
+                        <span style="font-size:.78rem;color:var(--bb-muted)">vs. current price</span>
+                        <span :style="idealSellingPrice > product.cost ? 'color:var(--bb-red);font-size:.8rem;font-weight:600' : 'color:var(--bb-sage-d);font-size:.8rem;font-weight:600'">
+                            {{ idealSellingPrice > product.cost ? '+' : '' }}{{ fmtCurrency(idealSellingPrice - product.cost) }}
+                        </span>
+                    </div>
+                </div>
+
                 <!-- By category -->
                 <div v-if="costItems.length" class="adm-card adm-card--sm">
                     <p class="adm-card-title">By Category</p>
@@ -460,4 +496,11 @@ const categoryTotal = (key: string) =>
 .pcd-margin--low   { background: var(--bb-red-bg); color: var(--bb-red); }
 
 .pcd-req { color: var(--bb-red); }
+
+/* Ideal Selling Price */
+.pcd-target-label { font-size: .875rem; color: var(--bb-text); }
+.pcd-target-input-wrap { display: flex; align-items: center; gap: .3rem; }
+.pcd-target-input { width: 56px; text-align: center; }
+.pcd-target-pct { font-size: .875rem; color: var(--bb-muted); }
+.pcd-ideal-price { font-size: 1.05rem; color: var(--bb-lav-d); }
 </style>
