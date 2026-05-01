@@ -117,6 +117,22 @@ const disconnect = () => {
                 <a :href="route('admin.marketplace.etsy.connect')" class="adm-btn mkp-connect-btn">
                     Connect Etsy Shop
                 </a>
+
+                <div class="mkp-manual-divider">
+                    <span>or use manual CSV tools while waiting for API approval</span>
+                </div>
+
+                <div class="mkp-manual-actions">
+                    <Link :href="route('admin.marketplace.etsy.products')" class="adm-btn adm-btn--ghost">
+                        Manage Products &amp; Download CSV
+                    </Link>
+                    <Link :href="route('admin.marketplace.etsy.orders.import-csv')" class="adm-btn adm-btn--ghost">
+                        Import Orders from CSV
+                    </Link>
+                    <Link :href="route('admin.marketplace.etsy.orders')" class="adm-btn adm-btn--ghost">
+                        View Orders
+                    </Link>
+                </div>
             </template>
 
         </div>
@@ -203,4 +219,26 @@ const disconnect = () => {
     font-weight: 700;
 }
 .mkp-connect-btn:hover:not(:disabled) { opacity: 0.88; }
+
+.mkp-manual-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 1.25rem 0 1rem;
+    font-size: 0.75rem;
+    color: var(--bb-muted);
+}
+.mkp-manual-divider::before,
+.mkp-manual-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--bb-border);
+}
+
+.mkp-manual-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
 </style>
