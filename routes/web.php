@@ -206,6 +206,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('etsy/callback', [EtsyController::class, 'callback'])->name('etsy.callback');
         Route::post('etsy/disconnect', [EtsyController::class, 'disconnect'])->name('etsy.disconnect');
         Route::get('etsy/products', [EtsyController::class, 'products'])->name('etsy.products');
+        Route::get('etsy/products/export-csv', [EtsyController::class, 'exportProductsCsv'])->name('etsy.products.export-csv');
         Route::post('etsy/products/{product}/toggle', [EtsyController::class, 'toggleProduct'])->name('etsy.products.toggle');
         Route::get('etsy/products/{product}/settings', [EtsyController::class, 'productSettings'])->name('etsy.products.settings');
         Route::put('etsy/products/{product}/settings', [EtsyController::class, 'saveProductSettings'])->name('etsy.products.settings.save');
@@ -214,6 +215,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::delete('etsy/products/{product}/unlink', [EtsyController::class, 'unlinkProduct'])->name('etsy.products.unlink');
         Route::get('etsy/orders', [EtsyController::class, 'orders'])->name('etsy.orders');
         Route::post('etsy/orders/import', [EtsyController::class, 'importOrders'])->name('etsy.orders.import');
+        Route::get('etsy/orders/import-csv', [EtsyController::class, 'importOrdersCsv'])->name('etsy.orders.import-csv');
+        Route::post('etsy/orders/import-csv', [EtsyController::class, 'processOrdersCsv'])->name('etsy.orders.import-csv.upload');
     });
 
     // Finance
