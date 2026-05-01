@@ -124,7 +124,7 @@ const disconnect = () => {
 
                 <div class="mkp-manual-actions">
                     <Link :href="route('admin.marketplace.etsy.products')" class="adm-btn adm-btn--ghost">
-                        Manage Products &amp; Download CSV
+                        Manage Products
                     </Link>
                     <Link :href="route('admin.marketplace.etsy.orders.import-csv')" class="adm-btn adm-btn--ghost">
                         Import Orders from CSV

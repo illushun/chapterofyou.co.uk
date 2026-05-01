@@ -134,9 +134,11 @@ const listingBadgeText = (status: EtsyListing['status']) => ({
                 </p>
             </div>
             <div class="ep-header-actions">
-                <a :href="route('admin.marketplace.etsy.products.export-csv')" class="adm-btn adm-btn--ghost adm-btn--sm">
+                <a :href="route('admin.marketplace.etsy.products.export-csv')"
+                    class="adm-btn adm-btn--ghost adm-btn--sm"
+                    title="Download a reference spreadsheet to copy listing data into Etsy manually">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Download CSV
+                    Listing Reference CSV
                 </a>
                 <Link :href="route('admin.marketplace.etsy.orders')" class="adm-btn adm-btn--ghost adm-btn--sm">
                     View Orders
@@ -154,10 +156,18 @@ const listingBadgeText = (status: EtsyListing['status']) => ({
             {{ flash.error }}
         </div>
 
-        <!-- Draft notice -->
+        <!-- Notice -->
         <div class="adm-flash adm-flash--warn" style="margin-bottom:1.25rem">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-            Products export as <strong>draft listings</strong>. Add a shipping profile and activate them in your Etsy shop before they go live.
+            <span>
+                <template v-if="connection">
+                    Products export as <strong>draft listings</strong>. Add a shipping profile and activate them in your Etsy shop before they go live.
+                </template>
+                <template v-else>
+                    <strong>No API connection yet.</strong>
+                    The <strong>Download CSV</strong> button generates a reference sheet of your enabled products — open it alongside Etsy's listing form to copy titles, descriptions, prices, and tags across without re-typing. Once your API application is approved, you'll be able to push listings directly.
+                </template>
+            </span>
         </div>
 
         <!-- Filters -->
