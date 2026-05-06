@@ -21,7 +21,7 @@ class EtsyService
     private const BASE_URL  = 'https://api.etsy.com/v3/application';
     private const AUTH_URL  = 'https://www.etsy.com/oauth/connect';
     private const TOKEN_URL = 'https://api.etsy.com/v3/public/oauth/token';
-    private const SCOPES    = 'listings_r listings_w listings_d transactions_r';
+    private const SCOPES    = 'listings_r listings_w listings_d transactions_r shops_r';
 
     private string $clientId;
     private string $clientSecret;
