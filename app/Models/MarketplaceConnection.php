@@ -13,6 +13,7 @@ class MarketplaceConnection extends Model
         'shop_id',
         'shop_name',
         'default_shipping_profile_id',
+        'default_readiness_state_id',
         'etsy_user_id',
         'access_token',
         'refresh_token',

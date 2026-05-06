@@ -145,6 +145,7 @@ class EtsyService
 
             $connection = $connection->fresh();
             $this->fetchAndStoreDefaultShippingProfile($connection, $client);
+            $this->fetchAndStoreDefaultReadinessState($connection, $client);
         } else {
             throw new Exception('Etsy API returned no shop for this account. Response: ' . $shopsResponse->body());
         }
@@ -168,9 +169,11 @@ class EtsyService
         $taxonomyId  = config('services.etsy.default_taxonomy_id', 1622);
         $tags        = $setting?->tagsArray() ?? [];
 
-        $shippingProfileId = $connection->default_shipping_profile_id;
-        if (! $shippingProfileId) {
-            throw new Exception('No shipping profile configured. Please disconnect and reconnect your Etsy shop to fetch your shipping profiles.');
+        $shippingProfileId  = $connection->default_shipping_profile_id;
+        $readinessStateId   = $connection->default_readiness_state_id;
+
+        if (! $shippingProfileId || ! $readinessStateId) {
+            throw new Exception('Shop configuration incomplete (missing shipping profile or readiness state). Use "Refresh Shop Info" on the Marketplaces page.');
         }
 
         $payload = [
@@ -182,7 +185,7 @@ class EtsyService
             'when_made'           => 'made_to_order',
             'taxonomy_id'         => $taxonomyId,
             'shipping_profile_id' => (int) $shippingProfileId,
-            'readiness_state_id'  => 1,
+            'readiness_state_id'  => (int) $readinessStateId,
             'state'               => 'draft',
         ];
 
@@ -441,6 +444,19 @@ class EtsyService
         if ($response->successful() && ! empty($profiles)) {
             $connection->update([
                 'default_shipping_profile_id' => (string) $profiles[0]['shipping_profile_id'],
+            ]);
+        }
+    }
+
+    private function fetchAndStoreDefaultReadinessState(MarketplaceConnection $connection, \Illuminate\Http\Client\PendingRequest $client): void
+    {
+        $response = $client->get("/shops/{$connection->shop_id}/listing-readiness-states");
+        Log::info('Etsy readiness-states status=' . $response->status() . ' body=' . $response->body());
+
+        $states = $response->json('results') ?? [];
+        if ($response->successful() && ! empty($states)) {
+            $connection->update([
+                'default_readiness_state_id' => (string) $states[0]['readiness_state_id'],
             ]);
         }
     }
