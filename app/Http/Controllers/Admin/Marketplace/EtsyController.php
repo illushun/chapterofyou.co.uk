@@ -76,6 +76,11 @@ class EtsyController extends Controller
                 ->with('error', 'Could not connect to Etsy: ' . $e->getMessage());
         }
 
+        if ($shopInfoError = session()->pull('shop_info_error')) {
+            return redirect()->route('admin.marketplace.etsy.index')
+                ->with('warning', 'Etsy token saved, but could not fetch shop info: ' . $shopInfoError);
+        }
+
         return redirect()->route('admin.marketplace.etsy.index')
             ->with('success', 'Etsy shop connected successfully!');
     }
@@ -86,6 +91,23 @@ class EtsyController extends Controller
 
         return redirect()->route('admin.marketplace.etsy.index')
             ->with('success', 'Etsy shop disconnected.');
+    }
+
+    public function refreshShopInfo(): RedirectResponse
+    {
+        $connection = MarketplaceConnection::where('marketplace', 'etsy')->first();
+
+        if (! $connection) {
+            return back()->with('error', 'No Etsy connection found.');
+        }
+
+        try {
+            $this->etsy->fetchAndStoreShopInfo($connection);
+        } catch (Exception $e) {
+            return back()->with('error', 'Could not fetch shop info: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Shop info refreshed: ' . $connection->fresh()->shop_name);
     }
 
     // ──────────────────────────────────────────────────

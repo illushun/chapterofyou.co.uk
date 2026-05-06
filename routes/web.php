@@ -205,6 +205,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::get('etsy/connect', [EtsyController::class, 'connect'])->name('etsy.connect');
         Route::get('etsy/callback', [EtsyController::class, 'callback'])->name('etsy.callback');
         Route::post('etsy/disconnect', [EtsyController::class, 'disconnect'])->name('etsy.disconnect');
+        Route::post('etsy/refresh-shop', [EtsyController::class, 'refreshShopInfo'])->name('etsy.refresh-shop');
         Route::get('etsy/products', [EtsyController::class, 'products'])->name('etsy.products');
         Route::get('etsy/products/export-csv', [EtsyController::class, 'exportProductsCsv'])->name('etsy.products.export-csv');
         Route::post('etsy/products/{product}/toggle', [EtsyController::class, 'toggleProduct'])->name('etsy.products.toggle');

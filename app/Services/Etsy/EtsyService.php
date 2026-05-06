@@ -81,7 +81,11 @@ class EtsyService
 
         session()->forget(['etsy_code_verifier', 'etsy_state']);
 
-        $this->fetchAndStoreShopInfo($connection);
+        try {
+            $this->fetchAndStoreShopInfo($connection);
+        } catch (Exception $e) {
+            session()->flash('shop_info_error', $e->getMessage());
+        }
 
         return $connection;
     }
@@ -116,27 +120,26 @@ class EtsyService
 
     public function fetchAndStoreShopInfo(MarketplaceConnection $connection): void
     {
-        try {
-            $connection = $this->refreshTokenIfNeeded($connection);
-            $client = $this->client($connection);
+        $connection = $this->refreshTokenIfNeeded($connection);
+        $client = $this->client($connection);
 
-            $meResponse = $client->get('/users/me');
-            $this->assertOk($meResponse, 'Could not fetch Etsy user');
+        $meResponse = $client->get('/users/me');
+        Log::info('Etsy /users/me status=' . $meResponse->status() . ' body=' . $meResponse->body());
+        $this->assertOk($meResponse, 'Could not fetch Etsy user');
 
-            $userId = $meResponse->json('user_id');
+        $userId = $meResponse->json('user_id');
 
-            $shopsResponse = $client->get("/users/{$userId}/shops");
-            if ($shopsResponse->successful() && $shopsResponse->json('shop_id')) {
-                $connection->update([
-                    'etsy_user_id' => $userId,
-                    'shop_id'      => (string) $shopsResponse->json('shop_id'),
-                    'shop_name'    => $shopsResponse->json('shop_name'),
-                ]);
-            } else {
-                Log::warning('Etsy: shops response did not contain shop_id — status ' . $shopsResponse->status() . ' body: ' . $shopsResponse->body());
-            }
-        } catch (Exception $e) {
-            Log::warning('Etsy: could not fetch shop info — ' . $e->getMessage());
+        $shopsResponse = $client->get("/users/{$userId}/shops");
+        Log::info('Etsy /users/' . $userId . '/shops status=' . $shopsResponse->status() . ' body=' . $shopsResponse->body());
+
+        if ($shopsResponse->successful() && $shopsResponse->json('shop_id')) {
+            $connection->update([
+                'etsy_user_id' => $userId,
+                'shop_id'      => (string) $shopsResponse->json('shop_id'),
+                'shop_name'    => $shopsResponse->json('shop_name'),
+            ]);
+        } else {
+            throw new Exception('Etsy API returned no shop for this account. Response: ' . $shopsResponse->body());
         }
     }
 
