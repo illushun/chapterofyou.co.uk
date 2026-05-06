@@ -126,13 +126,14 @@ class EtsyService
             $userId = $meResponse->json('user_id');
 
             $shopsResponse = $client->get("/users/{$userId}/shops");
-            if ($shopsResponse->successful() && ! empty($shopsResponse->json('results'))) {
-                $shop = $shopsResponse->json('results')[0];
+            if ($shopsResponse->successful() && $shopsResponse->json('shop_id')) {
                 $connection->update([
                     'etsy_user_id' => $userId,
-                    'shop_id'      => $shop['shop_id'],
-                    'shop_name'    => $shop['shop_name'],
+                    'shop_id'      => (string) $shopsResponse->json('shop_id'),
+                    'shop_name'    => $shopsResponse->json('shop_name'),
                 ]);
+            } else {
+                Log::warning('Etsy: shops response did not contain shop_id — status ' . $shopsResponse->status() . ' body: ' . $shopsResponse->body());
             }
         } catch (Exception $e) {
             Log::warning('Etsy: could not fetch shop info — ' . $e->getMessage());
@@ -417,6 +418,10 @@ class EtsyService
 
         if (! $connection) {
             throw new Exception('No Etsy connection found. Please connect your Etsy shop first.');
+        }
+
+        if (! $connection->shop_id) {
+            throw new Exception('Etsy shop ID is missing. Please disconnect and reconnect your Etsy shop.');
         }
 
         return $connection;
