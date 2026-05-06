@@ -54,6 +54,7 @@ return [
 
     'etsy' => [
         'client_id'           => env('ETSY_CLIENT_ID'),
+        'client_secret'       => env('ETSY_CLIENT_SECRET'),
         'redirect'            => env('ETSY_REDIRECT_URI', '/admin/marketplace/etsy/callback'),
         'default_taxonomy_id' => env('ETSY_DEFAULT_TAXONOMY_ID', 1622),
     ],

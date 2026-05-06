@@ -24,12 +24,14 @@ class EtsyService
     private const SCOPES    = 'listings_r listings_w listings_d transactions_r';
 
     private string $clientId;
+    private string $clientSecret;
     private string $redirectUri;
 
     public function __construct()
     {
-        $this->clientId   = config('services.etsy.client_id', '');
-        $this->redirectUri = config('services.etsy.redirect', '');
+        $this->clientId     = config('services.etsy.client_id', '');
+        $this->clientSecret = config('services.etsy.client_secret', '');
+        $this->redirectUri  = config('services.etsy.redirect', '');
     }
 
     // ──────────────────────────────────────────────────
@@ -412,7 +414,7 @@ class EtsyService
 
         return Http::baseUrl(self::BASE_URL)
             ->withToken($connection->access_token)
-            ->withHeaders(['x-api-key' => $this->clientId]);
+            ->withHeaders(['x-api-key' => $this->clientId . ':' . $this->clientSecret]);
     }
 
     private function requireConnection(): MarketplaceConnection
