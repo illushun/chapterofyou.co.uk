@@ -182,6 +182,7 @@ class EtsyService
             'when_made'           => 'made_to_order',
             'taxonomy_id'         => $taxonomyId,
             'shipping_profile_id' => (int) $shippingProfileId,
+            'readiness_state_id'  => 1,
             'state'               => 'draft',
         ];
 
