@@ -135,11 +135,16 @@ class EtsyService
         Log::info('Etsy /users/' . $userId . '/shops status=' . $shopsResponse->status() . ' body=' . $shopsResponse->body());
 
         if ($shopsResponse->successful() && $shopsResponse->json('shop_id')) {
+            $shopId = (string) $shopsResponse->json('shop_id');
+
             $connection->update([
                 'etsy_user_id' => $userId,
-                'shop_id'      => (string) $shopsResponse->json('shop_id'),
+                'shop_id'      => $shopId,
                 'shop_name'    => $shopsResponse->json('shop_name'),
             ]);
+
+            $connection = $connection->fresh();
+            $this->fetchAndStoreDefaultShippingProfile($connection, $client);
         } else {
             throw new Exception('Etsy API returned no shop for this account. Response: ' . $shopsResponse->body());
         }
@@ -163,15 +168,21 @@ class EtsyService
         $taxonomyId  = config('services.etsy.default_taxonomy_id', 1622);
         $tags        = $setting?->tagsArray() ?? [];
 
+        $shippingProfileId = $connection->default_shipping_profile_id;
+        if (! $shippingProfileId) {
+            throw new Exception('No shipping profile configured. Please disconnect and reconnect your Etsy shop to fetch your shipping profiles.');
+        }
+
         $payload = [
-            'title'       => $title,
-            'description' => $description,
-            'price'       => $price,
-            'quantity'    => $quantity,
-            'who_made'    => 'i_did',
-            'when_made'   => 'made_to_order',
-            'taxonomy_id' => $taxonomyId,
-            'state'       => 'draft',
+            'title'               => $title,
+            'description'         => $description,
+            'price'               => $price,
+            'quantity'            => $quantity,
+            'who_made'            => 'i_did',
+            'when_made'           => 'made_to_order',
+            'taxonomy_id'         => $taxonomyId,
+            'shipping_profile_id' => (int) $shippingProfileId,
+            'state'               => 'draft',
         ];
 
         if (! empty($tags)) {
@@ -402,6 +413,35 @@ class EtsyService
         $divisor = (float) ($amountObject['divisor'] ?? 100);
 
         return $divisor > 0 ? round($amount / $divisor, 2) : 0.0;
+    }
+
+    public function getShippingProfiles(MarketplaceConnection $connection): array
+    {
+        try {
+            $connection = $this->refreshTokenIfNeeded($connection);
+            $response   = $this->client($connection)->get("/shops/{$connection->shop_id}/shipping-profiles");
+
+            if ($response->successful()) {
+                return $response->json('results') ?? [];
+            }
+        } catch (Exception $e) {
+            Log::warning('Etsy: could not fetch shipping profiles: ' . $e->getMessage());
+        }
+
+        return [];
+    }
+
+    private function fetchAndStoreDefaultShippingProfile(MarketplaceConnection $connection, \Illuminate\Http\Client\PendingRequest $client): void
+    {
+        $response = $client->get("/shops/{$connection->shop_id}/shipping-profiles");
+        Log::info('Etsy shipping-profiles status=' . $response->status() . ' body=' . $response->body());
+
+        $profiles = $response->json('results') ?? [];
+        if ($response->successful() && ! empty($profiles)) {
+            $connection->update([
+                'default_shipping_profile_id' => (string) $profiles[0]['shipping_profile_id'],
+            ]);
+        }
     }
 
     // ──────────────────────────────────────────────────

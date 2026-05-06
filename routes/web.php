@@ -218,6 +218,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('etsy/orders/import', [EtsyController::class, 'importOrders'])->name('etsy.orders.import');
         Route::get('etsy/orders/import-csv', [EtsyController::class, 'importOrdersCsv'])->name('etsy.orders.import-csv');
         Route::post('etsy/orders/import-csv', [EtsyController::class, 'processOrdersCsv'])->name('etsy.orders.import-csv.upload');
+        Route::post('etsy/shipping-profile', [EtsyController::class, 'saveShippingProfile'])->name('etsy.shipping-profile');
+        Route::post('etsy/products/{product}/link', [EtsyController::class, 'linkExistingListing'])->name('etsy.products.link');
     });
 
     // Finance

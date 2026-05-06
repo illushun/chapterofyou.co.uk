@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useAdmin } from '@/composables/useAdmin';
 
 interface Connection {
@@ -9,6 +9,7 @@ interface Connection {
     shop_id: string | null;
     scopes: string | null;
     expires_at: string | null;
+    default_shipping_profile_id: string | null;
 }
 
 interface Stats {
@@ -20,6 +21,7 @@ interface Stats {
 const props = defineProps<{
     connection: Connection | null;
     stats: Stats | null;
+    shipping_profiles: { shipping_profile_id: number; title: string }[];
 }>();
 
 const page = usePage();
@@ -32,6 +34,16 @@ const disconnect = () => {
     if (confirm('Disconnect your Etsy shop? Existing imported orders will remain.')) {
         router.post(route('admin.marketplace.etsy.disconnect'));
     }
+};
+
+const selectedShippingProfile = ref<string>(
+    props.connection?.default_shipping_profile_id ?? ''
+);
+
+const saveShippingProfile = () => {
+    router.post(route('admin.marketplace.etsy.shipping-profile'), {
+        shipping_profile_id: selectedShippingProfile.value,
+    });
 };
 </script>
 
@@ -54,6 +66,10 @@ const disconnect = () => {
         <div v-if="flash.error" class="adm-flash adm-flash--error" style="margin-bottom:1.25rem">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
             {{ flash.error }}
+        </div>
+        <div v-if="flash.warning" class="adm-flash adm-flash--warn" style="margin-bottom:1.25rem">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            {{ flash.warning }}
         </div>
 
         <!-- Etsy card -->
@@ -94,6 +110,31 @@ const disconnect = () => {
                     {{ connection.shop_name ?? 'Unknown' }}
                     <span v-if="connection.shop_id" class="mkp-shop-id">#{{ connection.shop_id }}</span>
                 </p>
+
+                <!-- Shipping profile selector -->
+                <div class="mkp-shipping-profile">
+                    <p class="mkp-shipping-label">Shipping Profile</p>
+                    <template v-if="shipping_profiles.length">
+                        <div class="mkp-shipping-row">
+                            <select v-model="selectedShippingProfile" class="adm-input mkp-shipping-select">
+                                <option value="" disabled>Select a profile…</option>
+                                <option
+                                    v-for="profile in shipping_profiles"
+                                    :key="profile.shipping_profile_id"
+                                    :value="String(profile.shipping_profile_id)"
+                                >
+                                    {{ profile.title }}
+                                </option>
+                            </select>
+                            <button @click="saveShippingProfile" class="adm-btn adm-btn--primary mkp-shipping-save">
+                                Save
+                            </button>
+                        </div>
+                    </template>
+                    <p v-else class="adm-sub mkp-shipping-empty">
+                        No shipping profiles found — reconnect your shop to fetch them.
+                    </p>
+                </div>
 
                 <div class="mkp-actions">
                     <Link :href="route('admin.marketplace.etsy.products')" class="adm-btn adm-btn--primary">
@@ -240,5 +281,37 @@ const disconnect = () => {
     display: flex;
     flex-wrap: wrap;
     gap: 0.6rem;
+}
+
+.mkp-shipping-profile {
+    margin-bottom: 1.25rem;
+}
+
+.mkp-shipping-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+    margin-bottom: 0.5rem;
+}
+
+.mkp-shipping-row {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+}
+
+.mkp-shipping-select {
+    flex: 1;
+    min-width: 0;
+}
+
+.mkp-shipping-save {
+    flex-shrink: 0;
+}
+
+.mkp-shipping-empty {
+    font-size: 0.8rem;
 }
 </style>

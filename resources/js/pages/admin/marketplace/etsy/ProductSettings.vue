@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 import { useAdmin } from '@/composables/useAdmin';
 
 interface ProductData {
@@ -78,6 +78,18 @@ const listingBadgeClass = (status: string) => ({
 
 const formatDate = (iso: string | null) =>
     iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+
+const showLinkForm = ref(false);
+const linkForm = useForm({ listing_id: '' });
+
+const submitLink = () => {
+    linkForm.post(route('admin.marketplace.etsy.products.link', props.product.id), {
+        onSuccess: () => {
+            showLinkForm.value = false;
+            linkForm.reset();
+        },
+    });
+};
 </script>
 
 <template>
@@ -291,6 +303,36 @@ const formatDate = (iso: string | null) =>
                         <p v-if="!form.enabled" class="adm-err" style="margin-top:0.4rem;text-align:center">
                             Enable this product for Etsy first
                         </p>
+
+                        <!-- Link existing listing -->
+                        <div class="ps-link-divider">
+                            <span>or</span>
+                        </div>
+
+                        <button @click="showLinkForm = !showLinkForm"
+                            class="adm-btn adm-btn--ghost adm-btn--full ps-link-toggle">
+                            Link existing listing
+                        </button>
+
+                        <div v-if="showLinkForm" class="ps-link-form">
+                            <label class="adm-label" style="margin-bottom:0.35rem;display:block">
+                                Etsy listing ID
+                            </label>
+                            <input
+                                v-model="linkForm.listing_id"
+                                type="text"
+                                placeholder="e.g. 1234567890"
+                                class="adm-input"
+                                style="margin-bottom:0.5rem"
+                            />
+                            <p v-if="linkForm.errors.listing_id" class="adm-err">{{ linkForm.errors.listing_id }}</p>
+                            <button
+                                @click="submitLink"
+                                :disabled="linkForm.processing || !linkForm.listing_id"
+                                class="adm-btn adm-btn--primary adm-btn--full">
+                                {{ linkForm.processing ? 'Linking…' : 'Link listing' }}
+                            </button>
+                        </div>
                     </template>
                 </div>
 
@@ -411,5 +453,31 @@ const formatDate = (iso: string | null) =>
     flex-direction: column;
     gap: 0.5rem;
     margin-top: 0.85rem;
+}
+
+.ps-link-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0.85rem 0 0.6rem;
+    font-size: 0.75rem;
+    color: var(--bb-muted);
+}
+.ps-link-divider::before,
+.ps-link-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--bb-border);
+}
+
+.ps-link-toggle {
+    margin-bottom: 0;
+}
+
+.ps-link-form {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--bb-border);
 }
 </style>

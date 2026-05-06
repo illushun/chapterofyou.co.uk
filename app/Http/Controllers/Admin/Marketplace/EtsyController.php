@@ -31,7 +31,9 @@ class EtsyController extends Controller
     {
         $connection = MarketplaceConnection::where('marketplace', 'etsy')->first();
 
-        $stats = null;
+        $stats            = null;
+        $shippingProfiles = [];
+
         if ($connection) {
             $stats = [
                 'listings_count' => MarketplaceListing::where('marketplace', 'etsy')->count(),
@@ -39,17 +41,52 @@ class EtsyController extends Controller
                 'enabled_count'  => MarketplaceProductSetting::where('marketplace', 'etsy')->where('enabled', true)->count(),
                 'last_import'    => $connection->last_order_import_at?->toISOString(),
             ];
+
+            $shippingProfiles = $this->etsy->getShippingProfiles($connection);
         }
 
         return Inertia::render('admin/marketplace/Index', [
             'connection' => $connection ? [
-                'shop_name'  => $connection->shop_name,
-                'shop_id'    => $connection->shop_id,
-                'scopes'     => $connection->scopes,
-                'expires_at' => $connection->expires_at?->toISOString(),
+                'shop_name'                   => $connection->shop_name,
+                'shop_id'                     => $connection->shop_id,
+                'scopes'                      => $connection->scopes,
+                'expires_at'                  => $connection->expires_at?->toISOString(),
+                'default_shipping_profile_id' => $connection->default_shipping_profile_id,
             ] : null,
-            'stats' => $stats,
+            'stats'             => $stats,
+            'shipping_profiles' => $shippingProfiles,
         ]);
+    }
+
+    public function saveShippingProfile(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'shipping_profile_id' => ['required', 'string'],
+        ]);
+
+        MarketplaceConnection::where('marketplace', 'etsy')
+            ->update(['default_shipping_profile_id' => $data['shipping_profile_id']]);
+
+        return back()->with('success', 'Default shipping profile saved.');
+    }
+
+    public function linkExistingListing(Request $request, Product $product): RedirectResponse
+    {
+        $data = $request->validate([
+            'listing_id' => ['required', 'string'],
+        ]);
+
+        MarketplaceListing::updateOrCreate(
+            ['product_id' => $product->id, 'marketplace' => 'etsy'],
+            [
+                'listing_id'     => $data['listing_id'],
+                'status'         => 'synced',
+                'sync_error'     => null,
+                'last_synced_at' => now(),
+            ]
+        );
+
+        return back()->with('success', "Listing #{$data['listing_id']} linked to '{$product->name}'.");
     }
 
     // ──────────────────────────────────────────────────
