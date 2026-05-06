@@ -45,6 +45,10 @@ const saveShippingProfile = () => {
         shipping_profile_id: selectedShippingProfile.value,
     });
 };
+
+const refreshShopInfo = () => {
+    router.post(route('admin.marketplace.etsy.refresh-shop'));
+};
 </script>
 
 <template>
@@ -143,6 +147,9 @@ const saveShippingProfile = () => {
                     <Link :href="route('admin.marketplace.etsy.orders')" class="adm-btn adm-btn--ghost">
                         View Orders
                     </Link>
+                    <button @click="refreshShopInfo" class="adm-btn adm-btn--ghost">
+                        Refresh Shop Info
+                    </button>
                     <button @click="disconnect" class="adm-btn adm-btn--danger mkp-disconnect-btn">
                         Disconnect
                     </button>
