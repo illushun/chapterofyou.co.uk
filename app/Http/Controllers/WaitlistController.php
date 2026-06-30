@@ -1,37 +1,52 @@
 <?php
 
-// app/Http/Controllers/WaitlistController.php
-
 namespace App\Http\Controllers;
 
+use App\Mail\WelcomeDiscountMail;
+use App\Models\Voucher;
 use App\Models\WaitlistEntry;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class WaitlistController extends Controller
 {
-    /**
-     * Handle the incoming request to save a new waitlist email.
-     */
     public function __invoke(Request $request)
     {
-        // 1. Validation
         $validated = $request->validate([
             'email' => [
                 'required',
                 'email',
                 'max:255',
-                // Ensures the email is unique in the 'waitlist_entries' table
-                Rule::unique('waitlist_entries', 'email'), 
+                Rule::unique('waitlist_entries', 'email'),
             ],
         ]);
 
-        // 2. Save to Database
         WaitlistEntry::create($validated);
 
-        // 3. Return a successful JSON response
-        return response()->json([
-            'message' => 'Thank you! You have been added to the waitlist.',
-        ], 201); // 201 Created
+        // Generate a unique one-time voucher code for this signup
+        do {
+            $code = 'WELCOME' . strtoupper(Str::random(6));
+        } while (Voucher::where('code', $code)->exists());
+
+        Voucher::create([
+            'code'                    => $code,
+            'description'             => "10% welcome discount for {$validated['email']}",
+            'type'                    => 'percentage',
+            'value'                   => 10.00,
+            'applies_to_all_products' => true,
+            'stackable'               => false,
+            'new_customers_only'      => false,
+            'single_use_per_user'     => true,
+            'max_uses'                => 1,
+            'uses_count'              => 0,
+            'valid_until'             => now()->addDays(30),
+            'is_active'               => true,
+        ]);
+
+        Mail::to($validated['email'])->queue(new WelcomeDiscountMail($code));
+
+        return response()->json(['message' => 'Thank you!'], 201);
     }
 }

@@ -7,7 +7,7 @@ import { useSeoHead } from '@/composables/useSeoHead';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
 import { useOrganizationSchema, useWebsiteSchema } from '@/composables/useProductSchema';
 import StarRating from '@/components/ui/coy/StarRating.vue';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 
 interface FeaturedProduct {
@@ -32,9 +32,20 @@ const props = defineProps<{
     testimonials?: Testimonial[];
 }>();
 
-const heroImage = computed(() => {
-    const img = props.featuredProducts?.[0]?.image;
-    return img && img !== '/images/placeholder.jpg' ? img : null;
+// Spotlight cycles through featured products automatically
+const spotlightIndex = ref(0);
+let spotlightTimer: ReturnType<typeof setInterval> | null = null;
+
+onMounted(() => {
+    if ((props.featuredProducts?.length ?? 0) > 1) {
+        spotlightTimer = setInterval(() => {
+            spotlightIndex.value = (spotlightIndex.value + 1) % props.featuredProducts!.length;
+        }, 2800);
+    }
+});
+
+onUnmounted(() => {
+    if (spotlightTimer) clearInterval(spotlightTimer);
 });
 
 // Email capture
@@ -82,7 +93,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 
 
         <!-- ── Hero ── -->
-        <section class="lp-hero" :class="{ 'lp-hero--split': heroImage }">
+        <section class="lp-hero">
             <!-- Decorative blobs -->
             <div class="lp-blob lp-blob--1" aria-hidden="true"></div>
             <div class="lp-blob lp-blob--2" aria-hidden="true"></div>
@@ -108,44 +119,51 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
                     transform="rotate(20 100 550)">✿</text>
             </svg>
 
-            <div class="lp-hero-inner">
-                <div class="lp-hero-content">
-                    <p class="lp-hero-eyebrow">Handcrafted with love</p>
-                    <h1 class="lp-hero-title">
-                        <em>Chapter</em><br>of You
-                    </h1>
-                    <p class="lp-hero-sub">
-                        Your space, your scent, your self-care.<br>
-                        Premium reed diffusers poured by hand, made to order, just for you.
-                    </p>
-                    <div class="lp-hero-divider" aria-hidden="true">
-                        <span></span><span class="lp-hero-divider-dot">✦</span><span></span>
-                    </div>
-                    <div class="lp-hero-actions">
-                        <a href="/products" class="btn-rose btn-rose--lg">
-                            Shop the Collection
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M5 12h14M12 5l7 7-7 7" />
-                            </svg>
-                        </a>
-                        <a href="/about" class="btn-ghost">
-                            My Story
-                        </a>
-                    </div>
+            <!-- Centred brand text -->
+            <div class="lp-hero-content">
+                <p class="lp-hero-eyebrow">Handcrafted with love</p>
+                <h1 class="lp-hero-title">
+                    <em>Chapter</em><br>of You
+                </h1>
+                <p class="lp-hero-sub">
+                    Your space, your scent, your self-care.<br>
+                    Premium reed diffusers poured by hand, made to order, just for you.
+                </p>
+                <div class="lp-hero-divider" aria-hidden="true">
+                    <span></span><span class="lp-hero-divider-dot">✦</span><span></span>
                 </div>
+                <div class="lp-hero-actions">
+                    <a href="/products" class="btn-rose btn-rose--lg">
+                        Shop the Collection
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                    <a href="/about" class="btn-ghost">
+                        My Story
+                    </a>
+                </div>
+            </div>
 
-                <div v-if="heroImage" class="lp-hero-img-col" aria-hidden="true">
-                    <div class="lp-hero-img-frame">
-                        <img :src="heroImage" :alt="featuredProducts![0].name" class="lp-hero-img" loading="eager" />
-                        <div class="lp-hero-img-badge">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                            </svg>
-                            Hand-poured to order
-                        </div>
+            <!-- Interactive product strip -->
+            <div v-if="featuredProducts?.length" class="lp-hero-strip" aria-label="Featured products">
+                <a
+                    v-for="(p, i) in featuredProducts"
+                    :key="p.id"
+                    :href="p.slug ? `/product/${p.slug}` : `/product/${p.id}`"
+                    class="lp-hero-pcard"
+                    :class="{ 'lp-hero-pcard--lit': spotlightIndex === i }"
+                    @mouseenter="spotlightIndex = i"
+                >
+                    <div class="lp-hero-pcard-img">
+                        <img :src="p.image ?? '/images/placeholder.jpg'" :alt="p.name" loading="lazy" />
                     </div>
-                </div>
+                    <div class="lp-hero-pcard-body">
+                        <p class="lp-hero-pcard-name">{{ p.name }}</p>
+                        <p class="lp-hero-pcard-price">£{{ Number(p.cost).toFixed(2) }}</p>
+                    </div>
+                </a>
             </div>
         </section>
 
@@ -417,37 +435,14 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 /* ── Hero ── */
 .lp-hero {
     position: relative;
-    min-height: 88vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    text-align: center;
     overflow: hidden;
     background: #fdf4f3;
-    padding: 4rem 1.5rem 5rem;
-}
-
-.lp-hero-inner {
-    position: relative;
-    z-index: 1;
-    max-width: 1100px;
-    width: 100%;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4rem;
-}
-
-.lp-hero--split .lp-hero-inner {
-    justify-content: space-between;
-}
-
-@media (max-width: 860px) {
-    .lp-hero-inner {
-        flex-direction: column;
-        gap: 2.5rem;
-        text-align: center;
-    }
+    padding: 5rem 1.5rem 4rem;
 }
 
 /* Blobs */
@@ -486,71 +481,103 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 }
 
 .lp-hero-content {
-    flex: 1;
-    max-width: 560px;
-}
-
-.lp-hero--split .lp-hero-content {
-    text-align: left;
-}
-
-@media (max-width: 860px) {
-    .lp-hero--split .lp-hero-content {
-        text-align: center;
-    }
-}
-
-.lp-hero-img-col {
-    flex-shrink: 0;
-    width: 420px;
-}
-
-@media (max-width: 1060px) {
-    .lp-hero-img-col {
-        width: 340px;
-    }
-}
-
-@media (max-width: 860px) {
-    .lp-hero-img-col {
-        width: 100%;
-        max-width: 340px;
-    }
-}
-
-.lp-hero-img-frame {
     position: relative;
-    border-radius: 28px;
+    z-index: 1;
+    max-width: 680px;
+}
+
+/* ── Hero product strip ── */
+.lp-hero-strip {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    max-width: 1000px;
+    width: 100%;
+    margin-top: 3.5rem;
+    padding: 0 0 1rem;
+}
+
+@media (max-width: 860px) {
+    .lp-hero-strip {
+        grid-template-columns: repeat(2, 1fr);
+        max-width: 480px;
+        margin-top: 2.5rem;
+    }
+}
+
+.lp-hero-pcard {
+    --base-y: 0px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 18px;
     overflow: hidden;
     border: 1px solid #e5c9c7;
-    box-shadow: 0 20px 60px rgba(140, 74, 80, 0.15), 0 4px 16px rgba(229, 201, 199, 0.4);
-    aspect-ratio: 4 / 5;
-    background: #fdf4f3;
+    background: #fffafa;
+    text-decoration: none;
+    transform: translateY(var(--base-y));
+    transition: transform 0.4s cubic-bezier(.34,1.56,.64,1), box-shadow 0.35s ease, border-color 0.25s ease;
+    box-shadow: 0 2px 12px rgba(229, 201, 199, 0.3);
 }
 
-.lp-hero-img {
+.lp-hero-pcard:nth-child(1) { --base-y: 0px; }
+.lp-hero-pcard:nth-child(2) { --base-y: 18px; }
+.lp-hero-pcard:nth-child(3) { --base-y: -8px; }
+.lp-hero-pcard:nth-child(4) { --base-y: 10px; }
+
+@media (max-width: 860px) {
+    .lp-hero-pcard:nth-child(n) { --base-y: 0px; }
+}
+
+.lp-hero-pcard:hover,
+.lp-hero-pcard--lit {
+    transform: translateY(calc(var(--base-y) - 14px));
+    border-color: #c9a4a4;
+    box-shadow: 0 18px 40px rgba(140, 74, 80, 0.18);
+}
+
+.lp-hero-pcard-img {
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    background: #fdf4f3;
+    border-bottom: 1px solid #f0dcd8;
+}
+
+.lp-hero-pcard-img img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.45s ease;
     display: block;
 }
 
-.lp-hero-img-badge {
-    position: absolute;
-    bottom: 14px;
-    left: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: rgba(255, 250, 250, 0.92);
-    border: 1px solid #e5c9c7;
-    border-radius: 999px;
-    padding: 0.4rem 0.9rem;
-    font-size: 0.75rem;
-    font-weight: 700;
+.lp-hero-pcard:hover .lp-hero-pcard-img img,
+.lp-hero-pcard--lit .lp-hero-pcard-img img {
+    transform: scale(1.05);
+}
+
+.lp-hero-pcard-body {
+    padding: 0.7rem 0.85rem 0.85rem;
+}
+
+.lp-hero-pcard-name {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #2d1a1a;
+    line-height: 1.3;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lp-hero-pcard-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 500;
     color: #8c4a50;
-    backdrop-filter: blur(6px);
-    letter-spacing: 0.03em;
 }
 
 .lp-hero-eyebrow {
@@ -598,16 +625,6 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     animation: lp-fadeUp 0.9s 0.35s ease both;
 }
 
-.lp-hero--split .lp-hero-divider {
-    justify-content: flex-start;
-}
-
-@media (max-width: 860px) {
-    .lp-hero--split .lp-hero-divider {
-        justify-content: center;
-    }
-}
-
 .lp-hero-divider span:not(.lp-hero-divider-dot) {
     display: block;
     width: 70px;
@@ -626,16 +643,6 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     gap: 0.85rem;
     justify-content: center;
     animation: lp-fadeUp 0.9s 0.45s ease both;
-}
-
-.lp-hero--split .lp-hero-actions {
-    justify-content: flex-start;
-}
-
-@media (max-width: 860px) {
-    .lp-hero--split .lp-hero-actions {
-        justify-content: center;
-    }
 }
 
 @keyframes lp-fadeUp {
@@ -1212,11 +1219,12 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 
 .lp-testimonials-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 340px));
     gap: 1.25rem;
+    justify-content: center;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 600px) {
     .lp-testimonials-grid {
         grid-template-columns: 1fr;
     }
@@ -1251,6 +1259,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 .lp-testimonial-stars {
     position: relative;
     z-index: 1;
+    color: #c9747a; /* filled star colour — StarRating uses currentColor */
 }
 
 .lp-testimonial-body {
