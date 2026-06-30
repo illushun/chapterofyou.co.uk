@@ -87,7 +87,49 @@ class HomeController extends Controller
         return Inertia::render('home/LandingPage', [
             'featuredProducts' => $featuredProducts,
             'testimonials'     => $testimonials,
+            'season'           => $this->getSeason(),
         ]);
+    }
+
+    private function getSeason(): array
+    {
+        $month = (int) now()->month;
+        $year  = now()->year;
+
+        return match (true) {
+            in_array($month, [3, 4, 5]) => [
+                'id'           => 'spring',
+                'banner'       => "Spring is here — fresh floral scents for new beginnings",
+                'eyebrow'      => "Spring Collection {$year}",
+                'sub'          => 'Fresh, floral, and full of life — welcome the new season into your home with a scent made just for you.',
+                'motif'        => '✿',
+                'sectionLabel' => 'Spring favourites',
+            ],
+            in_array($month, [6, 7, 8]) => [
+                'id'           => 'summer',
+                'banner'       => "Summer is here — sun-kissed scents for long, warm days",
+                'eyebrow'      => "Summer Collection {$year}",
+                'sub'          => 'Light, fresh, and sun-kissed — premium reed diffusers to fill your home with the warmth of summer.',
+                'motif'        => '✦',
+                'sectionLabel' => 'Summer favourites',
+            ],
+            in_array($month, [9, 10, 11]) => [
+                'id'           => 'autumn',
+                'banner'       => "Autumn warmth — rich, spicy scents to cosy up your home",
+                'eyebrow'      => "Autumn Collection {$year}",
+                'sub'          => 'Warm, spicy, and comforting — wrap your home in the rich, golden scents of the season.',
+                'motif'        => '❧',
+                'sectionLabel' => 'Autumn warmth',
+            ],
+            default => [
+                'id'           => 'winter',
+                'banner'       => "Give the gift of beautiful scent — perfect for the festive season",
+                'eyebrow'      => "Winter Collection {$year}",
+                'sub'          => 'Rich, cosy, and luxurious — reed diffusers that make the perfect winter gift for someone you love.',
+                'motif'        => '❄',
+                'sectionLabel' => 'Winter warmth',
+            ],
+        };
     }
 
     /**

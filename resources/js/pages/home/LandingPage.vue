@@ -27,9 +27,19 @@ interface Testimonial {
     user: { name: string };
 }
 
+interface Season {
+    id: 'spring' | 'summer' | 'autumn' | 'winter';
+    banner: string;
+    eyebrow: string;
+    sub: string;
+    motif: string;
+    sectionLabel: string;
+}
+
 const props = defineProps<{
     featuredProducts?: FeaturedProduct[];
     testimonials?: Testimonial[];
+    season?: Season;
 }>();
 
 // Spotlight cycles through featured products automatically
@@ -91,9 +101,18 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 
     <main class="lp">
 
+        <!-- ── Seasonal banner ── -->
+        <div v-if="season" class="lp-season-banner" :class="`lp-season-banner--${season.id}`">
+            <span class="lp-season-banner-motif" aria-hidden="true">{{ season.motif }}</span>
+            <span class="lp-season-banner-text">{{ season.banner }}</span>
+            <a href="/products" class="lp-season-banner-cta">
+                Shop now
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </div>
 
         <!-- ── Hero ── -->
-        <section class="lp-hero">
+        <section class="lp-hero" :class="season?.id ? `lp-hero--${season.id}` : ''">
             <!-- Decorative blobs -->
             <div class="lp-blob lp-blob--1" aria-hidden="true"></div>
             <div class="lp-blob lp-blob--2" aria-hidden="true"></div>
@@ -110,24 +129,23 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
                 <ellipse cx="860" cy="480" rx="20" ry="7" fill="#c9a4a4" opacity=".07"
                     transform="rotate(-45 860 480)" />
                 <text x="200" y="180" font-size="18" fill="#c9a4a4" opacity=".15"
-                    transform="rotate(-20 200 180)">✿</text>
+                    transform="rotate(-20 200 180)">{{ season?.motif ?? '✿' }}</text>
                 <text x="650" y="100" font-size="14" fill="#c9a4a4" opacity=".12"
-                    transform="rotate(15 650 100)">✿</text>
+                    transform="rotate(15 650 100)">{{ season?.motif ?? '✿' }}</text>
                 <text x="750" y="550" font-size="22" fill="#c9a4a4" opacity=".10"
-                    transform="rotate(-10 750 550)">✿</text>
+                    transform="rotate(-10 750 550)">{{ season?.motif ?? '✿' }}</text>
                 <text x="100" y="550" font-size="16" fill="#c9a4a4" opacity=".11"
-                    transform="rotate(20 100 550)">✿</text>
+                    transform="rotate(20 100 550)">{{ season?.motif ?? '✿' }}</text>
             </svg>
 
             <!-- Centred brand text -->
             <div class="lp-hero-content">
-                <p class="lp-hero-eyebrow">Handcrafted with love</p>
+                <p class="lp-hero-eyebrow">{{ season?.eyebrow ?? 'Handcrafted with love' }}</p>
                 <h1 class="lp-hero-title">
                     <em>Chapter</em><br>of You
                 </h1>
                 <p class="lp-hero-sub">
-                    Your space, your scent, your self-care.<br>
-                    Premium reed diffusers poured by hand, made to order, just for you.
+                    {{ season?.sub ?? 'Your space, your scent, your self-care. Premium reed diffusers poured by hand, made to order, just for you.' }}
                 </p>
                 <div class="lp-hero-divider" aria-hidden="true">
                     <span></span><span class="lp-hero-divider-dot">✦</span><span></span>
@@ -303,7 +321,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
             <div class="lp-hot-inner">
                 <div class="lp-hot-header">
                     <div>
-                        <p class="lp-section-eyebrow">Most loved</p>
+                        <p class="lp-section-eyebrow">{{ season?.sectionLabel ?? 'Most loved' }}</p>
                         <h2 class="lp-section-title">My <em>bestsellers</em></h2>
                     </div>
                     <a href="/products" class="lp-hot-see-all">
@@ -432,6 +450,56 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     flex-shrink: 0;
 }
 
+/* ── Seasonal banner ── */
+.lp-season-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    padding: 0.55rem 1.25rem;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #fff;
+    text-align: center;
+    background: linear-gradient(135deg, #c47078, #a85058);
+}
+
+.lp-season-banner--summer  { background: linear-gradient(135deg, #d4961e, #b87418); }
+.lp-season-banner--autumn  { background: linear-gradient(135deg, #b06030, #8c4418); }
+.lp-season-banner--winter  { background: linear-gradient(135deg, #5a4880, #3e3060); }
+.lp-season-banner--spring  { background: linear-gradient(135deg, #9858b8, #7840a0); }
+
+.lp-season-banner-motif {
+    font-size: 1rem;
+    opacity: 0.9;
+}
+
+.lp-season-banner-text {
+    opacity: 0.95;
+}
+
+.lp-season-banner-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 700;
+    opacity: 0.9;
+    border-bottom: 1px solid rgba(255,255,255,0.5);
+    padding-bottom: 1px;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+}
+
+.lp-season-banner-cta:hover {
+    opacity: 1;
+    border-color: #fff;
+}
+
 /* ── Hero ── */
 .lp-hero {
     position: relative;
@@ -443,7 +511,15 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     overflow: hidden;
     background: #fdf4f3;
     padding: 5rem 1.5rem 4rem;
+    /* seasonal blob colour variables */
+    --blob1: #e5c9c7;
+    --blob2: #f0dcd8;
 }
+
+.lp-hero--summer { --blob1: #f5d4a8; --blob2: #f0e0b8; }
+.lp-hero--autumn { --blob1: #e8c090; --blob2: #e0b870; }
+.lp-hero--winter { --blob1: #ccc0dc; --blob2: #dcd4e8; }
+.lp-hero--spring { --blob1: #d8c0ec; --blob2: #e8d4f4; }
 
 /* Blobs */
 .lp-blob {
@@ -456,7 +532,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 .lp-blob--1 {
     width: 480px;
     height: 480px;
-    background: #e5c9c7;
+    background: var(--blob1);
     top: -80px;
     left: -120px;
     opacity: 0.45;
@@ -465,7 +541,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 .lp-blob--2 {
     width: 380px;
     height: 380px;
-    background: #f0dcd8;
+    background: var(--blob2);
     bottom: -60px;
     right: -80px;
     opacity: 0.4;
