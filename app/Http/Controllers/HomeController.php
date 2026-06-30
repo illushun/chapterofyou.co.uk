@@ -7,8 +7,10 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use App\Models\ContactMessage;
 use App\Models\Product;
+use App\Models\Product\Review;
 use App\Mail\ContactMessageReceived;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class HomeController extends Controller
 {
@@ -66,8 +68,25 @@ class HomeController extends Controller
                 ];
             });
 
+        $testimonials = Review::query()
+            ->approved()
+            ->where('rating', '>=', 4)
+            ->whereNotNull('message')
+            ->where('message', '!=', '')
+            ->with('user:id,name')
+            ->latest()
+            ->limit(3)
+            ->get()
+            ->map(fn (Review $r) => [
+                'id'      => $r->id,
+                'rating'  => $r->rating,
+                'message' => Str::limit($r->message, 160),
+                'user'    => ['name' => $r->user?->name ?? 'Customer'],
+            ]);
+
         return Inertia::render('home/LandingPage', [
             'featuredProducts' => $featuredProducts,
+            'testimonials'     => $testimonials,
         ]);
     }
 

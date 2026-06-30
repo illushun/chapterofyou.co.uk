@@ -121,7 +121,6 @@ const handleTouchEnd = (event: Event) => {
 
         <!-- Card body -->
         <div class="psc-body">
-            <p class="psc-mpn">{{ product.mpn }}</p>
             <p class="psc-name">{{ truncatedName }}</p>
 
             <div class="psc-footer">
@@ -303,13 +302,6 @@ const handleTouchEnd = (event: Event) => {
     flex-direction: column;
     gap: 0.15rem;
     flex: 1;
-}
-
-.psc-mpn {
-    font-size: 0.68rem;
-    font-family: monospace;
-    letter-spacing: 0.05em;
-    color: #a08080;
 }
 
 .psc-name {

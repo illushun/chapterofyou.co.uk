@@ -6,6 +6,9 @@ import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
 import { useOrganizationSchema, useWebsiteSchema } from '@/composables/useProductSchema';
+import StarRating from '@/components/ui/coy/StarRating.vue';
+import { ref, computed } from 'vue';
+import axios from 'axios';
 
 interface FeaturedProduct {
     id: number;
@@ -17,14 +20,49 @@ interface FeaturedProduct {
     views: number;
 }
 
-defineProps<{
+interface Testimonial {
+    id: number;
+    rating: number;
+    message: string;
+    user: { name: string };
+}
+
+const props = defineProps<{
     featuredProducts?: FeaturedProduct[];
+    testimonials?: Testimonial[];
 }>();
 
+const heroImage = computed(() => {
+    const img = props.featuredProducts?.[0]?.image;
+    return img && img !== '/images/placeholder.jpg' ? img : null;
+});
+
+// Email capture
+const ctaEmail = ref('');
+const ctaSubmitting = ref(false);
+const ctaSubmitted = ref(false);
+const ctaError = ref('');
+
+async function submitCtaEmail() {
+    if (!ctaEmail.value.trim() || ctaSubmitting.value) return;
+    ctaSubmitting.value = true;
+    ctaError.value = '';
+    try {
+        await axios.post(route('waitlist.store'), { email: ctaEmail.value.trim() });
+        ctaSubmitted.value = true;
+        ctaEmail.value = '';
+    } catch (err: any) {
+        ctaError.value = err?.response?.data?.errors?.email?.[0]
+            ?? err?.response?.data?.message
+            ?? 'Something went wrong. Please try again.';
+    } finally {
+        ctaSubmitting.value = false;
+    }
+}
+
 const seo = useSeoHead({
-    // No title — homepage should just be "Chapter of You"
-    description: 'Chapter of You. Luxurious hand-crafted reed diffusers made with care for your home. Your chapter, your self-care.',
-    canonical: '/',  // resolves to https://www.chapterofyou.co.uk
+    description: 'Luxury handmade reed diffusers crafted to order in the UK. Shop premium home fragrance gifts from Chapter of You — hand-poured with care, made just for you.',
+    canonical: '/',
 });
 
 const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
@@ -44,7 +82,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 
 
         <!-- ── Hero ── -->
-        <section class="lp-hero">
+        <section class="lp-hero" :class="{ 'lp-hero--split': heroImage }">
             <!-- Decorative blobs -->
             <div class="lp-blob lp-blob--1" aria-hidden="true"></div>
             <div class="lp-blob lp-blob--2" aria-hidden="true"></div>
@@ -70,29 +108,43 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
                     transform="rotate(20 100 550)">✿</text>
             </svg>
 
-            <div class="lp-hero-content">
-                <p class="lp-hero-eyebrow">Handcrafted with love</p>
-                <h1 class="lp-hero-title">
-                    <em>Chapter</em><br>of You
-                </h1>
-                <p class="lp-hero-sub">
-                    Your space, your scent, your self-care.<br>
-                    Premium reed diffusers poured by hand, made to order, just for you.
-                </p>
-                <div class="lp-hero-divider" aria-hidden="true">
-                    <span></span><span class="lp-hero-divider-dot">✦</span><span></span>
+            <div class="lp-hero-inner">
+                <div class="lp-hero-content">
+                    <p class="lp-hero-eyebrow">Handcrafted with love</p>
+                    <h1 class="lp-hero-title">
+                        <em>Chapter</em><br>of You
+                    </h1>
+                    <p class="lp-hero-sub">
+                        Your space, your scent, your self-care.<br>
+                        Premium reed diffusers poured by hand, made to order, just for you.
+                    </p>
+                    <div class="lp-hero-divider" aria-hidden="true">
+                        <span></span><span class="lp-hero-divider-dot">✦</span><span></span>
+                    </div>
+                    <div class="lp-hero-actions">
+                        <a href="/products" class="btn-rose btn-rose--lg">
+                            Shop the Collection
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                        <a href="/about" class="btn-ghost">
+                            My Story
+                        </a>
+                    </div>
                 </div>
-                <div class="lp-hero-actions">
-                    <a href="/products" class="btn-rose btn-rose--lg">
-                        Shop the Collection
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                    </a>
-                    <a href="/about" class="btn-ghost">
-                        My Story
-                    </a>
+
+                <div v-if="heroImage" class="lp-hero-img-col" aria-hidden="true">
+                    <div class="lp-hero-img-frame">
+                        <img :src="heroImage" :alt="featuredProducts![0].name" class="lp-hero-img" loading="eager" />
+                        <div class="lp-hero-img-badge">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            Hand-poured to order
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -209,6 +261,25 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
             </div>
         </section>
 
+        <!-- ── Testimonials ── -->
+        <section v-if="testimonials?.length" class="lp-testimonials">
+            <div class="lp-testimonials-inner">
+                <div class="lp-section-header">
+                    <p class="lp-section-eyebrow">Customer love</p>
+                    <h2 class="lp-section-title">What people are <em>saying</em></h2>
+                </div>
+                <div class="lp-testimonials-grid">
+                    <div v-for="t in testimonials" :key="t.id" class="lp-testimonial-card">
+                        <div class="lp-testimonial-stars">
+                            <StarRating :rating="t.rating" :size="16" />
+                        </div>
+                        <p class="lp-testimonial-body">"{{ t.message }}"</p>
+                        <p class="lp-testimonial-author">— {{ t.user.name }}</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- ── Hottest products ── -->
         <section v-if="featuredProducts?.length" class="lp-hot">
             <div class="lp-hot-inner">
@@ -242,7 +313,6 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 
                         <!-- Body -->
                         <div class="lp-hot-body">
-                            <p class="lp-hot-mpn">{{ product.mpn }}</p>
                             <p class="lp-hot-name">{{ product.name }}</p>
                             <div class="lp-hot-footer">
                                 <span class="lp-hot-price">£{{ Number(product.cost).toFixed(2) }}</span>
@@ -261,20 +331,47 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
             </div>
         </section>
 
-        <!-- ── CTA ── -->
+        <!-- ── CTA / Email capture ── -->
         <section class="lp-cta-section">
             <div class="lp-cta-card">
                 <div class="lp-cta-petals" aria-hidden="true">
                     <span>✿</span><span>✦</span><span>✿</span><span>✦</span><span>✿</span>
                 </div>
-                <h2 class="lp-cta-title">Join my little community</h2>
+                <h2 class="lp-cta-title">Get 10% off your first order</h2>
                 <p class="lp-cta-body">
-                    At Chapter of You you're more than a customer, you're part of a community dedicated to intentional
-                    self-care. Explore the collection and let me bring a little calm to your corner of the world.
+                    Join my little community and receive an exclusive discount on your first order,
+                    plus early access to new scents and behind-the-scenes updates.
                 </p>
-                <a href="/products" class="btn-rose btn-rose--lg">
-                    Shop the Collection
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+
+                <template v-if="!ctaSubmitted">
+                    <form class="lp-cta-form" @submit.prevent="submitCtaEmail">
+                        <input
+                            v-model="ctaEmail"
+                            type="email"
+                            placeholder="Your email address"
+                            class="lp-cta-input"
+                            required
+                            autocomplete="email"
+                        />
+                        <button type="submit" class="btn-rose btn-rose--lg" :disabled="ctaSubmitting">
+                            {{ ctaSubmitting ? 'Joining…' : 'Claim my 10% off' }}
+                        </button>
+                    </form>
+                    <p v-if="ctaError" class="lp-cta-error">{{ ctaError }}</p>
+                    <p class="lp-cta-disclaimer">No spam, ever. Unsubscribe any time.</p>
+                </template>
+
+                <div v-else class="lp-cta-success">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                    You're in! Check your inbox for your discount code.
+                </div>
+
+                <a href="/products" class="lp-cta-shop-link">
+                    Browse the collection
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
@@ -324,10 +421,33 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
     overflow: hidden;
     background: #fdf4f3;
     padding: 4rem 1.5rem 5rem;
+}
+
+.lp-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4rem;
+}
+
+.lp-hero--split .lp-hero-inner {
+    justify-content: space-between;
+}
+
+@media (max-width: 860px) {
+    .lp-hero-inner {
+        flex-direction: column;
+        gap: 2.5rem;
+        text-align: center;
+    }
 }
 
 /* Blobs */
@@ -366,9 +486,71 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 }
 
 .lp-hero-content {
+    flex: 1;
+    max-width: 560px;
+}
+
+.lp-hero--split .lp-hero-content {
+    text-align: left;
+}
+
+@media (max-width: 860px) {
+    .lp-hero--split .lp-hero-content {
+        text-align: center;
+    }
+}
+
+.lp-hero-img-col {
+    flex-shrink: 0;
+    width: 420px;
+}
+
+@media (max-width: 1060px) {
+    .lp-hero-img-col {
+        width: 340px;
+    }
+}
+
+@media (max-width: 860px) {
+    .lp-hero-img-col {
+        width: 100%;
+        max-width: 340px;
+    }
+}
+
+.lp-hero-img-frame {
     position: relative;
-    z-index: 1;
-    max-width: 680px;
+    border-radius: 28px;
+    overflow: hidden;
+    border: 1px solid #e5c9c7;
+    box-shadow: 0 20px 60px rgba(140, 74, 80, 0.15), 0 4px 16px rgba(229, 201, 199, 0.4);
+    aspect-ratio: 4 / 5;
+    background: #fdf4f3;
+}
+
+.lp-hero-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.lp-hero-img-badge {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 250, 250, 0.92);
+    border: 1px solid #e5c9c7;
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #8c4a50;
+    backdrop-filter: blur(6px);
+    letter-spacing: 0.03em;
 }
 
 .lp-hero-eyebrow {
@@ -416,6 +598,16 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     animation: lp-fadeUp 0.9s 0.35s ease both;
 }
 
+.lp-hero--split .lp-hero-divider {
+    justify-content: flex-start;
+}
+
+@media (max-width: 860px) {
+    .lp-hero--split .lp-hero-divider {
+        justify-content: center;
+    }
+}
+
 .lp-hero-divider span:not(.lp-hero-divider-dot) {
     display: block;
     width: 70px;
@@ -434,6 +626,16 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     gap: 0.85rem;
     justify-content: center;
     animation: lp-fadeUp 0.9s 0.45s ease both;
+}
+
+.lp-hero--split .lp-hero-actions {
+    justify-content: flex-start;
+}
+
+@media (max-width: 860px) {
+    .lp-hero--split .lp-hero-actions {
+        justify-content: center;
+    }
 }
 
 @keyframes lp-fadeUp {
@@ -847,13 +1049,6 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     flex: 1;
 }
 
-.lp-hot-mpn {
-    font-size: 0.68rem;
-    font-family: monospace;
-    letter-spacing: 0.05em;
-    color: #a08080;
-}
-
 .lp-hot-name {
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: 1.05rem;
@@ -1002,5 +1197,160 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     background: #faeaea;
     border-color: #c9a4a4;
     color: #2d1a1a;
+}
+
+/* ── Testimonials ── */
+.lp-testimonials {
+    padding: 5rem 1.5rem;
+    background: #fdf4f3;
+}
+
+.lp-testimonials-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.lp-testimonials-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+
+@media (max-width: 860px) {
+    .lp-testimonials-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.lp-testimonial-card {
+    background: #fffafa;
+    border: 1px solid #e5c9c7;
+    border-radius: 20px;
+    padding: 1.75rem 1.5rem;
+    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.lp-testimonial-card::before {
+    content: '"';
+    position: absolute;
+    top: -8px;
+    left: 12px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 5rem;
+    color: #e5c9c7;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+}
+
+.lp-testimonial-stars {
+    position: relative;
+    z-index: 1;
+}
+
+.lp-testimonial-body {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-style: italic;
+    color: #2d1a1a;
+    line-height: 1.7;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.lp-testimonial-author {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #8c4a50;
+    letter-spacing: 0.03em;
+}
+
+/* ── CTA email form ── */
+.lp-cta-form {
+    display: flex;
+    gap: 0.65rem;
+    max-width: 480px;
+    margin: 0 auto 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.lp-cta-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.72rem 1.1rem;
+    border: 1px solid #e5c9c7;
+    border-radius: 999px;
+    background: #fdf4f3;
+    color: #2d1a1a;
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.92rem;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.lp-cta-input:focus {
+    border-color: #8c4a50;
+    box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1);
+}
+
+.lp-cta-input::placeholder {
+    color: #a08080;
+}
+
+.lp-cta-error {
+    font-size: 0.82rem;
+    color: #b54040;
+    margin-bottom: 0.5rem;
+}
+
+.lp-cta-disclaimer {
+    font-size: 0.78rem;
+    color: #a08080;
+    font-style: italic;
+    margin-bottom: 1.25rem;
+}
+
+.lp-cta-success {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #2d7a3a;
+    font-weight: 600;
+    font-size: 0.95rem;
+    background: #f0faf0;
+    border: 1px solid #a8d8b0;
+    border-radius: 999px;
+    padding: 0.6rem 1.2rem;
+    margin-bottom: 1.25rem;
+}
+
+.lp-cta-shop-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #8c4a50;
+    text-decoration: none;
+    border-bottom: 1px solid #e5c9c7;
+    padding-bottom: 0.1rem;
+    transition: border-color 0.2s, color 0.2s;
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+}
+
+.lp-cta-shop-link:hover {
+    color: #6a3038;
+    border-color: #8c4a50;
 }
 </style>
