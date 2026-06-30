@@ -2,7 +2,7 @@
 import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
 import { Head, usePage, router, useForm } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
@@ -190,6 +190,29 @@ const handleFavourite = async (productArg?: any) => {
 const hasHowToUse = computed(() => !!props.product.how_to_use?.trim());
 const hasFaqs = computed(() => (props.product.faqs?.length ?? 0) > 0);
 const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
+
+// Low stock threshold
+const isLowStock = computed(() =>
+    !isOutOfStock.value && currentVariation.value.stock_qty <= 5
+);
+
+// Sticky mobile CTA — shows once the main add-to-cart button scrolls out of view
+const showStickyCta = ref(false);
+let cartBtnObserver: IntersectionObserver | null = null;
+
+onMounted(() => {
+    const cartBtn = document.querySelector<HTMLElement>('.pd-cart-btn');
+    if (cartBtn && 'IntersectionObserver' in window) {
+        cartBtnObserver = new IntersectionObserver(([entry]) => {
+            showStickyCta.value = !entry.isIntersecting;
+        }, { threshold: 0 });
+        cartBtnObserver.observe(cartBtn);
+    }
+});
+
+onUnmounted(() => {
+    cartBtnObserver?.disconnect();
+});
 </script>
 
 <template>
@@ -253,9 +276,12 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
                     </div>
 
                     <div class="pd-stock-row">
-                        <span class="pd-stock-badge" :class="isOutOfStock ? 'pd-stock--out' : 'pd-stock--in'">
-                            {{ isOutOfStock ? 'Out of Stock' : 'In Stock' }}
+                        <span v-if="isOutOfStock" class="pd-stock-badge pd-stock--out">Out of Stock</span>
+                        <span v-else-if="isLowStock" class="pd-stock-badge pd-stock--low">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                            Only {{ currentVariation.stock_qty }} left
                         </span>
+                        <span v-else class="pd-stock-badge pd-stock--in">In Stock</span>
                     </div>
 
                     <p class="pd-price">{{ formattedCost }}</p>
@@ -316,6 +342,32 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
                                     d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                             </svg>
                         </button>
+                    </div>
+
+                    <!-- Dispatch time -->
+                    <p class="pd-dispatch-note">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        Made to order &mdash; typically dispatches in 3&ndash;5 working days
+                    </p>
+
+                    <!-- Trust badges -->
+                    <div class="pd-trust">
+                        <div class="pd-trust-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                            Handmade in the UK
+                        </div>
+                        <div class="pd-trust-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                            Free delivery over £50
+                        </div>
+                        <div class="pd-trust-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+                            30-day returns
+                        </div>
+                        <div class="pd-trust-item">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            Secure checkout
+                        </div>
                     </div>
 
                     <div class="pd-description">
@@ -515,6 +567,21 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
             </div>
         </section>
     </main>
+
+    <!-- Sticky mobile add-to-cart -->
+    <Transition name="pd-sticky-slide">
+        <div v-if="showStickyCta && !isOutOfStock" class="pd-sticky-cta" aria-hidden="true">
+            <div class="pd-sticky-inner">
+                <div class="pd-sticky-info">
+                    <span class="pd-sticky-name">{{ product.name }}</span>
+                    <span class="pd-sticky-price">{{ formattedCost }}</span>
+                </div>
+                <button @click="handleAddToCart()" class="pd-sticky-btn">
+                    Add to Cart
+                </button>
+            </div>
+        </div>
+    </Transition>
 
     <SuccessToast ref="successToastRef" />
     <ModalImageViewer :images="product.images || []" :initial-index="selectedImageIndex" :open="isModalOpen"
@@ -736,6 +803,15 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
     background: #fff5f5;
     color: #8c2a2a;
     border-color: #e8a8a8;
+}
+
+.pd-stock--low {
+    background: #fff8f0;
+    color: #a05a10;
+    border-color: #f0c888;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
 .pd-price {
@@ -1488,5 +1564,120 @@ const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
     color: #9a7070;
     cursor: not-allowed;
     box-shadow: none;
+}
+
+/* ── Dispatch note ── */
+.pd-dispatch-note {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: #7a5a5a;
+    margin: 0.5rem 0 1rem;
+}
+
+/* ── Trust badges ── */
+.pd-trust {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem 1rem;
+    padding: 1rem 1.1rem;
+    background: #fffafa;
+    border: 1px solid #e5c9c7;
+    border-radius: 12px;
+    margin: 1.25rem 0;
+}
+
+.pd-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.78rem;
+    color: #5a3a3a;
+    font-weight: 500;
+}
+
+.pd-trust-item svg {
+    flex-shrink: 0;
+    color: #a85058;
+}
+
+/* ── Sticky mobile CTA ── */
+.pd-sticky-cta {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 40;
+    background: #fffafa;
+    border-top: 1px solid #e5c9c7;
+    padding: 0.75rem 1.25rem;
+    box-shadow: 0 -4px 20px rgba(45, 26, 26, 0.1);
+}
+
+@media (min-width: 860px) {
+    .pd-sticky-cta {
+        display: none;
+    }
+}
+
+.pd-sticky-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.pd-sticky-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.pd-sticky-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #2d1a1a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pd-sticky-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    color: #8c4a50;
+    font-weight: 500;
+}
+
+.pd-sticky-btn {
+    flex-shrink: 0;
+    background: #a85058;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 0.65rem 1.4rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.pd-sticky-btn:active {
+    transform: scale(0.97);
+}
+
+.pd-sticky-slide-enter-active,
+.pd-sticky-slide-leave-active {
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.pd-sticky-slide-enter-from,
+.pd-sticky-slide-leave-to {
+    transform: translateY(100%);
+    opacity: 0;
 }
 </style>

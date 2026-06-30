@@ -23,6 +23,9 @@ const emit = defineEmits(['addToCart', 'favourite']);
 
 const isWishlisted = ref(props.wishlisted ?? false);
 const isPopular = computed(() => (props.product.total_unique_views || 0) > 100);
+const isLowStock = computed(() =>
+    props.product.stock_qty > 0 && props.product.stock_qty <= 5
+);
 const imageUrl = computed(() => props.product.images?.[0]?.image || '/images/placeholder.jpg');
 const isTapped = ref(false);
 
@@ -85,8 +88,9 @@ const handleTouchEnd = (event: Event) => {
     <div ref="cardRef" class="psc" @mouseenter="motionCard.apply('hovered')" @mouseleave="motionCard.apply('initial')"
         @touchstart.stop="handleTouchStart">
 
-        <!-- Popular badge -->
-        <span v-if="isPopular" class="psc-badge">Popular</span>
+        <!-- Popular / low stock badge -->
+        <span v-if="isLowStock" class="psc-badge psc-badge--low">Only {{ product.stock_qty }} left</span>
+        <span v-else-if="isPopular" class="psc-badge">Popular</span>
 
         <!-- Invisible full-card link -->
         <a :href="productLink" class="psc-link" :aria-label="`View ${product.name}`">
@@ -190,7 +194,7 @@ const handleTouchEnd = (event: Event) => {
     z-index: 0;
 }
 
-/* ── Popular badge ── */
+/* ── Popular / low stock badge ── */
 .psc-badge {
     position: absolute;
     top: 10px;
@@ -206,6 +210,11 @@ const handleTouchEnd = (event: Event) => {
     border-radius: 999px;
     padding: 0.18rem 0.6rem;
     box-shadow: 0 1px 6px rgba(140, 74, 80, 0.3);
+}
+
+.psc-badge--low {
+    background: #a05a10;
+    box-shadow: 0 1px 6px rgba(160, 90, 16, 0.3);
 }
 
 /* ── Invisible full-card link ── */
