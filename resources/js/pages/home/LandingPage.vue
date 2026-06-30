@@ -112,7 +112,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
         </div>
 
         <!-- ── Hero ── -->
-        <section class="lp-hero" :class="season?.id ? `lp-hero--${season.id}` : ''">
+        <section class="lp-hero" :class="season ? [`lp-hero--${season.id}`, 'lp-hero--seasonal'] : []">
             <!-- Decorative blobs -->
             <div class="lp-blob lp-blob--1" aria-hidden="true"></div>
             <div class="lp-blob lp-blob--2" aria-hidden="true"></div>
@@ -516,10 +516,133 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     --blob2: #f0dcd8;
 }
 
-.lp-hero--summer { --blob1: #f5d4a8; --blob2: #f0e0b8; }
-.lp-hero--autumn { --blob1: #e8c090; --blob2: #e0b870; }
-.lp-hero--winter { --blob1: #ccc0dc; --blob2: #dcd4e8; }
-.lp-hero--spring { --blob1: #d8c0ec; --blob2: #e8d4f4; }
+/* ── Scenic seasonal hero backgrounds ── */
+
+/* Shared: hide blobs (they clash with landscape scenes), add overlay for text readability */
+.lp-hero--seasonal .lp-blob { display: none; }
+.lp-hero--seasonal .lp-petals { opacity: 0.18; }
+.lp-hero--seasonal { min-height: 80vh; }
+
+.lp-hero--seasonal::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.32) 0%,
+        rgba(0, 0, 0, 0.12) 38%,
+        rgba(0, 0, 0, 0.18) 65%,
+        rgba(0, 0, 0, 0.55) 100%
+    );
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* White text on scenic backgrounds */
+.lp-hero--seasonal .lp-hero-eyebrow {
+    color: rgba(255, 255, 255, 0.85);
+}
+.lp-hero--seasonal .lp-hero-title {
+    color: #fff;
+}
+.lp-hero--seasonal .lp-hero-title em {
+    color: rgba(255, 240, 220, 0.95);
+}
+.lp-hero--seasonal .lp-hero-sub {
+    color: rgba(255, 255, 255, 0.82);
+}
+.lp-hero--seasonal .lp-hero-divider-dot {
+    color: rgba(255, 255, 255, 0.45);
+}
+.lp-hero--seasonal .lp-hero-divider span:not(.lp-hero-divider-dot) {
+    background: rgba(255, 255, 255, 0.28);
+}
+.lp-hero--seasonal .btn-ghost {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #fff;
+    backdrop-filter: blur(6px);
+}
+.lp-hero--seasonal .btn-ghost:hover {
+    background: rgba(255, 255, 255, 0.24);
+    border-color: rgba(255, 255, 255, 0.7);
+    color: #fff;
+}
+.lp-hero--seasonal .lp-hero-pcard {
+    box-shadow: 0 6px 28px rgba(0, 0, 0, 0.28);
+}
+
+/* Summer: blue sky above, sea horizon below, warm sand at base, sun glow top-right */
+.lp-hero--summer {
+    background:
+        radial-gradient(ellipse 44% 34% at 78% 13%, rgba(255, 220, 80, 0.55) 0%, transparent 100%),
+        linear-gradient(
+            180deg,
+            #6abde0 0%,
+            #48aad4 20%,
+            #228ab8 42%,
+            #1678a0 58%,
+            #147090 74%,
+            #1a7080 88%,
+            #20706e 100%
+        );
+}
+
+/* Autumn: warm sunset sky, golden forest canopy, deep earthy floor, sun blazing top-right */
+.lp-hero--autumn {
+    background:
+        radial-gradient(ellipse 38% 28% at 82% 10%, rgba(255, 190, 50, 0.65) 0%, transparent 100%),
+        linear-gradient(
+            180deg,
+            #a84018 0%,
+            #be5820 16%,
+            #cc6e28 30%,
+            #a84e1e 48%,
+            #7e3618 64%,
+            #58220e 78%,
+            #3c1408 90%,
+            #2c0e06 100%
+        );
+}
+
+/* Winter: grey-blue dusk sky, soft horizon, deep snow with shadows, pale moon top-left */
+.lp-hero--winter {
+    background:
+        radial-gradient(ellipse 22% 18% at 24% 15%, rgba(215, 232, 250, 0.88) 0%, transparent 100%),
+        linear-gradient(
+            180deg,
+            #566880 0%,
+            #6e88a4 18%,
+            #8ea8c2 36%,
+            #aec4d8 52%,
+            #ccdce8 65%,
+            #e2eef5 76%,
+            #eef5fa 86%,
+            #deeaf2 100%
+        );
+}
+
+/* Winter: swap to white text with slightly different treatment (dark sky needs it too) */
+.lp-hero--winter .lp-hero-title em {
+    color: rgba(200, 228, 255, 0.95);
+}
+
+/* Spring: pale spring sky, fresh green meadow below, cherry blossom flush at base, sun glow */
+.lp-hero--spring {
+    background:
+        radial-gradient(ellipse 34% 26% at 62% 11%, rgba(255, 248, 180, 0.5) 0%, transparent 100%),
+        linear-gradient(
+            180deg,
+            #b0d8f0 0%,
+            #84c0e4 18%,
+            #70b860 36%,
+            #58a850 52%,
+            #e8a8d0 64%,
+            #de86bc 76%,
+            #d068aa 88%,
+            #c050a0 100%
+        );
+}
 
 /* Blobs */
 .lp-blob {
