@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import { router } from '@inertiajs/vue3';
 
+const GA_ID = 'G-HKD85XSYN0';
 const STORAGE_KEY = 'coy_cookie_consent';
 
 const visible = ref(false);
@@ -9,7 +11,6 @@ const accepted = ref(false);
 onMounted(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) {
-        // Small delay so it doesn't flash immediately on page load
         setTimeout(() => { visible.value = true; }, 800);
     } else {
         accepted.value = stored === 'accepted';
@@ -30,23 +31,34 @@ function decline() {
     visible.value = false;
 }
 
+function gtag(...args: any[]) {
+    (window as any).dataLayer.push(args);
+}
+
 function loadAnalytics() {
     // Only inject GA script after consent — prevents PECR violation
     if (typeof window === 'undefined') return;
     if (document.getElementById('ga-script')) return; // already loaded
 
+    // Set up dataLayer and global gtag BEFORE the script loads
+    (window as any).dataLayer = (window as any).dataLayer || [];
+    (window as any).gtag = gtag;
+    gtag('js', new Date());
+    gtag('config', GA_ID);
+
     const script = document.createElement('script');
     script.id = 'ga-script';
     script.async = true;
-    script.src = 'https://www.googletagmanager.com/gtag/js?id=G-HKD85XSYN0';
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
     document.head.appendChild(script);
 
-    script.onload = () => {
-        (window as any).dataLayer = (window as any).dataLayer || [];
-        function gtag(...args: any[]) { (window as any).dataLayer.push(args); }
-        gtag('js', new Date());
-        gtag('config', 'G-HKD85XSYN0');
-    };
+    // Fire a page_view on each Inertia navigation (SPA — no full page reload)
+    router.on('navigate', (event) => {
+        gtag('event', 'page_view', {
+            page_title: document.title,
+            page_location: event.detail.page.url,
+        });
+    });
 }
 </script>
 
