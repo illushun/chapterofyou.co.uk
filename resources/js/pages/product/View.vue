@@ -707,6 +707,13 @@ const productListSchema = computed(() => ({
     transform: translateY(-1px);
 }
 
+/* Hide the mobile filter button once the sidebar is visible */
+@media (min-width: 1024px) {
+    .pv-filter-btn {
+        display: none;
+    }
+}
+
 /* ── Product grid ── */
 .pv-product-grid {
     list-style: none;
@@ -845,8 +852,10 @@ const productListSchema = computed(() => ({
 
 .pv-mobile-panel {
     position: fixed;
-    inset-y: 0;
+    top: 0;
+    bottom: 0;
     right: 0;
+    height: 100dvh;
     width: 300px;
     background: #fffafa;
     border-left: 1px solid #e5c9c7;
