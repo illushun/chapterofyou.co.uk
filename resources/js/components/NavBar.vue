@@ -866,7 +866,7 @@ const cartCount = computed<number>(() => Number((page.props as any).cartCount) |
     justify-content: space-between;
     padding: 0.55rem 0.75rem;
     border-radius: 10px;
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 500;
     color: #6b4f4f;
     text-decoration: none;
@@ -889,7 +889,7 @@ const cartCount = computed<number>(() => Number((page.props as any).cartCount) |
     width: 100%;
     padding: 0.55rem 0.75rem;
     border-radius: 10px;
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 500;
     color: #8c2a2a;
     background: none;

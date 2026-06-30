@@ -438,7 +438,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     gap: 0.6rem;
     background: linear-gradient(135deg, #c47078, #a85058);
     color: #fff;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.04em;
     padding: 0.55rem 1rem;
@@ -459,7 +459,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     flex-wrap: wrap;
     padding: 0.55rem 1.25rem;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.02em;
     color: #fff;
@@ -639,7 +639,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 
 .lp-hero-pcard-name {
     font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 500;
     color: #2d1a1a;
     line-height: 1.3;
@@ -658,7 +658,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 
 .lp-hero-eyebrow {
     font-family: 'Nunito', sans-serif;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -710,7 +710,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 
 .lp-hero-divider-dot {
     color: #c9a4a4;
-    font-size: 0.9rem;
+    font-size: 1rem;
 }
 
 .lp-hero-actions {
@@ -755,7 +755,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     display: flex;
     align-items: center;
     gap: 0.55rem;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #6b4f4f;
     white-space: nowrap;
@@ -787,7 +787,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 }
 
 .lp-section-eyebrow {
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.18em;
@@ -851,7 +851,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 }
 
 .lp-story-body {
-    font-size: 0.97rem;
+    font-size: 1rem;
     line-height: 1.8;
     color: rgba(255, 255, 255, 0.82);
     margin-bottom: 1rem;
@@ -861,7 +861,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: #fff;
     text-decoration: none;
@@ -909,7 +909,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 }
 
 .lp-stat-label {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-style: italic;
     color: rgba(255, 255, 255, 0.75);
     line-height: 1.4;
@@ -958,7 +958,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 }
 
 .lp-feature-icon {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #c9a4a4;
     letter-spacing: 0.3em;
     margin-bottom: 1rem;
@@ -975,7 +975,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 }
 
 .lp-feature-body {
-    font-size: 0.9rem;
+    font-size: 1rem;
     line-height: 1.75;
     color: #6b4f4f;
 }
@@ -1006,7 +1006,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -1078,7 +1078,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     position: absolute;
     top: 5px;
     left: 9px;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #c9a4a4;
     opacity: 0.22;
     pointer-events: none;
@@ -1092,7 +1092,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     top: 10px;
     left: 10px;
     z-index: 10;
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
@@ -1161,7 +1161,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     display: inline-flex;
     align-items: center;
     gap: 0.25rem;
-    font-size: 0.72rem;
+    font-size: 0.875rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -1223,7 +1223,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 }
 
 .lp-cta-body {
-    font-size: 0.97rem;
+    font-size: 1rem;
     line-height: 1.8;
     color: #6b4f4f;
     max-width: 520px;
@@ -1241,7 +1241,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     background: linear-gradient(135deg, #c47078, #a85058);
     color: #fff;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
@@ -1256,7 +1256,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 
 .btn-rose--lg {
     padding: 0.85rem 2rem;
-    font-size: 0.97rem;
+    font-size: 1rem;
 }
 
 .btn-ghost {
@@ -1269,7 +1269,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     background: rgba(255, 250, 250, 0.7);
     color: #6b4f4f;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 600;
     text-decoration: none;
     backdrop-filter: blur(4px);
@@ -1350,7 +1350,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 }
 
 .lp-testimonial-author {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 700;
     color: #8c4a50;
     letter-spacing: 0.03em;
@@ -1375,7 +1375,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     background: #fdf4f3;
     color: #2d1a1a;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.92rem;
+    font-size: 1rem;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -1390,13 +1390,13 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 }
 
 .lp-cta-error {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     color: #b54040;
     margin-bottom: 0.5rem;
 }
 
 .lp-cta-disclaimer {
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     color: #a08080;
     font-style: italic;
     margin-bottom: 1.25rem;
@@ -1408,7 +1408,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     gap: 0.5rem;
     color: #2d7a3a;
     font-weight: 600;
-    font-size: 0.95rem;
+    font-size: 1rem;
     background: #f0faf0;
     border: 1px solid #a8d8b0;
     border-radius: 999px;
@@ -1420,7 +1420,7 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
     display: inline-flex;
     align-items: center;
     gap: 0.35rem;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;

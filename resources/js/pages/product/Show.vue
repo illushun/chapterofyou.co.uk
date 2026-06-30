@@ -653,7 +653,7 @@ onUnmounted(() => {
     top: 12px;
     left: 12px;
     z-index: 10;
-    font-size: 0.68rem;
+    font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
@@ -737,7 +737,7 @@ onUnmounted(() => {
 }
 
 .pd-crumb {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #6b4f4f;
     text-decoration: none;
     transition: color 0.2s;
@@ -748,7 +748,7 @@ onUnmounted(() => {
 }
 
 .pd-crumb-sep {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #c9a4a4;
 }
 
@@ -762,7 +762,7 @@ onUnmounted(() => {
 }
 
 .pd-mpn {
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     font-family: monospace;
     letter-spacing: 0.05em;
     color: #a08080;
@@ -775,7 +775,7 @@ onUnmounted(() => {
 }
 
 .pd-rating-label {
-    font-size: 0.85rem;
+    font-size: 0.925rem;
     color: #6b4f4f;
 }
 
@@ -784,7 +784,7 @@ onUnmounted(() => {
 }
 
 .pd-stock-badge {
-    font-size: 0.72rem;
+    font-size: 0.875rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -829,7 +829,7 @@ onUnmounted(() => {
 }
 
 .pd-variations-label {
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.07em;
@@ -850,7 +850,7 @@ onUnmounted(() => {
     background: #fffafa;
     color: #2d1a1a;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s, color 0.2s;
@@ -918,7 +918,7 @@ onUnmounted(() => {
     width: 40px;
     text-align: center;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #2d1a1a;
     background: transparent;
@@ -949,7 +949,7 @@ onUnmounted(() => {
     background: linear-gradient(135deg, #c47078, #a85058);
     color: #fff;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
@@ -1010,7 +1010,7 @@ onUnmounted(() => {
 }
 
 .pd-description-body {
-    font-size: 0.92rem;
+    font-size: 1rem;
     color: #6b4f4f;
     line-height: 1.75;
 }
@@ -1032,7 +1032,7 @@ onUnmounted(() => {
     border: 1px solid #e5c9c7;
     border-radius: 16px;
     padding: 1.5rem 1.75rem;
-    font-size: 0.95rem;
+    font-size: 1rem;
     color: #3d2222;
     line-height: 1.8;
     position: relative;
@@ -1114,7 +1114,7 @@ onUnmounted(() => {
 
 .pd-faq-q {
     font-family: 'Nunito', sans-serif;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #2d1a1a;
     line-height: 1.4;
@@ -1144,7 +1144,7 @@ onUnmounted(() => {
 }
 
 .pd-faq-a {
-    font-size: 0.92rem;
+    font-size: 1rem;
     color: #6b4f4f;
     line-height: 1.7;
     padding-top: 0.6rem;
@@ -1162,7 +1162,7 @@ onUnmounted(() => {
 .pd-reviews-count {
     font-family: 'Nunito', sans-serif;
     font-style: normal;
-    font-size: 0.72rem;
+    font-size: 0.875rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -1181,7 +1181,7 @@ onUnmounted(() => {
 }
 
 .pd-avg-val {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #6b4f4f;
     font-style: italic;
 }
@@ -1193,7 +1193,7 @@ onUnmounted(() => {
 }
 
 .field-label {
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -1213,7 +1213,7 @@ onUnmounted(() => {
     background: #fdf4f3;
     color: #2d1a1a;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.92rem;
+    font-size: 1rem;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -1233,7 +1233,7 @@ onUnmounted(() => {
 }
 
 .field-error {
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     color: #b54040;
 }
 
@@ -1242,7 +1242,7 @@ onUnmounted(() => {
     border-radius: 12px;
     background: #fffafa;
     padding: 0.85rem 1.1rem;
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #6b4f4f;
     font-style: italic;
     margin-bottom: 1.5rem;
@@ -1295,20 +1295,20 @@ onUnmounted(() => {
 }
 
 .pd-reviewer-name {
-    font-size: 0.92rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #2d1a1a;
     margin-top: 0.2rem;
 }
 
 .pd-review-date {
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     color: #6b4f4f;
     font-style: italic;
 }
 
 .pd-review-body {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #6b4f4f;
     line-height: 1.65;
 }
@@ -1348,7 +1348,7 @@ onUnmounted(() => {
 }
 
 .pd-no-reviews {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #6b4f4f;
     font-style: italic;
     margin-top: 1rem;
@@ -1367,7 +1367,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.72rem;
+    font-size: 0.875rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.07em;
@@ -1376,7 +1376,7 @@ onUnmounted(() => {
 }
 
 .pd-admin-reply-body {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     color: #2d1a1a;
     line-height: 1.6;
 }
@@ -1465,7 +1465,7 @@ onUnmounted(() => {
 }
 
 .pd-rf-rating-label {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-style: italic;
     color: #8c4a50;
     font-weight: 600;
@@ -1489,7 +1489,7 @@ onUnmounted(() => {
     background: #fdf4f3;
     color: #8c4a50;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.925rem;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
@@ -1520,7 +1520,7 @@ onUnmounted(() => {
 }
 
 .pd-rf-no-rating-hint {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #9a7070;
     font-style: italic;
 }
@@ -1545,7 +1545,7 @@ onUnmounted(() => {
     background: linear-gradient(135deg, #c47078, #a85058);
     color: #fff;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
@@ -1571,7 +1571,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 0.4rem;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #7a5a5a;
     margin: 0.5rem 0 1rem;
 }
@@ -1592,7 +1592,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 0.45rem;
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     color: #5a3a3a;
     font-weight: 500;
 }
@@ -1637,7 +1637,7 @@ onUnmounted(() => {
 }
 
 .pd-sticky-name {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #2d1a1a;
     white-space: nowrap;
@@ -1659,7 +1659,7 @@ onUnmounted(() => {
     border: none;
     border-radius: 999px;
     padding: 0.65rem 1.4rem;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 700;
     letter-spacing: 0.03em;
     cursor: pointer;

@@ -334,7 +334,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 .item-badge {
     font-family: 'Nunito', sans-serif;
     font-style: normal;
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -350,7 +350,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     color: #6b4f4f;
     text-decoration: none;
     transition: color 0.2s;
@@ -367,7 +367,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 }
 
 .ship-text {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     color: #6b4f4f;
     margin-bottom: 0.45rem;
     line-height: 1.4;
@@ -439,7 +439,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 }
 
 .cp-empty p {
-    font-size: 0.92rem;
+    font-size: 1rem;
     color: #6b4f4f;
     margin-bottom: 1.75rem;
     line-height: 1.6;
@@ -484,7 +484,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     position: absolute;
     top: 6px;
     left: 10px;
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: #c9a4a4;
     opacity: 0.22;
     pointer-events: none;
@@ -549,7 +549,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 }
 
 .ci-unit {
-    font-size: 0.78rem;
+    font-size: 0.875rem;
     color: #6b4f4f;
     font-style: italic;
 }
@@ -622,7 +622,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 .qty-num {
     min-width: 28px;
     text-align: center;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: #2d1a1a;
     border-left: 1px solid #e5c9c7;
@@ -684,7 +684,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 .sum-row {
     display: flex;
     justify-content: space-between;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     color: #6b4f4f;
 }
 
@@ -697,7 +697,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     font-style: italic;
     font-weight: 400 !important;
     color: #8c4a50 !important;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
 }
 
 .sum-dash {
@@ -738,7 +738,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     background: linear-gradient(135deg, #c47078, #a85058);
     color: #fff;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.92rem;
+    font-size: 1rem;
     font-weight: 600;
     letter-spacing: 0.04em;
     text-decoration: none;
@@ -761,7 +761,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     background: linear-gradient(135deg, #c47078, #a85058);
     color: #fff;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 14px rgba(168, 80, 88, 0.2);
@@ -778,7 +778,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     align-items: center;
     justify-content: center;
     gap: 0.35rem;
-    font-size: 0.74rem;
+    font-size: 0.875rem;
     color: #6b4f4f;
     margin-top: 0.85rem;
     font-style: italic;
@@ -834,7 +834,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 }
 
 .gv-cart-badge {
-    font-size: 0.72rem;
+    font-size: 0.875rem;
     font-style: italic;
     color: #8a6a5a;
 }
@@ -843,6 +843,6 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     font-weight: 400 !important;
     font-style: italic;
     color: #9a7070 !important;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
 }
 </style>

@@ -185,7 +185,7 @@ const handleTouchEnd = (event: Event) => {
     position: absolute;
     top: 6px;
     left: 9px;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #c9a4a4;
     opacity: 0.22;
     pointer-events: none;
@@ -201,7 +201,7 @@ const handleTouchEnd = (event: Event) => {
     left: 10px;
     z-index: 10;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
@@ -290,7 +290,7 @@ const handleTouchEnd = (event: Event) => {
 
 .psc-oos span {
     font-family: 'Nunito', sans-serif;
-    font-size: 0.7rem;
+    font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;

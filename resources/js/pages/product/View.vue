@@ -403,7 +403,7 @@ const productListSchema = computed(() => ({
 }
 
 .pv-sub {
-    font-size: 0.92rem;
+    font-size: 1rem;
     color: #6b4f4f;
     font-style: italic;
 }
@@ -423,7 +423,7 @@ const productListSchema = computed(() => ({
     background: #fffafa;
     color: #2d1a1a;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem;
+    font-size: 1rem;
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -518,7 +518,7 @@ const productListSchema = computed(() => ({
 }
 
 .pv-filter-label {
-    font-size: 0.75rem;
+    font-size: 0.875rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.07em;
@@ -530,7 +530,7 @@ const productListSchema = computed(() => ({
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     color: #6b4f4f;
     cursor: pointer;
 }
@@ -539,7 +539,7 @@ const productListSchema = computed(() => ({
     display: flex;
     align-items: center;
     gap: 0.6rem;
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     color: #6b4f4f;
     cursor: pointer;
     margin-bottom: 0.4rem;
@@ -573,7 +573,7 @@ const productListSchema = computed(() => ({
 }
 
 .pv-price-val {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #6b4f4f;
     font-weight: 600;
     cursor: pointer;
@@ -589,7 +589,7 @@ const productListSchema = computed(() => ({
     padding: 0.1rem 0.3rem;
     border: 1px solid #e5c9c7;
     border-radius: 6px;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: #2d1a1a;
     background: #fdf4f3;
     outline: none;
@@ -611,7 +611,7 @@ const productListSchema = computed(() => ({
     padding-top: 0.75rem;
     margin-top: 0.5rem;
     border-top: 1px solid #e5c9c7;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 600;
     color: #8c4a50;
     background: none;
@@ -642,7 +642,7 @@ const productListSchema = computed(() => ({
 }
 
 .pv-count {
-    font-size: 0.88rem;
+    font-size: 0.95rem;
     color: #6b4f4f;
 }
 
@@ -657,7 +657,7 @@ const productListSchema = computed(() => ({
 }
 
 .pv-sort-label {
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     color: #6b4f4f;
     white-space: nowrap;
     display: none;
@@ -676,7 +676,7 @@ const productListSchema = computed(() => ({
     background: #fdf4f3;
     color: #2d1a1a;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.925rem;
     outline: none;
     cursor: pointer;
     transition: border-color 0.2s;
@@ -696,7 +696,7 @@ const productListSchema = computed(() => ({
     background: linear-gradient(135deg, #c47078, #a85058);
     color: #fff;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(168, 80, 88, 0.18);
@@ -758,7 +758,7 @@ const productListSchema = computed(() => ({
 }
 
 .pv-empty p {
-    font-size: 0.95rem;
+    font-size: 1rem;
     color: #6b4f4f;
     font-style: italic;
 }
@@ -788,7 +788,7 @@ const productListSchema = computed(() => ({
     background: #fffafa;
     color: #6b4f4f;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.925rem;
     font-weight: 500;
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s, color 0.15s;
@@ -823,7 +823,7 @@ const productListSchema = computed(() => ({
     background: linear-gradient(135deg, #c47078, #a85058);
     color: #fff;
     font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
@@ -838,7 +838,7 @@ const productListSchema = computed(() => ({
 
 .btn-rose--sm {
     padding: 0.5rem 1.1rem;
-    font-size: 0.85rem;
+    font-size: 0.925rem;
 }
 
 /* ── Mobile filter backdrop + panel ── */
