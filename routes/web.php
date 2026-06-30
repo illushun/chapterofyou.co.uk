@@ -38,6 +38,7 @@ use App\Http\Controllers\Admin\AdminJournalController;
 use App\Http\Controllers\Admin\Marketplace\EtsyController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\Admin\AdminFinanceController;
+use App\Http\Controllers\GoogleShoppingFeedController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
@@ -254,6 +255,7 @@ Route::get('/unsubscribe/{user}', [MarketingOptInController::class, 'unsubscribe
 Route::post('/unsubscribe/confirm/{user}', [MarketingOptInController::class, 'unsubscribeConfirm'])->name('unsubscribe.confirm');
 
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('/feed/google-shopping.xml', GoogleShoppingFeedController::class)->name('feed.google-shopping');
 
 
 require __DIR__ . '/settings.php';
