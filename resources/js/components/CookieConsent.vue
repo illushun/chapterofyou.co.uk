@@ -31,20 +31,17 @@ function decline() {
     visible.value = false;
 }
 
-function gtag(...args: any[]) {
-    (window as any).dataLayer.push(args);
-}
-
 function loadAnalytics() {
     // Only inject GA script after consent — prevents PECR violation
     if (typeof window === 'undefined') return;
     if (document.getElementById('ga-script')) return; // already loaded
 
-    // Set up dataLayer and global gtag BEFORE the script loads
+    // GA4 requires arguments (not rest params) so it can be processed by the dataLayer queue
     (window as any).dataLayer = (window as any).dataLayer || [];
-    (window as any).gtag = gtag;
-    gtag('js', new Date());
-    gtag('config', GA_ID);
+    // eslint-disable-next-line prefer-rest-params
+    (window as any).gtag = function() { (window as any).dataLayer.push(arguments); };
+    (window as any).gtag('js', new Date());
+    (window as any).gtag('config', GA_ID);
 
     const script = document.createElement('script');
     script.id = 'ga-script';
@@ -54,7 +51,7 @@ function loadAnalytics() {
 
     // Fire a page_view on each Inertia navigation (SPA — no full page reload)
     router.on('navigate', (event) => {
-        gtag('event', 'page_view', {
+        (window as any).gtag('event', 'page_view', {
             page_title: document.title,
             page_location: event.detail.page.url,
         });
