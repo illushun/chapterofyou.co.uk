@@ -162,18 +162,20 @@ watch(() => props.open, (newOpen) => {
 /* ── Image area ── */
 .miv-img-wrap {
     flex: 1;
+    min-height: 0; /* let flex child shrink so % heights resolve on the image */
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
     background: #fdf4f3;
-    min-height: 300px;
-    max-height: 65vh;
+    padding: 1rem;
 }
 
 .miv-img {
+    display: block;
     max-width: 100%;
-    max-height: 100%;
+    max-height: 65vh;
+    width: auto;
+    height: auto;
     object-fit: contain;
     transition: opacity 0.25s ease;
 }
