@@ -15,7 +15,7 @@ class AdminJournalController extends Controller
     public function index(Request $request)
     {
         $posts = JournalPost::with('author:id,name')
-            ->select('id', 'title', 'slug', 'status', 'published_at', 'views', 'author_id', 'created_at')
+            ->select('id', 'title', 'slug', 'status', 'published_at', 'views', 'author_id', 'created_at', 'is_ai_generated')
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->status))
             ->when($request->filled('search'), fn ($q) =>
                 $q->where('title', 'like', "%{$request->search}%"))

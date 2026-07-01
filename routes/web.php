@@ -35,6 +35,7 @@ use App\Http\Controllers\GiftVoucherController;
 use App\Http\Controllers\Admin\AdminGiftVoucherController;
 use App\Http\Controllers\JournalController;
 use App\Http\Controllers\Admin\AdminJournalController;
+use App\Http\Controllers\Admin\AdminJournalAutoGeneratorController;
 use App\Http\Controllers\Admin\Marketplace\EtsyController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\Admin\AdminFinanceController;
@@ -234,6 +235,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         Route::post('/products/{product}/costs', [AdminFinanceController::class, 'addProductCost'])->name('products.costs.add');
         Route::put('/products/{product}/costs/{costItem}', [AdminFinanceController::class, 'updateProductCost'])->name('products.costs.update');
         Route::delete('/products/{product}/costs/{costItem}', [AdminFinanceController::class, 'removeProductCost'])->name('products.costs.remove');
+    });
+
+    Route::prefix('journal/auto-generator')->name('journal.auto-generator.')->group(function () {
+        Route::get('/', [AdminJournalAutoGeneratorController::class, 'edit'])->name('edit');
+        Route::put('/', [AdminJournalAutoGeneratorController::class, 'update'])->name('update');
+        Route::post('/generate-now', [AdminJournalAutoGeneratorController::class, 'generateNow'])->name('generate-now');
     });
 
     Route::resource('journal', AdminJournalController::class)

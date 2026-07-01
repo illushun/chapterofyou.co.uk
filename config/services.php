@@ -58,4 +58,12 @@ return [
         'redirect'            => env('ETSY_REDIRECT_URI', '/admin/marketplace/etsy/callback'),
         'default_taxonomy_id' => env('ETSY_DEFAULT_TAXONOMY_ID', 1622),
     ],
+
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+    ],
+
+    'unsplash' => [
+        'access_key' => env('UNSPLASH_ACCESS_KEY'),
+    ],
 ];

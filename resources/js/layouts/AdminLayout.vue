@@ -61,6 +61,7 @@ const navGroups = [
             { name: 'Gift Vouchers', route: 'admin.gift-vouchers.index', icon: OrdersIcon },
             { name: 'Broadcast', route: 'admin.broadcasts.index', icon: MessagesIcon },
             { name: 'Journal', route: 'admin.journal.index', icon: MessagesIcon },
+            { name: 'Journal Auto Generator', route: 'admin.journal.auto-generator.edit', icon: MessagesIcon },
         ],
     },
     {
