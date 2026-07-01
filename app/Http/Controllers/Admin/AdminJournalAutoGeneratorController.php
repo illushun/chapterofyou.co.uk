@@ -33,6 +33,7 @@ class AdminJournalAutoGeneratorController extends Controller
             'enabled' => ['required', 'boolean'],
             'frequency' => ['required', Rule::in(['daily', 'weekly', 'biweekly', 'monthly'])],
             'day_of_week' => ['nullable', 'integer', 'between:0,6'],
+            'day_of_month' => ['nullable', 'integer', 'between:1,31'],
             'topic_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 

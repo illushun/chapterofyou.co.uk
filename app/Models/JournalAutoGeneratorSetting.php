@@ -10,6 +10,7 @@ class JournalAutoGeneratorSetting extends Model
         'enabled',
         'frequency',
         'day_of_week',
+        'day_of_month',
         'topic_notes',
         'last_generated_at',
         'last_run_status',
@@ -19,6 +20,7 @@ class JournalAutoGeneratorSetting extends Model
     protected $casts = [
         'enabled' => 'boolean',
         'day_of_week' => 'integer',
+        'day_of_month' => 'integer',
         'last_generated_at' => 'datetime',
     ];
 

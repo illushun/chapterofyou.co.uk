@@ -8,6 +8,7 @@ const props = defineProps<{
         enabled: boolean;
         frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly';
         day_of_week: number | null;
+        day_of_month: number | null;
         topic_notes: string | null;
         last_generated_at: string | null;
         last_run_status: 'success' | 'failed' | null;
@@ -34,10 +35,19 @@ const days = [
     { value: 6, label: 'Saturday' },
 ];
 
+const daysOfMonth = Array.from({ length: 31 }, (_, i) => i + 1);
+
+function ordinal(n: number): string {
+    const suffixes: Record<number, string> = { 1: 'st', 2: 'nd', 3: 'rd' };
+    const suffix = n % 100 >= 11 && n % 100 <= 13 ? 'th' : (suffixes[n % 10] ?? 'th');
+    return `${n}${suffix}`;
+}
+
 const form = useForm({
     enabled: props.settings.enabled,
     frequency: props.settings.frequency,
     day_of_week: props.settings.day_of_week ?? 1,
+    day_of_month: props.settings.day_of_month ?? 1,
     topic_notes: props.settings.topic_notes ?? '',
 });
 
@@ -113,11 +123,20 @@ function generateNow() {
                         </select>
                     </div>
 
-                    <div v-if="form.frequency !== 'daily'" class="adm-field">
+                    <div v-if="form.frequency === 'weekly' || form.frequency === 'biweekly'" class="adm-field">
                         <label class="adm-label adm-label--sm">Day of week</label>
                         <select v-model.number="form.day_of_week" class="adm-input">
                             <option v-for="d in days" :key="d.value" :value="d.value">{{ d.label }}</option>
                         </select>
+                    </div>
+
+                    <div v-if="form.frequency === 'monthly'" class="adm-field">
+                        <label class="adm-label adm-label--sm">Day of month</label>
+                        <select v-model.number="form.day_of_month" class="adm-input">
+                            <option v-for="d in daysOfMonth" :key="d" :value="d">{{ ordinal(d) }}</option>
+                        </select>
+                        <p class="adm-field-note">If a month is shorter than this (e.g. 31st in February), the post
+                            runs on the last day of that month instead.</p>
                     </div>
 
                     <div class="adm-field">

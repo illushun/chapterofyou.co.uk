@@ -68,7 +68,7 @@ class GenerateJournalPost extends Command
         $now = Carbon::now();
 
         if (! $settings->last_generated_at) {
-            return $this->matchesDayOfWeek($settings, $now);
+            return $this->matchesScheduleDay($settings, $now);
         }
 
         $daysSinceLastRun = $settings->last_generated_at->diffInDays($now);
@@ -85,15 +85,19 @@ class GenerateJournalPost extends Command
             return false;
         }
 
-        return $this->matchesDayOfWeek($settings, $now);
+        return $this->matchesScheduleDay($settings, $now);
     }
 
-    private function matchesDayOfWeek(JournalAutoGeneratorSetting $settings, Carbon $now): bool
+    private function matchesScheduleDay(JournalAutoGeneratorSetting $settings, Carbon $now): bool
     {
-        if ($settings->frequency === 'daily' || $settings->day_of_week === null) {
-            return true;
-        }
-
-        return (int) $now->dayOfWeek === (int) $settings->day_of_week;
+        return match ($settings->frequency) {
+            'daily' => true,
+            'weekly', 'biweekly' => $settings->day_of_week === null
+                || (int) $now->dayOfWeek === (int) $settings->day_of_week,
+            // Clamp to the last day of the month so "31" still fires in e.g. February.
+            'monthly' => $settings->day_of_month === null
+                || $now->day === min((int) $settings->day_of_month, $now->daysInMonth),
+            default => true,
+        };
     }
 }
