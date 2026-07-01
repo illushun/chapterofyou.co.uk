@@ -96,7 +96,7 @@ function deletePost(id: number, title: string) {
                                 }}</div>
                         </td>
                         <td class="adm-td">
-                            <span :class="post.status === 'published' ? 'adm-badge--on' : 'adm-badge--warn'">
+                            <span class="adm-badge" :class="post.status === 'published' ? 'adm-badge--on' : 'adm-badge--warn'">
                                 {{ post.status }}
                             </span>
                         </td>

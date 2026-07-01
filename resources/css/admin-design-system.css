@@ -359,6 +359,8 @@
 }
 .adm-status-btn--on  { background: var(--bb-green-bg); border-color: var(--bb-green); color: #2a7a50; }
 .adm-status-btn--off { background: var(--bb-red-bg); border-color: var(--bb-red); color: var(--bb-red); }
+/* Generic "selected" state for non-binary status/filter toggles (e.g. All / Published / Drafts) */
+.adm-status-btn--active { background: var(--bb-navy); border-color: var(--bb-navy); color: #fff; }
 .adm-status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .adm-status-dot--green { background: var(--bb-green); }
 .adm-status-dot--grey  { background: #b0b0c0; }
