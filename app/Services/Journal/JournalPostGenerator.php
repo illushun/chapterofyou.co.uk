@@ -9,7 +9,7 @@ use RuntimeException;
 
 class JournalPostGenerator
 {
-    private const MODEL = 'claude-opus-4-8';
+    private const MODEL = 'claude-sonnet-5';
 
     private Client $client;
 
