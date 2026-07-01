@@ -309,6 +309,8 @@
 .adm-textarea { resize: vertical; min-height: 120px; }
 
 .adm-err { font-size: 0.75rem; color: var(--bb-red); }
+.adm-field-note { font-size: 0.72rem; color: var(--bb-muted); margin: 0; }
+.adm-field-error { font-size: 0.75rem; color: var(--bb-red); margin: 0; }
 
 /* £ prefix wrapper */
 .adm-prefix-wrap { position: relative; display: flex; align-items: center; }

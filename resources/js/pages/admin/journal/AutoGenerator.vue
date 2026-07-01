@@ -91,11 +91,11 @@ function generateNow() {
                         <label class="adm-label adm-label--sm">Status</label>
                         <div class="adm-status-btns">
                             <button type="button" @click="form.enabled = false" class="adm-status-btn"
-                                :class="!form.enabled ? 'adm-status-btn--active' : ''">
+                                :class="!form.enabled ? 'adm-status-btn--off' : ''">
                                 Off
                             </button>
                             <button type="button" @click="form.enabled = true" class="adm-status-btn"
-                                :class="form.enabled ? 'adm-status-btn--active' : ''">
+                                :class="form.enabled ? 'adm-status-btn--on' : ''">
                                 On
                             </button>
                         </div>
@@ -158,7 +158,7 @@ function generateNow() {
                     </div>
                     <div v-if="settings.last_run_status" class="adm-field">
                         <label class="adm-label adm-label--sm">Status</label>
-                        <span :class="settings.last_run_status === 'success' ? 'adm-badge--on' : 'adm-badge--warn'">
+                        <span class="adm-badge" :class="settings.last_run_status === 'success' ? 'adm-badge--on' : 'adm-badge--warn'">
                             {{ settings.last_run_status }}
                         </span>
                     </div>
