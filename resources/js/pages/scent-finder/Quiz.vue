@@ -5,7 +5,7 @@ import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import { router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
-import { SCENT_FAMILIES, MOOD_TAGS, INTENSITY_LABELS } from '@/lib/scentTaxonomy';
+import { SCENT_FAMILIES, MOOD_TAGS, ROOMS } from '@/lib/scentTaxonomy';
 
 const seo = useSeoHead({
     title: 'Scent Finder',
@@ -16,7 +16,7 @@ const seo = useSeoHead({
 const answers = reactive({
     scent_families: [] as string[],
     mood_tags: [] as string[],
-    intensity: 3,
+    room_tags: [] as string[],
 });
 
 const currentStep = ref(0);
@@ -25,7 +25,7 @@ const submitting = ref(false);
 const steps = [
     { key: 'families', title: 'Which scents call to you?', subtitle: 'Pick up to 2' },
     { key: 'moods', title: 'What mood are you after?', subtitle: 'Pick up to 3' },
-    { key: 'intensity', title: 'How strong should it be?', subtitle: 'Slide to your preference' },
+    { key: 'rooms', title: 'Where will you use it?', subtitle: 'Pick up to 2' },
 ] as const;
 
 const totalSteps = steps.length;
@@ -48,9 +48,19 @@ const toggleMood = (value: string) => {
     }
 };
 
+const toggleRoom = (value: string) => {
+    const idx = answers.room_tags.indexOf(value);
+    if (idx !== -1) {
+        answers.room_tags.splice(idx, 1);
+    } else if (answers.room_tags.length < 2) {
+        answers.room_tags.push(value);
+    }
+};
+
 const canProceed = computed(() => {
     if (currentStep.value === 0) return answers.scent_families.length > 0;
     if (currentStep.value === 1) return answers.mood_tags.length > 0;
+    if (currentStep.value === 2) return answers.room_tags.length > 0;
     return true;
 });
 
@@ -123,10 +133,14 @@ const submit = () => {
                     </button>
                 </div>
 
-                <!-- Step 3: Intensity -->
-                <div v-else class="sf-intensity">
-                    <input type="range" min="1" max="5" step="1" v-model.number="answers.intensity" class="sf-slider" />
-                    <p class="sf-intensity-label">{{ INTENSITY_LABELS[answers.intensity] }}</p>
+                <!-- Step 3: Rooms -->
+                <div v-else class="sf-chip-grid">
+                    <button v-for="room in ROOMS" :key="room.value" type="button" class="sf-chip"
+                        :class="{ 'sf-chip--active': answers.room_tags.includes(room.value) }"
+                        :disabled="!answers.room_tags.includes(room.value) && answers.room_tags.length >= 2"
+                        @click="toggleRoom(room.value)">
+                        {{ room.label }}
+                    </button>
                 </div>
 
                 <div class="sf-actions">
@@ -289,26 +303,6 @@ const submit = () => {
 .sf-chip:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-}
-
-.sf-intensity {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 0.5rem;
-}
-
-.sf-slider {
-    width: 100%;
-    accent-color: #a85058;
-}
-
-.sf-intensity-label {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem;
-    color: #a85058;
-    font-weight: 500;
 }
 
 .sf-actions {

@@ -139,11 +139,13 @@ class AdminProductController extends Controller
             'scent_families.*' => [Rule::in(Product::SCENT_FAMILIES)],
             'mood_tags'        => ['nullable', 'array'],
             'mood_tags.*'      => [Rule::in(Product::MOOD_TAGS)],
-            'intensity'        => ['nullable', 'integer', 'min:1', 'max:5'],
+            'room_tags'        => ['nullable', 'array'],
+            'room_tags.*'      => [Rule::in(Product::ROOMS)],
         ]);
 
         $validated['scent_families'] = !empty($validated['scent_families']) ? implode(',', $validated['scent_families']) : null;
         $validated['mood_tags'] = !empty($validated['mood_tags']) ? implode(',', $validated['mood_tags']) : null;
+        $validated['room_tags'] = !empty($validated['room_tags']) ? implode(',', $validated['room_tags']) : null;
 
         return DB::transaction(function () use ($validated, $request) {
             $product = Product::create($validated);
@@ -235,6 +237,7 @@ class AdminProductController extends Controller
             'productFaqs' => $productFaqs,
             'selectedScentFamilies' => $product->scent_families_array,
             'selectedMoodTags'      => $product->mood_tags_array,
+            'selectedRoomTags'      => $product->room_tags_array,
         ]);
     }
 
@@ -281,11 +284,13 @@ class AdminProductController extends Controller
             'scent_families.*' => [Rule::in(Product::SCENT_FAMILIES)],
             'mood_tags'        => ['nullable', 'array'],
             'mood_tags.*'      => [Rule::in(Product::MOOD_TAGS)],
-            'intensity'        => ['nullable', 'integer', 'min:1', 'max:5'],
+            'room_tags'        => ['nullable', 'array'],
+            'room_tags.*'      => [Rule::in(Product::ROOMS)],
         ]);
 
         $validated['scent_families'] = !empty($validated['scent_families']) ? implode(',', $validated['scent_families']) : null;
         $validated['mood_tags'] = !empty($validated['mood_tags']) ? implode(',', $validated['mood_tags']) : null;
+        $validated['room_tags'] = !empty($validated['room_tags']) ? implode(',', $validated['room_tags']) : null;
 
         return DB::transaction(function () use ($request, $validated, $product) {
             $product->update($validated);

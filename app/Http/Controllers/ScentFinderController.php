@@ -30,7 +30,8 @@ class ScentFinderController extends Controller
             'scent_families.*' => [Rule::in(Product::SCENT_FAMILIES)],
             'mood_tags' => ['required', 'array', 'min:1'],
             'mood_tags.*' => [Rule::in(Product::MOOD_TAGS)],
-            'intensity' => ['required', 'integer', 'min:1', 'max:5'],
+            'room_tags' => ['required', 'array', 'min:1'],
+            'room_tags.*' => [Rule::in(Product::ROOMS)],
         ]);
 
         $products = $scentFinder->match($validated);

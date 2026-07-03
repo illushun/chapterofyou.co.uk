@@ -24,7 +24,7 @@ class ScentTagSuggester
         $this->client = new Client(apiKey: $apiKey);
     }
 
-    /** @return array{scent_families:array<string>,mood_tags:array<string>,intensity:int,reasoning:string} */
+    /** @return array{scent_families:array<string>,mood_tags:array<string>,room_tags:array<string>,reasoning:string} */
     public function suggest(string $name, ?string $description = null, ?string $details = null): array
     {
         $systemPrompt = <<<'SYSTEM'
@@ -45,9 +45,10 @@ class ScentTagSuggester
 
             Allowed scent families: {$this->allowedList(Product::SCENT_FAMILIES)}
             Allowed mood tags: {$this->allowedList(Product::MOOD_TAGS)}
+            Allowed rooms: {$this->allowedList(Product::ROOMS)}
 
-            Choose 1-2 scent families and 1-3 mood tags that best fit this product, and rate its
-            fragrance intensity from 1 (very subtle) to 5 (very strong).
+            Choose 1-2 scent families, 1-3 mood tags, and 1-2 rooms of the home this product suits
+            best.
             PROMPT;
 
         $message = $this->client->messages->create(
@@ -73,17 +74,17 @@ class ScentTagSuggester
                                 'items' => ['type' => 'string', 'enum' => Product::MOOD_TAGS],
                                 'description' => '1-3 best-matching mood/occasion tags',
                             ],
-                            'intensity' => [
-                                'type' => 'integer',
-                                'enum' => [1, 2, 3, 4, 5],
-                                'description' => 'Fragrance intensity, 1 (subtle) to 5 (strong)',
+                            'room_tags' => [
+                                'type' => 'array',
+                                'items' => ['type' => 'string', 'enum' => Product::ROOMS],
+                                'description' => '1-2 best-matching rooms of the home',
                             ],
                             'reasoning' => [
                                 'type' => 'string',
                                 'description' => 'One short sentence explaining the choice, for admin review',
                             ],
                         ],
-                        'required' => ['scent_families', 'mood_tags', 'intensity', 'reasoning'],
+                        'required' => ['scent_families', 'mood_tags', 'room_tags', 'reasoning'],
                         'additionalProperties' => false,
                     ],
                 ],

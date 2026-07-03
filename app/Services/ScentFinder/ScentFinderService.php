@@ -9,18 +9,17 @@ class ScentFinderService
 {
     private const SCENT_FAMILY_POINTS = 10;
     private const MOOD_TAG_POINTS = 5;
-    private const INTENSITY_POINTS = 3;
-    private const INTENSITY_TOLERANCE = 1;
+    private const ROOM_POINTS = 8;
     private const RESULT_LIMIT = 4;
 
     /**
-     * @param  array{scent_families?: array<string>, mood_tags?: array<string>, intensity?: int}  $answers
+     * @param  array{scent_families?: array<string>, mood_tags?: array<string>, room_tags?: array<string>}  $answers
      */
     public function match(array $answers): Collection
     {
         $wantedFamilies = $answers['scent_families'] ?? [];
         $wantedMoods = $answers['mood_tags'] ?? [];
-        $wantedIntensity = $answers['intensity'] ?? null;
+        $wantedRooms = $answers['room_tags'] ?? [];
 
         return Product::with('categories', 'images', 'reviews', 'seo:product_id,slug')
             ->withCount('uniqueViews')
@@ -29,8 +28,8 @@ class ScentFinderService
             ->where('stock_qty', '>', 0)
             ->whereHas('oils')
             ->get()
-            ->map(function (Product $product) use ($wantedFamilies, $wantedMoods, $wantedIntensity) {
-                $product->match_score = $this->score($product, $wantedFamilies, $wantedMoods, $wantedIntensity);
+            ->map(function (Product $product) use ($wantedFamilies, $wantedMoods, $wantedRooms) {
+                $product->match_score = $this->score($product, $wantedFamilies, $wantedMoods, $wantedRooms);
 
                 return $product;
             })
@@ -40,18 +39,14 @@ class ScentFinderService
             ->values();
     }
 
-    /** @param array<string> $wantedFamilies @param array<string> $wantedMoods */
-    private function score(Product $product, array $wantedFamilies, array $wantedMoods, ?int $wantedIntensity): int
+    /** @param array<string> $wantedFamilies @param array<string> $wantedMoods @param array<string> $wantedRooms */
+    private function score(Product $product, array $wantedFamilies, array $wantedMoods, array $wantedRooms): int
     {
         $score = 0;
 
         $score += count(array_intersect($wantedFamilies, $product->scent_families_array)) * self::SCENT_FAMILY_POINTS;
         $score += count(array_intersect($wantedMoods, $product->mood_tags_array)) * self::MOOD_TAG_POINTS;
-
-        if ($wantedIntensity !== null && $product->intensity !== null
-            && abs($product->intensity - $wantedIntensity) <= self::INTENSITY_TOLERANCE) {
-            $score += self::INTENSITY_POINTS;
-        }
+        $score += count(array_intersect($wantedRooms, $product->room_tags_array)) * self::ROOM_POINTS;
 
         return $score;
     }

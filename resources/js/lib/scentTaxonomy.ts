@@ -1,4 +1,4 @@
-// Mirrors Product::SCENT_FAMILIES / Product::MOOD_TAGS in app/Models/Product.php.
+// Mirrors Product::SCENT_FAMILIES / Product::MOOD_TAGS / Product::ROOMS in app/Models/Product.php.
 // Keep in sync — these are the only values the backend will accept.
 
 export interface ScentOption {
@@ -24,13 +24,14 @@ export const MOOD_TAGS: ScentOption[] = [
     { value: 'focus_clarity', label: 'Focus & Clarity' },
 ];
 
-export const INTENSITY_LABELS: Record<number, string> = {
-    1: 'Very subtle',
-    2: 'Subtle',
-    3: 'Moderate',
-    4: 'Strong',
-    5: 'Very strong',
-};
+export const ROOMS: ScentOption[] = [
+    { value: 'bedroom', label: 'Bedroom' },
+    { value: 'living_room', label: 'Living Room' },
+    { value: 'bathroom', label: 'Bathroom' },
+    { value: 'kitchen', label: 'Kitchen' },
+    { value: 'office', label: 'Office' },
+    { value: 'hallway_entryway', label: 'Hallway & Entryway' },
+];
 
 export function scentFamilyLabel(value: string): string {
     return SCENT_FAMILIES.find(f => f.value === value)?.label ?? value;
@@ -38,4 +39,8 @@ export function scentFamilyLabel(value: string): string {
 
 export function moodTagLabel(value: string): string {
     return MOOD_TAGS.find(m => m.value === value)?.label ?? value;
+}
+
+export function roomLabel(value: string): string {
+    return ROOMS.find(r => r.value === value)?.label ?? value;
 }

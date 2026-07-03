@@ -8,7 +8,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
-import { scentFamilyLabel, moodTagLabel } from '@/lib/scentTaxonomy';
+import { scentFamilyLabel, moodTagLabel, roomLabel } from '@/lib/scentTaxonomy';
 
 interface ProductCardData {
     id: number; name: string; mpn: string; cost: number; stock_qty: number;
@@ -17,7 +17,7 @@ interface ProductCardData {
 
 const props = defineProps<{
     products: ProductCardData[];
-    answers: { scent_families: string[]; mood_tags: string[]; intensity: number };
+    answers: { scent_families: string[]; mood_tags: string[]; room_tags: string[] };
     wishlistedIds: number[];
 }>();
 
@@ -65,7 +65,8 @@ const handleFavourite = async (product: ProductCardData) => {
                     <strong>{{ answers.scent_families.map(scentFamilyLabel).join(' & ') }}</strong>
                     scents for
                     <strong>{{ answers.mood_tags.map(moodTagLabel).join(', ') }}</strong>
-                    moments.
+                    moments in the
+                    <strong>{{ answers.room_tags.map(roomLabel).join(' & ') }}</strong>.
                 </p>
             </header>
 

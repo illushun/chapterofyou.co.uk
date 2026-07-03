@@ -40,6 +40,15 @@ class Product extends Model
         'focus_clarity',
     ];
 
+    public const ROOMS = [
+        'bedroom',
+        'living_room',
+        'bathroom',
+        'kitchen',
+        'office',
+        'hallway_entryway',
+    ];
+
     protected $fillable = [
         'mpn',
         'name',
@@ -52,7 +61,7 @@ class Product extends Model
         'how_to_use',
         'scent_families',
         'mood_tags',
-        'intensity',
+        'room_tags',
     ];
 
     protected $hidden = [];
@@ -137,6 +146,15 @@ class Product extends Model
         }
 
         return array_filter(array_map('trim', explode(',', $this->mood_tags)));
+    }
+
+    public function getRoomTagsArrayAttribute(): array
+    {
+        if (! $this->room_tags) {
+            return [];
+        }
+
+        return array_filter(array_map('trim', explode(',', $this->room_tags)));
     }
 
     public function courier()

@@ -5,7 +5,7 @@ import { computed, ref, watch } from 'vue';
 import { debounce } from 'lodash';
 import axios from 'axios';
 import { useAdmin } from '@/composables/useAdmin';
-import { SCENT_FAMILIES, MOOD_TAGS, INTENSITY_LABELS } from '@/lib/scentTaxonomy';
+import { SCENT_FAMILIES, MOOD_TAGS, ROOMS } from '@/lib/scentTaxonomy';
 
 interface Category { id: number; name: string; }
 interface Courier { id: number; name: string; type: string; status: string; cost: number; }
@@ -16,13 +16,12 @@ interface Product {
     status: 'enabled' | 'disabled'; cost: number; stock_qty: number;
     details: string; parent_product_id: number | null;
     how_to_use: string | null;
-    intensity: number | null;
     seo: { meta_title: string; meta_description: string; slug: string; };
 }
 interface ScentTagSuggestion {
     scent_families: string[];
     mood_tags: string[];
-    intensity: number;
+    room_tags: string[];
     reasoning: string;
 }
 interface Oil { id: number; name: string; supplier: string | null; cas_primary: string | null; }
@@ -45,6 +44,7 @@ const props = defineProps<{
     errors: Record<string, string>;
     selectedScentFamilies?: string[];
     selectedMoodTags?: string[];
+    selectedRoomTags?: string[];
 }>();
 
 const { fmtSize } = useAdmin();
@@ -66,7 +66,7 @@ const form = useForm({
     materials: (props.productMaterials ?? []).map(m => ({ oil_id: m.oil_id, percentage: m.percentage })) as ProductMaterial[],
     scent_families: (props.selectedScentFamilies ?? []) as string[],
     mood_tags: (props.selectedMoodTags ?? []) as string[],
-    intensity: props.product?.intensity ?? 3,
+    room_tags: (props.selectedRoomTags ?? []) as string[],
     meta_title: props.product?.seo?.meta_title || '',
     meta_description: props.product?.seo?.meta_description || '',
     slug: props.product?.seo?.slug || '',
@@ -142,6 +142,10 @@ const toggleMoodTag = (value: string, checked: boolean) => {
     checked ? (!form.mood_tags.includes(value) && form.mood_tags.push(value))
         : (form.mood_tags = form.mood_tags.filter(v => v !== value));
 };
+const toggleRoomTag = (value: string, checked: boolean) => {
+    checked ? (!form.room_tags.includes(value) && form.room_tags.push(value))
+        : (form.room_tags = form.room_tags.filter(v => v !== value));
+};
 
 const aiSuggesting = ref(false);
 const aiReasoning = ref('');
@@ -162,7 +166,7 @@ const suggestScentTags = async () => {
 
         form.scent_families = data.scent_families;
         form.mood_tags = data.mood_tags;
-        form.intensity = data.intensity;
+        form.room_tags = data.room_tags;
         aiReasoning.value = data.reasoning;
     } catch (e: any) {
         aiError.value = e?.response?.data?.message ?? 'Suggestion failed. Please try again.';
@@ -574,15 +578,17 @@ const submit = () => {
                     </div>
                     <p v-if="form.errors.mood_tags" class="adm-err">{{ form.errors.mood_tags }}</p>
 
-                    <div class="adm-field" style="margin-top: 0.85rem;">
-                        <label class="adm-label" for="intensity">
-                            Intensity
-                            <span class="adm-label-note">{{ INTENSITY_LABELS[form.intensity] }}</span>
+                    <p class="adm-label" style="margin: 0.85rem 0 0.4rem;">Best Suited Rooms</p>
+                    <div class="adm-check-list">
+                        <label v-for="room in ROOMS" :key="room.value" class="adm-check-item"
+                            :class="{ 'adm-check-item--active': form.room_tags.includes(room.value) }">
+                            <input type="checkbox" :checked="form.room_tags.includes(room.value)"
+                                @change="toggleRoomTag(room.value, ($event.target as HTMLInputElement).checked)"
+                                class="adm-checkbox" />
+                            {{ room.label }}
                         </label>
-                        <input id="intensity" type="range" min="1" max="5" step="1" v-model.number="form.intensity"
-                            class="adm-input" />
-                        <p v-if="form.errors.intensity" class="adm-err">{{ form.errors.intensity }}</p>
                     </div>
+                    <p v-if="form.errors.room_tags" class="adm-err">{{ form.errors.room_tags }}</p>
                 </section>
 
                 <!-- Couriers -->
