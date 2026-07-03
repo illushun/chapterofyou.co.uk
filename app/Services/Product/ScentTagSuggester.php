@@ -75,8 +75,7 @@ class ScentTagSuggester
                             ],
                             'intensity' => [
                                 'type' => 'integer',
-                                'minimum' => 1,
-                                'maximum' => 5,
+                                'enum' => [1, 2, 3, 4, 5],
                                 'description' => 'Fragrance intensity, 1 (subtle) to 5 (strong)',
                             ],
                             'reasoning' => [

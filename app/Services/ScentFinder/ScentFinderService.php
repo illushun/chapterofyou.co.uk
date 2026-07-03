@@ -27,6 +27,7 @@ class ScentFinderService
             ->whereNull('parent_product_id')
             ->where('status', 'enabled')
             ->where('stock_qty', '>', 0)
+            ->whereHas('oils')
             ->get()
             ->map(function (Product $product) use ($wantedFamilies, $wantedMoods, $wantedIntensity) {
                 $product->match_score = $this->score($product, $wantedFamilies, $wantedMoods, $wantedIntensity);
