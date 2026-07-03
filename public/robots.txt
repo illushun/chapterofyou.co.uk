@@ -1,2 +1,8 @@
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /account
+Disallow: /cart
+Disallow: /checkout
+Disallow: /settings
+
+Sitemap: https://www.chapterofyou.co.uk/sitemap.xml

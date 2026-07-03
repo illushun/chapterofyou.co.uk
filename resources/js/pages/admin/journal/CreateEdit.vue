@@ -3,6 +3,8 @@ import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Link, router, useForm, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 
+interface ProductOption { id: number; name: string; slug: string | null; }
+
 const props = defineProps<{
     isEditing: boolean;
     post?: {
@@ -13,6 +15,8 @@ const props = defineProps<{
         author: { name: string } | null;
     };
     suggested?: string[];
+    products?: ProductOption[];
+    selectedProductIds?: number[];
 }>();
 
 const page = usePage();
@@ -30,7 +34,13 @@ const form = useForm({
     published_at: props.post?.published_at ?? '',
     cover_image: null as File | null,
     remove_cover_image: false,
+    product_ids: (props.selectedProductIds ?? []) as number[],
 });
+
+const toggleProduct = (id: number, checked: boolean) => {
+    checked ? (!form.product_ids.includes(id) && form.product_ids.push(id))
+        : (form.product_ids = form.product_ids.filter(v => v !== id));
+};
 
 // Auto-generate slug from title (only when creating)
 watch(() => form.title, (val) => {
@@ -310,6 +320,24 @@ const titleCharCount = computed(() => form.meta_title.length);
                         <input v-model="form.tags" type="text" class="adm-input"
                             placeholder="aromatherapy, self-care, home fragrance" />
                         <p class="adm-field-note">Comma-separated. Used for related posts.</p>
+                    </div>
+                </div>
+
+                <!-- Related products -->
+                <div v-if="products?.length" class="adm-card">
+                    <h2 class="adm-card-title">Related Products</h2>
+                    <p class="adm-field-note" style="margin-bottom:0.6rem;">
+                        Shown on the live post as "Shop the scents in this post" — pick any products genuinely
+                        mentioned or relevant.
+                    </p>
+                    <div class="adm-check-list">
+                        <label v-for="p in products" :key="p.id" class="adm-check-item"
+                            :class="{ 'adm-check-item--active': form.product_ids.includes(p.id) }">
+                            <input type="checkbox" :checked="form.product_ids.includes(p.id)"
+                                @change="toggleProduct(p.id, ($event.target as HTMLInputElement).checked)"
+                                class="adm-checkbox" />
+                            {{ p.name }}
+                        </label>
                     </div>
                 </div>
 

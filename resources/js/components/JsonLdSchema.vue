@@ -64,7 +64,7 @@ const schemaArray = computed(() =>
             v-for on a <script> tag inside <Head> is valid in Inertia —
             each iteration produces a separate <script> element in <head>.
         -->
-        <component v-for="(item, index) in schemaArray" :key="index" :is="'script'" type="application/ld+json"
-            v-text="JSON.stringify(item)" />
+        <component v-for="(item, index) in schemaArray" :key="index" :is="'script'"
+            type="application/ld+json">{{ JSON.stringify(item) }}</component>
     </Head>
 </template>

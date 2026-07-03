@@ -5,7 +5,7 @@ import { Head } from '@inertiajs/vue3';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
-import { useOrganizationSchema, useWebsiteSchema } from '@/composables/useProductSchema';
+import { useOrganizationSchema, useWebsiteSchema, useItemListSchema } from '@/composables/useProductSchema';
 import StarRating from '@/components/ui/coy/StarRating.vue';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
@@ -86,7 +86,19 @@ const seo = useSeoHead({
     canonical: '/',
 });
 
-const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
+const siteSchemas = computed(() => {
+    const schemas: object[] = [useOrganizationSchema(), useWebsiteSchema()];
+
+    if (props.featuredProducts?.length) {
+        schemas.push(useItemListSchema(props.featuredProducts.map(p => ({
+            name: p.name,
+            url: p.slug ? `/product/${p.slug}` : `/product/${p.id}`,
+            image: p.image,
+        }))));
+    }
+
+    return schemas;
+});
 </script>
 
 <template>

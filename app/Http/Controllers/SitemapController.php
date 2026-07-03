@@ -122,7 +122,6 @@ class SitemapController extends Controller
 
             // Journal listing page
             $urls->push([
-                'loc'        => env("APP_URL") . "/journal",
                 'loc'        => "{$this->WEBSITE_URL}/journal",
                 'priority'   => '0.7',
                 'changefreq' => 'weekly',

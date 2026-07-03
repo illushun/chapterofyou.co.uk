@@ -242,3 +242,35 @@ export function useBreadcrumbSchema(items: BreadcrumbItem[]): object {
         })),
     };
 }
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// ITEM LIST SCHEMA
+// Use this for any page showing a curated set of products (homepage
+// bestsellers, category listings) — helps Google understand the products
+// shown and can enable enhanced/carousel-style search result treatment.
+// ══════════════════════════════════════════════════════════════════════════
+export interface ItemListEntry {
+    name: string;
+    url: string;
+    image?: string | null;
+}
+
+export function useItemListSchema(items: ItemListEntry[]): object {
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        'itemListElement': items.map((item, index) => ({
+            '@type': 'ListItem',
+            'position': index + 1,
+            'item': {
+                '@type': 'Product',
+                'name': item.name,
+                'url': item.url.startsWith('http') ? item.url : BASE_URL + item.url,
+                ...(item.image
+                    ? { 'image': item.image.startsWith('http') ? item.image : BASE_URL + item.image }
+                    : {}),
+            },
+        })),
+    };
+}

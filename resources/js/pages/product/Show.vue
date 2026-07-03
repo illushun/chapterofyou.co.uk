@@ -39,10 +39,15 @@ interface ProductDetailData {
     faqs?: FaqItem[] | null;
     seo?: { meta_title: string; meta_description: string };
 }
+interface JournalPostSummary {
+    title: string; slug: string; excerpt: string | null;
+    cover_image: string | null; published_at: string; reading_time: number;
+}
 interface ProductProps {
     product: ProductDetailData;
     parent?: ProductDetailData | null;
     related: ProductDetailData[];
+    journalPosts?: JournalPostSummary[];
     canReview: boolean;
     wishlisted: boolean;
     wishlistedIds: number[];
@@ -50,7 +55,11 @@ interface ProductProps {
 
 const props = defineProps<ProductProps>();
 const page = usePage();
-const recentPosts = computed(() => (page.props.recentJournalPosts as any[]) ?? []);
+// Prefer journal posts that specifically reference this product; fall back
+// to the site-wide recent posts when none have been linked yet.
+const recentPosts = computed(() =>
+    props.journalPosts?.length ? props.journalPosts : ((page.props.recentJournalPosts as any[]) ?? [])
+);
 const auth = computed(() => page.props.auth as any);
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 const isModalOpen = ref(false);
@@ -249,7 +258,8 @@ onUnmounted(() => {
                     <div v-if="product.images.length > 1" class="pd-thumbs">
                         <button v-for="(img, i) in product.images" :key="i" @click="selectedImageIndex = i"
                             class="pd-thumb" :class="{ 'pd-thumb--active': selectedImageIndex === i }">
-                            <img :src="img.image" :alt="`View ${i + 1}`" class="pd-thumb-img" />
+                            <img :src="img.image" :alt="`${product.name} — view ${i + 1}`" class="pd-thumb-img"
+                                loading="lazy" />
                         </button>
                     </div>
                 </div>
@@ -287,7 +297,7 @@ onUnmounted(() => {
                     <p class="pd-price">{{ formattedCost }}</p>
 
                     <div v-if="product.children?.length > 0" class="pd-variations">
-                        <h3 class="pd-variations-label">Choose Option</h3>
+                        <h2 class="pd-variations-label">Choose Option</h2>
                         <div class="pd-variation-btns">
                             <button v-for="v in product.children" :key="v.id" @click="selectedVariationId = v.id"
                                 :disabled="v.stock_qty <= 0" class="pd-variation-btn"
@@ -533,7 +543,8 @@ onUnmounted(() => {
                         <p class="pd-review-body">{{ review.message }}</p>
                         <div v-if="review.review_images?.length" class="pd-review-imgs">
                             <img v-for="(img, idx) in review.review_images" :key="idx" :src="img"
-                                :alt="`Review photo ${idx + 1}`" class="pd-review-img" @click="openImageModal" />
+                                :alt="`${product.name} — photo ${idx + 1} from ${review.user.name}'s review`"
+                                class="pd-review-img" loading="lazy" @click="openImageModal" />
                         </div>
                         <div v-if="review.admin_reply" class="pd-admin-reply">
                             <div class="pd-admin-reply-head">

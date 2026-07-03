@@ -5,6 +5,8 @@ namespace App\Services\Journal;
 use Anthropic\Client;
 use Anthropic\Messages\TextBlock;
 use App\Models\JournalPost;
+use App\Models\Product;
+use Illuminate\Support\Str;
 use RuntimeException;
 
 class JournalPostGenerator
@@ -31,12 +33,20 @@ class JournalPostGenerator
             ->limit(40)
             ->get(['title', 'tags']);
 
-        $data = $this->requestPostFromClaude($existingPosts, $topicNotes);
+        $products = Product::query()
+            ->whereNull('parent_product_id')
+            ->where('status', 'enabled')
+            ->with('seo:product_id,slug')
+            ->get(['id', 'name', 'description'])
+            ->filter(fn (Product $p) => $p->seo?->slug)
+            ->values();
+
+        $data = $this->requestPostFromClaude($existingPosts, $products, $topicNotes);
 
         $slug = JournalPost::generateSlug($data['title']);
         $cover = $this->images->fetch($data['image_query']);
 
-        return JournalPost::create([
+        $post = JournalPost::create([
             'title' => $data['title'],
             'slug' => $slug,
             'excerpt' => $data['excerpt'],
@@ -50,10 +60,21 @@ class JournalPostGenerator
             'author_id' => null,
             'is_ai_generated' => true,
         ]);
+
+        $wantedSlugs = $data['related_product_slugs'] ?? [];
+        $relatedProductIds = $products
+            ->filter(fn (Product $p) => in_array($p->seo->slug, $wantedSlugs, true))
+            ->pluck('id');
+
+        if ($relatedProductIds->isNotEmpty()) {
+            $post->products()->sync($relatedProductIds);
+        }
+
+        return $post;
     }
 
-    /** @return array{title:string,excerpt:string,body:string,meta_title:string,meta_description:string,tags:string,image_query:string} */
-    private function requestPostFromClaude($existingPosts, ?string $topicNotes): array
+    /** @return array{title:string,excerpt:string,body:string,meta_title:string,meta_description:string,tags:string,image_query:string,related_product_slugs:array<string>} */
+    private function requestPostFromClaude($existingPosts, $products, ?string $topicNotes): array
     {
         $existingTitles = $existingPosts->isEmpty()
             ? 'None yet — this is the first post.'
@@ -62,6 +83,12 @@ class JournalPostGenerator
         $steering = $topicNotes
             ? "\n\nAdditional guidance from the site owner for this post: {$topicNotes}"
             : '';
+
+        $productSlugs = $products->map(fn ($p) => $p->seo->slug)->all();
+
+        $availableProducts = $products->isEmpty()
+            ? 'None available yet.'
+            : $products->map(fn ($p) => "- {$p->name} (slug: {$p->seo->slug}): ".Str::limit(strip_tags((string) $p->description), 120))->implode("\n");
 
         $systemPrompt = <<<'SYSTEM'
             You are the in-house content writer for Chapter of You, a UK home-fragrance brand
@@ -72,12 +99,21 @@ class JournalPostGenerator
             Your goal: a genuinely useful, engaging, SEO-optimised article that will attract
             organic search traffic and be worth sharing on social media. Avoid generic filler
             and avoid duplicating the topic or angle of any existing post listed below.
+
+            Where it's genuinely relevant to the topic, naturally mention 1-3 real products
+            from the catalogue below by name within the article body (not a bolted-on list —
+            weave them into the prose, e.g. recommending a specific scent for a mood or room
+            you're discussing). Never invent a product that isn't in the list, and never force
+            a mention if nothing in the catalogue actually fits the topic.
             SYSTEM;
 
         $userPrompt = <<<PROMPT
             Existing journal posts (do not repeat these topics or angles):
             {$existingTitles}
             {$steering}
+
+            Products available to reference (only mention ones that are genuinely relevant):
+            {$availableProducts}
 
             Write one new journal post. The body must be well-structured HTML suitable for a
             rich-text article field: use <h2>/<h3> subheadings, <p> paragraphs, and <ul>/<li>
@@ -105,8 +141,16 @@ class JournalPostGenerator
                             'meta_description' => ['type' => 'string', 'description' => 'SEO meta description, 155 characters or fewer'],
                             'tags' => ['type' => 'string', 'description' => 'Comma-separated list of 3-6 short tags'],
                             'image_query' => ['type' => 'string', 'description' => 'A short 2-4 word stock-photo search phrase matching the post topic'],
+                            'related_product_slugs' => [
+                                'type' => 'array',
+                                'items' => array_merge(
+                                    ['type' => 'string'],
+                                    $productSlugs ? ['enum' => $productSlugs] : [],
+                                ),
+                                'description' => '0-3 slugs of products genuinely mentioned in the body, from the provided list only',
+                            ],
                         ],
-                        'required' => ['title', 'excerpt', 'body', 'meta_title', 'meta_description', 'tags', 'image_query'],
+                        'required' => ['title', 'excerpt', 'body', 'meta_title', 'meta_description', 'tags', 'image_query', 'related_product_slugs'],
                         'additionalProperties' => false,
                     ],
                 ],

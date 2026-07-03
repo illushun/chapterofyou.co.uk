@@ -46,6 +46,13 @@ class JournalController extends Controller
             ->with('author:id,name')
             ->firstOrFail();
 
+        $relatedProducts = $post->products()
+            ->with('categories', 'images', 'reviews', 'seo:product_id,slug')
+            ->withCount('uniqueViews')
+            ->where('status', 'enabled')
+            ->where('stock_qty', '>', 0)
+            ->get();
+
         try {
             if (!Auth::check() || !Auth::user()->is_admin) {
                 $post->increment('views');
@@ -53,12 +60,16 @@ class JournalController extends Controller
         } catch (\Exception $e) {
         }
 
-        // Related posts — same tags, exclude current
+        // Related posts — prefer posts sharing tags with the current one,
+        // falling back to latest when there's no tag overlap.
         $related = JournalPost::published()
             ->where('id', '!=', $post->id)
+            ->select('id', 'title', 'slug', 'excerpt', 'cover_image', 'tags', 'published_at')
             ->latest('published_at')
-            ->limit(3)
             ->get()
+            ->sortByDesc(fn ($p) => count(array_intersect($post->tags_array, $p->tags_array)))
+            ->values()
+            ->take(3)
             ->map(fn ($p) => [
                 'id'           => $p->id,
                 'title'        => $p->title,
@@ -90,6 +101,13 @@ class JournalController extends Controller
                 'author'           => 'Chapter of You', // $post->author?->name
             ],
             'related' => $related,
+            'relatedProducts' => $relatedProducts,
+            'wishlistedIds' => Auth::check()
+                ? \App\Models\Wishlist::where('user_id', Auth::id())
+                    ->whereIn('product_id', $relatedProducts->pluck('id'))
+                    ->pluck('product_id')
+                    ->toArray()
+                : [],
         ]);
     }
 }

@@ -4,8 +4,16 @@ import Footer from '@/components/Footer.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
-import { Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import axios from 'axios';
+import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
+import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
+
+interface RelatedProduct {
+    id: number; name: string; mpn: string; cost: number; stock_qty: number;
+    images?: { image: string }[]; total_unique_views?: number; seo?: { slug: string };
+}
 
 const props = defineProps<{
     post: {
@@ -22,7 +30,31 @@ const props = defineProps<{
         excerpt: string | null; cover_image: string | null;
         published_at: string; reading_time: number;
     }>;
+    relatedProducts?: RelatedProduct[];
+    wishlistedIds?: number[];
 }>();
+
+const wishlistedIds = ref<number[]>(props.wishlistedIds ?? []);
+const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
+
+const handleAddToCart = (product: RelatedProduct) => {
+    router.post('/cart/add', { product_id: product.id, quantity: 1 }, {
+        preserveScroll: true,
+        onSuccess: () => successToastRef.value?.show(`${product.name} added to cart!`, 'cart'),
+    });
+};
+
+const handleFavourite = async (product: RelatedProduct) => {
+    const idx = wishlistedIds.value.indexOf(product.id);
+    idx === -1 ? wishlistedIds.value.push(product.id) : wishlistedIds.value.splice(idx, 1);
+    try {
+        const { data } = await axios.post(route('wishlist.toggle'), { product_id: product.id });
+        successToastRef.value?.show(data.message, data.wishlisted ? 'favourite' : 'trash');
+    } catch (err: any) {
+        idx === -1 ? wishlistedIds.value.splice(wishlistedIds.value.indexOf(product.id), 1) : wishlistedIds.value.splice(idx, 0, product.id);
+        if (err.response?.status === 401) window.location.href = route('login');
+    }
+};
 
 const seo = useSeoHead({
     title: props.post.meta_title || props.post.title,
@@ -118,6 +150,17 @@ const articleSchema = computed(() => ({
             <!-- Article body -->
             <article class="js-body" v-html="post.body"></article>
 
+            <!-- Shop the scents in this post -->
+            <section v-if="relatedProducts?.length" class="js-shop">
+                <h2 class="js-shop-title">Shop the scents in this post</h2>
+                <ul class="js-shop-grid">
+                    <li v-for="product in relatedProducts" :key="product.id">
+                        <ProductSpringCard :product="product" :wishlisted="wishlistedIds.includes(product.id)"
+                            @add-to-cart="handleAddToCart(product)" @favourite="handleFavourite(product)" />
+                    </li>
+                </ul>
+            </section>
+
             <!-- Tags footer -->
             <div v-if="post.tags.length" class="js-tags-footer">
                 <span class="js-tags-label">Tagged:</span>
@@ -173,6 +216,7 @@ const articleSchema = computed(() => ({
         </div>
     </main>
 
+    <SuccessToast ref="successToastRef" />
     <Footer />
 </template>
 
@@ -389,6 +433,27 @@ const articleSchema = computed(() => ({
     max-width: 100%;
     border-radius: 12px;
     margin: 1rem 0;
+}
+
+/* Shop the scents in this post */
+.js-shop {
+    margin-bottom: 2.5rem;
+}
+
+.js-shop-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 400;
+    color: #2d1a1a;
+    margin-bottom: 1.25rem;
+}
+
+.js-shop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+    list-style: none;
+    padding: 0;
 }
 
 /* Tags footer */

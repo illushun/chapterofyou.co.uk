@@ -30,11 +30,11 @@ const BASE_URL = 'https://www.chapterofyou.co.uk';
 
 const props = defineProps<ProductProps & { wishlistedIds: number[] }>();
 
-const seo = useSeoHead({
+const seo = computed(() => useSeoHead({
     title: 'Shop Reed Diffusers',
     description: 'Browse my full collection of hand-crafted reed diffusers. Free UK delivery on orders over £50.',
-    canonical: '/products',
-});
+    canonical: props.products.current_page > 1 ? `/products?page=${props.products.current_page}` : '/products',
+}));
 
 const form = reactive({
     search: props.filters.search || '',

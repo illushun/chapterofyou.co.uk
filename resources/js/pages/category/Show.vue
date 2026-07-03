@@ -4,6 +4,7 @@ import Footer from '@/components/Footer.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { useItemListSchema } from '@/composables/useProductSchema';
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -28,15 +29,18 @@ const props = defineProps<{
         }>;
         links: any[];
         meta: any;
+        current_page?: number;
     };
 }>();
 
-const seo = useSeoHead({
+const seo = computed(() => useSeoHead({
     title: props.category.meta_title,
     description: props.category.meta_description,
-    canonical: `/category/${props.category.slug}`,
+    canonical: props.products.current_page && props.products.current_page > 1
+        ? `/category/${props.category.slug}?page=${props.products.current_page}`
+        : `/category/${props.category.slug}`,
     ogImage: props.category.image_url || undefined,
-});
+}));
 
 const schemas = computed(() => [
     {
@@ -56,6 +60,11 @@ const schemas = computed(() => [
             { '@type': 'ListItem', 'position': 3, 'name': props.category.name, 'item': `https://www.chapterofyou.co.uk/category/${props.category.slug}` },
         ],
     },
+    ...(props.products.data.length ? [useItemListSchema(props.products.data.map(p => ({
+        name: p.name,
+        url: `/product/${p.slug}`,
+        image: p.image,
+    })))] : []),
 ]);
 
 const fmt = (v: number) => `£${Number(v).toFixed(2)}`;

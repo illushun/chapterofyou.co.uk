@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\JournalPost;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -32,6 +33,7 @@ class AdminJournalController extends Controller
     {
         return Inertia::render('admin/journal/CreateEdit', [
             'isEditing' => false,
+            'products' => $this->productOptions(),
             'suggested' => [
                 'How long do reed diffusers last?',
                 'Reed diffuser vs candle — which is right for you?',
@@ -46,6 +48,8 @@ class AdminJournalController extends Controller
     public function store(Request $request)
     {
         $validated = $this->validatePost($request);
+        $productIds = $validated['product_ids'] ?? [];
+        unset($validated['product_ids']);
 
         $validated['author_id'] = Auth::id();
         $validated['slug'] = $validated['slug'] ?: JournalPost::generateSlug($validated['title']);
@@ -54,6 +58,7 @@ class AdminJournalController extends Controller
             : null;
 
         $post = JournalPost::create($validated);
+        $post->products()->sync($productIds);
 
         if ($request->hasFile('cover_image')) {
             $this->handleImageUpload($post, $request->file('cover_image'));
@@ -81,18 +86,23 @@ class AdminJournalController extends Controller
         return Inertia::render('admin/journal/CreateEdit', [
             'post' => $journal->load('author:id,name'),
             'isEditing' => true,
+            'products' => $this->productOptions(),
+            'selectedProductIds' => $journal->products()->pluck('product.id'),
         ]);
     }
 
     public function update(Request $request, JournalPost $journal)
     {
         $validated = $this->validatePost($request, $journal->id);
+        $productIds = $validated['product_ids'] ?? [];
+        unset($validated['product_ids']);
 
         $validated['published_at'] = $validated['status'] === 'published'
             ? ($validated['published_at'] ?? $journal->published_at ?? now())
             : null;
 
         $journal->update($validated);
+        $journal->products()->sync($productIds);
 
         if ($request->hasFile('cover_image')) {
             // Delete old image
@@ -130,6 +140,22 @@ class AdminJournalController extends Controller
         $post->update(['cover_image' => $path]);
     }
 
+    /** Product picker options for the admin journal form (id/name/slug). */
+    private function productOptions()
+    {
+        return Product::query()
+            ->whereNull('parent_product_id')
+            ->where('status', 'enabled')
+            ->with('seo:product_id,slug')
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Product $p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'slug' => $p->seo?->slug,
+            ]);
+    }
+
     private function validatePost(Request $request, ?int $ignoreId = null): array
     {
         return $request->validate([
@@ -144,6 +170,8 @@ class AdminJournalController extends Controller
             'tags' => ['nullable', 'string', 'max:255'],
             'status' => ['required', \Illuminate\Validation\Rule::in(['draft', 'published'])],
             'published_at' => ['nullable', 'date'],
+            'product_ids' => ['nullable', 'array'],
+            'product_ids.*' => ['exists:product,id'],
         ]);
     }
 }

@@ -155,10 +155,27 @@ class ProductController extends Controller
             $canReview = Auth::user()->hasPurchased($product->id);
         }
 
+        $journalPosts = $product->journalPosts()
+            ->published()
+            ->select('journal_post.id', 'title', 'slug', 'excerpt', 'cover_image', 'published_at')
+            ->latest('published_at')
+            ->take(3)
+            ->get()
+            ->map(fn ($p) => [
+                'id'           => $p->id,
+                'title'        => $p->title,
+                'slug'         => $p->slug,
+                'excerpt'      => $p->excerpt,
+                'cover_image'  => $p->cover_image ? asset('storage/'.$p->cover_image) : null,
+                'published_at' => $p->published_at->format('d M Y'),
+                'reading_time' => $p->reading_time,
+            ]);
+
         return Inertia::render('product/Show', [
             'product'     => $product->loadMissing('seo'),
             'parent'      => $parentProduct,
             'related'     => $relatedProducts,
+            'journalPosts' => $journalPosts,
             'canReview'   => $canReview,
             'wishlisted'  => Auth::check()
                 ? Wishlist::where('user_id', Auth::id())->where('product_id', $product->id)->exists()

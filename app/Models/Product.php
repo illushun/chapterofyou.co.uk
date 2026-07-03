@@ -254,4 +254,10 @@ class Product extends Model
                     ->withPivot('qty_per_unit')
                     ->withTimestamps();
     }
+
+    public function journalPosts()
+    {
+        return $this->belongsToMany(JournalPost::class, 'journal_post_product')
+                    ->withTimestamps();
+    }
 }

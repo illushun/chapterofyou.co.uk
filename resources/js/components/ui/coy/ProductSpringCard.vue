@@ -117,7 +117,7 @@ const handleTouchEnd = (event: Event) => {
 
         <!-- Product image -->
         <div class="psc-img-wrap">
-            <img :src="imageUrl" :alt="product.name" class="psc-img" />
+            <img :src="imageUrl" :alt="product.name" class="psc-img" loading="lazy" />
             <div v-if="product.stock_qty <= 0" class="psc-oos">
                 <span>Out of Stock</span>
             </div>
