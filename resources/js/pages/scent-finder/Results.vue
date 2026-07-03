@@ -104,6 +104,7 @@ const handleFavourite = async (product: ProductCardData) => {
 .sfr-wrap {
     max-width: 1100px;
     margin: 0 auto;
+    padding: 3rem 1.25rem 6rem;
 }
 
 .sfr-header {
