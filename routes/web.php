@@ -71,7 +71,7 @@ Route::get('/journal', [JournalController::class, 'index'])->name('journal.index
 Route::get('/journal/{slug}', [JournalController::class, 'show'])->name('journal.show');
 
 Route::get('/scent-finder', [ScentFinderController::class, 'index'])->name('scent-finder.index');
-Route::post('/scent-finder/results', [ScentFinderController::class, 'results'])->name('scent-finder.results');
+Route::get('/scent-finder/results', [ScentFinderController::class, 'results'])->name('scent-finder.results');
 
 Route::prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'view'])->name('cart.view');

@@ -81,7 +81,7 @@ const back = () => {
 
 const submit = () => {
     submitting.value = true;
-    router.post(route('scent-finder.results'), { ...answers }, {
+    router.get(route('scent-finder.results'), { ...answers }, {
         onFinish: () => { submitting.value = false; },
     });
 };
