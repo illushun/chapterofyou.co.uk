@@ -40,6 +40,7 @@ use App\Http\Controllers\Admin\Marketplace\EtsyController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\Admin\AdminFinanceController;
 use App\Http\Controllers\GoogleShoppingFeedController;
+use App\Http\Controllers\ScentFinderController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
@@ -68,6 +69,9 @@ Route::post('/gift-vouchers/remove-from-cart', function () {
 
 Route::get('/journal', [JournalController::class, 'index'])->name('journal.index');
 Route::get('/journal/{slug}', [JournalController::class, 'show'])->name('journal.show');
+
+Route::get('/scent-finder', [ScentFinderController::class, 'index'])->name('scent-finder.index');
+Route::post('/scent-finder/results', [ScentFinderController::class, 'results'])->name('scent-finder.results');
 
 Route::prefix('cart')->group(function () {
     Route::get('/', [CartController::class, 'view'])->name('cart.view');
@@ -134,6 +138,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('products/relationships', [AdminProductController::class, 'relationshipIndex'])->name('products.relationships');
     Route::post('products/assign-relationship', [AdminProductController::class, 'assignRelationship'])->name('products.assign-relationship');
     Route::post('products/remove-relationship', [AdminProductController::class, 'removeRelationship'])->name('products.remove-relationship');
+    Route::post('products/suggest-scent-tags', [AdminProductController::class, 'suggestScentTags'])->name('products.suggest-scent-tags');
 
     Route::get('messages', [AdminMessageController::class, 'index'])->name('messages.index');
     Route::get('messages/{message}', [AdminMessageController::class, 'show'])->name('messages.show');

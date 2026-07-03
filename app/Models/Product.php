@@ -22,6 +22,24 @@ class Product extends Model
 
     protected $table = 'product';
 
+    public const SCENT_FAMILIES = [
+        'floral',
+        'woody',
+        'citrus_fresh',
+        'spicy_warm',
+        'gourmand_sweet',
+        'herbal_green',
+    ];
+
+    public const MOOD_TAGS = [
+        'relaxing',
+        'energising',
+        'cosy',
+        'romantic',
+        'fresh_clean',
+        'focus_clarity',
+    ];
+
     protected $fillable = [
         'mpn',
         'name',
@@ -31,7 +49,10 @@ class Product extends Model
         'cost',
         'stock_qty',
         'parent_product_id',
-        'how_to_use'
+        'how_to_use',
+        'scent_families',
+        'mood_tags',
+        'intensity',
     ];
 
     protected $hidden = [];
@@ -98,6 +119,24 @@ class Product extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class)->approved();
+    }
+
+    public function getScentFamiliesArrayAttribute(): array
+    {
+        if (! $this->scent_families) {
+            return [];
+        }
+
+        return array_filter(array_map('trim', explode(',', $this->scent_families)));
+    }
+
+    public function getMoodTagsArrayAttribute(): array
+    {
+        if (! $this->mood_tags) {
+            return [];
+        }
+
+        return array_filter(array_map('trim', explode(',', $this->mood_tags)));
     }
 
     public function courier()

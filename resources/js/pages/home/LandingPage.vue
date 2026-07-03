@@ -367,6 +367,19 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
             </div>
         </section>
 
+        <!-- ── Scent Finder banner ── -->
+        <section class="lp-sf-banner">
+            <div class="lp-sf-inner">
+                <p class="lp-sf-petal" aria-hidden="true">✿</p>
+                <h2 class="lp-sf-title">Not sure which scent is <em>you</em>?</h2>
+                <p class="lp-sf-body">
+                    Take our two-minute Scent Finder quiz and we'll match you with the fragrance
+                    you'll love most.
+                </p>
+                <a href="/scent-finder" class="btn-rose btn-rose--lg">Find my scent</a>
+            </div>
+        </section>
+
         <!-- ── CTA / Email capture ── -->
         <section class="lp-cta-section">
             <div class="lp-cta-card">
@@ -1171,6 +1184,43 @@ const siteSchemas = [useOrganizationSchema(), useWebsiteSchema()];
 
 .lp-hot-card:hover .lp-hot-cta {
     gap: 0.45rem;
+}
+
+/* ── Scent Finder banner ── */
+.lp-sf-banner {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    background: #fdf4f3;
+}
+
+.lp-sf-inner {
+    max-width: 560px;
+    margin: 0 auto;
+}
+
+.lp-sf-petal {
+    color: #c9a4a4;
+    font-size: 1.6rem;
+    margin-bottom: 0.5rem;
+}
+
+.lp-sf-title {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: 1.9rem;
+    font-weight: 400;
+    color: #2d1a1a;
+}
+
+.lp-sf-title em {
+    font-style: italic;
+    color: #a85058;
+}
+
+.lp-sf-body {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: #6b4f4f;
+    margin: 0.75rem 0 1.5rem;
 }
 
 /* ── CTA section ── */

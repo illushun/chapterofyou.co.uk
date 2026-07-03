@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { debounce } from 'lodash';
+import axios from 'axios';
 import { useAdmin } from '@/composables/useAdmin';
+import { SCENT_FAMILIES, MOOD_TAGS, INTENSITY_LABELS } from '@/lib/scentTaxonomy';
 
 interface Category { id: number; name: string; }
 interface Courier { id: number; name: string; type: string; status: string; cost: number; }
@@ -14,7 +16,14 @@ interface Product {
     status: 'enabled' | 'disabled'; cost: number; stock_qty: number;
     details: string; parent_product_id: number | null;
     how_to_use: string | null;
+    intensity: number | null;
     seo: { meta_title: string; meta_description: string; slug: string; };
+}
+interface ScentTagSuggestion {
+    scent_families: string[];
+    mood_tags: string[];
+    intensity: number;
+    reasoning: string;
 }
 interface Oil { id: number; name: string; supplier: string | null; cas_primary: string | null; }
 interface ProductMaterial { oil_id: number; percentage: string; }
@@ -34,6 +43,8 @@ const props = defineProps<{
     productImages: ProductImage[];
     isEditing: boolean;
     errors: Record<string, string>;
+    selectedScentFamilies?: string[];
+    selectedMoodTags?: string[];
 }>();
 
 const { fmtSize } = useAdmin();
@@ -53,6 +64,9 @@ const form = useForm({
     courier_id: props.selectedCourierId || null,
     courier_per_item: props.courierPerItem || 'no',
     materials: (props.productMaterials ?? []).map(m => ({ oil_id: m.oil_id, percentage: m.percentage })) as ProductMaterial[],
+    scent_families: (props.selectedScentFamilies ?? []) as string[],
+    mood_tags: (props.selectedMoodTags ?? []) as string[],
+    intensity: props.product?.intensity ?? 3,
     meta_title: props.product?.seo?.meta_title || '',
     meta_description: props.product?.seo?.meta_description || '',
     slug: props.product?.seo?.slug || '',
@@ -118,6 +132,44 @@ const availableOilsFor = (idx: number) => {
     return props.oils.filter(o => !taken.includes(o.id));
 };
 const materialsTotal = computed(() => form.materials.reduce((s, m) => s + (parseFloat(m.percentage) || 0), 0));
+
+// ── Scent profile ──────────────────────────────────────────────────────────
+const toggleScentFamily = (value: string, checked: boolean) => {
+    checked ? (!form.scent_families.includes(value) && form.scent_families.push(value))
+        : (form.scent_families = form.scent_families.filter(v => v !== value));
+};
+const toggleMoodTag = (value: string, checked: boolean) => {
+    checked ? (!form.mood_tags.includes(value) && form.mood_tags.push(value))
+        : (form.mood_tags = form.mood_tags.filter(v => v !== value));
+};
+
+const aiSuggesting = ref(false);
+const aiReasoning = ref('');
+const aiError = ref('');
+
+const suggestScentTags = async () => {
+    if (!form.name) return;
+    aiSuggesting.value = true;
+    aiError.value = '';
+    aiReasoning.value = '';
+
+    try {
+        const { data } = await axios.post<ScentTagSuggestion>(route('admin.products.suggest-scent-tags'), {
+            name: form.name,
+            description: form.description,
+            details: form.details,
+        });
+
+        form.scent_families = data.scent_families;
+        form.mood_tags = data.mood_tags;
+        form.intensity = data.intensity;
+        aiReasoning.value = data.reasoning;
+    } catch (e: any) {
+        aiError.value = e?.response?.data?.message ?? 'Suggestion failed. Please try again.';
+    } finally {
+        aiSuggesting.value = false;
+    }
+};
 
 // ── Submit ─────────────────────────────────────────────────────────────────
 const submit = () => {
@@ -474,6 +526,63 @@ const submit = () => {
                         </label>
                     </div>
                     <p v-if="form.errors.category_ids" class="adm-err">{{ form.errors.category_ids }}</p>
+                </section>
+
+                <!-- Scent Profile -->
+                <section class="adm-card">
+                    <h2 class="adm-card-title">
+                        Scent Profile
+                        <span class="adm-card-title-note">powers the Scent Finder quiz</span>
+                    </h2>
+
+                    <button type="button" @click="suggestScentTags" :disabled="aiSuggesting || !form.name"
+                        class="pe-dashed-btn" style="margin-bottom: 0.85rem;">
+                        <svg v-if="!aiSuggesting" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+                        </svg>
+                        <svg v-else class="adm-spinner" width="13" height="13" viewBox="0 0 24 24" fill="none">
+                            <circle cx="12" cy="12" r="10" stroke="var(--bb-border)" stroke-width="3" />
+                            <path d="M12 2a10 10 0 0 1 10 10" stroke="var(--bb-lav-d)" stroke-width="3" stroke-linecap="round" />
+                        </svg>
+                        {{ aiSuggesting ? 'Suggesting…' : 'Suggest with AI' }}
+                    </button>
+                    <p v-if="aiError" class="adm-err">{{ aiError }}</p>
+                    <p v-if="aiReasoning" class="pe-hint" style="margin-bottom: 0.85rem;">{{ aiReasoning }}</p>
+
+                    <p class="adm-label" style="margin-bottom: 0.4rem;">Scent Families</p>
+                    <div class="adm-check-list">
+                        <label v-for="family in SCENT_FAMILIES" :key="family.value" class="adm-check-item"
+                            :class="{ 'adm-check-item--active': form.scent_families.includes(family.value) }">
+                            <input type="checkbox" :checked="form.scent_families.includes(family.value)"
+                                @change="toggleScentFamily(family.value, ($event.target as HTMLInputElement).checked)"
+                                class="adm-checkbox" />
+                            {{ family.label }}
+                        </label>
+                    </div>
+                    <p v-if="form.errors.scent_families" class="adm-err">{{ form.errors.scent_families }}</p>
+
+                    <p class="adm-label" style="margin: 0.85rem 0 0.4rem;">Mood / Occasion</p>
+                    <div class="adm-check-list">
+                        <label v-for="mood in MOOD_TAGS" :key="mood.value" class="adm-check-item"
+                            :class="{ 'adm-check-item--active': form.mood_tags.includes(mood.value) }">
+                            <input type="checkbox" :checked="form.mood_tags.includes(mood.value)"
+                                @change="toggleMoodTag(mood.value, ($event.target as HTMLInputElement).checked)"
+                                class="adm-checkbox" />
+                            {{ mood.label }}
+                        </label>
+                    </div>
+                    <p v-if="form.errors.mood_tags" class="adm-err">{{ form.errors.mood_tags }}</p>
+
+                    <div class="adm-field" style="margin-top: 0.85rem;">
+                        <label class="adm-label" for="intensity">
+                            Intensity
+                            <span class="adm-label-note">{{ INTENSITY_LABELS[form.intensity] }}</span>
+                        </label>
+                        <input id="intensity" type="range" min="1" max="5" step="1" v-model.number="form.intensity"
+                            class="adm-input" />
+                        <p v-if="form.errors.intensity" class="adm-err">{{ form.errors.intensity }}</p>
+                    </div>
                 </section>
 
                 <!-- Couriers -->

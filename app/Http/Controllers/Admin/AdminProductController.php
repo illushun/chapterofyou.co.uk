@@ -18,6 +18,8 @@ use App\Models\Product\Image as ProductImage;
 use App\Models\Oil;
 use App\Models\Product\Material;
 use App\Models\Product\Faq as ProductFaq;
+use App\Services\Product\ScentTagSuggester;
+use Throwable;
 
 class AdminProductController extends Controller
 {
@@ -131,7 +133,17 @@ class AdminProductController extends Controller
             'faqs'                  => ['nullable', 'array'],
             'faqs.*.question'       => ['required_with:faqs', 'string', 'max:500'],
             'faqs.*.answer'         => ['required_with:faqs', 'string', 'max:2000'],
+
+            // Scent profile
+            'scent_families'   => ['nullable', 'array'],
+            'scent_families.*' => [Rule::in(Product::SCENT_FAMILIES)],
+            'mood_tags'        => ['nullable', 'array'],
+            'mood_tags.*'      => [Rule::in(Product::MOOD_TAGS)],
+            'intensity'        => ['nullable', 'integer', 'min:1', 'max:5'],
         ]);
+
+        $validated['scent_families'] = !empty($validated['scent_families']) ? implode(',', $validated['scent_families']) : null;
+        $validated['mood_tags'] = !empty($validated['mood_tags']) ? implode(',', $validated['mood_tags']) : null;
 
         return DB::transaction(function () use ($validated, $request) {
             $product = Product::create($validated);
@@ -221,6 +233,8 @@ class AdminProductController extends Controller
             'productMaterials'  => $productMaterials,
             'isEditing'         => true,
             'productFaqs' => $productFaqs,
+            'selectedScentFamilies' => $product->scent_families_array,
+            'selectedMoodTags'      => $product->mood_tags_array,
         ]);
     }
 
@@ -261,7 +275,17 @@ class AdminProductController extends Controller
             'faqs'                  => ['nullable', 'array'],
             'faqs.*.question'       => ['required_with:faqs', 'string', 'max:500'],
             'faqs.*.answer'         => ['required_with:faqs', 'string', 'max:2000'],
+
+            // Scent profile
+            'scent_families'   => ['nullable', 'array'],
+            'scent_families.*' => [Rule::in(Product::SCENT_FAMILIES)],
+            'mood_tags'        => ['nullable', 'array'],
+            'mood_tags.*'      => [Rule::in(Product::MOOD_TAGS)],
+            'intensity'        => ['nullable', 'integer', 'min:1', 'max:5'],
         ]);
+
+        $validated['scent_families'] = !empty($validated['scent_families']) ? implode(',', $validated['scent_families']) : null;
+        $validated['mood_tags'] = !empty($validated['mood_tags']) ? implode(',', $validated['mood_tags']) : null;
 
         return DB::transaction(function () use ($request, $validated, $product) {
             $product->update($validated);
@@ -396,6 +420,35 @@ class AdminProductController extends Controller
         Product::where('id', $request->product_id)->update(['parent_product_id' => null]);
 
         return back()->with('success', 'Product removed from parent.');
+    }
+
+    /**
+     * Ask Claude to suggest scent tags from the in-progress product form
+     * (works for both create and edit, since the product may not be saved
+     * yet). Returns the suggestion as JSON for the admin to review and edit
+     * before saving — it is never persisted directly.
+     */
+    public function suggestScentTags(Request $request)
+    {
+        $validated = $request->validate([
+            'name'        => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string'],
+            'details'     => ['nullable', 'string'],
+        ]);
+
+        try {
+            $suggestion = app(ScentTagSuggester::class)->suggest(
+                $validated['name'],
+                $validated['description'] ?? null,
+                $validated['details'] ?? null,
+            );
+
+            return response()->json($suggestion);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json(['message' => "Suggestion failed: {$e->getMessage()}"], 422);
+        }
     }
 
     /**

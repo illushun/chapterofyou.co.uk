@@ -404,6 +404,7 @@
                 <div class="nav-links">
                     <a href="/" class="nav-link">Home</a>
                     <a href="/products" class="nav-link">Products</a>
+                    <a href="/scent-finder" class="nav-link">Scent Finder</a>
                     <a href="/about" class="nav-link">About Me</a>
                     <a href="/journal" class="nav-link">My Journal</a>
                     <a href="/contact" class="nav-link">Contact</a>
@@ -497,6 +498,7 @@
                     <a v-else href="/login" class="nav-mobile-account">Sign in / Register</a>
 
                     <a href="/products" class="nav-mobile-link">Products</a>
+                    <a href="/scent-finder" class="nav-mobile-link">Scent Finder</a>
                     <a href="/about" class="nav-mobile-link">About Me</a>
                     <a href="/journal" class="nav-mobile-link">My Journal</a>
                     <a href="/contact" class="nav-mobile-link">Contact Me</a>
