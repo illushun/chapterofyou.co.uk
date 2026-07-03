@@ -105,8 +105,8 @@ const submit = () => {
 
                 <!-- Step 1: Scent families -->
                 <div v-if="currentStep === 0" class="sf-chip-grid">
-                    <button v-for="family in SCENT_FAMILIES" :key="family.value" type="button"
-                        class="sf-chip" :class="{ 'sf-chip--active': answers.scent_families.includes(family.value) }"
+                    <button v-for="family in SCENT_FAMILIES" :key="family.value" type="button" class="sf-chip"
+                        :class="{ 'sf-chip--active': answers.scent_families.includes(family.value) }"
                         :disabled="!answers.scent_families.includes(family.value) && answers.scent_families.length >= 2"
                         @click="toggleFamily(family.value)">
                         {{ family.label }}
@@ -115,8 +115,8 @@ const submit = () => {
 
                 <!-- Step 2: Mood tags -->
                 <div v-else-if="currentStep === 1" class="sf-chip-grid">
-                    <button v-for="mood in MOOD_TAGS" :key="mood.value" type="button"
-                        class="sf-chip" :class="{ 'sf-chip--active': answers.mood_tags.includes(mood.value) }"
+                    <button v-for="mood in MOOD_TAGS" :key="mood.value" type="button" class="sf-chip"
+                        :class="{ 'sf-chip--active': answers.mood_tags.includes(mood.value) }"
                         :disabled="!answers.mood_tags.includes(mood.value) && answers.mood_tags.length >= 3"
                         @click="toggleMood(mood.value)">
                         {{ mood.label }}
@@ -125,8 +125,7 @@ const submit = () => {
 
                 <!-- Step 3: Intensity -->
                 <div v-else class="sf-intensity">
-                    <input type="range" min="1" max="5" step="1" v-model.number="answers.intensity"
-                        class="sf-slider" />
+                    <input type="range" min="1" max="5" step="1" v-model.number="answers.intensity" class="sf-slider" />
                     <p class="sf-intensity-label">{{ INTENSITY_LABELS[answers.intensity] }}</p>
                 </div>
 
@@ -157,6 +156,7 @@ const submit = () => {
 .sf-wrap {
     max-width: 640px;
     margin: 0 auto;
+    padding: 3rem 1.25rem 6rem;
 }
 
 .sf-header {
