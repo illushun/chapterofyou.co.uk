@@ -79,7 +79,7 @@ class GoogleShoppingFeedController extends Controller
         $lines = [];
         $lines[] = '    <item>';
         $lines[] = '      <g:id>'           . $this->e($product->id)         . '</g:id>';
-        $lines[] = '      <g:title>'        . $this->e($product->name)       . '</g:title>';
+        $lines[] = '      <g:title>'        . $this->e($this->withDiffuserKeyword($product->name)) . '</g:title>';
         $lines[] = '      <g:description>'  . $this->e($description)         . '</g:description>';
         $lines[] = '      <g:link>'         . $this->e($productUrl)          . '</g:link>';
 
@@ -109,5 +109,10 @@ class GoogleShoppingFeedController extends Controller
     private function e(mixed $value): string
     {
         return htmlspecialchars((string) $value, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+    }
+
+    private function withDiffuserKeyword(string $text): string
+    {
+        return preg_match('/\bdiffusers?\b/i', $text) ? $text : "{$text} Reed Diffuser";
     }
 }
