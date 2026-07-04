@@ -66,8 +66,16 @@ const isModalOpen = ref(false);
 const isWishlisted = ref(props.wishlisted ?? false);
 const wishlistedIds = ref<number[]>(props.wishlistedIds ?? []);
 
+// Product names are just scent names (e.g. "Peppermint Pines") with no
+// "diffuser" keyword, which hurts relevance for diffuser searches — append
+// it here so every title/H1 carries the keyword without renaming products.
+const withDiffuserKeyword = (text: string) =>
+    /\bdiffusers?\b/i.test(text) ? text : `${text} Reed Diffuser`;
+
+const displayTitle = computed(() => withDiffuserKeyword(props.product.name));
+
 const seo = useSeoHead({
-    title: props.product.seo?.meta_title || props.product.name,
+    title: props.product.seo?.meta_title || displayTitle.value,
     description: props.product.seo?.meta_description
         || props.product.description?.replace(/<[^>]*>/g, '').slice(0, 155),
     canonical: `/product/${props.product.seo?.slug || props.product.id}`,
@@ -275,7 +283,7 @@ onUnmounted(() => {
                         </template>
                     </nav>
 
-                    <h1 class="pd-title">{{ product.name }}</h1>
+                    <h1 class="pd-title">{{ displayTitle }}</h1>
                     <p class="pd-mpn">{{ currentVariation.mpn }}</p>
 
                     <div v-if="product.approved_reviews_count > 0" class="pd-rating-row">

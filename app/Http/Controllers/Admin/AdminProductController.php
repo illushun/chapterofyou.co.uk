@@ -24,6 +24,16 @@ use Throwable;
 class AdminProductController extends Controller
 {
     /**
+     * Appends "Reed Diffuser" to a default SEO title/description when the
+     * product name doesn't already mention diffusers, so blank SEO fields
+     * don't lose the keyword we rank products on.
+     */
+    private function withDiffuserKeyword(string $text): string
+    {
+        return preg_match('/\bdiffusers?\b/i', $text) ? $text : "{$text} Reed Diffuser";
+    }
+
+    /**
      * Helper to store uploaded images and create database records.
      */
     private function handleImageUpload(Product $product, array $files): void
@@ -163,8 +173,8 @@ class AdminProductController extends Controller
             ]);
 
             $product->seo()->create([
-                'meta_title'       => $validated['meta_title'] ?? $validated['name'],
-                'meta_description' => $validated['meta_description'] ?? substr(strip_tags($validated['description']), 0, 160),
+                'meta_title'       => $validated['meta_title'] ?? $this->withDiffuserKeyword($validated['name']),
+                'meta_description' => $validated['meta_description'] ?? $this->withDiffuserKeyword(substr(strip_tags($validated['description']), 0, 160)),
                 'slug'             => $validated['slug'] ?? Str::slug($validated['name']),
             ]);
 
@@ -314,8 +324,8 @@ class AdminProductController extends Controller
             $product->seo()->updateOrCreate(
                 ['product_id' => $product->id],
                 [
-                    'meta_title'       => $validated['meta_title'] ?? $validated['name'],
-                    'meta_description' => $validated['meta_description'] ?? substr(strip_tags($validated['description']), 0, 160),
+                    'meta_title'       => $validated['meta_title'] ?? $this->withDiffuserKeyword($validated['name']),
+                    'meta_description' => $validated['meta_description'] ?? $this->withDiffuserKeyword(substr(strip_tags($validated['description']), 0, 160)),
                     'slug'             => $validated['slug'] ?? Str::slug($validated['name']),
                 ]
             );
