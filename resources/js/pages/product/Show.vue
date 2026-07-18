@@ -27,6 +27,7 @@ interface ProductVariation {
     cost: number; stock_qty: number; parent_product_id: number;
 }
 interface FaqItem { question: string; answer: string; }
+interface ProductAddon { id: number; name: string; cost: number; stock_qty: number; }
 interface ProductDetailData {
     id: number; name: string; mpn: string; description: string;
     cost: number; stock_qty: number; total_unique_views: number;
@@ -34,6 +35,7 @@ interface ProductDetailData {
     images: ProductImage[]; reviews: ProductReview[];
     categories: { id: number; name: string; slug: string | null }[];
     children: ProductVariation[];
+    addon?: ProductAddon | null;
     details: string;
     how_to_use?: string | null;
     faqs?: FaqItem[] | null;
@@ -169,15 +171,25 @@ const isPopular = computed(() => props.product.total_unique_views > 100);
 const fmt = (v: number | string) => { const n = Number(v); return isNaN(n) ? 'N/A' : `£${n.toFixed(2)}`; };
 const formattedCost = computed(() => fmt(currentVariation.value.cost));
 
+// ── Add-on (e.g. "6x Reeds") ────────────────────────────────────────────────
+const addAddon = ref(false);
+const addonOutOfStock = computed(() => (props.product.addon?.stock_qty ?? 0) <= 0);
+
 const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
     const itemToAdd = quickAddProduct ?? currentVariation.value;
     const qty = quickAddProduct ? 1 : quantity.value;
     const name = quickAddProduct ? quickAddProduct.name : props.product.name;
     if (!itemToAdd?.id || qty < 1 || itemToAdd.stock_qty < qty) return;
-    router.post('/cart/add', { product_id: itemToAdd.id, quantity: qty }, {
+    const includeAddon = !quickAddProduct && addAddon.value && props.product.addon && !addonOutOfStock.value;
+    router.post('/cart/add', {
+        product_id: itemToAdd.id,
+        quantity: qty,
+        addon_id: includeAddon ? props.product.addon!.id : undefined,
+    }, {
         preserveScroll: true,
         onSuccess: () => {
-            successToastRef.value?.show(`${qty} × ${name} added to cart!`, 'cart');
+            const addonSuffix = includeAddon ? ` + ${props.product.addon!.name}` : '';
+            successToastRef.value?.show(`${qty} × ${name}${addonSuffix} added to cart!`, 'cart');
             if (!quickAddProduct) quantity.value = 1;
         },
     });
@@ -313,6 +325,17 @@ onUnmounted(() => {
                                 {{ v.name }}
                             </button>
                         </div>
+                    </div>
+
+                    <div v-if="product.addon" class="pd-addon">
+                        <label class="pd-addon-label" :class="{ 'pd-addon-label--disabled': addonOutOfStock }">
+                            <input type="checkbox" v-model="addAddon" :disabled="addonOutOfStock" class="pd-addon-checkbox" />
+                            <span class="pd-addon-text">
+                                Add {{ product.addon.name }}
+                                <span class="pd-addon-price">(+{{ fmt(product.addon.cost) }})</span>
+                            </span>
+                        </label>
+                        <p v-if="addonOutOfStock" class="pd-addon-oos">Currently out of stock</p>
                     </div>
 
                     <div class="pd-actions">
@@ -891,6 +914,54 @@ onUnmounted(() => {
     opacity: 0.4;
     cursor: not-allowed;
     text-decoration: line-through;
+}
+
+.pd-addon {
+    border-top: 1px solid #e5c9c7;
+    padding-top: 1rem;
+}
+
+.pd-addon-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+}
+
+.pd-addon-label--disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.pd-addon-checkbox {
+    width: 18px;
+    height: 18px;
+    accent-color: #a85058;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.pd-addon-label--disabled .pd-addon-checkbox {
+    cursor: not-allowed;
+}
+
+.pd-addon-text {
+    font-family: 'Nunito', sans-serif;
+    font-size: 0.975rem;
+    font-weight: 600;
+    color: #2d1a1a;
+}
+
+.pd-addon-price {
+    font-weight: 500;
+    color: #8c4a50;
+}
+
+.pd-addon-oos {
+    font-size: 0.85rem;
+    color: #9a7070;
+    font-style: italic;
+    margin: 0.3rem 0 0 1.75rem;
 }
 
 .pd-actions {

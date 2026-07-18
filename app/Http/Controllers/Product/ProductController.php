@@ -109,6 +109,10 @@ class ProductController extends Controller
                     $query->select('id', 'parent_product_id', 'mpn', 'name', 'cost', 'stock_qty')
                         ->where('status', 'enabled')
                         ->where('stock_qty', '>', 0);
+                },
+                'addon' => function ($query) {
+                    $query->select('id', 'name', 'cost', 'stock_qty')
+                        ->where('status', 'enabled');
                 }
             ])
             ->where('status', 'enabled')

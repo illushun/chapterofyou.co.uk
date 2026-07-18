@@ -58,6 +58,7 @@ class Product extends Model
         'cost',
         'stock_qty',
         'parent_product_id',
+        'addon_product_id',
         'how_to_use',
         'scent_families',
         'mood_tags',
@@ -97,6 +98,11 @@ class Product extends Model
     public function parent()
     {
         return $this->belongsTo(Product::class, 'parent_product_id');
+    }
+
+    public function addon()
+    {
+        return $this->belongsTo(Product::class, 'addon_product_id');
     }
 
     public function seo()
