@@ -3,7 +3,7 @@
  *
  * Usage:
  *   import { useAdmin } from '@/composables/useAdmin';
- *   const { paginate, confirmDelete, fmtCurrency, fmtSize, stockLabel } = useAdmin();
+ *   const { paginate, confirmDelete, duplicateRecord, fmtCurrency, fmtSize, stockLabel } = useAdmin();
  */
 
 import { router } from '@inertiajs/vue3';
@@ -25,6 +25,16 @@ export function useAdmin() {
         if (confirm(`Delete "${label}"?\n\nThis cannot be undone.`)) {
             router.delete(route(routeName, id), { preserveScroll: true });
         }
+    }
+
+    /**
+     * Fire a POST request to duplicate a record. No confirmation dialog since
+     * duplicating is non-destructive (the copy can simply be deleted again).
+     * @param routeName  Named route, e.g. 'admin.products.duplicate'
+     * @param id      Record ID
+     */
+    function duplicateRecord(routeName: string, id: number) {
+        router.post(route(routeName, id), {}, { preserveScroll: true });
     }
 
     /** Format a number as a GBP currency string. */
@@ -49,5 +59,5 @@ export function useAdmin() {
         return { text: String(qty), cls: 'adm-stock--ok' };
     }
 
-    return { paginate, confirmDelete, fmtCurrency, fmtSize, stockLabel };
+    return { paginate, confirmDelete, duplicateRecord, fmtCurrency, fmtSize, stockLabel };
 }

@@ -135,6 +135,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('categories', AdminCategoryController::class)->except(['show']);
     Route::resource('couriers', AdminCourierController::class)->except(['show']);
 
+    Route::post('products/{product}/duplicate', [AdminProductController::class, 'duplicate'])->name('products.duplicate');
     Route::get('products/relationships', [AdminProductController::class, 'relationshipIndex'])->name('products.relationships');
     Route::post('products/assign-relationship', [AdminProductController::class, 'assignRelationship'])->name('products.assign-relationship');
     Route::post('products/remove-relationship', [AdminProductController::class, 'removeRelationship'])->name('products.remove-relationship');

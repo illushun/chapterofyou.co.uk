@@ -16,7 +16,7 @@ interface ProductsPaginated {
 
 defineProps<{ products: ProductsPaginated }>();
 
-const { paginate, confirmDelete, fmtCurrency, stockLabel } = useAdmin();
+const { paginate, confirmDelete, duplicateRecord, fmtCurrency, stockLabel } = useAdmin();
 </script>
 
 <template>
@@ -86,6 +86,8 @@ const { paginate, confirmDelete, fmtCurrency, stockLabel } = useAdmin();
                             <td class="adm-td adm-td--actions">
                                 <Link :href="route('admin.products.edit', p.id)" class="adm-action adm-action--edit">
                                 Edit</Link>
+                                <button @click="duplicateRecord('admin.products.duplicate', p.id)"
+                                    class="adm-action adm-action--edit">Duplicate</button>
                                 <button @click="confirmDelete(p.name, 'admin.products.destroy', p.id)"
                                     class="adm-action adm-action--del">Delete</button>
                             </td>
@@ -124,6 +126,8 @@ const { paginate, confirmDelete, fmtCurrency, stockLabel } = useAdmin();
                     <div class="pi-mob-foot">
                         <Link :href="route('admin.products.edit', p.id)" class="adm-btn adm-btn--ghost adm-btn--sm">Edit
                         </Link>
+                        <button @click="duplicateRecord('admin.products.duplicate', p.id)"
+                            class="adm-btn adm-btn--ghost adm-btn--sm">Duplicate</button>
                         <button @click="confirmDelete(p.name, 'admin.products.destroy', p.id)"
                             class="adm-btn adm-btn--danger adm-btn--sm">Delete</button>
                     </div>

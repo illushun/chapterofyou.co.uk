@@ -396,6 +396,127 @@ class AdminProductController extends Controller
             ->with('success', "Product '{$productName}' deleted successfully.");
     }
 
+    /**
+     * Duplicate a product and everything attached to it (categories, images,
+     * oil formulation, FAQs, courier, SEO, refill links) so admins don't
+     * have to rebuild similar products from scratch. The copy is created
+     * disabled with a fresh MPN/slug and sent straight to its edit page for
+     * review before going live.
+     */
+    public function duplicate(Product $product)
+    {
+        $product->load(['categories', 'images', 'courier', 'seo', 'faqs', 'materials', 'refills']);
+
+        return DB::transaction(function () use ($product) {
+            $copy = $product->replicate(['mpn']);
+            $copy->name = "{$product->name} (Copy)";
+            $copy->mpn = $this->generateUniqueMpn($product->mpn);
+            $copy->status = 'disabled';
+            $copy->save();
+
+            $copy->categories()->sync($product->categories->pluck('id'));
+            $copy->refills()->sync($product->refills->pluck('id'));
+
+            if ($product->courier) {
+                $copy->courier()->create([
+                    'product_id' => $copy->id,
+                    'courier_id' => $product->courier->courier_id,
+                    'per_item'   => $product->courier->per_item,
+                ]);
+            }
+
+            $copy->seo()->create([
+                'meta_title'       => $product->seo?->meta_title ?? $copy->name,
+                'meta_description' => $product->seo?->meta_description ?? '',
+                'slug'             => $this->generateUniqueSlug($product->seo?->slug ?? Str::slug($product->name)),
+            ]);
+
+            foreach ($product->materials as $material) {
+                Material::create([
+                    'product_id' => $copy->id,
+                    'oil_id'     => $material->oil_id,
+                    'percentage' => $material->percentage,
+                ]);
+            }
+
+            foreach ($product->faqs as $faq) {
+                ProductFaq::create([
+                    'product_id' => $copy->id,
+                    'question'   => $faq->question,
+                    'answer'     => $faq->answer,
+                    'sort_order' => $faq->sort_order,
+                ]);
+            }
+
+            foreach ($product->images as $image) {
+                $copiedPath = $this->copyImageFile($image->image);
+                if ($copiedPath) {
+                    $copy->images()->create([
+                        'image'  => Storage::url($copiedPath),
+                        'status' => $image->status,
+                    ]);
+                }
+            }
+
+            cache()->forget('sitemap.xml');
+
+            return redirect()->route('admin.products.edit', $copy->id)
+                ->with('success', "Duplicated '{$product->name}' — review and save the copy.");
+        });
+    }
+
+    /**
+     * Appends "-COPY" (and a numeric suffix if needed) to produce an unused MPN.
+     */
+    private function generateUniqueMpn(string $baseMpn): string
+    {
+        $mpn = "{$baseMpn}-COPY";
+        $suffix = 1;
+        while (Product::where('mpn', $mpn)->exists()) {
+            $suffix++;
+            $mpn = "{$baseMpn}-COPY-{$suffix}";
+        }
+
+        return $mpn;
+    }
+
+    /**
+     * Appends "-copy" (and a numeric suffix if needed) to produce an unused SEO slug.
+     */
+    private function generateUniqueSlug(string $baseSlug): string
+    {
+        $slug = "{$baseSlug}-copy";
+        $suffix = 1;
+        while (Seo::where('slug', $slug)->exists()) {
+            $suffix++;
+            $slug = "{$baseSlug}-copy-{$suffix}";
+        }
+
+        return $slug;
+    }
+
+    /**
+     * Copies the actual file behind a stored image URL (not just the DB row) so the
+     * original and the duplicate don't end up pointing at the same file on disk.
+     * Returns the new file's path relative to the 'public' disk, or null if the
+     * source file no longer exists.
+     */
+    private function copyImageFile(string $imageUrl): ?string
+    {
+        $relativePath = ltrim(Str::after($imageUrl, '/storage/'), '/');
+
+        if (! Storage::disk('public')->exists($relativePath)) {
+            return null;
+        }
+
+        $extension = pathinfo($relativePath, PATHINFO_EXTENSION);
+        $newPath = 'product_images/' . time() . '_' . Str::random(10) . ($extension ? ".{$extension}" : '');
+
+        Storage::disk('public')->copy($relativePath, $newPath);
+
+        return $newPath;
+    }
+
     public function relationshipIndex()
     {
         $products = Product::select('id', 'name', 'mpn', 'status', 'stock_qty', 'parent_product_id')
