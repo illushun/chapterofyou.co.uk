@@ -110,8 +110,8 @@ class ProductController extends Controller
                         ->where('status', 'enabled')
                         ->where('stock_qty', '>', 0);
                 },
-                'addon' => function ($query) {
-                    $query->select('id', 'name', 'cost', 'stock_qty')
+                'refills' => function ($query) {
+                    $query->select('product.id', 'product.name', 'product.cost', 'product.stock_qty')
                         ->where('status', 'enabled');
                 }
             ])

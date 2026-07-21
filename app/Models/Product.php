@@ -58,7 +58,6 @@ class Product extends Model
         'cost',
         'stock_qty',
         'parent_product_id',
-        'addon_product_id',
         'how_to_use',
         'scent_families',
         'mood_tags',
@@ -100,9 +99,14 @@ class Product extends Model
         return $this->belongsTo(Product::class, 'parent_product_id');
     }
 
-    public function addon()
+    public function refills()
     {
-        return $this->belongsTo(Product::class, 'addon_product_id');
+        return $this->belongsToMany(Product::class, 'product_refill', 'product_id', 'refill_product_id');
+    }
+
+    public function refillFor()
+    {
+        return $this->belongsToMany(Product::class, 'product_refill', 'refill_product_id', 'product_id');
     }
 
     public function seo()

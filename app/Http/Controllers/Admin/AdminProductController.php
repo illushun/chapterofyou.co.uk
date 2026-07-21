@@ -96,15 +96,15 @@ class AdminProductController extends Controller
     {
         $categories     = Category::select('id', 'name')->get();
         $couriers       = Courier::select(['id', 'name'])->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
-        $parentProducts = Product::select('id', 'name')->get();
-        $addonProducts  = Product::select('id', 'name')->orderBy('name')->get();
-        $oils           = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
+        $parentProducts   = Product::select('id', 'name')->get();
+        $refillCandidates = Product::select('id', 'name')->orderBy('name')->get();
+        $oils             = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
 
         return Inertia::render('admin/product/CreateEdit', [
             'categories'       => $categories,
             'couriers'         => $couriers,
             'parentProducts'   => $parentProducts,
-            'addonProducts'    => $addonProducts,
+            'refillCandidates' => $refillCandidates,
             'oils'             => $oils,
             'productMaterials' => [],
             'isEditing'        => false,
@@ -132,7 +132,8 @@ class AdminProductController extends Controller
             'meta_description' => ['nullable', 'string', 'max:500'],
             'slug'             => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')],
             'parent_product_id' => ['nullable', 'exists:product,id'],
-            'addon_product_id' => ['nullable', 'exists:product,id'],
+            'refill_product_ids'   => ['nullable', 'array'],
+            'refill_product_ids.*' => ['exists:product,id'],
             'new_images'       => ['nullable', 'array', 'max:5'],
             'new_images.*'     => ['image', 'max:2048', 'mimes:jpeg,png,webp'],
 
@@ -166,6 +167,8 @@ class AdminProductController extends Controller
             if (!empty($validated['category_ids'])) {
                 $product->categories()->sync($validated['category_ids']);
             }
+
+            $product->refills()->sync($validated['refill_product_ids'] ?? []);
 
             $this->syncFaqs($product, $validated['faqs'] ?? []);
 
@@ -202,10 +205,10 @@ class AdminProductController extends Controller
     {
         $product->load(['seo:product_id,meta_title,meta_description,slug', 'categories:id', 'courier']);
 
-        $categories   = Category::select('id', 'name')->get();
-        $parentProducts = Product::where('id', '!=', $product->id)->select('id', 'name')->get();
-        $addonProducts = Product::where('id', '!=', $product->id)->select('id', 'name')->orderBy('name')->get();
-        $oils         = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
+        $categories       = Category::select('id', 'name')->get();
+        $parentProducts   = Product::where('id', '!=', $product->id)->select('id', 'name')->get();
+        $refillCandidates = Product::where('id', '!=', $product->id)->select('id', 'name')->orderBy('name')->get();
+        $oils             = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
         $productFaqs = ProductFaq::where('product_id', $product->id)
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -241,8 +244,9 @@ class AdminProductController extends Controller
             'categories'        => $categories,
             'couriers'          => $couriers,
             'parentProducts'    => $parentProducts,
-            'addonProducts'     => $addonProducts,
+            'refillCandidates'  => $refillCandidates,
             'selectedCategoryIds' => $product->categories->pluck('id'),
+            'selectedRefillProductIds' => $product->refills()->pluck('refill_product_id'),
             'selectedCourierId' => $product->courier?->courier_id,
             'courierPerItem'    => $product->courier?->per_item,
             'productImages'     => $productImages,
@@ -277,7 +281,8 @@ class AdminProductController extends Controller
             'meta_description' => ['nullable', 'string', 'max:500'],
             'slug'             => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')->ignore($product->seo->id ?? null, 'id')],
             'parent_product_id' => ['nullable', 'exists:product,id', Rule::notIn([$product->id])],
-            'addon_product_id' => ['nullable', 'exists:product,id', Rule::notIn([$product->id])],
+            'refill_product_ids'   => ['nullable', 'array'],
+            'refill_product_ids.*' => ['exists:product,id', Rule::notIn([$product->id])],
             'new_images'       => ['nullable', 'array', 'max:5'],
             'new_images.*'     => ['image', 'max:2048', 'mimes:jpeg,png,webp'],
             'images_to_delete' => ['nullable', 'array'],
@@ -312,6 +317,8 @@ class AdminProductController extends Controller
             $product->update($validated);
 
             $product->categories()->sync($validated['category_ids'] ?? []);
+
+            $product->refills()->sync($validated['refill_product_ids'] ?? []);
 
             $this->syncFaqs($product, $validated['faqs'] ?? []);
 

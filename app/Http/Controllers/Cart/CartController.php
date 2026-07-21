@@ -63,15 +63,15 @@ class CartController extends Controller
         $request->validate([
             'product_id' => 'required|exists:product,id',
             'quantity' => 'nullable|integer|min:1',
-            'addon_id' => 'nullable|exists:product,id',
+            'refill_id' => 'nullable|exists:product,id',
         ]);
 
         $cart = $this->cartManager->getCurrentCart();
         $quantity = $request->quantity ?? 1;
         $this->cartManager->addItem($cart, $request->product_id, $quantity);
 
-        if ($request->addon_id) {
-            $this->cartManager->addItem($cart, $request->addon_id, $quantity);
+        if ($request->refill_id) {
+            $this->cartManager->addItem($cart, $request->refill_id, $quantity);
         }
 
         return redirect()->back()->with('success', 'Product added to cart!');

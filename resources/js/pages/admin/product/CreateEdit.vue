@@ -10,13 +10,12 @@ import { SCENT_FAMILIES, MOOD_TAGS, ROOMS } from '@/lib/scentTaxonomy';
 interface Category { id: number; name: string; }
 interface Courier { id: number; name: string; type: string; status: string; cost: number; }
 interface ParentProduct { id: number; name: string; }
-interface AddonProduct { id: number; name: string; }
+interface RefillProduct { id: number; name: string; }
 interface ProductImage { id: number; product_id: number; image: string; status: string; file_path: string; is_enabled: boolean; }
 interface Product {
     id: number; mpn: string; name: string; description: string;
     status: 'enabled' | 'disabled'; cost: number; stock_qty: number;
     details: string; parent_product_id: number | null;
-    addon_product_id: number | null;
     how_to_use: string | null;
     seo: { meta_title: string; meta_description: string; slug: string; };
 }
@@ -35,8 +34,9 @@ const props = defineProps<{
     categories: Category[];
     couriers: Courier[];
     parentProducts: ParentProduct[];
-    addonProducts: AddonProduct[];
+    refillCandidates: RefillProduct[];
     selectedCategoryIds: number[];
+    selectedRefillProductIds?: number[];
     selectedCourierId: number | null;
     courierPerItem: string;
     oils: Oil[];
@@ -63,7 +63,7 @@ const form = useForm({
     cost: props.product?.cost?.toString() || '0.00',
     stock_qty: props.product?.stock_qty || 0,
     parent_product_id: props.product?.parent_product_id || null,
-    addon_product_id: props.product?.addon_product_id || null,
+    refill_product_ids: (props.selectedRefillProductIds ?? []) as number[],
     category_ids: props.selectedCategoryIds || ([] as number[]),
     courier_id: props.selectedCourierId || null,
     courier_per_item: props.courierPerItem || 'no',
@@ -122,6 +122,10 @@ const handleCategoryChange = (id: number, checked: boolean) => {
 const handleCourierChange = (id: number, checked: boolean) => {
     form.courier_id = checked ? id : null;
     form.courier_per_item = 'no';
+};
+const handleRefillChange = (id: number, checked: boolean) => {
+    checked ? (!form.refill_product_ids.includes(id) && form.refill_product_ids.push(id))
+        : (form.refill_product_ids = form.refill_product_ids.filter(r => r !== id));
 };
 
 // ── FAQ helpers ────────────────────────────────────────────────────────────
@@ -263,18 +267,20 @@ const submit = () => {
                     </div>
 
                     <div class="adm-field">
-                        <label class="adm-label" for="addon">
-                            Add-on Product
-                            <span class="adm-label-note">(optional extra shown on the product page, e.g. "6x Reeds")</span>
+                        <label class="adm-label">
+                            Refill Products
+                            <span class="adm-label-note">(optional — shown as an add-on on this product's page; the first selected is featured)</span>
                         </label>
-                        <select id="addon" v-model="form.addon_product_id" class="adm-select">
-                            <option :value="null">No add-on</option>
-                            <option v-for="p in addonProducts" :key="p.id" :value="p.id"
-                                :disabled="isEditing && p.id === product?.id">
+                        <div class="adm-check-list">
+                            <label v-for="p in refillCandidates" :key="p.id" class="adm-check-item"
+                                :class="{ 'adm-check-item--active': form.refill_product_ids.includes(p.id) }">
+                                <input type="checkbox" :checked="form.refill_product_ids.includes(p.id)"
+                                    @change="handleRefillChange(p.id, ($event.target as HTMLInputElement).checked)"
+                                    class="adm-checkbox" />
                                 {{ p.name }}
-                            </option>
-                        </select>
-                        <p v-if="form.errors.addon_product_id" class="adm-err">{{ form.errors.addon_product_id }}</p>
+                            </label>
+                        </div>
+                        <p v-if="form.errors.refill_product_ids" class="adm-err">{{ form.errors.refill_product_ids }}</p>
                     </div>
 
                     <div class="adm-field">
