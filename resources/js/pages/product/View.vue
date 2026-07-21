@@ -10,6 +10,7 @@ import { useSeoHead } from '@/composables/useSeoHead';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
 
 import { Checkbox } from '@/components/ui/checkbox';
+import { CheckboxGroupRoot } from 'reka-ui';
 import { Label } from '@/components/ui/label';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
@@ -182,16 +183,15 @@ const productListSchema = computed(() => ({
                         <div class="pv-filter-section pv-filter-section--border">
                             <h4 class="pv-filter-label">Product Types</h4>
                             <div class="pv-category-scroll">
-                                <ul class="pv-category-list">
+                                <CheckboxGroupRoot v-model="form.categories" as="ul" class="pv-category-list">
                                     <li v-for="cat in categories" :key="cat.id">
                                         <Label :for="'FilterCategory-' + cat.id" class="pv-check-label">
                                             <Checkbox :id="'FilterCategory-' + cat.id" :value="cat.id"
-                                                class="border-copy data-[state=checked]:bg-[var(--primary)] data-[state=checked]:text-primary-content"
-                                                v-model="form.categories" />
+                                                class="border-copy data-[state=checked]:bg-[var(--primary)] data-[state=checked]:text-primary-content" />
                                             <span>{{ cat.name }}</span>
                                         </Label>
                                     </li>
-                                </ul>
+                                </CheckboxGroupRoot>
                             </div>
                         </div>
 
