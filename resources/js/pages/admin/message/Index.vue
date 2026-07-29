@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { useAdmin } from '@/composables/useAdmin';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { Mail } from 'lucide-vue-next';
 
-// Interfaces for data structure
 interface Message {
     id: number;
     name: string;
@@ -20,148 +20,191 @@ interface MessagesPaginated {
     last_page: number;
 }
 
-const props = defineProps<{
+defineProps<{
     messages: MessagesPaginated;
 }>();
 
-const formatDate = (dateString: string): string => {
-    // Standard format for cards and tables
-    return new Date(dateString).toLocaleDateString('en-GB', {
+const { paginate } = useAdmin();
+
+const formatDate = (dateString: string): string =>
+    new Date(dateString).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
     });
-};
-
-const paginate = (url: string | null) => {
-    if (url) {
-        router.get(url, {}, { preserveState: true, preserveScroll: true });
-    }
-};
 </script>
 
 <template>
     <AdminLayout>
+        <Head title="Messages : Admin" />
 
-        <Head title="Manage Messages" />
-
-        <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">Messages (Recent)</h2>
+        <!-- Header -->
+        <div class="adm-header">
+            <div>
+                <h1 class="adm-title">Messages</h1>
+                <p class="adm-sub">
+                    Contact form submissions from the storefront
+                </p>
+            </div>
         </div>
 
-        <div v-if="messages.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
-
-            <!--
-                DESKTOP TABLE VIEW
-                (Hidden below 'md' breakpoint, uses full table structure)
-            -->
-            <div class="hidden md:block relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
-                <table class="min-w-full text-sm divide-y divide-copy-light/50">
+        <!-- Table card -->
+        <div class="adm-card adm-card--flush" style="margin-bottom: 1.5rem">
+            <!-- Desktop table -->
+            <div v-if="messages.data.length" class="adm-table-wrap">
+                <table class="adm-table">
                     <thead>
-                        <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
-                            <th class="px-4 py-3">#</th>
-                            <th class="px-4 py-3">Name</th>
-                            <th class="px-4 py-3">Email</th>
-                            <th class="px-4 py-3">Subject</th>
-                            <th class="px-4 py-3">Date</th>
-                            <th class="px-4 py-3">Have Read?</th>
-                            <th class="px-4 py-3 text-right">Actions</th>
+                        <tr class="adm-thead">
+                            <th class="adm-th">#</th>
+                            <th class="adm-th">Name</th>
+                            <th class="adm-th">Email</th>
+                            <th class="adm-th">Subject</th>
+                            <th class="adm-th">Date</th>
+                            <th class="adm-th">Status</th>
+                            <th class="adm-th adm-th--right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-copy-light/50">
-                        <tr v-for="message in messages.data" :key="message.id"
-                            class="hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-semibold">#{{ message.id }}</td>
-                            <td class="px-4 py-3">{{ message.name }}</td>
-                            <td class="px-4 py-3">{{ message.email }}</td>
-                            <td class="px-4 py-3">
-                                <span v-if="message.subject">{{ message.subject
-                                    }}</span>
-                                <span v-else class="text-copy-light italic">No subject...</span>
+                    <tbody>
+                        <tr
+                            v-for="message in messages.data"
+                            :key="message.id"
+                            class="adm-row"
+                        >
+                            <td class="adm-td adm-td--mono">
+                                #{{ message.id }}
                             </td>
-                            <td class="px-4 py-3">{{ formatDate(message.created_at) }}</td>
-                            <td class="px-4 py-3 font-bold text-primary-content">{{ message.is_read }}</td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <Link :href="route('admin.messages.show', message.id)"
-                                    class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                View
-                                </Link>
+                            <td class="adm-td">{{ message.name }}</td>
+                            <td
+                                class="adm-td"
+                                style="color: var(--adm-ink-dim)"
+                            >
+                                {{ message.email }}
+                            </td>
+                            <td class="adm-td">
+                                <span v-if="message.subject">{{
+                                    message.subject
+                                }}</span>
+                                <span
+                                    v-else
+                                    style="
+                                        font-style: italic;
+                                        color: var(--adm-ink-dim);
+                                    "
+                                    >No subject</span
+                                >
+                            </td>
+                            <td
+                                class="adm-td"
+                                style="color: var(--adm-ink-dim)"
+                            >
+                                {{ formatDate(message.created_at) }}
+                            </td>
+                            <td class="adm-td">
+                                <span
+                                    class="adm-badge"
+                                    :class="
+                                        message.is_read
+                                            ? 'adm-badge--off'
+                                            : 'adm-badge--blush'
+                                    "
+                                >
+                                    {{ message.is_read ? 'Read' : 'Unread' }}
+                                </span>
+                            </td>
+                            <td class="adm-td adm-td--actions">
+                                <Link
+                                    :href="
+                                        route('admin.messages.show', message.id)
+                                    "
+                                    class="adm-action adm-action--edit"
+                                >
+                                    View</Link
+                                >
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!--
-                MOBILE CARD VIEW
-                (Visible below 'md' breakpoint, stacked layout for small screens)
-            -->
-            <div class="md:hidden divide-y divide-copy-light/50">
-                <div v-for="message in messages.data" :key="message.id"
-                    class="p-4 bg-foreground hover:bg-secondary-light transition">
-
-                    <!-- Message ID and Status -->
-                    <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
-                        <div>
-                            <Link :href="route('admin.messages.show', message.id)"
-                                class="text-xl font-bold hover:underline">
-                            #{{ message.id }}
-                            </Link>
-                        </div>
-                        <span :class="['mt-1 px-3 py-1 rounded-full text-xs font-semibold uppercase flex-shrink-0']">
-                            {{ message.is_read }}
+            <!-- Mobile cards -->
+            <div v-if="messages.data.length" class="adm-mob-list">
+                <Link
+                    v-for="message in messages.data"
+                    :key="message.id"
+                    :href="route('admin.messages.show', message.id)"
+                    class="adm-mob-card"
+                    style="text-decoration: none"
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                        "
+                    >
+                        <span
+                            class="adm-td--mono"
+                            style="font-weight: 600; color: var(--adm-ink)"
+                            >#{{ message.id }}</span
+                        >
+                        <span
+                            class="adm-badge"
+                            :class="
+                                message.is_read
+                                    ? 'adm-badge--off'
+                                    : 'adm-badge--blush'
+                            "
+                        >
+                            {{ message.is_read ? 'Read' : 'Unread' }}
                         </span>
                     </div>
-
-                    <!-- User Info -->
-                    <div class="py-2 border-b border-copy-light/30">
-                        <div class="text-xs text-copy-light uppercase font-medium">User</div>
-                        <div class="mt-1 text-sm text-copy">{{ message.name }}</div>
-                        <div class="mt-1 text-sm text-copy">{{ message.email }}</div>
+                    <div>
+                        <p class="adm-label--sm">From</p>
+                        <p style="color: var(--adm-ink)">{{ message.name }}</p>
+                        <p class="adm-sub">{{ message.email }}</p>
                     </div>
+                    <p
+                        style="
+                            font-size: 0.72rem;
+                            color: var(--adm-ink-dim);
+                            font-style: italic;
+                        "
+                    >
+                        {{ formatDate(message.created_at) }}
+                    </p>
+                </Link>
+            </div>
 
-                    <!-- Date, Have Read, and Actions -->
-                    <div class="flex justify-between items-end pt-3">
-                        <!-- Date & Have Read -->
-                        <div class="flex flex-col space-y-1">
-                            <div>
-                                <div class="text-xs text-copy-light uppercase font-medium">Have Read?</div>
-                                <div class="font-bold text-lg text-primary-content">{{ message.is_read }}
-                                </div>
-                            </div>
-                            <div class="text-xs text-copy-light italic">
-                                Created: {{ formatDate(message.created_at) }}
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="flex-shrink-0">
-                            <Link :href="route('admin.messages.show', message.id)"
-                                class="px-4 py-2 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
-                            View
-                            </Link>
-                        </div>
-                    </div>
-
+            <div v-if="!messages.data.length" class="adm-empty">
+                <div class="adm-empty-icon">
+                    <Mail :size="28" :stroke-width="1.5" />
                 </div>
+                <p class="adm-empty-title">No messages yet</p>
+                <p class="adm-empty-sub">
+                    Contact form submissions will appear here.
+                </p>
             </div>
         </div>
-        <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-secondary-light/50">
-            <p class="text-xl font-semibold text-copy mb-2">No messages found.</p>
-        </div>
 
-        <div v-if="messages.last_page > 1" class="mt-6 flex justify-center">
-            <ol class="flex gap-2 text-sm font-medium">
-                <li v-for="link in messages.links" :key="link.label">
-                    <button @click.prevent="paginate(link.url)" :disabled="!link.url"
-                        :class="{ 'px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold': true, 'bg-primary text-primary-content shadow-md': link.active, 'bg-foreground hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed': !link.active }"
-                        v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')"
-                        :aria-label="link.label">
-                    </button>
-                </li>
-            </ol>
+        <!-- Pagination -->
+        <div v-if="messages.last_page > 1" class="adm-pagination">
+            <div class="adm-page-btns">
+                <button
+                    v-for="link in messages.links"
+                    :key="link.label"
+                    @click.prevent="paginate(link.url)"
+                    :disabled="!link.url"
+                    class="adm-page-btn"
+                    :class="{ 'adm-page-btn--active': link.active }"
+                    v-html="
+                        link.label
+                            .replace('&laquo; Previous', '←')
+                            .replace('Next &raquo;', '→')
+                    "
+                ></button>
+            </div>
         </div>
     </AdminLayout>
 </template>

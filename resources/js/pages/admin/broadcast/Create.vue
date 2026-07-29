@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps<{
     audiences: Record<string, string>;
@@ -16,12 +16,18 @@ const form = useForm({
 
 // Simple confirmation before sending
 const confirmed = ref(false);
-const confirmAndSend = () => { confirmed.value = true; };
-const cancelConfirm = () => { confirmed.value = false; };
+const confirmAndSend = () => {
+    confirmed.value = true;
+};
+const cancelConfirm = () => {
+    confirmed.value = false;
+};
 
 const submit = () => {
     form.post(route('admin.broadcasts.store'), {
-        onError: () => { confirmed.value = false; },
+        onError: () => {
+            confirmed.value = false;
+        },
     });
 };
 
@@ -32,14 +38,19 @@ const subjectMax = 255;
 const bodyMax = 20000;
 
 // Minimal toolbar actions for the body textarea
-// (We keep it as plain textarea — the HTML is passed raw to the blade template)
+// (We keep it as plain textarea, the HTML is passed raw to the blade template)
 const insertTag = (open: string, close: string) => {
     const el = document.getElementById('body-input') as HTMLTextAreaElement;
     if (!el) return;
     const start = el.selectionStart;
     const end = el.selectionEnd;
     const sel = form.body.substring(start, end);
-    form.body = form.body.substring(0, start) + open + sel + close + form.body.substring(end);
+    form.body =
+        form.body.substring(0, start) +
+        open +
+        sel +
+        close +
+        form.body.substring(end);
     // Reposition cursor
     setTimeout(() => {
         el.selectionStart = start + open.length;
@@ -51,21 +62,30 @@ const insertTag = (open: string, close: string) => {
 
 <template>
     <AdminLayout>
-
-        <Head title="Compose Broadcast" />
+        <Head title="Compose Broadcast : Admin" />
 
         <!-- Header -->
         <div class="bc-header">
             <div class="bc-header-left">
                 <Link :href="route('admin.broadcasts.index')" class="bc-back">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                Broadcasts
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                    Broadcasts
                 </Link>
                 <h1 class="bc-title">Compose Broadcast</h1>
-                <p class="bc-sub">Write and send an email to a segment of your customer list.</p>
+                <p class="bc-sub">
+                    Write and send an email to a segment of your customer list.
+                </p>
             </div>
         </div>
 
@@ -73,49 +93,107 @@ const insertTag = (open: string, close: string) => {
         <div v-if="confirmed" class="bc-confirm-overlay">
             <div class="bc-confirm-box">
                 <div class="bc-confirm-icon" aria-hidden="true">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path
+                            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                        />
                         <polyline points="22,6 12,13 2,6" />
                     </svg>
                 </div>
                 <h2 class="bc-confirm-title">Ready to send?</h2>
                 <p class="bc-confirm-body">
-                    You're about to send <strong>"{{ form.subject }}"</strong> to
-                    <strong>{{ selectedCount.toLocaleString() }} recipient{{ selectedCount !== 1 ? 's' : '' }}</strong>
+                    You're about to send
+                    <strong>"{{ form.subject }}"</strong> to
+                    <strong
+                        >{{ selectedCount.toLocaleString() }} recipient{{
+                            selectedCount !== 1 ? 's' : ''
+                        }}</strong
+                    >
                     ({{ audiences[form.audience] }}).
                 </p>
-                <p class="bc-confirm-note">This cannot be undone. Emails will be queued immediately.</p>
+                <p class="bc-confirm-note">
+                    This cannot be undone. Emails will be queued immediately.
+                </p>
                 <div class="bc-confirm-actions">
-                    <button @click="cancelConfirm" class="bc-btn bc-btn--ghost" type="button">
+                    <button
+                        @click="cancelConfirm"
+                        class="bc-btn bc-btn--ghost"
+                        type="button"
+                    >
                         Go back
                     </button>
-                    <button @click="submit" :disabled="form.processing" class="bc-btn bc-btn--send" type="button">
-                        <svg v-if="form.processing" class="bc-spinner" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
-                            <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                    <button
+                        @click="submit"
+                        :disabled="form.processing"
+                        class="bc-btn bc-btn--send"
+                        type="button"
+                    >
+                        <svg
+                            v-if="form.processing"
+                            class="bc-spinner"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="rgba(255,255,255,0.3)"
+                                stroke-width="3"
+                            />
+                            <path
+                                d="M12 2a10 10 0 0 1 10 10"
+                                stroke="var(--adm-paper-raised)"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                            />
                         </svg>
-                        {{ form.processing ? 'Sending...' : `Send to ${selectedCount.toLocaleString()}` }}
+                        {{
+                            form.processing
+                                ? 'Sending...'
+                                : `Send to ${selectedCount.toLocaleString()}`
+                        }}
                     </button>
                 </div>
             </div>
         </div>
 
         <div class="bc-grid">
-
             <!-- ── Compose form ── -->
             <div class="bc-left">
-
                 <!-- Subject -->
                 <div class="bc-card">
                     <h2 class="bc-card-title">Subject Line</h2>
                     <div class="bc-field">
-                        <input id="subject-input" v-model="form.subject" type="text" class="bc-input"
+                        <input
+                            id="subject-input"
+                            v-model="form.subject"
+                            type="text"
+                            class="bc-input"
                             :class="{ 'bc-input--error': form.errors.subject }"
-                            placeholder="e.g. Something special just for you..." :maxlength="subjectMax" />
+                            placeholder="e.g. Something special just for you..."
+                            :maxlength="subjectMax"
+                        />
                         <div class="bc-field-foot">
-                            <p v-if="form.errors.subject" class="bc-error">{{ form.errors.subject }}</p>
-                            <span class="bc-char-count" :class="{ 'bc-char-count--warn': form.subject.length > 200 }">
+                            <p v-if="form.errors.subject" class="bc-error">
+                                {{ form.errors.subject }}
+                            </p>
+                            <span
+                                class="bc-char-count"
+                                :class="{
+                                    'bc-char-count--warn':
+                                        form.subject.length > 200,
+                                }"
+                            >
                                 {{ form.subject.length }} / {{ subjectMax }}
                             </span>
                         </div>
@@ -126,24 +204,66 @@ const insertTag = (open: string, close: string) => {
                 <div class="bc-card">
                     <h2 class="bc-card-title">Email Body</h2>
                     <p class="bc-body-hint">
-                        Write your message below. Basic HTML is supported — use the toolbar for quick formatting, or
-                        write tags manually. The email template will wrap your content automatically.
+                        Write your message below. Basic HTML is supported. Use
+                        the toolbar for quick formatting, or write tags
+                        manually. The email template will wrap your content
+                        automatically.
                     </p>
 
                     <!-- Mini toolbar -->
-                    <div class="bc-toolbar" role="toolbar" aria-label="Formatting">
-                        <button type="button" @click="insertTag('<strong>', '</strong>')" class="bc-tool"
-                            title="Bold"><strong>B</strong></button>
-                        <button type="button" @click="insertTag('<em>', '</em>')" class="bc-tool bc-tool--italic"
-                            title="Italic"><em>I</em></button>
-                        <button type="button" @click="insertTag('<p>', '</p>')" class="bc-tool"
-                            title="Paragraph">¶</button>
-                        <button type="button" @click="insertTag('<h2>', '</h2>')" class="bc-tool"
-                            title="Heading">H2</button>
-                        <button type="button" @click="insertTag('<ul>\n  <li>', '</li>\n</ul>')" class="bc-tool"
-                            title="List">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <div
+                        class="bc-toolbar"
+                        role="toolbar"
+                        aria-label="Formatting"
+                    >
+                        <button
+                            type="button"
+                            @click="insertTag('<strong>', '</strong>')"
+                            class="bc-tool"
+                            title="Bold"
+                        >
+                            <strong>B</strong>
+                        </button>
+                        <button
+                            type="button"
+                            @click="insertTag('<em>', '</em>')"
+                            class="bc-tool bc-tool--italic"
+                            title="Italic"
+                        >
+                            <em>I</em>
+                        </button>
+                        <button
+                            type="button"
+                            @click="insertTag('<p>', '</p>')"
+                            class="bc-tool"
+                            title="Paragraph"
+                        >
+                            ¶
+                        </button>
+                        <button
+                            type="button"
+                            @click="insertTag('<h2>', '</h2>')"
+                            class="bc-tool"
+                            title="Heading"
+                        >
+                            H2
+                        </button>
+                        <button
+                            type="button"
+                            @click="insertTag('<ul>\n  <li>', '</li>\n</ul>')"
+                            class="bc-tool"
+                            title="List"
+                        >
+                            <svg
+                                width="13"
+                                height="13"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
                                 <line x1="8" y1="6" x2="21" y2="6" />
                                 <line x1="8" y1="12" x2="21" y2="12" />
                                 <line x1="8" y1="18" x2="21" y2="18" />
@@ -153,53 +273,102 @@ const insertTag = (open: string, close: string) => {
                             </svg>
                         </button>
                         <div class="bc-toolbar-sep"></div>
-                        <button type="button" @click="insertTag('<a href=\'\'>', '</a>')" class="bc-tool" title="Link">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                        <button
+                            type="button"
+                            @click="insertTag('<a href=\'\'>', '</a>')"
+                            class="bc-tool"
+                            title="Link"
+                        >
+                            <svg
+                                width="13"
+                                height="13"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"
+                                />
+                                <path
+                                    d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
+                                />
                             </svg>
                         </button>
                     </div>
 
                     <div class="bc-field">
-                        <textarea id="body-input" v-model="form.body" rows="16" class="bc-textarea"
+                        <textarea
+                            id="body-input"
+                            v-model="form.body"
+                            rows="16"
+                            class="bc-textarea"
                             :class="{ 'bc-input--error': form.errors.body }"
-                            placeholder="Write your email content here. You can use HTML tags for formatting.&#10;&#10;Example:&#10;&lt;p&gt;Hi there,&lt;/p&gt;&#10;&lt;p&gt;We have some exciting news to share...&lt;/p&gt;"></textarea>
+                            placeholder="Write your email content here. You can use HTML tags for formatting.&#10;&#10;Example:&#10;&lt;p&gt;Hi there,&lt;/p&gt;&#10;&lt;p&gt;We have some exciting news to share...&lt;/p&gt;"
+                        ></textarea>
                         <div class="bc-field-foot">
-                            <p v-if="form.errors.body" class="bc-error">{{ form.errors.body }}</p>
-                            <span class="bc-char-count">{{ form.body.length }} / {{ bodyMax.toLocaleString() }}</span>
+                            <p v-if="form.errors.body" class="bc-error">
+                                {{ form.errors.body }}
+                            </p>
+                            <span class="bc-char-count"
+                                >{{ form.body.length }} /
+                                {{ bodyMax.toLocaleString() }}</span
+                            >
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <!-- ── Sidebar ── -->
             <aside class="bc-right">
-
                 <!-- Audience selector -->
                 <div class="bc-card">
                     <h2 class="bc-card-title">Audience</h2>
-                    <p class="bc-audience-hint">Who should receive this email?</p>
+                    <p class="bc-audience-hint">
+                        Who should receive this email?
+                    </p>
 
                     <div class="bc-audience-options">
-                        <label v-for="(label, key) in audiences" :key="key" class="bc-audience-option"
-                            :class="{ 'bc-audience-option--selected': form.audience === key }">
+                        <label
+                            v-for="(label, key) in audiences"
+                            :key="key"
+                            class="bc-audience-option"
+                            :class="{
+                                'bc-audience-option--selected':
+                                    form.audience === key,
+                            }"
+                        >
                             <div class="bc-audience-radio-wrap">
-                                <input type="radio" :value="key" v-model="form.audience" class="bc-radio" />
+                                <input
+                                    type="radio"
+                                    :value="key"
+                                    v-model="form.audience"
+                                    class="bc-radio"
+                                />
                             </div>
                             <div class="bc-audience-info">
                                 <p class="bc-audience-label">{{ label }}</p>
                                 <p class="bc-audience-count">
-                                    {{ (audienceCounts[key] ?? 0).toLocaleString() }}
-                                    recipient{{ (audienceCounts[key] ?? 0) !== 1 ? 's' : '' }}
+                                    {{
+                                        (
+                                            audienceCounts[key] ?? 0
+                                        ).toLocaleString()
+                                    }}
+                                    recipient{{
+                                        (audienceCounts[key] ?? 0) !== 1
+                                            ? 's'
+                                            : ''
+                                    }}
                                 </p>
                             </div>
                         </label>
                     </div>
 
-                    <p v-if="form.errors.audience" class="bc-error">{{ form.errors.audience }}</p>
+                    <p v-if="form.errors.audience" class="bc-error">
+                        {{ form.errors.audience }}
+                    </p>
                 </div>
 
                 <!-- Send summary -->
@@ -209,15 +378,24 @@ const insertTag = (open: string, close: string) => {
                     <div class="bc-send-summary">
                         <div class="bc-send-row">
                             <span class="bc-send-label">Recipients</span>
-                            <span class="bc-send-val">{{ selectedCount.toLocaleString() }}</span>
+                            <span class="bc-send-val">{{
+                                selectedCount.toLocaleString()
+                            }}</span>
                         </div>
                         <div class="bc-send-row">
                             <span class="bc-send-label">Audience</span>
-                            <span class="bc-send-val">{{ audiences[form.audience] }}</span>
+                            <span class="bc-send-val">{{
+                                audiences[form.audience]
+                            }}</span>
                         </div>
                         <div class="bc-send-row">
                             <span class="bc-send-label">Subject</span>
-                            <span class="bc-send-val bc-send-subject" :class="{ 'bc-send-placeholder': !form.subject }">
+                            <span
+                                class="bc-send-val bc-send-subject"
+                                :class="{
+                                    'bc-send-placeholder': !form.subject,
+                                }"
+                            >
                                 {{ form.subject || 'Not yet written' }}
                             </span>
                         </div>
@@ -225,21 +403,45 @@ const insertTag = (open: string, close: string) => {
 
                     <!-- Warnings -->
                     <div v-if="selectedCount === 0" class="bc-warning">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path
-                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                            />
                             <line x1="12" y1="9" x2="12" y2="13" />
                             <line x1="12" y1="17" x2="12.01" y2="17" />
                         </svg>
                         No recipients in this segment.
                     </div>
 
-                    <button type="button" @click="confirmAndSend"
-                        :disabled="!form.subject.trim() || !form.body.trim() || selectedCount === 0"
-                        class="bc-btn bc-btn--send bc-btn--full">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <button
+                        type="button"
+                        @click="confirmAndSend"
+                        :disabled="
+                            !form.subject.trim() ||
+                            !form.body.trim() ||
+                            selectedCount === 0
+                        "
+                        class="bc-btn bc-btn--send bc-btn--full"
+                    >
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="M22 2 11 13" />
                             <path d="M22 2 15 22 11 13 2 9l20-7z" />
                         </svg>
@@ -250,10 +452,8 @@ const insertTag = (open: string, close: string) => {
                         You'll see a confirmation before anything is sent.
                     </p>
                 </div>
-
             </aside>
         </div>
-
     </AdminLayout>
 </template>
 
@@ -280,25 +480,27 @@ const insertTag = (open: string, close: string) => {
     gap: 0.35rem;
     font-size: 0.82rem;
     font-weight: 600;
-    color: var(--copy-light);
+    color: var(--adm-ink-dim);
     text-decoration: none;
     transition: color 0.15s;
     margin-bottom: 0.2rem;
 }
 
 .bc-back:hover {
-    color: var(--copy);
+    color: var(--adm-ink);
 }
 
 .bc-title {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: var(--copy);
+    font-family: var(--adm-display);
+    font-style: italic;
+    font-size: 1.9rem;
+    font-weight: 400;
+    color: var(--adm-ink);
 }
 
 .bc-sub {
     font-size: 0.85rem;
-    color: var(--copy-light);
+    color: var(--adm-ink-dim);
 }
 
 /* ── Grid ── */
@@ -331,19 +533,19 @@ const insertTag = (open: string, close: string) => {
 
 /* ── Cards ── */
 .bc-card {
-    border: 2px solid var(--copy);
+    border: 1px solid var(--adm-line);
     border-radius: 12px;
-    background: var(--foreground);
+    background: var(--adm-paper-raised);
     padding: 1.5rem;
 }
 
 .bc-card-title {
     font-size: 0.95rem;
     font-weight: 800;
-    color: var(--copy);
+    color: var(--adm-ink);
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid color-mix(in srgb, var(--copy-light) 30%, transparent);
+    border-bottom: 1px dashed var(--adm-line);
 }
 
 /* ── Fields ── */
@@ -363,10 +565,10 @@ const insertTag = (open: string, close: string) => {
 .bc-input {
     width: 100%;
     padding: 0.65rem 0.9rem;
-    border: 2px solid color-mix(in srgb, var(--copy-light) 40%, transparent);
+    border: 1px solid var(--adm-line);
     border-radius: 8px;
-    background: var(--background);
-    color: var(--copy);
+    background: var(--adm-paper);
+    color: var(--adm-ink);
     font-family: inherit;
     font-size: 0.95rem;
     outline: none;
@@ -374,32 +576,32 @@ const insertTag = (open: string, close: string) => {
 }
 
 .bc-input:focus {
-    border-color: var(--primary);
+    border-color: var(--adm-stamp);
 }
 
 .bc-input--error {
-    border-color: #c84040;
+    border-color: var(--adm-danger);
 }
 
 .bc-error {
     font-size: 0.78rem;
-    color: #b54040;
+    color: var(--adm-danger);
 }
 
 .bc-char-count {
     font-size: 0.72rem;
-    color: var(--copy-lighter);
+    color: var(--adm-ink-faint);
     margin-left: auto;
 }
 
 .bc-char-count--warn {
-    color: #c84040;
+    color: var(--adm-danger);
 }
 
 /* ── Body textarea ── */
 .bc-body-hint {
     font-size: 0.82rem;
-    color: var(--copy-light);
+    color: var(--adm-ink-dim);
     line-height: 1.5;
     margin-bottom: 0.85rem;
     font-style: italic;
@@ -410,8 +612,8 @@ const insertTag = (open: string, close: string) => {
     align-items: center;
     gap: 0.2rem;
     padding: 0.4rem 0.5rem;
-    background: var(--secondary-light);
-    border: 2px solid color-mix(in srgb, var(--copy-light) 40%, transparent);
+    background: var(--adm-paper);
+    border: 1px solid var(--adm-line);
     border-bottom: none;
     border-radius: 8px 8px 0 0;
     flex-wrap: wrap;
@@ -426,17 +628,19 @@ const insertTag = (open: string, close: string) => {
     border-radius: 4px;
     border: 1px solid transparent;
     background: transparent;
-    color: var(--copy-light);
+    color: var(--adm-ink-dim);
     font-size: 0.82rem;
     font-weight: 700;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition:
+        background 0.15s,
+        color 0.15s;
 }
 
 .bc-tool:hover {
-    background: var(--foreground);
-    color: var(--copy);
-    border-color: color-mix(in srgb, var(--copy-light) 40%, transparent);
+    background: var(--adm-paper-raised);
+    color: var(--adm-ink);
+    border-color: color-mix(in srgb, var(--adm-ink-dim) 40%, transparent);
 }
 
 .bc-tool--italic {
@@ -446,19 +650,19 @@ const insertTag = (open: string, close: string) => {
 .bc-toolbar-sep {
     width: 1px;
     height: 18px;
-    background: color-mix(in srgb, var(--copy-light) 35%, transparent);
+    background: color-mix(in srgb, var(--adm-ink-dim) 35%, transparent);
     margin: 0 0.2rem;
 }
 
 .bc-textarea {
     width: 100%;
     padding: 0.75rem 0.9rem;
-    border: 2px solid color-mix(in srgb, var(--copy-light) 40%, transparent);
+    border: 1px solid var(--adm-line);
     border-top: none;
     border-radius: 0 0 8px 8px;
-    background: var(--background);
-    color: var(--copy);
-    font-family: 'Courier New', monospace;
+    background: var(--adm-paper);
+    color: var(--adm-ink);
+    font-family: var(--adm-font);
     font-size: 0.88rem;
     line-height: 1.65;
     resize: vertical;
@@ -468,13 +672,13 @@ const insertTag = (open: string, close: string) => {
 }
 
 .bc-textarea:focus {
-    border-color: var(--primary);
+    border-color: var(--adm-stamp);
 }
 
 /* ── Audience selector ── */
 .bc-audience-hint {
     font-size: 0.82rem;
-    color: var(--copy-light);
+    color: var(--adm-ink-dim);
     margin-bottom: 0.85rem;
     font-style: italic;
 }
@@ -491,23 +695,25 @@ const insertTag = (open: string, close: string) => {
     gap: 0.75rem;
     padding: 0.75rem 1rem;
     border-radius: 8px;
-    border: 2px solid color-mix(in srgb, var(--copy-light) 30%, transparent);
+    border: 1px solid var(--adm-line);
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-    background: var(--background);
+    transition:
+        border-color 0.15s,
+        background 0.15s;
+    background: var(--adm-paper);
 }
 
 .bc-audience-option:hover {
-    border-color: color-mix(in srgb, var(--copy-light) 60%, transparent);
+    border-color: color-mix(in srgb, var(--adm-ink-dim) 60%, transparent);
 }
 
 .bc-audience-option--selected {
-    border-color: var(--primary);
-    background: color-mix(in srgb, var(--primary) 6%, transparent);
+    border-color: var(--adm-stamp);
+    background: color-mix(in srgb, var(--adm-stamp) 6%, transparent);
 }
 
 .bc-radio {
-    accent-color: var(--primary);
+    accent-color: var(--adm-stamp);
     width: 15px;
     height: 15px;
     cursor: pointer;
@@ -516,17 +722,18 @@ const insertTag = (open: string, close: string) => {
 .bc-audience-label {
     font-size: 0.88rem;
     font-weight: 600;
-    color: var(--copy);
+    color: var(--adm-ink);
 }
 
 .bc-audience-count {
     font-size: 0.75rem;
-    color: var(--copy-light);
+    color: var(--adm-ink-dim);
     margin-top: 0.1rem;
 }
 
 /* ── Send card ── */
-.bc-send-card {}
+.bc-send-card {
+}
 
 .bc-send-summary {
     display: flex;
@@ -534,7 +741,8 @@ const insertTag = (open: string, close: string) => {
     gap: 0.55rem;
     margin-bottom: 1.1rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--copy-light) 25%, transparent);
+    border-bottom: 1px solid
+        color-mix(in srgb, var(--adm-ink-dim) 25%, transparent);
 }
 
 .bc-send-row {
@@ -549,14 +757,14 @@ const insertTag = (open: string, close: string) => {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--copy-lighter);
+    color: var(--adm-ink-faint);
     flex-shrink: 0;
 }
 
 .bc-send-val {
     font-size: 0.88rem;
     font-weight: 600;
-    color: var(--copy);
+    color: var(--adm-ink);
     text-align: right;
 }
 
@@ -568,7 +776,7 @@ const insertTag = (open: string, close: string) => {
 }
 
 .bc-send-placeholder {
-    color: var(--copy-lighter);
+    color: var(--adm-ink-faint);
     font-style: italic;
     font-weight: 400;
 }
@@ -579,9 +787,9 @@ const insertTag = (open: string, close: string) => {
     gap: 0.4rem;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #8a5a00;
-    background: #fffbf0;
-    border: 1px solid #e0c878;
+    color: var(--adm-warning);
+    background: var(--adm-warning-bg);
+    border: 1px solid var(--adm-warning-line);
     border-radius: 8px;
     padding: 0.55rem 0.75rem;
     margin-bottom: 0.85rem;
@@ -589,7 +797,7 @@ const insertTag = (open: string, close: string) => {
 
 .bc-send-note {
     font-size: 0.75rem;
-    color: var(--copy-lighter);
+    color: var(--adm-ink-faint);
     font-style: italic;
     margin-top: 0.6rem;
     text-align: center;
@@ -603,12 +811,14 @@ const insertTag = (open: string, close: string) => {
     gap: 0.4rem;
     padding: 0.65rem 1.25rem;
     border-radius: 8px;
-    border: 2px solid var(--copy);
+    border: 1px solid var(--adm-line);
     font-family: inherit;
     font-size: 0.88rem;
     font-weight: 700;
     cursor: pointer;
-    transition: opacity 0.15s, transform 0.15s;
+    transition:
+        opacity 0.15s,
+        transform 0.15s;
 }
 
 .bc-btn:disabled {
@@ -625,15 +835,15 @@ const insertTag = (open: string, close: string) => {
 }
 
 .bc-btn--send {
-    background: var(--primary);
-    color: var(--primary-content);
-    border-color: var(--primary);
+    background: var(--adm-stamp);
+    color: var(--adm-paper-raised);
+    border-color: var(--adm-stamp);
 }
 
 .bc-btn--ghost {
-    background: var(--foreground);
-    color: var(--copy);
-    border-color: color-mix(in srgb, var(--copy-light) 50%, transparent);
+    background: var(--adm-paper-raised);
+    color: var(--adm-ink);
+    border-color: color-mix(in srgb, var(--adm-ink-dim) 50%, transparent);
 }
 
 /* ── Confirm overlay ── */
@@ -652,8 +862,8 @@ const insertTag = (open: string, close: string) => {
 .bc-confirm-box {
     width: 100%;
     max-width: 440px;
-    background: var(--foreground);
-    border: 2px solid var(--copy);
+    background: var(--adm-paper-raised);
+    border: 1px solid var(--adm-line);
     border-radius: 16px;
     padding: 2rem;
     display: flex;
@@ -666,9 +876,9 @@ const insertTag = (open: string, close: string) => {
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    border: 2px solid var(--copy);
-    background: color-mix(in srgb, var(--primary) 10%, transparent);
-    color: var(--primary);
+    border: 1px solid var(--adm-line);
+    background: color-mix(in srgb, var(--adm-stamp) 10%, transparent);
+    color: var(--adm-stamp);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -678,24 +888,24 @@ const insertTag = (open: string, close: string) => {
 .bc-confirm-title {
     font-size: 1.3rem;
     font-weight: 800;
-    color: var(--copy);
+    color: var(--adm-ink);
     text-align: center;
 }
 
 .bc-confirm-body {
     font-size: 0.92rem;
-    color: var(--copy-light);
+    color: var(--adm-ink-dim);
     text-align: center;
     line-height: 1.6;
 }
 
 .bc-confirm-body strong {
-    color: var(--copy);
+    color: var(--adm-ink);
 }
 
 .bc-confirm-note {
     font-size: 0.8rem;
-    color: var(--copy-lighter);
+    color: var(--adm-ink-faint);
     text-align: center;
     font-style: italic;
 }

@@ -1,10 +1,18 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Plus, X } from 'lucide-vue-next';
 import { computed } from 'vue';
 
-interface OrderOption { id: number; label: string; }
-interface ProductOption { id: number; name: string; mpn: string; }
+interface OrderOption {
+    id: number;
+    label: string;
+}
+interface ProductOption {
+    id: number;
+    name: string;
+    mpn: string;
+}
 
 interface IngredientRow {
     ingredient: string;
@@ -43,8 +51,12 @@ const props = defineProps<{
 }>();
 
 const blankRow = (): IngredientRow => ({
-    ingredient: '', supplier: '', lot_batch_no: '',
-    percent_used: '', weight_g: '', sds_ifra_ref: '',
+    ingredient: '',
+    supplier: '',
+    lot_batch_no: '',
+    percent_used: '',
+    weight_g: '',
+    sds_ifra_ref: '',
 });
 
 const form = useForm({
@@ -52,7 +64,9 @@ const form = useForm({
     product_id: props.sheet?.product_id ?? null,
     batch_number: props.sheet?.batch_number ?? props.batchNumber,
     blend_name: props.sheet?.blend_name ?? '',
-    date_of_manufacture: props.sheet?.date_of_manufacture ?? new Date().toISOString().split('T')[0],
+    date_of_manufacture:
+        props.sheet?.date_of_manufacture ??
+        new Date().toISOString().split('T')[0],
     produced_by: props.sheet?.produced_by ?? 'Chapter of You',
     bottle_size_ml: props.sheet?.bottle_size_ml ?? 100,
     total_units_produced: props.sheet?.total_units_produced ?? '',
@@ -67,7 +81,7 @@ const form = useForm({
 });
 
 const title = computed(() =>
-    props.isEditing ? `Edit: ${props.sheet?.batch_number}` : 'New Batch Sheet'
+    props.isEditing ? `Edit: ${props.sheet?.batch_number}` : 'New Batch Sheet',
 );
 
 function addRow() {
@@ -82,9 +96,12 @@ function removeRow(index: number) {
 
 function submit() {
     if (props.isEditing && props.sheet) {
-        form.put(route('admin.batch-sheets.update', { batch_sheet: props.sheet.id }), {
-            preserveScroll: true,
-        });
+        form.put(
+            route('admin.batch-sheets.update', { batch_sheet: props.sheet.id }),
+            {
+                preserveScroll: true,
+            },
+        );
     } else {
         form.post(route('admin.batch-sheets.store'), {
             preserveScroll: true,
@@ -95,265 +112,414 @@ function submit() {
 
 <template>
     <AdminLayout>
+        <Head :title="`${title} : Admin`" />
 
-        <Head :title="title" />
-
-        <div class="mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">{{ title }}</h2>
-            <p class="text-copy-light mt-1">Complete all fields — this document provides production traceability.</p>
+        <!-- Header -->
+        <div class="adm-header">
+            <div>
+                <div class="adm-breadcrumb">
+                    <Link
+                        :href="route('admin.batch-sheets.index')"
+                        class="adm-breadcrumb a"
+                        >Batch Sheets</Link
+                    >
+                    <span class="adm-breadcrumb-sep">/</span>
+                    <span>{{ isEditing ? 'Edit' : 'New' }}</span>
+                </div>
+                <h1 class="adm-title">{{ title }}</h1>
+                <p class="adm-sub">
+                    Complete all fields. This document provides production
+                    traceability.
+                </p>
+            </div>
+            <div v-if="form.isDirty" class="adm-unsaved">Unsaved changes</div>
         </div>
 
-        <form @submit.prevent="submit" class="space-y-6 max-w-5xl">
-
-            <!-- ── Batch Information ── -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                    <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">
-                        Batch Information
-                    </h3>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                        <!-- Batch Number -->
-                        <div>
-                            <label class="form-label">Batch Number *</label>
-                            <input v-model="form.batch_number" type="text" required class="field font-mono"
-                                :class="{ 'border-error': form.errors.batch_number }" />
-                            <p v-if="form.errors.batch_number" class="err">{{ form.errors.batch_number }}</p>
-                        </div>
-
-                        <!-- Blend Name -->
-                        <div>
-                            <label class="form-label">Blend Name *</label>
-                            <input v-model="form.blend_name" type="text" required class="field"
-                                :class="{ 'border-error': form.errors.blend_name }" />
-                            <p v-if="form.errors.blend_name" class="err">{{ form.errors.blend_name }}</p>
-                        </div>
-
-                        <!-- Date of Manufacture -->
-                        <div>
-                            <label class="form-label">Date of Manufacture *</label>
-                            <input v-model="form.date_of_manufacture" type="date" required class="field" />
-                        </div>
-
-                        <!-- Produced By -->
-                        <div>
-                            <label class="form-label">Produced By *</label>
-                            <input v-model="form.produced_by" type="text" required class="field" />
-                        </div>
-
-                        <!-- Bottle Size -->
-                        <div>
-                            <label class="form-label">Bottle Size (ml) *</label>
-                            <input v-model="form.bottle_size_ml" type="number" min="1" required class="field" />
-                        </div>
-
-                        <!-- Total Units -->
-                        <div>
-                            <label class="form-label">Total Units Produced *</label>
-                            <input v-model="form.total_units_produced" type="text" required
-                                placeholder="e.g. 10 or 96–97 mix" class="field" />
-                        </div>
-
-                        <!-- Link to Order -->
-                        <div>
-                            <label class="form-label">Link to Order <span
-                                    class="text-copy-light">(optional)</span></label>
-                            <select v-model="form.order_id" class="field">
-                                <option :value="null">— No order linked —</option>
-                                <option v-for="o in orders" :key="o.id" :value="o.id">{{ o.label }}</option>
-                            </select>
-                        </div>
-
-                        <!-- Link to Product -->
-                        <div>
-                            <label class="form-label">Product <span class="text-copy-light">(optional)</span></label>
-                            <select v-model="form.product_id" class="field">
-                                <option :value="null">— No product linked —</option>
-                                <option v-for="p in products" :key="p.id" :value="p.id">
-                                    {{ p.name }} ({{ p.mpn }})
-                                </option>
-                            </select>
-                        </div>
+        <form
+            @submit.prevent="submit"
+            style="
+                display: flex;
+                flex-direction: column;
+                gap: 1.25rem;
+                max-width: 64rem;
+            "
+        >
+            <!-- Batch Information -->
+            <section class="adm-card">
+                <h2 class="adm-card-title">Batch Information</h2>
+                <div
+                    class="adm-field-row"
+                    style="grid-template-columns: repeat(2, 1fr)"
+                >
+                    <div class="adm-field">
+                        <label class="adm-label">Batch Number *</label>
+                        <input
+                            v-model="form.batch_number"
+                            type="text"
+                            required
+                            class="adm-input adm-td--mono"
+                            :class="{
+                                'adm-input--err': form.errors.batch_number,
+                            }"
+                        />
+                        <p v-if="form.errors.batch_number" class="adm-err">
+                            {{ form.errors.batch_number }}
+                        </p>
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label">Blend Name *</label>
+                        <input
+                            v-model="form.blend_name"
+                            type="text"
+                            required
+                            class="adm-input"
+                            :class="{
+                                'adm-input--err': form.errors.blend_name,
+                            }"
+                        />
+                        <p v-if="form.errors.blend_name" class="adm-err">
+                            {{ form.errors.blend_name }}
+                        </p>
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label">Date of Manufacture *</label>
+                        <input
+                            v-model="form.date_of_manufacture"
+                            type="date"
+                            required
+                            class="adm-input"
+                        />
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label">Produced By *</label>
+                        <input
+                            v-model="form.produced_by"
+                            type="text"
+                            required
+                            class="adm-input"
+                        />
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label">Bottle Size (ml) *</label>
+                        <input
+                            v-model="form.bottle_size_ml"
+                            type="number"
+                            min="1"
+                            required
+                            class="adm-input"
+                        />
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label">Total Units Produced *</label>
+                        <input
+                            v-model="form.total_units_produced"
+                            type="text"
+                            required
+                            placeholder="e.g. 10 or 96-97 mix"
+                            class="adm-input"
+                        />
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label"
+                            >Link to Order
+                            <span class="adm-label-note">optional</span></label
+                        >
+                        <select v-model="form.order_id" class="adm-select">
+                            <option :value="null">No order linked</option>
+                            <option
+                                v-for="o in orders"
+                                :key="o.id"
+                                :value="o.id"
+                            >
+                                {{ o.label }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label"
+                            >Product
+                            <span class="adm-label-note">optional</span></label
+                        >
+                        <select v-model="form.product_id" class="adm-select">
+                            <option :value="null">No product linked</option>
+                            <option
+                                v-for="p in products"
+                                :key="p.id"
+                                :value="p.id"
+                            >
+                                {{ p.name }} ({{ p.mpn }})
+                            </option>
+                        </select>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- ── Ingredients Table ── -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                    <div class="flex items-center justify-between mb-4 border-b-2 border-copy-light pb-2">
-                        <h3 class="text-xl font-bold text-copy">Ingredients Used</h3>
-                        <button type="button" @click="addRow"
-                            class="rounded border border-copy-light px-3 py-1 text-sm font-medium text-copy hover:bg-secondary-light transition">
-                            + Add Row
-                        </button>
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm border-collapse">
-                            <thead>
-                                <tr class="bg-gray-50 text-xs uppercase tracking-wider text-copy-light">
-                                    <th class="border border-copy-light px-3 py-2 text-left font-semibold">Ingredient
-                                    </th>
-                                    <th class="border border-copy-light px-3 py-2 text-left font-semibold">Supplier</th>
-                                    <th class="border border-copy-light px-3 py-2 text-left font-semibold">Lot/Batch No.
-                                    </th>
-                                    <th class="border border-copy-light px-3 py-2 text-center font-semibold">% Used</th>
-                                    <th class="border border-copy-light px-3 py-2 text-center font-semibold">Weight (g)
-                                    </th>
-                                    <th class="border border-copy-light px-3 py-2 text-left font-semibold">SDS/IFRA Ref.
-                                    </th>
-                                    <th class="border border-copy-light px-2 py-2 w-8"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(row, i) in form.ingredients" :key="i"
-                                    class="hover:bg-secondary-light transition">
-                                    <td class="border border-copy-light p-1">
-                                        <input v-model="row.ingredient" type="text" placeholder="e.g. Lavender EO"
-                                            class="w-full rounded border border-copy-light px-2 py-1 text-sm focus:border-copy focus:outline-none bg-foreground text-copy" />
-                                    </td>
-                                    <td class="border border-copy-light p-1">
-                                        <input v-model="row.supplier" type="text" placeholder="e.g. Nikura"
-                                            class="w-full rounded border border-copy-light px-2 py-1 text-sm focus:border-copy focus:outline-none bg-foreground text-copy" />
-                                    </td>
-                                    <td class="border border-copy-light p-1">
-                                        <input v-model="row.lot_batch_no" type="text" placeholder="001"
-                                            class="w-full rounded border border-copy-light px-2 py-1 text-sm font-mono focus:border-copy focus:outline-none bg-foreground text-copy" />
-                                    </td>
-                                    <td class="border border-copy-light p-1">
-                                        <input v-model="row.percent_used" type="text" placeholder="7.73"
-                                            class="w-full rounded border border-copy-light px-2 py-1 text-sm text-center focus:border-copy focus:outline-none bg-foreground text-copy" />
-                                    </td>
-                                    <td class="border border-copy-light p-1">
-                                        <input v-model="row.weight_g" type="text" placeholder="7.73"
-                                            class="w-full rounded border border-copy-light px-2 py-1 text-sm text-center focus:border-copy focus:outline-none bg-foreground text-copy" />
-                                    </td>
-                                    <td class="border border-copy-light p-1">
-                                        <input v-model="row.sds_ifra_ref" type="text" placeholder="—"
-                                            class="w-full rounded border border-copy-light px-2 py-1 text-sm focus:border-copy focus:outline-none bg-foreground text-copy" />
-                                    </td>
-                                    <td class="border border-copy-light p-1 text-center">
-                                        <button type="button" @click="removeRow(i)"
-                                            :disabled="form.ingredients.length <= 1"
-                                            class="text-error hover:text-red-800 transition disabled:opacity-30 text-xs font-bold px-1"
-                                            title="Remove row">✕</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <p v-if="form.errors.ingredients" class="err mt-2">{{ form.errors.ingredients }}</p>
+            <!-- Ingredients Table -->
+            <section class="adm-card">
+                <div
+                    style="
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        margin-bottom: 1rem;
+                        padding-bottom: 0.75rem;
+                        border-bottom: 1px dashed var(--adm-line);
+                    "
+                >
+                    <h2
+                        class="adm-card-title"
+                        style="border: none; padding: 0; margin: 0"
+                    >
+                        Ingredients Used
+                    </h2>
+                    <button
+                        type="button"
+                        @click="addRow"
+                        class="adm-btn adm-btn--ghost adm-btn--sm"
+                    >
+                        <Plus :size="13" :stroke-width="2.5" /> Add Row
+                    </button>
                 </div>
-            </div>
 
-            <!-- ── Compliance Checks ── -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                    <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">
-                        Compliance Checks
-                    </h3>
+                <div class="bs-ing-table-wrap">
+                    <table class="adm-table bs-ing-table">
+                        <thead>
+                            <tr class="adm-thead">
+                                <th class="adm-th">Ingredient</th>
+                                <th class="adm-th">Supplier</th>
+                                <th class="adm-th">Lot/Batch No.</th>
+                                <th class="adm-th">% Used</th>
+                                <th class="adm-th">Weight (g)</th>
+                                <th class="adm-th">SDS/IFRA Ref.</th>
+                                <th class="adm-th" style="width: 2rem"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr
+                                v-for="(row, i) in form.ingredients"
+                                :key="i"
+                                class="adm-row"
+                            >
+                                <td class="adm-td">
+                                    <input
+                                        v-model="row.ingredient"
+                                        type="text"
+                                        placeholder="e.g. Lavender EO"
+                                        class="bs-cell-input"
+                                    />
+                                </td>
+                                <td class="adm-td">
+                                    <input
+                                        v-model="row.supplier"
+                                        type="text"
+                                        placeholder="e.g. Nikura"
+                                        class="bs-cell-input"
+                                    />
+                                </td>
+                                <td class="adm-td">
+                                    <input
+                                        v-model="row.lot_batch_no"
+                                        type="text"
+                                        placeholder="001"
+                                        class="bs-cell-input adm-td--mono"
+                                    />
+                                </td>
+                                <td class="adm-td">
+                                    <input
+                                        v-model="row.percent_used"
+                                        type="text"
+                                        placeholder="7.73"
+                                        class="bs-cell-input"
+                                        style="text-align: center"
+                                    />
+                                </td>
+                                <td class="adm-td">
+                                    <input
+                                        v-model="row.weight_g"
+                                        type="text"
+                                        placeholder="7.73"
+                                        class="bs-cell-input"
+                                        style="text-align: center"
+                                    />
+                                </td>
+                                <td class="adm-td">
+                                    <input
+                                        v-model="row.sds_ifra_ref"
+                                        type="text"
+                                        placeholder="-"
+                                        class="bs-cell-input"
+                                    />
+                                </td>
+                                <td class="adm-td" style="text-align: center">
+                                    <button
+                                        type="button"
+                                        @click="removeRow(i)"
+                                        :disabled="form.ingredients.length <= 1"
+                                        class="adm-action adm-action--del"
+                                        title="Remove row"
+                                    >
+                                        <X :size="12" :stroke-width="2.5" />
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p
+                    v-if="form.errors.ingredients"
+                    class="adm-err"
+                    style="margin-top: 0.5rem"
+                >
+                    {{ form.errors.ingredients }}
+                </p>
+            </section>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                        <!-- IFRA checked -->
-                        <label class="flex items-start gap-3 cursor-pointer">
-                            <input type="checkbox" v-model="form.ifra_certificate_checked"
-                                class="mt-0.5 size-5 border-2 border-copy text-primary" />
-                            <div>
-                                <span class="block text-sm font-medium text-copy">IFRA Certificate Checked?</span>
-                                <span class="text-xs text-copy-light">Confirm IFRA compliance has been verified</span>
-                            </div>
-                        </label>
-
-                        <!-- CLP label -->
-                        <label class="flex items-start gap-3 cursor-pointer">
-                            <input type="checkbox" v-model="form.clp_label_prepared"
-                                class="mt-0.5 size-5 border-2 border-copy text-primary" />
-                            <div>
-                                <span class="block text-sm font-medium text-copy">CLP Label Prepared?</span>
-                                <span class="text-xs text-copy-light">Confirm CLP label has been generated</span>
-                            </div>
-                        </label>
-
-                        <!-- Max % allowed -->
-                        <div>
-                            <label class="form-label">Max % Allowed</label>
-                            <input v-model="form.max_percent_allowed" type="text" placeholder="e.g. Not limited"
-                                class="field" />
-                        </div>
-
-                        <!-- SDS hazards noted -->
-                        <div>
-                            <label class="form-label">SDS Hazards Noted</label>
-                            <input v-model="form.sds_hazards_noted" type="text" placeholder="e.g. H317, H410"
-                                class="field" />
-                        </div>
+            <!-- Compliance Checks -->
+            <section class="adm-card">
+                <h2 class="adm-card-title">Compliance Checks</h2>
+                <div
+                    class="adm-field-row"
+                    style="grid-template-columns: repeat(2, 1fr)"
+                >
+                    <label
+                        class="adm-check-item"
+                        style="align-items: flex-start"
+                    >
+                        <input
+                            type="checkbox"
+                            v-model="form.ifra_certificate_checked"
+                            class="adm-checkbox"
+                            style="margin-top: 0.15rem"
+                        />
+                        <span>
+                            <span
+                                style="
+                                    display: block;
+                                    color: var(--adm-ink);
+                                    font-weight: 500;
+                                "
+                                >IFRA Certificate Checked?</span
+                            >
+                            <span class="adm-field-note"
+                                >Confirm IFRA compliance has been verified</span
+                            >
+                        </span>
+                    </label>
+                    <label
+                        class="adm-check-item"
+                        style="align-items: flex-start"
+                    >
+                        <input
+                            type="checkbox"
+                            v-model="form.clp_label_prepared"
+                            class="adm-checkbox"
+                            style="margin-top: 0.15rem"
+                        />
+                        <span>
+                            <span
+                                style="
+                                    display: block;
+                                    color: var(--adm-ink);
+                                    font-weight: 500;
+                                "
+                                >CLP Label Prepared?</span
+                            >
+                            <span class="adm-field-note"
+                                >Confirm CLP label has been generated</span
+                            >
+                        </span>
+                    </label>
+                    <div class="adm-field">
+                        <label class="adm-label">Max % Allowed</label>
+                        <input
+                            v-model="form.max_percent_allowed"
+                            type="text"
+                            placeholder="e.g. Not limited"
+                            class="adm-input"
+                        />
+                    </div>
+                    <div class="adm-field">
+                        <label class="adm-label">SDS Hazards Noted</label>
+                        <input
+                            v-model="form.sds_hazards_noted"
+                            type="text"
+                            placeholder="e.g. H317, H410"
+                            class="adm-input"
+                        />
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- ── Notes & Observations ── -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                    <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">
-                        Notes &amp; Observations
-                    </h3>
-                    <textarea v-model="form.notes" rows="5"
-                        placeholder="Record any observations about scent throw, performance, or quality notes…"
-                        class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-copy focus:outline-none shadow-sm resize-y"></textarea>
-                </div>
-            </div>
+            <!-- Notes -->
+            <section class="adm-card">
+                <h2 class="adm-card-title">Notes &amp; Observations</h2>
+                <textarea
+                    v-model="form.notes"
+                    rows="5"
+                    placeholder="Record any observations about scent throw, performance, or quality notes..."
+                    class="adm-textarea"
+                ></textarea>
+            </section>
 
-            <!-- ── Submit ── -->
-            <div class="flex gap-3">
-                <button type="submit" :disabled="form.processing"
-                    class="rounded-lg border-2 border-copy px-8 py-3 font-bold text-lg transition disabled:opacity-50"
-                    style="background-color: var(--primary); color: var(--primary-content);">
-                    {{ form.processing ? 'Saving…' : (isEditing ? 'Update Batch Sheet' : 'Save Batch Sheet') }}
+            <!-- Submit -->
+            <div style="display: flex; gap: 0.75rem">
+                <button
+                    type="submit"
+                    :disabled="form.processing"
+                    class="adm-btn adm-btn--primary"
+                >
+                    {{
+                        form.processing
+                            ? 'Saving...'
+                            : isEditing
+                              ? 'Update Batch Sheet'
+                              : 'Save Batch Sheet'
+                    }}
                 </button>
-                <a :href="route('admin.batch-sheets.index')"
-                    class="rounded-lg border-2 border-copy px-6 py-3 font-bold text-sm text-copy-light hover:text-copy hover:bg-secondary-light transition">
-                    Cancel
-                </a>
+                <Link
+                    :href="route('admin.batch-sheets.index')"
+                    class="adm-btn adm-btn--ghost"
+                    >Cancel</Link
+                >
             </div>
-
         </form>
     </AdminLayout>
 </template>
 
 <style scoped>
-.form-label {
-    display: block;
-    font-size: 0.6875rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #6b7280;
-    margin-bottom: 4px;
+.bs-ing-table-wrap {
+    overflow-x: auto;
 }
 
-.field {
-    display: block;
+.bs-ing-table {
+    min-width: 640px;
+}
+
+.bs-cell-input {
     width: 100%;
-    font-size: 0.8125rem;
-    color: #111827;
-    background: white;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    padding: 6px 10px;
+    padding: 0.3rem 0.4rem;
+    border: 1px solid transparent;
+    border-radius: var(--adm-radius-sm);
+    background: transparent;
+    color: var(--adm-ink);
+    font-family: var(--adm-font);
+    font-size: 0.82rem;
     outline: none;
-    transition: border-color 0.15s;
+    transition:
+        border-color 0.15s,
+        background 0.15s;
 }
 
-.field:focus {
-    border-color: #374151;
+.bs-cell-input:hover {
+    background: var(--adm-paper);
 }
 
-.err {
-    font-size: 0.75rem;
-    color: #b91c1c;
-    margin-top: 2px;
+.bs-cell-input:focus {
+    background: var(--adm-paper-raised);
+    border-color: var(--adm-stamp);
+}
+
+.bs-cell-input::placeholder {
+    color: var(--adm-ink-faint);
 }
 </style>

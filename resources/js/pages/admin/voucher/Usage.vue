@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import { Receipt } from 'lucide-vue-next';
 
 interface Voucher {
     id: number;
@@ -20,7 +21,12 @@ interface Usage {
     ip_address: string | null;
     guest_email: string | null;
     user: { id: number; name: string; email: string } | null;
-    order: { id: number; status: string; grand_total: string; created_at: string } | null;
+    order: {
+        id: number;
+        status: string;
+        grand_total: string;
+        created_at: string;
+    } | null;
 }
 
 interface Paginated<T> {
@@ -42,92 +48,199 @@ function fmt(val: string) {
 
 <template>
     <AdminLayout>
+        <Head :title="`Usage Log: ${voucher.code} : Admin`" />
 
-        <Head :title="`Usage Log: ${voucher.code}`" />
-
-        <div class="mb-6 flex items-center justify-between border-b-2 border-copy pb-2">
+        <!-- Header -->
+        <div class="adm-header">
             <div>
-                <h2 class="text-3xl font-black">Usage Log: <span class="font-mono text-primary">{{ voucher.code
-                }}</span></h2>
-                <p class="text-copy-light mt-1">
-                    {{ usages.total }} use{{ usages.total !== 1 ? 's' : '' }} recorded
-                    <span v-if="voucher.max_uses !== null"> · {{ voucher.uses_count }}/{{ voucher.max_uses }} total
-                        uses</span>
+                <div class="adm-breadcrumb">
+                    <Link
+                        :href="route('admin.vouchers.index')"
+                        class="adm-breadcrumb a"
+                        >Vouchers</Link
+                    >
+                    <span class="adm-breadcrumb-sep">/</span>
+                    <span>Usage log</span>
+                </div>
+                <h1 class="adm-title">
+                    <span
+                        class="adm-td--mono"
+                        style="color: var(--adm-stamp-deep)"
+                        >{{ voucher.code }}</span
+                    >
+                </h1>
+                <p class="adm-sub">
+                    {{ usages.total }} use{{
+                        usages.total !== 1 ? 's' : ''
+                    }}
+                    recorded
+                    <span v-if="voucher.max_uses !== null">
+                        &middot; {{ voucher.uses_count }}/{{
+                            voucher.max_uses
+                        }}
+                        total uses</span
+                    >
                 </p>
             </div>
-            <a :href="route('admin.vouchers.index')"
-                class="rounded-lg border-2 border-copy px-4 py-2 text-sm font-medium text-copy-light hover:text-copy hover:bg-secondary-light transition">
-                ← Back to vouchers
-            </a>
+            <Link
+                :href="route('admin.vouchers.index')"
+                class="adm-btn adm-btn--ghost adm-btn--sm"
+                >Back to vouchers</Link
+            >
         </div>
 
-        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
-                <table class="w-full text-sm">
+        <div class="adm-card adm-card--flush">
+            <div
+                v-if="usages.data.length"
+                class="adm-table-wrap"
+                style="display: block"
+            >
+                <table class="adm-table">
                     <thead>
-                        <tr
-                            class="border-b-2 border-copy-light text-left text-xs uppercase tracking-wider text-copy-light">
-                            <th class="px-4 py-3">Date</th>
-                            <th class="px-4 py-3">Customer</th>
-                            <th class="px-4 py-3">Order</th>
-                            <th class="px-4 py-3">Before</th>
-                            <th class="px-4 py-3">Discount</th>
-                            <th class="px-4 py-3">After</th>
-                            <th class="px-4 py-3">IP</th>
+                        <tr class="adm-thead">
+                            <th class="adm-th">Date</th>
+                            <th class="adm-th">Customer</th>
+                            <th class="adm-th">Order</th>
+                            <th class="adm-th">Before</th>
+                            <th class="adm-th">Discount</th>
+                            <th class="adm-th">After</th>
+                            <th class="adm-th">IP</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-if="usages.data.length === 0">
-                            <td colspan="7" class="px-4 py-8 text-center text-copy-light italic">
-                                No usages recorded yet.
-                            </td>
-                        </tr>
-                        <tr v-for="u in usages.data" :key="u.id"
-                            class="border-b border-copy-light last:border-b-0 hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 text-xs text-copy-light whitespace-nowrap">
-                                {{ new Date(u.created_at).toLocaleString('en-GB', {
-                                    dateStyle: 'short', timeStyle:
-                                        'short'
-                                }) }}
+                        <tr
+                            v-for="u in usages.data"
+                            :key="u.id"
+                            class="adm-row"
+                        >
+                            <td
+                                class="adm-td"
+                                style="
+                                    color: var(--adm-ink-dim);
+                                    font-size: 0.78rem;
+                                    white-space: nowrap;
+                                "
+                            >
+                                {{
+                                    new Date(u.created_at).toLocaleString(
+                                        'en-GB',
+                                        {
+                                            dateStyle: 'short',
+                                            timeStyle: 'short',
+                                        },
+                                    )
+                                }}
                             </td>
 
-                            <td class="px-4 py-3">
+                            <td class="adm-td">
                                 <template v-if="u.user">
-                                    <span class="font-medium text-copy">{{ u.user.name }}</span>
-                                    <p class="text-xs text-copy-light">{{ u.user.email }}</p>
+                                    <span
+                                        style="
+                                            font-weight: 500;
+                                            color: var(--adm-ink);
+                                        "
+                                        >{{ u.user.name }}</span
+                                    >
+                                    <p class="adm-sub">{{ u.user.email }}</p>
                                 </template>
                                 <template v-else-if="u.guest_email">
-                                    <span class="text-copy">{{ u.guest_email }}</span>
-                                    <p class="text-xs text-copy-light">Guest</p>
+                                    <span style="color: var(--adm-ink)">{{
+                                        u.guest_email
+                                    }}</span>
+                                    <p class="adm-sub">Guest</p>
                                 </template>
-                                <span v-else class="text-copy-light italic text-xs">Unknown</span>
+                                <span
+                                    v-else
+                                    style="
+                                        font-style: italic;
+                                        color: var(--adm-ink-dim);
+                                        font-size: 0.8rem;
+                                    "
+                                    >Unknown</span
+                                >
                             </td>
 
-                            <td class="px-4 py-3">
+                            <td class="adm-td">
                                 <template v-if="u.order">
-                                    <span class="font-mono font-medium text-copy">#{{ u.order.id }}</span>
-                                    <p class="text-xs text-copy-light capitalize">{{ u.order.status }}</p>
+                                    <span
+                                        class="adm-td--mono"
+                                        style="
+                                            font-weight: 600;
+                                            color: var(--adm-ink);
+                                        "
+                                        >#{{ u.order.id }}</span
+                                    >
+                                    <p
+                                        class="adm-sub"
+                                        style="text-transform: capitalize"
+                                    >
+                                        {{ u.order.status }}
+                                    </p>
                                 </template>
-                                <span v-else class="text-copy-light italic text-xs">—</span>
+                                <span
+                                    v-else
+                                    style="
+                                        font-style: italic;
+                                        color: var(--adm-ink-dim);
+                                        font-size: 0.8rem;
+                                    "
+                                    >-</span
+                                >
                             </td>
 
-                            <td class="px-4 py-3 text-copy">{{ fmt(u.order_total_before) }}</td>
-                            <td class="px-4 py-3 font-bold text-green-700">-{{ fmt(u.discount_applied) }}</td>
-                            <td class="px-4 py-3 font-bold text-copy">{{ fmt(u.order_total_after) }}</td>
-                            <td class="px-4 py-3 text-xs text-copy-light font-mono">{{ u.ip_address ?? '—' }}</td>
+                            <td class="adm-td">
+                                {{ fmt(u.order_total_before) }}
+                            </td>
+                            <td
+                                class="adm-td"
+                                style="
+                                    font-weight: 700;
+                                    color: var(--adm-success);
+                                "
+                            >
+                                -{{ fmt(u.discount_applied) }}
+                            </td>
+                            <td class="adm-td adm-td--price">
+                                {{ fmt(u.order_total_after) }}
+                            </td>
+                            <td class="adm-td adm-td--mono">
+                                {{ u.ip_address ?? '-' }}
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <div v-else class="adm-empty">
+                <div class="adm-empty-icon">
+                    <Receipt :size="28" :stroke-width="1.5" />
+                </div>
+                <p class="adm-empty-title">No usages recorded yet</p>
+                <p class="adm-empty-sub">
+                    Uses of this voucher will appear here.
+                </p>
+            </div>
         </div>
 
         <!-- Pagination -->
-        <div v-if="usages.last_page > 1" class="mt-4 flex justify-center gap-2">
-            <a v-for="page in usages.last_page" :key="page"
-                :href="route('admin.vouchers.usage', { voucher: voucher.id, page })"
-                class="rounded border px-3 py-1 text-sm transition" :class="page === usages.current_page
-                    ? 'border-copy bg-copy text-foreground font-bold'
-                    : 'border-copy-light text-copy-light hover:border-copy hover:text-copy'">{{ page }}</a>
+        <div v-if="usages.last_page > 1" class="adm-pagination">
+            <div class="adm-page-btns">
+                <a
+                    v-for="page in usages.last_page"
+                    :key="page"
+                    :href="
+                        route('admin.vouchers.usage', {
+                            voucher: voucher.id,
+                            page,
+                        })
+                    "
+                    class="adm-page-btn"
+                    :class="{
+                        'adm-page-btn--active': page === usages.current_page,
+                    }"
+                    >{{ page }}</a
+                >
+            </div>
         </div>
     </AdminLayout>
 </template>

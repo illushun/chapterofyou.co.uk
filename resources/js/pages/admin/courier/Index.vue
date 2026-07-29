@@ -23,7 +23,11 @@ const props = defineProps<{
 }>();
 
 const confirmDelete = (courier: Courier) => {
-    if (confirm(`Are you sure you want to delete the courier: ${courier.name}? This action cannot be undone.`)) {
+    if (
+        confirm(
+            `Are you sure you want to delete the courier: ${courier.name}? This action cannot be undone.`,
+        )
+    ) {
         router.delete(route('admin.couriers.destroy', courier.id), {
             preserveScroll: true,
         });
@@ -52,26 +56,43 @@ const paginate = (url: string | null) => {
 
 <template>
     <AdminLayout>
-        <component :is="'link'"
+        <component
+            :is="'link'"
             href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap"
-            rel="stylesheet" />
+            rel="stylesheet"
+        />
 
         <Head title="Manage Couriers" />
 
         <div class="ci-wrap">
-
             <!-- Page Header -->
             <div class="ci-header">
                 <div>
                     <h1 class="ci-title">Couriers</h1>
-                    <p class="ci-sub">Manage shipping providers and their rates. {{ couriers.data.length }} couriers
-                        shown.</p>
+                    <p class="ci-sub">
+                        Manage shipping providers and their rates.
+                        {{ couriers.data.length }} couriers shown.
+                    </p>
                 </div>
-                <Link :href="route('admin.couriers.create')" class="ci-btn-primary">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                </svg>
-                Add Courier
+                <Link
+                    :href="route('admin.couriers.create')"
+                    class="ci-btn-primary"
+                >
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 14 14"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M7 1v12M1 7h12"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                        />
+                    </svg>
+                    Add Courier
                 </Link>
             </div>
 
@@ -91,36 +112,83 @@ const paginate = (url: string | null) => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="courier in couriers.data" :key="courier.id">
+                            <tr
+                                v-for="courier in couriers.data"
+                                :key="courier.id"
+                            >
                                 <td class="ci-td-id">{{ courier.id }}</td>
                                 <td class="ci-td-name">{{ courier.name }}</td>
                                 <td>
-                                    <span class="ci-badge ci-badge--type">{{ courier.type }}</span>
+                                    <span class="ci-badge ci-badge--type">{{
+                                        courier.type
+                                    }}</span>
                                 </td>
-                                <td class="ci-td-cost">{{ formatCurrency(courier.cost) }}</td>
+                                <td class="ci-td-cost">
+                                    {{ formatCurrency(courier.cost) }}
+                                </td>
                                 <td>
                                     <span
-                                        :class="['ci-badge', courier.status === 'enabled' ? 'ci-badge--on' : 'ci-badge--off']">
-                                        {{ courier.status === 'enabled' ? 'Active' : 'Inactive' }}
+                                        :class="[
+                                            'ci-badge',
+                                            courier.status === 'enabled'
+                                                ? 'ci-badge--on'
+                                                : 'ci-badge--off',
+                                        ]"
+                                    >
+                                        {{
+                                            courier.status === 'enabled'
+                                                ? 'Active'
+                                                : 'Inactive'
+                                        }}
                                     </span>
                                 </td>
-                                <td class="ci-td-date">{{ formatDate(courier.created_at) }}</td>
+                                <td class="ci-td-date">
+                                    {{ formatDate(courier.created_at) }}
+                                </td>
                                 <td class="ci-td-actions">
-                                    <Link :href="route('admin.couriers.edit', courier.id)"
-                                        class="ci-action-btn ci-action-btn--edit">
-                                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M9.5 1.5a1.414 1.414 0 0 1 2 2L4 11H1.5V8.5L9.5 1.5Z"
-                                            stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" />
-                                    </svg>
-                                    Edit
+                                    <Link
+                                        :href="
+                                            route(
+                                                'admin.couriers.edit',
+                                                courier.id,
+                                            )
+                                        "
+                                        class="ci-action-btn ci-action-btn--edit"
+                                    >
+                                        <svg
+                                            width="13"
+                                            height="13"
+                                            viewBox="0 0 13 13"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                d="M9.5 1.5a1.414 1.414 0 0 1 2 2L4 11H1.5V8.5L9.5 1.5Z"
+                                                stroke="currentColor"
+                                                stroke-width="1.4"
+                                                stroke-linejoin="round"
+                                            />
+                                        </svg>
+                                        Edit
                                     </Link>
-                                    <button @click="confirmDelete(courier)" class="ci-action-btn ci-action-btn--delete">
-                                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M2 3.5h9M5 3.5V2h3v1.5M5.5 6v3.5M7.5 6v3.5M3 3.5l.5 7h6l.5-7"
-                                                stroke="currentColor" stroke-width="1.4" stroke-linecap="round"
-                                                stroke-linejoin="round" />
+                                    <button
+                                        @click="confirmDelete(courier)"
+                                        class="ci-action-btn ci-action-btn--delete"
+                                    >
+                                        <svg
+                                            width="13"
+                                            height="13"
+                                            viewBox="0 0 13 13"
+                                            fill="none"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                        >
+                                            <path
+                                                d="M2 3.5h9M5 3.5V2h3v1.5M5.5 6v3.5M7.5 6v3.5M3 3.5l.5 7h6l.5-7"
+                                                stroke="currentColor"
+                                                stroke-width="1.4"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            />
                                         </svg>
                                         Delete
                                     </button>
@@ -132,38 +200,67 @@ const paginate = (url: string | null) => {
 
                 <!-- Mobile Cards -->
                 <div class="ci-mobile-list">
-                    <div v-for="courier in couriers.data" :key="courier.id" class="ci-mobile-card">
+                    <div
+                        v-for="courier in couriers.data"
+                        :key="courier.id"
+                        class="ci-mobile-card"
+                    >
                         <div class="ci-mobile-card__header">
                             <div>
-                                <span class="ci-mobile-card__id">#{{ courier.id }}</span>
-                                <span class="ci-mobile-card__name">{{ courier.name }}</span>
+                                <span class="ci-mobile-card__id"
+                                    >#{{ courier.id }}</span
+                                >
+                                <span class="ci-mobile-card__name">{{
+                                    courier.name
+                                }}</span>
                             </div>
                             <span
-                                :class="['ci-badge', courier.status === 'enabled' ? 'ci-badge--on' : 'ci-badge--off']">
-                                {{ courier.status === 'enabled' ? 'Active' : 'Inactive' }}
+                                :class="[
+                                    'ci-badge',
+                                    courier.status === 'enabled'
+                                        ? 'ci-badge--on'
+                                        : 'ci-badge--off',
+                                ]"
+                            >
+                                {{
+                                    courier.status === 'enabled'
+                                        ? 'Active'
+                                        : 'Inactive'
+                                }}
                             </span>
                         </div>
                         <div class="ci-mobile-card__body">
                             <div class="ci-mobile-card__row">
                                 <span class="ci-mobile-card__label">Type</span>
-                                <span class="ci-badge ci-badge--type">{{ courier.type }}</span>
+                                <span class="ci-badge ci-badge--type">{{
+                                    courier.type
+                                }}</span>
                             </div>
                             <div class="ci-mobile-card__row">
                                 <span class="ci-mobile-card__label">Cost</span>
-                                <span class="ci-mobile-card__value ci-mobile-card__value--bold">{{
-                                    formatCurrency(courier.cost) }}</span>
+                                <span
+                                    class="ci-mobile-card__value ci-mobile-card__value--bold"
+                                    >{{ formatCurrency(courier.cost) }}</span
+                                >
                             </div>
                             <div class="ci-mobile-card__row">
                                 <span class="ci-mobile-card__label">Added</span>
-                                <span class="ci-mobile-card__value">{{ formatDate(courier.created_at) }}</span>
+                                <span class="ci-mobile-card__value">{{
+                                    formatDate(courier.created_at)
+                                }}</span>
                             </div>
                         </div>
                         <div class="ci-mobile-card__footer">
-                            <Link :href="route('admin.couriers.edit', courier.id)"
-                                class="ci-action-btn ci-action-btn--edit">
-                            Edit
+                            <Link
+                                :href="route('admin.couriers.edit', courier.id)"
+                                class="ci-action-btn ci-action-btn--edit"
+                            >
+                                Edit
                             </Link>
-                            <button @click="confirmDelete(courier)" class="ci-action-btn ci-action-btn--delete">
+                            <button
+                                @click="confirmDelete(courier)"
+                                class="ci-action-btn ci-action-btn--delete"
+                            >
                                 Delete
                             </button>
                         </div>
@@ -173,51 +270,73 @@ const paginate = (url: string | null) => {
                 <!-- Pagination -->
                 <div v-if="couriers.last_page > 1" class="ci-pagination">
                     <span class="ci-pagination__info">
-                        Page {{couriers.links.find(l => l.active)?.label}} of {{ couriers.last_page }}
+                        Page
+                        {{ couriers.links.find((l) => l.active)?.label }} of
+                        {{ couriers.last_page }}
                     </span>
                     <div class="ci-pagination__btns">
-                        <button v-for="link in couriers.links" :key="link.label" @click.prevent="paginate(link.url)"
-                            :disabled="!link.url" :class="['ci-page-btn', { 'ci-page-btn--active': link.active }]"
-                            v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')" />
+                        <button
+                            v-for="link in couriers.links"
+                            :key="link.label"
+                            @click.prevent="paginate(link.url)"
+                            :disabled="!link.url"
+                            :class="[
+                                'ci-page-btn',
+                                { 'ci-page-btn--active': link.active },
+                            ]"
+                            v-html="
+                                link.label
+                                    .replace('&laquo; Previous', '←')
+                                    .replace('Next &raquo;', '→')
+                            "
+                        />
                     </div>
                 </div>
             </div>
 
             <!-- Empty State -->
             <div v-else class="ci-empty">
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="6" y="12" width="28" height="20" rx="3" stroke="var(--bb-muted)" stroke-width="1.8" />
-                    <path d="M6 18h28M14 12V8a6 6 0 0 1 12 0v4" stroke="var(--bb-muted)" stroke-width="1.8"
-                        stroke-linecap="round" />
+                <svg
+                    width="40"
+                    height="40"
+                    viewBox="0 0 40 40"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+                    <rect
+                        x="6"
+                        y="12"
+                        width="28"
+                        height="20"
+                        rx="3"
+                        stroke="var(--adm-ink-dim)"
+                        stroke-width="1.8"
+                    />
+                    <path
+                        d="M6 18h28M14 12V8a6 6 0 0 1 12 0v4"
+                        stroke="var(--adm-ink-dim)"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                    />
                 </svg>
                 <p class="ci-empty__title">No couriers found</p>
-                <p class="ci-empty__sub">Add your first courier to get started.</p>
-                <Link :href="route('admin.couriers.create')" class="ci-btn-primary">+ Add Courier</Link>
+                <p class="ci-empty__sub">
+                    Add your first courier to get started.
+                </p>
+                <Link
+                    :href="route('admin.couriers.create')"
+                    class="ci-btn-primary"
+                    >+ Add Courier</Link
+                >
             </div>
-
         </div>
     </AdminLayout>
 </template>
 
 <style scoped>
 .ci-wrap {
-    --bb-navy: #1a1a2e;
-    --bb-cream: #faf9f7;
-    --bb-surface: #ffffff;
-    --bb-border: #ece8e2;
-    --bb-text: #1a1a2e;
-    --bb-muted: #7a7a9a;
-    --bb-red: #e05c6e;
-    --bb-red-bg: #fdeef0;
-    --bb-green: #4caf7d;
-    --bb-green-bg: #eef7f2;
-    --bb-lav: #c9b8f0;
-    --bb-lav-d: #9b84d4;
-    --bb-peach: #f5d5b8;
-    --bb-peach-d: #c8820a;
-
-    font-family: 'DM Sans', sans-serif;
-    color: var(--bb-text);
+    font-family: var(--adm-font);
+    color: var(--adm-ink);
     padding: 0.25rem 0;
 }
 
@@ -231,15 +350,17 @@ const paginate = (url: string | null) => {
 }
 
 .ci-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-family: var(--adm-display);
+    font-style: italic;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
     margin: 0 0 0.25rem;
 }
 
 .ci-sub {
     font-size: 0.85rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin: 0;
 }
 
@@ -247,17 +368,19 @@ const paginate = (url: string | null) => {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    background: var(--bb-navy);
-    color: #fff;
+    background: var(--adm-charcoal);
+    color: var(--adm-paper-raised);
     border: none;
     border-radius: 8px;
     padding: 0.6rem 1.1rem;
     font-size: 0.85rem;
     font-weight: 600;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
     text-decoration: none;
     cursor: pointer;
-    transition: opacity 0.15s, transform 0.15s;
+    transition:
+        opacity 0.15s,
+        transform 0.15s;
     white-space: nowrap;
 }
 
@@ -268,9 +391,9 @@ const paginate = (url: string | null) => {
 
 /* ── Table (desktop) ── */
 .ci-table-wrap {
-    background: var(--bb-surface);
+    background: var(--adm-paper-raised);
     border-radius: 14px;
-    border: 1px solid var(--bb-border);
+    border: 1px solid var(--adm-line);
     box-shadow: 0 1px 6px rgba(26, 26, 46, 0.05);
     overflow: hidden;
 }
@@ -282,8 +405,8 @@ const paginate = (url: string | null) => {
 }
 
 .ci-table thead {
-    background: var(--bb-cream);
-    border-bottom: 1px solid var(--bb-border);
+    background: var(--adm-paper);
+    border-bottom: 1px solid var(--adm-line);
 }
 
 .ci-table th {
@@ -292,12 +415,12 @@ const paginate = (url: string | null) => {
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     text-align: left;
 }
 
 .ci-table tbody tr {
-    border-bottom: 1px solid var(--bb-border);
+    border-bottom: 1px solid var(--adm-line);
     transition: background 0.12s;
 }
 
@@ -306,7 +429,7 @@ const paginate = (url: string | null) => {
 }
 
 .ci-table tbody tr:hover {
-    background: #fdfcfb;
+    background: var(--adm-paper);
 }
 
 .ci-table td {
@@ -316,7 +439,7 @@ const paginate = (url: string | null) => {
 
 .ci-td-id {
     font-weight: 600;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-size: 0.82rem;
 }
 
@@ -329,7 +452,7 @@ const paginate = (url: string | null) => {
 }
 
 .ci-td-date {
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-size: 0.83rem;
 }
 
@@ -350,19 +473,19 @@ const paginate = (url: string | null) => {
 }
 
 .ci-badge--on {
-    background: var(--bb-green-bg);
-    color: #2a7a50;
+    background: var(--adm-success-bg);
+    color: var(--adm-success);
 }
 
 .ci-badge--off {
-    background: var(--bb-red-bg);
-    color: var(--bb-red);
+    background: var(--adm-danger-bg);
+    color: var(--adm-danger);
 }
 
 .ci-badge--type {
-    background: #f8f6ff;
-    color: var(--bb-lav-d);
-    border: 1px solid var(--bb-lav);
+    background: var(--adm-stamp-dim);
+    color: var(--adm-stamp-deep);
+    border: 1px solid var(--adm-stamp-dim);
 }
 
 /* ── Action buttons ── */
@@ -374,41 +497,44 @@ const paginate = (url: string | null) => {
     border-radius: 6px;
     font-size: 0.78rem;
     font-weight: 600;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
     border: 1px solid transparent;
     background: transparent;
     cursor: pointer;
     text-decoration: none;
-    transition: background 0.13s, color 0.13s, border-color 0.13s;
-    color: var(--bb-muted);
+    transition:
+        background 0.13s,
+        color 0.13s,
+        border-color 0.13s;
+    color: var(--adm-ink-dim);
     margin-left: 0.2rem;
 }
 
 .ci-action-btn--edit:hover {
-    background: var(--bb-cream);
-    border-color: var(--bb-border);
-    color: var(--bb-text);
+    background: var(--adm-paper);
+    border-color: var(--adm-line);
+    color: var(--adm-ink);
 }
 
 .ci-action-btn--delete:hover {
-    background: var(--bb-red-bg);
-    border-color: var(--bb-red);
-    color: var(--bb-red);
+    background: var(--adm-danger-bg);
+    border-color: var(--adm-danger);
+    color: var(--adm-danger);
 }
 
 /* ── Mobile cards ── */
 .ci-mobile-list {
     display: none;
-    background: var(--bb-surface);
+    background: var(--adm-paper-raised);
     border-radius: 14px;
-    border: 1px solid var(--bb-border);
+    border: 1px solid var(--adm-line);
     box-shadow: 0 1px 6px rgba(26, 26, 46, 0.05);
     overflow: hidden;
 }
 
 .ci-mobile-card {
     padding: 1rem;
-    border-bottom: 1px solid var(--bb-border);
+    border-bottom: 1px solid var(--adm-line);
 }
 
 .ci-mobile-card:last-child {
@@ -425,7 +551,7 @@ const paginate = (url: string | null) => {
 
 .ci-mobile-card__id {
     font-size: 0.75rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-weight: 600;
     margin-right: 0.4rem;
 }
@@ -454,12 +580,12 @@ const paginate = (url: string | null) => {
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .ci-mobile-card__value {
     font-size: 0.88rem;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .ci-mobile-card__value--bold {
@@ -470,7 +596,7 @@ const paginate = (url: string | null) => {
     display: flex;
     gap: 0.5rem;
     padding-top: 0.5rem;
-    border-top: 1px solid var(--bb-border);
+    border-top: 1px solid var(--adm-line);
 }
 
 /* ── Pagination ── */
@@ -479,12 +605,12 @@ const paginate = (url: string | null) => {
     align-items: center;
     justify-content: space-between;
     padding: 1.1rem 1.25rem;
-    background: var(--bb-surface);
+    background: var(--adm-paper-raised);
     border-radius: 14px;
-    border: 1px solid var(--bb-border);
+    border: 1px solid var(--adm-line);
     margin-top: 1rem;
     font-size: 0.83rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-weight: 500;
 }
 
@@ -500,25 +626,27 @@ const paginate = (url: string | null) => {
     align-items: center;
     justify-content: center;
     border-radius: 8px;
-    border: 1px solid var(--bb-border);
-    background: var(--bb-surface);
-    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--adm-line);
+    background: var(--adm-paper-raised);
+    font-family: var(--adm-font);
     font-size: 0.83rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.12s, color 0.12s;
-    color: var(--bb-text);
+    transition:
+        background 0.12s,
+        color 0.12s;
+    color: var(--adm-ink);
     padding: 0 0.5rem;
 }
 
 .ci-page-btn:hover:not(:disabled) {
-    background: var(--bb-cream);
+    background: var(--adm-paper);
 }
 
 .ci-page-btn--active {
-    background: var(--bb-navy);
-    color: #fff;
-    border-color: var(--bb-navy);
+    background: var(--adm-charcoal);
+    color: var(--adm-paper-raised);
+    border-color: var(--adm-charcoal);
     font-weight: 700;
 }
 
@@ -535,9 +663,9 @@ const paginate = (url: string | null) => {
     justify-content: center;
     gap: 0.6rem;
     padding: 3.5rem 2rem;
-    background: var(--bb-surface);
+    background: var(--adm-paper-raised);
     border-radius: 14px;
-    border: 2px dashed var(--bb-border);
+    border: 2px dashed var(--adm-line);
     text-align: center;
 }
 
@@ -549,7 +677,7 @@ const paginate = (url: string | null) => {
 
 .ci-empty__sub {
     font-size: 0.85rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin: 0 0 0.5rem;
 }
 

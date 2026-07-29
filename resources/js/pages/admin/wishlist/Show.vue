@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import { Heart } from 'lucide-vue-next';
 
 interface WishlistItem {
     wishlist_id: number;
@@ -31,52 +32,98 @@ const fmt = (v: number | string) => {
 
 <template>
     <AdminLayout>
+        <Head :title="`${user.name}'s Wishlist : Admin`" />
 
-        <Head :title="`Wishlist: ${user.name}`" />
-
-        <div class="mb-6 flex items-center justify-between border-b-2 border-copy pb-2">
+        <!-- Header -->
+        <div class="adm-header">
             <div>
-                <h2 class="text-3xl font-black">{{ user.name }}'s Wishlist</h2>
-                <p class="text-copy-light mt-1">{{ user.email }} &nbsp;·&nbsp; {{ items.length }} item{{ items.length
-                    !== 1 ? 's' : '' }}</p>
+                <div class="adm-breadcrumb">
+                    <Link
+                        :href="route('admin.wishlists.index')"
+                        class="adm-breadcrumb a"
+                        >Wishlists</Link
+                    >
+                    <span class="adm-breadcrumb-sep">/</span>
+                    <span>{{ user.name }}</span>
+                </div>
+                <h1 class="adm-title">{{ user.name }}'s Wishlist</h1>
+                <p class="adm-sub">
+                    {{ user.email }} &middot; {{ items.length }} item{{
+                        items.length !== 1 ? 's' : ''
+                    }}
+                </p>
             </div>
-            <a :href="route('admin.wishlists.index')"
-                class="rounded-lg border-2 border-copy px-4 py-2 text-sm font-medium text-copy-light hover:text-copy hover:bg-secondary-light transition">
-                ← All wishlists
-            </a>
+            <Link
+                :href="route('admin.wishlists.index')"
+                class="adm-btn adm-btn--ghost adm-btn--sm"
+            >
+                All wishlists
+            </Link>
         </div>
 
-        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
-                <table class="w-full text-sm">
+        <div class="adm-card adm-card--flush">
+            <div class="adm-table-wrap" style="display: block">
+                <table class="adm-table">
                     <thead>
-                        <tr
-                            class="border-b-2 border-copy-light text-left text-xs uppercase tracking-wider text-copy-light">
-                            <th class="px-4 py-3 font-medium">Product</th>
-                            <th class="px-4 py-3 font-medium">MPN</th>
-                            <th class="px-4 py-3 font-medium">Price</th>
-                            <th class="px-4 py-3 font-medium">Stock</th>
-                            <th class="px-4 py-3 font-medium">Saved</th>
+                        <tr class="adm-thead">
+                            <th class="adm-th">Product</th>
+                            <th class="adm-th">MPN</th>
+                            <th class="adm-th">Price</th>
+                            <th class="adm-th">Stock</th>
+                            <th class="adm-th">Saved</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr v-if="items.length === 0">
-                            <td colspan="5" class="px-4 py-8 text-center text-copy-light italic">
-                                This user has no wishlist items.
+                            <td colspan="5" style="padding: 0">
+                                <div class="adm-empty">
+                                    <div class="adm-empty-icon">
+                                        <Heart :size="28" :stroke-width="1.5" />
+                                    </div>
+                                    <p class="adm-empty-title">
+                                        No wishlist items
+                                    </p>
+                                    <p class="adm-empty-sub">
+                                        This user has not saved any products.
+                                    </p>
+                                </div>
                             </td>
                         </tr>
-                        <tr v-for="item in items" :key="item.wishlist_id"
-                            class="border-b border-copy-light last:border-b-0 hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-medium text-copy">{{ item.name }}</td>
-                            <td class="px-4 py-3 font-mono text-xs text-copy-light">{{ item.mpn }}</td>
-                            <td class="px-4 py-3 text-copy">{{ fmt(item.cost) }}</td>
-                            <td class="px-4 py-3">
-                                <span class="text-xs font-semibold px-2 py-0.5 rounded-full"
-                                    :class="item.stock_qty > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
-                                    {{ item.stock_qty > 0 ? item.stock_qty + ' in stock' : 'Out of stock' }}
+                        <tr
+                            v-for="item in items"
+                            :key="item.wishlist_id"
+                            class="adm-row"
+                        >
+                            <td class="adm-td" style="font-weight: 500">
+                                {{ item.name }}
+                            </td>
+                            <td class="adm-td adm-td--mono">{{ item.mpn }}</td>
+                            <td class="adm-td">{{ fmt(item.cost) }}</td>
+                            <td class="adm-td">
+                                <span
+                                    class="adm-stock"
+                                    :class="
+                                        item.stock_qty > 0
+                                            ? 'adm-stock--ok'
+                                            : 'adm-stock--nil'
+                                    "
+                                >
+                                    {{
+                                        item.stock_qty > 0
+                                            ? item.stock_qty + ' in stock'
+                                            : 'Out of stock'
+                                    }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-xs text-copy-light">{{ item.added_at }}</td>
+                            <td
+                                class="adm-td"
+                                style="
+                                    color: var(--adm-ink-dim);
+                                    font-size: 0.8rem;
+                                "
+                            >
+                                {{ item.added_at }}
+                            </td>
                         </tr>
                     </tbody>
                 </table>

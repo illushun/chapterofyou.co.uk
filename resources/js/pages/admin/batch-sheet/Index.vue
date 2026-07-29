@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { ClipboardList, Download } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 interface Sheet {
@@ -31,107 +32,221 @@ const confirmingDelete = ref<number | null>(null);
 function deleteSheet(id: number) {
     router.delete(route('admin.batch-sheets.destroy', { batch_sheet: id }), {
         preserveScroll: true,
-        onSuccess: () => { confirmingDelete.value = null; },
+        onSuccess: () => {
+            confirmingDelete.value = null;
+        },
     });
 }
 </script>
 
 <template>
     <AdminLayout>
+        <Head title="Batch Sheets : Admin" />
 
-        <Head title="Batch Sheets" />
-
-        <div class="mb-6 flex items-center justify-between border-b-2 border-copy pb-2">
+        <!-- Header -->
+        <div class="adm-header">
             <div>
-                <h2 class="text-3xl font-black">Batch Sheets</h2>
-                <p class="text-copy-light mt-1">{{ sheets.total }} sheet{{ sheets.total !== 1 ? 's' : '' }} recorded</p>
+                <h1 class="adm-title">Batch Sheets</h1>
+                <p class="adm-sub">
+                    {{ sheets.total }} sheet{{
+                        sheets.total !== 1 ? 's' : ''
+                    }}
+                    recorded
+                </p>
             </div>
-            <a :href="route('admin.batch-sheets.create')"
-                class="rounded-lg border-2 border-copy px-4 py-2 font-bold text-sm transition"
-                style="background-color: var(--primary); color: var(--primary-content);">+ New Batch Sheet</a>
+            <Link
+                :href="route('admin.batch-sheets.create')"
+                class="adm-btn adm-btn--primary"
+            >
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                >
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+                New Batch Sheet
+            </Link>
         </div>
 
-        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
-                <table class="w-full text-sm">
+        <!-- Table card -->
+        <div class="adm-card adm-card--flush" style="margin-bottom: 1.5rem">
+            <div v-if="sheets.data.length" class="adm-table-wrap">
+                <table class="adm-table">
                     <thead>
-                        <tr
-                            class="border-b-2 border-copy-light text-left text-xs uppercase tracking-wider text-copy-light">
-                            <th class="px-4 py-3">Batch No.</th>
-                            <th class="px-4 py-3">Blend</th>
-                            <th class="px-4 py-3">Product</th>
-                            <th class="px-4 py-3">Order</th>
-                            <th class="px-4 py-3">Made On</th>
-                            <th class="px-4 py-3">By</th>
-                            <th class="px-4 py-3 text-right">Actions</th>
+                        <tr class="adm-thead">
+                            <th class="adm-th">Batch No.</th>
+                            <th class="adm-th">Blend</th>
+                            <th class="adm-th">Product</th>
+                            <th class="adm-th">Order</th>
+                            <th class="adm-th">Made On</th>
+                            <th class="adm-th">By</th>
+                            <th class="adm-th adm-th--right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-if="sheets.data.length === 0">
-                            <td colspan="7" class="px-4 py-8 text-center text-copy-light italic">
-                                No batch sheets yet. Create one above.
+                        <tr
+                            v-for="sheet in sheets.data"
+                            :key="sheet.id"
+                            class="adm-row"
+                        >
+                            <td class="adm-td adm-td--mono">
+                                {{ sheet.batch_number }}
                             </td>
-                        </tr>
-                        <tr v-for="sheet in sheets.data" :key="sheet.id"
-                            class="border-b border-copy-light last:border-b-0 hover:bg-secondary-light transition">
-                            <td class="px-4 py-3">
-                                <span class="font-mono font-bold text-copy text-xs">{{ sheet.batch_number }}</span>
+                            <td class="adm-td" style="font-weight: 500">
+                                {{ sheet.blend_name }}
                             </td>
-                            <td class="px-4 py-3 font-medium text-copy">{{ sheet.blend_name }}</td>
-                            <td class="px-4 py-3">
-                                <span v-if="sheet.product" class="text-copy text-xs">
-                                    {{ sheet.product.name }}<br>
-                                    <span class="font-mono text-copy-light">{{ sheet.product.mpn }}</span>
-                                </span>
-                                <span v-else class="text-copy-light text-xs italic">—</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span v-if="sheet.order" class="font-mono text-xs text-copy">#{{ sheet.order.id
+                            <td class="adm-td">
+                                <span v-if="sheet.product">
+                                    {{ sheet.product.name }}<br />
+                                    <span class="adm-td--mono">{{
+                                        sheet.product.mpn
                                     }}</span>
-                                <span v-else class="text-copy-light text-xs italic">—</span>
+                                </span>
+                                <span
+                                    v-else
+                                    style="
+                                        font-style: italic;
+                                        color: var(--adm-ink-dim);
+                                        font-size: 0.8rem;
+                                    "
+                                    >-</span
+                                >
                             </td>
-                            <td class="px-4 py-3 text-xs text-copy-light">{{ sheet.date_of_manufacture }}</td>
-                            <td class="px-4 py-3 text-xs text-copy-light">{{ sheet.produced_by }}</td>
-                            <td class="px-4 py-3 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <!-- PDF download -->
-                                    <a :href="route('admin.batch-sheets.pdf', { batch_sheet: sheet.id })"
-                                        target="_blank"
-                                        class="rounded border border-copy-light px-2 py-1 text-xs font-medium text-copy-light hover:text-copy transition"
-                                        title="Download PDF">PDF</a>
+                            <td class="adm-td">
+                                <span v-if="sheet.order" class="adm-td--mono"
+                                    >#{{ sheet.order.id }}</span
+                                >
+                                <span
+                                    v-else
+                                    style="
+                                        font-style: italic;
+                                        color: var(--adm-ink-dim);
+                                        font-size: 0.8rem;
+                                    "
+                                    >-</span
+                                >
+                            </td>
+                            <td
+                                class="adm-td"
+                                style="
+                                    color: var(--adm-ink-dim);
+                                    font-size: 0.8rem;
+                                "
+                            >
+                                {{ sheet.date_of_manufacture }}
+                            </td>
+                            <td
+                                class="adm-td"
+                                style="
+                                    color: var(--adm-ink-dim);
+                                    font-size: 0.8rem;
+                                "
+                            >
+                                {{ sheet.produced_by }}
+                            </td>
+                            <td class="adm-td adm-td--actions">
+                                <a
+                                    :href="
+                                        route('admin.batch-sheets.pdf', {
+                                            batch_sheet: sheet.id,
+                                        })
+                                    "
+                                    target="_blank"
+                                    class="adm-action adm-action--edit"
+                                    title="Download PDF"
+                                >
+                                    <Download :size="12" :stroke-width="2.5" />
+                                    PDF
+                                </a>
+                                <Link
+                                    :href="
+                                        route('admin.batch-sheets.show', {
+                                            batch_sheet: sheet.id,
+                                        })
+                                    "
+                                    class="adm-action adm-action--edit"
+                                    >View</Link
+                                >
+                                <Link
+                                    :href="
+                                        route('admin.batch-sheets.edit', {
+                                            batch_sheet: sheet.id,
+                                        })
+                                    "
+                                    class="adm-action adm-action--edit"
+                                    >Edit</Link
+                                >
 
-                                    <a :href="route('admin.batch-sheets.show', { batch_sheet: sheet.id })"
-                                        class="rounded border border-copy-light px-2 py-1 text-xs font-medium text-copy hover:bg-secondary-light transition">View</a>
-
-                                    <a :href="route('admin.batch-sheets.edit', { batch_sheet: sheet.id })"
-                                        class="rounded border border-copy-light px-2 py-1 text-xs font-medium text-copy hover:bg-secondary-light transition">Edit</a>
-
-                                    <!-- Inline delete confirm -->
-                                    <template v-if="confirmingDelete === sheet.id">
-                                        <span class="text-xs text-error font-medium">Sure?</span>
-                                        <button @click="deleteSheet(sheet.id)"
-                                            class="rounded border border-error px-2 py-1 text-xs font-medium text-error hover:bg-red-50 transition">Yes</button>
-                                        <button @click="confirmingDelete = null"
-                                            class="rounded border border-copy-light px-2 py-1 text-xs font-medium text-copy-light hover:text-copy transition">No</button>
-                                    </template>
-                                    <button v-else @click="confirmingDelete = sheet.id"
-                                        class="rounded border border-error px-2 py-1 text-xs font-medium text-error hover:bg-red-50 transition">
-                                        Delete
+                                <template v-if="confirmingDelete === sheet.id">
+                                    <span
+                                        style="
+                                            font-size: 0.75rem;
+                                            color: var(--adm-danger);
+                                            font-weight: 600;
+                                        "
+                                        >Sure?</span
+                                    >
+                                    <button
+                                        @click="deleteSheet(sheet.id)"
+                                        class="adm-action adm-action--del"
+                                    >
+                                        Yes
                                     </button>
-                                </div>
+                                    <button
+                                        @click="confirmingDelete = null"
+                                        class="adm-action adm-action--edit"
+                                    >
+                                        No
+                                    </button>
+                                </template>
+                                <button
+                                    v-else
+                                    @click="confirmingDelete = sheet.id"
+                                    class="adm-action adm-action--del"
+                                >
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <div v-else class="adm-empty">
+                <div class="adm-empty-icon">
+                    <ClipboardList :size="28" :stroke-width="1.5" />
+                </div>
+                <p class="adm-empty-title">No batch sheets yet</p>
+                <p class="adm-empty-sub">
+                    Create one to start tracking production traceability.
+                </p>
+                <Link
+                    :href="route('admin.batch-sheets.create')"
+                    class="adm-btn adm-btn--primary"
+                    >New Batch Sheet</Link
+                >
+            </div>
         </div>
 
         <!-- Pagination -->
-        <div v-if="sheets.last_page > 1" class="mt-4 flex justify-center gap-2">
-            <a v-for="page in sheets.last_page" :key="page" :href="route('admin.batch-sheets.index', { page })"
-                class="rounded border px-3 py-1 text-sm transition" :class="page === sheets.current_page
-                    ? 'border-copy bg-copy text-foreground font-bold'
-                    : 'border-copy-light text-copy-light hover:border-copy hover:text-copy'">{{ page }}</a>
+        <div v-if="sheets.last_page > 1" class="adm-pagination">
+            <div class="adm-page-btns">
+                <a
+                    v-for="page in sheets.last_page"
+                    :key="page"
+                    :href="route('admin.batch-sheets.index', { page })"
+                    class="adm-page-btn"
+                    :class="{
+                        'adm-page-btn--active': page === sheets.current_page,
+                    }"
+                    >{{ page }}</a
+                >
+            </div>
         </div>
     </AdminLayout>
 </template>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
 import { useAdmin } from '@/composables/useAdmin';
+import AdminLayout from '@/layouts/AdminLayout.vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 interface ProductData {
     id: number;
@@ -42,101 +42,153 @@ const props = defineProps<{
 }>();
 
 const { fmtCurrency } = useAdmin();
-const page  = usePage();
+const page = usePage();
 const flash = computed(() => (page.props as any).flash ?? {});
 
 const form = useForm({
-    enabled:              props.setting.enabled,
-    override_title:       props.setting.override_title,
+    enabled: props.setting.enabled,
+    override_title: props.setting.override_title,
     override_description: props.setting.override_description,
-    override_price:       props.setting.override_price?.toString() ?? '',
-    override_tags:        props.setting.override_tags,
+    override_price: props.setting.override_price?.toString() ?? '',
+    override_tags: props.setting.override_tags,
 });
 
-const titleLength   = computed(() => form.override_title.length);
+const titleLength = computed(() => form.override_title.length);
 const titleOverflow = computed(() => titleLength.value > 140);
 
 const tagsArray = computed(() =>
     form.override_tags
-        ? form.override_tags.split(',').map(t => t.trim()).filter(Boolean)
-        : []
+        ? form.override_tags
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+        : [],
 );
 const tagsOverflow = computed(() => tagsArray.value.length > 13);
 
 const submit = () => {
-    form.put(route('admin.marketplace.etsy.products.settings.save', props.product.id));
+    form.put(
+        route(
+            'admin.marketplace.etsy.products.settings.save',
+            props.product.id,
+        ),
+    );
 };
 
 const etsyListingUrl = (id: string) => `https://www.etsy.com/listing/${id}`;
 
-const listingBadgeClass = (status: string) => ({
-    draft:  'adm-badge adm-badge--warn',
-    active: 'adm-badge adm-badge--on',
-    synced: 'adm-badge adm-badge--lav',
-    error:  'adm-badge adm-badge--red',
-}[status] ?? 'adm-badge adm-badge--off');
+const listingBadgeClass = (status: string) =>
+    ({
+        draft: 'adm-badge adm-badge--warn',
+        active: 'adm-badge adm-badge--on',
+        synced: 'adm-badge adm-badge--lav',
+        error: 'adm-badge adm-badge--red',
+    })[status] ?? 'adm-badge adm-badge--off';
 
 const formatDate = (iso: string | null) =>
-    iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+    iso
+        ? new Date(iso).toLocaleString('en-GB', {
+              dateStyle: 'medium',
+              timeStyle: 'short',
+          })
+        : '-';
 
 const showLinkForm = ref(false);
 const linkForm = useForm({ listing_id: '' });
 
 const submitLink = () => {
-    linkForm.post(route('admin.marketplace.etsy.products.link', props.product.id), {
-        onSuccess: () => {
-            showLinkForm.value = false;
-            linkForm.reset();
+    linkForm.post(
+        route('admin.marketplace.etsy.products.link', props.product.id),
+        {
+            onSuccess: () => {
+                showLinkForm.value = false;
+                linkForm.reset();
+            },
         },
-    });
+    );
 };
 </script>
 
 <template>
     <AdminLayout>
-        <Head :title="`Etsy: ${product.name} — Admin`" />
+        <Head :title="`Etsy: ${product.name} : Admin`" />
 
         <!-- Header -->
         <div class="adm-header">
             <div>
                 <div class="adm-breadcrumb">
-                    <Link :href="route('admin.marketplace.etsy.index')">Marketplaces</Link>
+                    <Link :href="route('admin.marketplace.etsy.index')"
+                        >Marketplaces</Link
+                    >
                     <span class="adm-breadcrumb-sep">/</span>
-                    <Link :href="route('admin.marketplace.etsy.products')">Etsy Products</Link>
+                    <Link :href="route('admin.marketplace.etsy.products')"
+                        >Etsy Products</Link
+                    >
                     <span class="adm-breadcrumb-sep">/</span>
                     <span>{{ product.name }}</span>
                 </div>
                 <h1 class="adm-title">Etsy Settings</h1>
-                <p class="adm-sub">Customise how this product appears on Etsy</p>
+                <p class="adm-sub">
+                    Customise how this product appears on Etsy
+                </p>
             </div>
         </div>
 
         <!-- Flash -->
         <div v-if="flash.success" class="adm-flash adm-flash--success">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+            >
+                <path d="M20 6 9 17l-5-5" />
+            </svg>
             {{ flash.success }}
         </div>
         <div v-if="flash.error" class="adm-flash adm-flash--error">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+            >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4M12 16h.01" />
+            </svg>
             {{ flash.error }}
         </div>
 
         <div class="adm-form-grid">
-
             <!-- Left: overrides form -->
             <div class="adm-form-left">
-
                 <form @submit.prevent="submit">
-
                     <!-- Enable toggle card -->
                     <div class="adm-card adm-card--sm ps-enable-card">
                         <div class="ps-enable-row">
                             <div>
                                 <p class="adm-label">Enable for Etsy</p>
-                                <p class="adm-sub" style="margin-top:2px">Include this product in Etsy exports and syncs</p>
+                                <p class="adm-sub" style="margin-top: 2px">
+                                    Include this product in Etsy exports and
+                                    syncs
+                                </p>
                             </div>
-                            <button type="button" @click="form.enabled = !form.enabled"
-                                :class="['ep-toggle', form.enabled ? 'ep-toggle--on' : 'ep-toggle--off']">
+                            <button
+                                type="button"
+                                @click="form.enabled = !form.enabled"
+                                :class="[
+                                    'ep-toggle',
+                                    form.enabled
+                                        ? 'ep-toggle--on'
+                                        : 'ep-toggle--off',
+                                ]"
+                            >
                                 <span class="ep-toggle-dot"></span>
                             </button>
                         </div>
@@ -148,15 +200,32 @@ const submitLink = () => {
                         <div class="adm-field">
                             <label class="adm-label">
                                 Etsy title
-                                <span class="adm-label-note">Leave blank to use product name</span>
+                                <span class="adm-label-note"
+                                    >Leave blank to use product name</span
+                                >
                             </label>
-                            <input v-model="form.override_title" type="text" maxlength="140"
-                                :placeholder="product.name" class="adm-input"
-                                :class="{ 'adm-input--err': titleOverflow }" />
-                            <div class="ps-char-count" :class="{ 'ps-char-count--over': titleOverflow }">
+                            <input
+                                v-model="form.override_title"
+                                type="text"
+                                maxlength="140"
+                                :placeholder="product.name"
+                                class="adm-input"
+                                :class="{ 'adm-input--err': titleOverflow }"
+                            />
+                            <div
+                                class="ps-char-count"
+                                :class="{
+                                    'ps-char-count--over': titleOverflow,
+                                }"
+                            >
                                 {{ titleLength }} / 140
                             </div>
-                            <p v-if="form.errors.override_title" class="adm-err">{{ form.errors.override_title }}</p>
+                            <p
+                                v-if="form.errors.override_title"
+                                class="adm-err"
+                            >
+                                {{ form.errors.override_title }}
+                            </p>
                         </div>
                     </div>
 
@@ -166,12 +235,24 @@ const submitLink = () => {
                         <div class="adm-field">
                             <label class="adm-label">
                                 Etsy description
-                                <span class="adm-label-note">Leave blank to use product description</span>
+                                <span class="adm-label-note"
+                                    >Leave blank to use product
+                                    description</span
+                                >
                             </label>
-                            <textarea v-model="form.override_description" rows="8"
+                            <textarea
+                                v-model="form.override_description"
+                                rows="8"
                                 placeholder="Write an Etsy-optimised description…"
-                                class="adm-textarea" style="min-height:200px" />
-                            <p v-if="form.errors.override_description" class="adm-err">{{ form.errors.override_description }}</p>
+                                class="adm-textarea"
+                                style="min-height: 200px"
+                            />
+                            <p
+                                v-if="form.errors.override_description"
+                                class="adm-err"
+                            >
+                                {{ form.errors.override_description }}
+                            </p>
                         </div>
                     </div>
 
@@ -181,16 +262,33 @@ const submitLink = () => {
                         <div class="adm-field">
                             <label class="adm-label">
                                 Etsy price
-                                <span class="adm-label-note">Leave blank to use product price ({{ fmtCurrency(product.cost) }})</span>
+                                <span class="adm-label-note"
+                                    >Leave blank to use product price ({{
+                                        fmtCurrency(product.cost)
+                                    }})</span
+                                >
                             </label>
                             <div class="adm-prefix-wrap">
                                 <span class="adm-prefix">£</span>
-                                <input v-model="form.override_price" type="number" step="0.01" min="0"
+                                <input
+                                    v-model="form.override_price"
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
                                     :placeholder="product.cost.toString()"
                                     class="adm-input adm-input--prefixed"
-                                    :class="{ 'adm-input--err': form.errors.override_price }" />
+                                    :class="{
+                                        'adm-input--err':
+                                            form.errors.override_price,
+                                    }"
+                                />
                             </div>
-                            <p v-if="form.errors.override_price" class="adm-err">{{ form.errors.override_price }}</p>
+                            <p
+                                v-if="form.errors.override_price"
+                                class="adm-err"
+                            >
+                                {{ form.errors.override_price }}
+                            </p>
                         </div>
                     </div>
 
@@ -200,50 +298,87 @@ const submitLink = () => {
                         <div class="adm-field">
                             <label class="adm-label">
                                 Etsy tags
-                                <span class="adm-label-note">Comma-separated, max 13 tags</span>
+                                <span class="adm-label-note"
+                                    >Comma-separated, max 13 tags</span
+                                >
                             </label>
-                            <input v-model="form.override_tags" type="text"
+                            <input
+                                v-model="form.override_tags"
+                                type="text"
                                 placeholder="e.g. natural soap, vegan, gift for her"
-                                class="adm-input" :class="{ 'adm-input--err': tagsOverflow }" />
+                                class="adm-input"
+                                :class="{ 'adm-input--err': tagsOverflow }"
+                            />
                             <!-- Tag pills -->
                             <div v-if="tagsArray.length" class="ps-tag-pills">
-                                <span v-for="tag in tagsArray" :key="tag" class="adm-badge adm-badge--lav">
+                                <span
+                                    v-for="tag in tagsArray"
+                                    :key="tag"
+                                    class="adm-badge adm-badge--lav"
+                                >
                                     {{ tag }}
                                 </span>
                             </div>
-                            <p v-if="tagsOverflow" class="adm-err">Maximum 13 tags. You have {{ tagsArray.length }}.</p>
-                            <p v-if="form.errors.override_tags" class="adm-err">{{ form.errors.override_tags }}</p>
+                            <p v-if="tagsOverflow" class="adm-err">
+                                Maximum 13 tags. You have
+                                {{ tagsArray.length }}.
+                            </p>
+                            <p v-if="form.errors.override_tags" class="adm-err">
+                                {{ form.errors.override_tags }}
+                            </p>
                         </div>
                     </div>
 
                     <!-- Save -->
-                    <button type="submit" :disabled="form.processing" class="adm-submit">
-                        <svg v-if="form.processing" class="adm-spinner" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    <button
+                        type="submit"
+                        :disabled="form.processing"
+                        class="adm-submit"
+                    >
+                        <svg
+                            v-if="form.processing"
+                            class="adm-spinner"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                        >
+                            <path
+                                d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+                            />
+                        </svg>
                         {{ form.processing ? 'Saving…' : 'Save Etsy Settings' }}
                     </button>
-
                 </form>
-
             </div>
 
             <!-- Right sidebar -->
             <div class="adm-form-right">
-
                 <!-- Product reference card -->
                 <div class="adm-card adm-card--sm adm-card--sticky">
                     <div class="adm-card-title">Product</div>
 
-                    <img v-if="product.images[0]?.image" :src="product.images[0].image"
-                        :alt="product.name" class="ps-product-img" />
+                    <img
+                        v-if="product.images[0]?.image"
+                        :src="product.images[0].image"
+                        :alt="product.name"
+                        class="ps-product-img"
+                    />
 
                     <p class="ps-product-name">{{ product.name }}</p>
-                    <p class="adm-td--mono" style="font-size:0.75rem; margin-bottom:0.75rem">{{ product.mpn }}</p>
+                    <p
+                        class="adm-td--mono"
+                        style="font-size: 0.75rem; margin-bottom: 0.75rem"
+                    >
+                        {{ product.mpn }}
+                    </p>
 
                     <div class="ps-product-meta">
                         <div>
                             <p class="ep-stat-label">Website price</p>
-                            <p class="ep-stat-val">{{ fmtCurrency(product.cost) }}</p>
+                            <p class="ep-stat-val">
+                                {{ fmtCurrency(product.cost) }}
+                            </p>
                         </div>
                         <div>
                             <p class="ep-stat-label">Stock</p>
@@ -251,8 +386,11 @@ const submitLink = () => {
                         </div>
                     </div>
 
-                    <Link :href="route('admin.products.edit', product.id)"
-                        class="adm-btn adm-btn--ghost adm-btn--sm adm-btn--full" style="margin-top:0.75rem">
+                    <Link
+                        :href="route('admin.products.edit', product.id)"
+                        class="adm-btn adm-btn--ghost adm-btn--sm adm-btn--full"
+                        style="margin-top: 0.75rem"
+                    >
                         Edit product
                     </Link>
                 </div>
@@ -264,43 +402,100 @@ const submitLink = () => {
                     <template v-if="listing">
                         <div class="ps-listing-row">
                             <span>Status</span>
-                            <a :href="etsyListingUrl(listing.listing_id)" target="_blank" rel="noopener"
-                                :class="listingBadgeClass(listing.status)" class="ps-listing-link">
+                            <a
+                                :href="etsyListingUrl(listing.listing_id)"
+                                target="_blank"
+                                rel="noopener"
+                                :class="listingBadgeClass(listing.status)"
+                                class="ps-listing-link"
+                            >
                                 {{ listing.status }}
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>
+                                <svg
+                                    width="10"
+                                    height="10"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                >
+                                    <path
+                                        d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"
+                                    />
+                                </svg>
                             </a>
                         </div>
                         <div class="ps-listing-row">
                             <span>Listing ID</span>
-                            <span class="adm-td--mono" style="font-size:0.78rem">#{{ listing.listing_id }}</span>
+                            <span
+                                class="adm-td--mono"
+                                style="font-size: 0.78rem"
+                                >#{{ listing.listing_id }}</span
+                            >
                         </div>
                         <div class="ps-listing-row">
                             <span>Last synced</span>
-                            <span class="adm-td--mono" style="font-size:0.75rem">{{ formatDate(listing.last_synced_at) }}</span>
+                            <span
+                                class="adm-td--mono"
+                                style="font-size: 0.75rem"
+                                >{{ formatDate(listing.last_synced_at) }}</span
+                            >
                         </div>
-                        <div v-if="listing.sync_error" class="ps-listing-error">{{ listing.sync_error }}</div>
+                        <div v-if="listing.sync_error" class="ps-listing-error">
+                            {{ listing.sync_error }}
+                        </div>
                         <div class="ps-listing-actions">
-                            <button @click="$inertia.post(route('admin.marketplace.etsy.products.sync', product.id))"
-                                class="adm-btn adm-btn--ghost adm-btn--sm adm-btn--full">
+                            <button
+                                @click="
+                                    $inertia.post(
+                                        route(
+                                            'admin.marketplace.etsy.products.sync',
+                                            product.id,
+                                        ),
+                                    )
+                                "
+                                class="adm-btn adm-btn--ghost adm-btn--sm adm-btn--full"
+                            >
                                 Sync to Etsy
                             </button>
-                            <button @click="$inertia.delete(route('admin.marketplace.etsy.products.unlink', product.id))"
-                                class="adm-btn adm-btn--danger adm-btn--sm adm-btn--full">
+                            <button
+                                @click="
+                                    $inertia.delete(
+                                        route(
+                                            'admin.marketplace.etsy.products.unlink',
+                                            product.id,
+                                        ),
+                                    )
+                                "
+                                class="adm-btn adm-btn--danger adm-btn--sm adm-btn--full"
+                            >
                                 Unlink
                             </button>
                         </div>
                     </template>
 
                     <template v-else>
-                        <p class="adm-sub" style="margin-bottom:0.85rem">
+                        <p class="adm-sub" style="margin-bottom: 0.85rem">
                             This product hasn't been exported to Etsy yet.
                         </p>
-                        <button @click="$inertia.post(route('admin.marketplace.etsy.products.export', product.id))"
+                        <button
+                            @click="
+                                $inertia.post(
+                                    route(
+                                        'admin.marketplace.etsy.products.export',
+                                        product.id,
+                                    ),
+                                )
+                            "
                             :disabled="!form.enabled"
-                            class="adm-btn adm-btn--primary adm-btn--full">
+                            class="adm-btn adm-btn--primary adm-btn--full"
+                        >
                             Export to Etsy
                         </button>
-                        <p v-if="!form.enabled" class="adm-err" style="margin-top:0.4rem;text-align:center">
+                        <p
+                            v-if="!form.enabled"
+                            class="adm-err"
+                            style="margin-top: 0.4rem; text-align: center"
+                        >
                             Enable this product for Etsy first
                         </p>
 
@@ -309,13 +504,18 @@ const submitLink = () => {
                             <span>or</span>
                         </div>
 
-                        <button @click="showLinkForm = !showLinkForm"
-                            class="adm-btn adm-btn--ghost adm-btn--full ps-link-toggle">
+                        <button
+                            @click="showLinkForm = !showLinkForm"
+                            class="adm-btn adm-btn--ghost adm-btn--full ps-link-toggle"
+                        >
                             Link existing listing
                         </button>
 
                         <div v-if="showLinkForm" class="ps-link-form">
-                            <label class="adm-label" style="margin-bottom:0.35rem;display:block">
+                            <label
+                                class="adm-label"
+                                style="margin-bottom: 0.35rem; display: block"
+                            >
                                 Etsy listing ID
                             </label>
                             <input
@@ -323,30 +523,41 @@ const submitLink = () => {
                                 type="text"
                                 placeholder="e.g. 1234567890"
                                 class="adm-input"
-                                style="margin-bottom:0.5rem"
+                                style="margin-bottom: 0.5rem"
                             />
-                            <p v-if="linkForm.errors.listing_id" class="adm-err">{{ linkForm.errors.listing_id }}</p>
+                            <p
+                                v-if="linkForm.errors.listing_id"
+                                class="adm-err"
+                            >
+                                {{ linkForm.errors.listing_id }}
+                            </p>
                             <button
                                 @click="submitLink"
-                                :disabled="linkForm.processing || !linkForm.listing_id"
-                                class="adm-btn adm-btn--primary adm-btn--full">
-                                {{ linkForm.processing ? 'Linking…' : 'Link listing' }}
+                                :disabled="
+                                    linkForm.processing || !linkForm.listing_id
+                                "
+                                class="adm-btn adm-btn--primary adm-btn--full"
+                            >
+                                {{
+                                    linkForm.processing
+                                        ? 'Linking…'
+                                        : 'Link listing'
+                                }}
                             </button>
                         </div>
                     </template>
                 </div>
-
             </div>
-
         </div>
-
     </AdminLayout>
 </template>
 
 <style scoped>
 /* Enable toggle card */
-.ps-enable-card { border-left: 3px solid var(--bb-green); }
-.ps-enable-row  {
+.ps-enable-card {
+    border-left: 3px solid var(--adm-success);
+}
+.ps-enable-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -366,27 +577,38 @@ const submitLink = () => {
     transition: background 0.2s;
     flex-shrink: 0;
 }
-.ep-toggle--on  { background: var(--bb-green); }
-.ep-toggle--off { background: #ccc; }
+.ep-toggle--on {
+    background: var(--adm-success);
+}
+.ep-toggle--off {
+    background: var(--adm-ink-faint);
+}
 .ep-toggle-dot {
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--adm-paper-raised);
     transition: transform 0.2s;
     flex-shrink: 0;
 }
-.ep-toggle--on  .ep-toggle-dot { transform: translateX(18px); }
-.ep-toggle--off .ep-toggle-dot { transform: translateX(0); }
+.ep-toggle--on .ep-toggle-dot {
+    transform: translateX(18px);
+}
+.ep-toggle--off .ep-toggle-dot {
+    transform: translateX(0);
+}
 
 /* Char counter */
 .ps-char-count {
     text-align: right;
     font-size: 0.72rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-top: 2px;
 }
-.ps-char-count--over { color: var(--bb-red); font-weight: 600; }
+.ps-char-count--over {
+    color: var(--adm-danger);
+    font-weight: 600;
+}
 
 /* Tag pills */
 .ps-tag-pills {
@@ -401,24 +623,34 @@ const submitLink = () => {
     width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
-    border-radius: var(--bb-radius);
-    border: 1px solid var(--bb-border);
+    border-radius: var(--adm-radius);
+    border: 1px solid var(--adm-line);
     margin-bottom: 0.75rem;
 }
 .ps-product-name {
     font-size: 0.92rem;
     font-weight: 700;
-    color: var(--bb-text);
+    color: var(--adm-ink);
     margin-bottom: 0.1rem;
 }
 .ps-product-meta {
     display: flex;
     gap: 1.5rem;
     padding-top: 0.5rem;
-    border-top: 1px solid var(--bb-border);
+    border-top: 1px solid var(--adm-line);
 }
-.ep-stat-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--bb-muted); }
-.ep-stat-val   { font-size: 0.9rem; font-weight: 600; color: var(--bb-text); }
+.ep-stat-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--adm-ink-dim);
+}
+.ep-stat-val {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--adm-ink);
+}
 
 /* Listing status */
 .ps-listing-row {
@@ -426,11 +658,13 @@ const submitLink = () => {
     justify-content: space-between;
     align-items: center;
     padding: 0.4rem 0;
-    border-bottom: 1px solid var(--bb-border);
+    border-bottom: 1px solid var(--adm-line);
     font-size: 0.82rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
-.ps-listing-row:last-of-type { border-bottom: none; }
+.ps-listing-row:last-of-type {
+    border-bottom: none;
+}
 .ps-listing-link {
     display: inline-flex;
     align-items: center;
@@ -438,13 +672,15 @@ const submitLink = () => {
     text-decoration: none;
     transition: opacity 0.12s;
 }
-.ps-listing-link:hover { opacity: 0.75; }
+.ps-listing-link:hover {
+    opacity: 0.75;
+}
 .ps-listing-error {
     font-size: 0.75rem;
-    color: var(--bb-red);
-    background: var(--bb-red-bg);
-    border: 1px solid var(--bb-red-border);
-    border-radius: var(--bb-radius-sm);
+    color: var(--adm-danger);
+    background: var(--adm-danger-bg);
+    border: 1px solid var(--adm-danger-line);
+    border-radius: var(--adm-radius-sm);
     padding: 0.4rem 0.6rem;
     margin-top: 0.5rem;
 }
@@ -461,14 +697,14 @@ const submitLink = () => {
     gap: 0.6rem;
     margin: 0.85rem 0 0.6rem;
     font-size: 0.75rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 .ps-link-divider::before,
 .ps-link-divider::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--bb-border);
+    background: var(--adm-line);
 }
 
 .ps-link-toggle {
@@ -478,6 +714,6 @@ const submitLink = () => {
 .ps-link-form {
     margin-top: 0.75rem;
     padding-top: 0.75rem;
-    border-top: 1px solid var(--bb-border);
+    border-top: 1px solid var(--adm-line);
 }
 </style>

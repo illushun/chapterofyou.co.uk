@@ -19,25 +19,35 @@ defineProps<{
 
 const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'long', year: 'numeric',
-        hour: '2-digit', minute: '2-digit',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
     });
 </script>
 
 <template>
     <AdminLayout>
-
-        <Head :title="`Broadcast #${broadcast.id}`" />
+        <Head :title="`Broadcast #${broadcast.id} : Admin`" />
 
         <!-- Header -->
         <div class="bs-header">
             <div>
                 <Link :href="route('admin.broadcasts.index')" class="bs-back">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m15 18-6-6 6-6" />
-                </svg>
-                All Broadcasts
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                    All Broadcasts
                 </Link>
                 <h1 class="bs-title">Broadcast #{{ broadcast.id }}</h1>
                 <p class="bs-sub">Sent {{ fmtDate(broadcast.sent_at) }}</p>
@@ -54,7 +64,10 @@ const fmtDate = (d: string) =>
 
                 <div class="bs-card">
                     <h2 class="bs-card-title">Email Body Preview</h2>
-                    <p class="bs-preview-note">This is how your body content appeared in the email template.</p>
+                    <p class="bs-preview-note">
+                        This is how your body content appeared in the email
+                        template.
+                    </p>
                     <div class="bs-preview-wrap">
                         <div class="bs-preview" v-html="broadcast.body"></div>
                     </div>
@@ -72,22 +85,26 @@ const fmtDate = (d: string) =>
                         </div>
                         <div class="bs-meta-row">
                             <span class="bs-meta-label">Recipients</span>
-                            <span class="bs-meta-val bs-meta-count">{{ broadcast.recipient_count.toLocaleString()
-                                }}</span>
+                            <span class="bs-meta-val bs-meta-count">{{
+                                broadcast.recipient_count.toLocaleString()
+                            }}</span>
                         </div>
                         <div class="bs-meta-row">
                             <span class="bs-meta-label">Sent by</span>
-                            <span class="bs-meta-val">{{ broadcast.sender?.name ?? '—' }}</span>
+                            <span class="bs-meta-val">{{
+                                broadcast.sender?.name ?? '-'
+                            }}</span>
                         </div>
                         <div class="bs-meta-row">
                             <span class="bs-meta-label">Sent at</span>
-                            <span class="bs-meta-val">{{ fmtDate(broadcast.sent_at) }}</span>
+                            <span class="bs-meta-val">{{
+                                fmtDate(broadcast.sent_at)
+                            }}</span>
                         </div>
                     </div>
                 </div>
             </aside>
         </div>
-
     </AdminLayout>
 </template>
 
@@ -102,25 +119,27 @@ const fmtDate = (d: string) =>
     gap: 0.35rem;
     font-size: 0.82rem;
     font-weight: 600;
-    color: var(--copy-light);
+    color: var(--adm-ink-dim);
     text-decoration: none;
     margin-bottom: 0.25rem;
     transition: color 0.15s;
 }
 
 .bs-back:hover {
-    color: var(--copy);
+    color: var(--adm-ink);
 }
 
 .bs-title {
-    font-size: 1.6rem;
-    font-weight: 800;
-    color: var(--copy);
+    font-family: var(--adm-display);
+    font-style: italic;
+    font-size: 1.9rem;
+    font-weight: 400;
+    color: var(--adm-ink);
 }
 
 .bs-sub {
     font-size: 0.82rem;
-    color: var(--copy-light);
+    color: var(--adm-ink-dim);
     margin-top: 0.1rem;
 }
 
@@ -149,39 +168,39 @@ const fmtDate = (d: string) =>
 }
 
 .bs-card {
-    border: 2px solid var(--copy);
+    border: 1px solid var(--adm-line);
     border-radius: 12px;
-    background: var(--foreground);
+    background: var(--adm-paper-raised);
     padding: 1.5rem;
 }
 
 .bs-card-title {
     font-size: 0.95rem;
     font-weight: 800;
-    color: var(--copy);
+    color: var(--adm-ink);
     margin-bottom: 0.85rem;
     padding-bottom: 0.6rem;
-    border-bottom: 2px solid color-mix(in srgb, var(--copy-light) 30%, transparent);
+    border-bottom: 1px dashed var(--adm-line);
 }
 
 .bs-subject {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--copy);
+    color: var(--adm-ink);
 }
 
 .bs-preview-note {
     font-size: 0.8rem;
-    color: var(--copy-lighter);
+    color: var(--adm-ink-faint);
     font-style: italic;
     margin-bottom: 0.85rem;
 }
 
 .bs-preview-wrap {
-    border: 1px solid color-mix(in srgb, var(--copy-light) 30%, transparent);
+    border: 1px solid color-mix(in srgb, var(--adm-ink-dim) 30%, transparent);
     border-radius: 8px;
     padding: 1.25rem;
-    background: var(--background);
+    background: var(--adm-paper);
     max-height: 500px;
     overflow-y: auto;
 }
@@ -190,7 +209,7 @@ const fmtDate = (d: string) =>
 .bs-preview {
     font-size: 0.92rem;
     line-height: 1.7;
-    color: var(--copy);
+    color: var(--adm-ink);
 }
 
 .bs-preview :deep(p) {
@@ -213,11 +232,11 @@ const fmtDate = (d: string) =>
 }
 
 .bs-preview :deep(strong) {
-    color: var(--copy);
+    color: var(--adm-ink);
 }
 
 .bs-preview :deep(a) {
-    color: var(--primary);
+    color: var(--adm-stamp);
 }
 
 /* Meta */
@@ -238,13 +257,13 @@ const fmtDate = (d: string) =>
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--copy-lighter);
+    color: var(--adm-ink-faint);
 }
 
 .bs-meta-val {
     font-size: 0.9rem;
     font-weight: 500;
-    color: var(--copy);
+    color: var(--adm-ink);
 }
 
 .bs-meta-count {

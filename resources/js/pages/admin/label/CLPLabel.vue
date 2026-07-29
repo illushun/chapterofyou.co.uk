@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
 import axios from 'axios';
+import { ref, watch } from 'vue';
 
-interface Product { id: number; name: string; }
+interface Product {
+    id: number;
+    name: string;
+}
 
 interface ClpResult {
     signal_word: string | null;
@@ -15,11 +18,22 @@ interface ClpResult {
 }
 
 interface ClpReasoning {
-    ingredients: { name: string; percentage: number; is_base: boolean; hazards: string[] }[];
+    ingredients: {
+        name: string;
+        percentage: number;
+        is_base: boolean;
+        hazards: string[];
+    }[];
     triggered_classes: {
-        class: string; h_code: string; h_text: string;
-        category: string | null; signal: string | null; pictogram: string | null;
-        threshold: string; sum: number | null; contributors: string[];
+        class: string;
+        h_code: string;
+        h_text: string;
+        category: string | null;
+        signal: string | null;
+        pictogram: string | null;
+        threshold: string;
+        sum: number | null;
+        contributors: string[];
     }[];
     signal_word: string;
     p_statement_sources: { code: string; text: string; triggered_by: string }[];
@@ -35,21 +49,21 @@ const showReasoning = ref(false);
 const exportingPdf = ref(false);
 
 const pictogramMap: Record<string, string> = {
-    'exclamation': '/storage/images/Pictograms/GHS07.png',
+    exclamation: '/storage/images/Pictograms/GHS07.png',
     'health-hazard': '/storage/images/Pictograms/GHS08.png',
-    'environment': '/storage/images/Pictograms/GHS09.png',
-    'flame': '/storage/images/Pictograms/GHS02.png',
-    'skull': '/storage/images/Pictograms/GHS06.png',
-    'corrosion': '/storage/images/Pictograms/GHS05.png',
+    environment: '/storage/images/Pictograms/GHS09.png',
+    flame: '/storage/images/Pictograms/GHS02.png',
+    skull: '/storage/images/Pictograms/GHS06.png',
+    corrosion: '/storage/images/Pictograms/GHS05.png',
 };
 
 const pictogramLabels: Record<string, string> = {
-    'exclamation': 'GHS07 Exclamation',
+    exclamation: 'GHS07 Exclamation',
     'health-hazard': 'GHS08 Health Hazard',
-    'environment': 'GHS09 Environment',
-    'flame': 'GHS02 Flame',
-    'skull': 'GHS06 Skull & Crossbones',
-    'corrosion': 'GHS05 Corrosion',
+    environment: 'GHS09 Environment',
+    flame: 'GHS02 Flame',
+    skull: 'GHS06 Skull & Crossbones',
+    corrosion: 'GHS05 Corrosion',
 };
 
 async function onProductChange() {
@@ -58,7 +72,9 @@ async function onProductChange() {
     clpResult.value = null;
     showReasoning.value = false;
     try {
-        const res = await axios.get(`/admin/clp-labels/${selectedProductId.value}/calculate`);
+        const res = await axios.get(
+            `/admin/clp-labels/${selectedProductId.value}/calculate`,
+        );
         clpResult.value = res.data.clp;
         productName.value = res.data.product.name;
     } finally {
@@ -66,7 +82,10 @@ async function onProductChange() {
     }
 }
 
-watch(selectedProductId, () => { clpResult.value = null; showReasoning.value = false; });
+watch(selectedProductId, () => {
+    clpResult.value = null;
+    showReasoning.value = false;
+});
 
 // ── Pictogram PDF export ──────────────────────────────────────────────────
 // Builds a hidden HTML sheet of all pictograms at exactly 1cm × 1cm and
@@ -106,24 +125,28 @@ async function exportPictogramsPdf() {
         const ROWS = 1;
         const COUNT = COLS * ROWS;
 
-        // One <section> per pictogram — each gets its own @page via page-break-after
-        const sections = entries.map(([key]) => {
-            const label = pictogramLabels[key] ?? key;
-            const cells = Array(COUNT)
-                .fill(`<div class="cell"><img src="${b64[key]}" alt="${label}" /></div>`)
-                .join('');
-            return `
+        // One <section> per pictogram, each gets its own @page via page-break-after
+        const sections = entries
+            .map(([key]) => {
+                const label = pictogramLabels[key] ?? key;
+                const cells = Array(COUNT)
+                    .fill(
+                        `<div class="cell"><img src="${b64[key]}" alt="${label}" /></div>`,
+                    )
+                    .join('');
+                return `
             <section>
                 <p class="sheet-label">${label}</p>
                 <div class="grid">${cells}</div>
             </section>`;
-        }).join('\n');
+            })
+            .join('\n');
 
         const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<title>GHS Pictogram Sheets — Chapter of You</title>
+<title>GHS Pictogram Sheets : Chapter of You</title>
 <style>
   @page { size: A4 portrait; margin: 15mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -184,13 +207,18 @@ async function exportPictogramsPdf() {
 
         const win = window.open('', '_blank');
         if (!win) {
-            alert('Pop-up blocked — please allow pop-ups for this page and try again.');
+            alert(
+                'Pop-up blocked. Please allow pop-ups for this page and try again.',
+            );
             return;
         }
         win.document.write(html);
         win.document.close();
         // Small delay lets images render fully before the print dialog opens
-        setTimeout(() => { win.focus(); win.print(); }, 800);
+        setTimeout(() => {
+            win.focus();
+            win.print();
+        }, 800);
     } finally {
         exportingPdf.value = false;
     }
@@ -199,19 +227,32 @@ async function exportPictogramsPdf() {
 
 <template>
     <AdminLayout>
-
-        <Head title="CLP Label Generator — Admin" />
+        <Head title="CLP Label Generator : Admin" />
 
         <!-- Page header -->
         <div class="cl-header">
             <div>
                 <h1 class="cl-title">CLP Label Generator</h1>
-                <p class="cl-sub">Select a product to calculate its CLP hazard classification.</p>
+                <p class="cl-sub">
+                    Select a product to calculate its CLP hazard classification.
+                </p>
             </div>
             <!-- Pictogram sheet export -->
-            <button @click="exportPictogramsPdf" :disabled="exportingPdf" class="cl-export-btn">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
+            <button
+                @click="exportPictogramsPdf"
+                :disabled="exportingPdf"
+                class="cl-export-btn"
+            >
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <polyline points="17 8 12 3 7 8" />
                     <line x1="12" y1="3" x2="12" y2="15" />
@@ -223,35 +264,68 @@ async function exportPictogramsPdf() {
         <!-- Product selector -->
         <div class="cl-selector-card">
             <label class="cl-label" for="product-select">Product</label>
-            <select id="product-select" v-model="selectedProductId" @change="onProductChange" class="cl-select">
-                <option :value="null" disabled>Select a product to calculate…</option>
-                <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }}</option>
+            <select
+                id="product-select"
+                v-model="selectedProductId"
+                @change="onProductChange"
+                class="cl-select"
+            >
+                <option :value="null" disabled>
+                    Select a product to calculate…
+                </option>
+                <option v-for="p in products" :key="p.id" :value="p.id">
+                    {{ p.name }}
+                </option>
             </select>
         </div>
 
         <!-- Loading -->
         <div v-if="loading" class="cl-loading">
             <svg class="cl-spinner" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="rgba(26,26,46,0.15)" stroke-width="3" />
-                <path d="M12 2a10 10 0 0 1 10 10" stroke="#9b84d4" stroke-width="3" stroke-linecap="round" />
+                <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="rgba(26,26,46,0.15)"
+                    stroke-width="3"
+                />
+                <path
+                    d="M12 2a10 10 0 0 1 10 10"
+                    stroke="var(--adm-stamp-deep)"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                />
             </svg>
             Calculating CLP classification…
         </div>
 
         <!-- Result -->
         <div v-if="clpResult" class="cl-result">
-
             <!-- Result header -->
             <div class="cl-result-head">
                 <div>
                     <p class="cl-result-eyebrow">CLP Label Preview</p>
                     <h2 class="cl-result-name">{{ productName }}</h2>
                 </div>
-                <a :href="`/admin/clp-labels/${selectedProductId}/print`" target="_blank" class="cl-print-btn">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                <a
+                    :href="`/admin/clp-labels/${selectedProductId}/print`"
+                    target="_blank"
+                    class="cl-print-btn"
+                >
+                    <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <polyline points="6 9 6 2 18 2 18 9" />
-                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                        <path
+                            d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
+                        />
                         <rect x="6" y="14" width="12" height="8" />
                     </svg>
                     Print Label
@@ -261,15 +335,28 @@ async function exportPictogramsPdf() {
             <!-- Signal word -->
             <div class="cl-section">
                 <p class="cl-section-label">Signal Word</p>
-                <div v-if="clpResult.signal_word" class="cl-signal-word" :class="{
-                    'cl-signal--danger': clpResult.signal_word === 'Danger',
-                    'cl-signal--warning': clpResult.signal_word === 'Warning',
-                }">
+                <div
+                    v-if="clpResult.signal_word"
+                    class="cl-signal-word"
+                    :class="{
+                        'cl-signal--danger': clpResult.signal_word === 'Danger',
+                        'cl-signal--warning':
+                            clpResult.signal_word === 'Warning',
+                    }"
+                >
                     {{ clpResult.signal_word }}
                 </div>
                 <div v-else class="cl-no-hazard">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="M20 6 9 17l-5-5" />
                     </svg>
                     No hazard classification required at this concentration
@@ -280,58 +367,111 @@ async function exportPictogramsPdf() {
             <div v-if="clpResult.required_pictograms.length" class="cl-section">
                 <p class="cl-section-label">Pictograms</p>
                 <div class="cl-pictograms">
-                    <div v-for="pic in clpResult.required_pictograms" :key="pic" class="cl-pic" :title="pic">
-                        <img v-if="pictogramMap[pic]" :src="pictogramMap[pic]" :alt="pic" class="cl-pic-img" />
+                    <div
+                        v-for="pic in clpResult.required_pictograms"
+                        :key="pic"
+                        class="cl-pic"
+                        :title="pic"
+                    >
+                        <img
+                            v-if="pictogramMap[pic]"
+                            :src="pictogramMap[pic]"
+                            :alt="pic"
+                            class="cl-pic-img"
+                        />
                         <span v-else class="cl-pic-nil">{{ pic }}</span>
-                        <span class="cl-pic-label">{{ pictogramLabels[pic] ?? pic }}</span>
+                        <span class="cl-pic-label">{{
+                            pictogramLabels[pic] ?? pic
+                        }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Hazard statements -->
-            <div v-if="Object.keys(clpResult.hazard_statements).length" class="cl-section">
+            <div
+                v-if="Object.keys(clpResult.hazard_statements).length"
+                class="cl-section"
+            >
                 <p class="cl-section-label">Hazard Statements</p>
                 <div class="cl-statement-list">
-                    <div v-for="(statement, code) in clpResult.hazard_statements" :key="code" class="cl-statement">
-                        <span class="cl-statement-code cl-statement-code--h">{{ code }}</span>
+                    <div
+                        v-for="(statement, code) in clpResult.hazard_statements"
+                        :key="code"
+                        class="cl-statement"
+                    >
+                        <span class="cl-statement-code cl-statement-code--h">{{
+                            code
+                        }}</span>
                         <span class="cl-statement-text">{{ statement }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Precautionary statements -->
-            <div v-if="Object.keys(clpResult.precautionary_statements).length" class="cl-section">
+            <div
+                v-if="Object.keys(clpResult.precautionary_statements).length"
+                class="cl-section"
+            >
                 <p class="cl-section-label">Precautionary Statements</p>
                 <div class="cl-statement-list">
-                    <div v-for="(text, code) in clpResult.precautionary_statements" :key="code" class="cl-statement">
-                        <span class="cl-statement-code cl-statement-code--p">{{ code }}</span>
+                    <div
+                        v-for="(
+                            text, code
+                        ) in clpResult.precautionary_statements"
+                        :key="code"
+                        class="cl-statement"
+                    >
+                        <span class="cl-statement-code cl-statement-code--p">{{
+                            code
+                        }}</span>
                         <span class="cl-statement-text">{{ text }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- No hazards at all -->
-            <div v-if="!clpResult.signal_word && !Object.keys(clpResult.hazard_statements).length"
-                class="cl-no-statements">
+            <div
+                v-if="
+                    !clpResult.signal_word &&
+                    !Object.keys(clpResult.hazard_statements).length
+                "
+                class="cl-no-statements"
+            >
                 No hazard statements triggered for this formulation.
             </div>
 
             <!-- ── Reasoning panel ── -->
             <div v-if="clpResult.reasoning" class="cl-reasoning">
-                <button type="button" @click="showReasoning = !showReasoning" class="cl-reasoning-toggle">
+                <button
+                    type="button"
+                    @click="showReasoning = !showReasoning"
+                    class="cl-reasoning-toggle"
+                >
                     <div>
-                        <p class="cl-reasoning-toggle-title">How was this classification reached?</p>
-                        <p class="cl-reasoning-toggle-sub">CLP mixture calculation audit trail</p>
+                        <p class="cl-reasoning-toggle-title">
+                            How was this classification reached?
+                        </p>
+                        <p class="cl-reasoning-toggle-sub">
+                            CLP mixture calculation audit trail
+                        </p>
                     </div>
-                    <svg class="cl-chevron" :class="{ 'cl-chevron--open': showReasoning }" width="16" height="16"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                        stroke-linejoin="round">
+                    <svg
+                        class="cl-chevron"
+                        :class="{ 'cl-chevron--open': showReasoning }"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="m6 9 6 6 6-6" />
                     </svg>
                 </button>
 
                 <div v-if="showReasoning" class="cl-reasoning-body">
-
                     <!-- Ingredients -->
                     <div class="cl-r-section">
                         <h4 class="cl-r-title">Ingredients in this product</h4>
@@ -340,21 +480,44 @@ async function exportPictogramsPdf() {
                                 <thead>
                                     <tr>
                                         <th class="cl-r-th">Ingredient</th>
-                                        <th class="cl-r-th cl-r-th--right">% in blend</th>
+                                        <th class="cl-r-th cl-r-th--right">
+                                            % in blend
+                                        </th>
                                         <th class="cl-r-th">Hazard codes</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="ing in clpResult.reasoning.ingredients" :key="ing.name" class="cl-r-row">
+                                    <tr
+                                        v-for="ing in clpResult.reasoning
+                                            .ingredients"
+                                        :key="ing.name"
+                                        class="cl-r-row"
+                                    >
                                         <td class="cl-r-td cl-r-td--name">
                                             {{ ing.name }}
-                                            <span v-if="ing.is_base" class="cl-r-base-tag">base</span>
+                                            <span
+                                                v-if="ing.is_base"
+                                                class="cl-r-base-tag"
+                                                >base</span
+                                            >
                                         </td>
-                                        <td class="cl-r-td cl-r-td--right cl-r-td--pct">{{ ing.percentage }}%</td>
+                                        <td
+                                            class="cl-r-td cl-r-td--right cl-r-td--pct"
+                                        >
+                                            {{ ing.percentage }}%
+                                        </td>
                                         <td class="cl-r-td">
-                                            <span v-if="!ing.hazards.length" class="cl-r-none">None</span>
-                                            <span v-for="code in ing.hazards" :key="code" class="cl-r-hcode">{{ code
-                                            }}</span>
+                                            <span
+                                                v-if="!ing.hazards.length"
+                                                class="cl-r-none"
+                                                >None</span
+                                            >
+                                            <span
+                                                v-for="code in ing.hazards"
+                                                :key="code"
+                                                class="cl-r-hcode"
+                                                >{{ code }}</span
+                                            >
                                         </td>
                                     </tr>
                                 </tbody>
@@ -365,28 +528,58 @@ async function exportPictogramsPdf() {
                     <!-- Triggered classes -->
                     <div class="cl-r-section">
                         <h4 class="cl-r-title">Hazard classes triggered</h4>
-                        <p v-if="!clpResult.reasoning.triggered_classes.length" class="cl-r-empty">
-                            No hazard classes triggered — product is not classified as hazardous.
+                        <p
+                            v-if="!clpResult.reasoning.triggered_classes.length"
+                            class="cl-r-empty"
+                        >
+                            No hazard classes triggered. Product is not
+                            classified as hazardous.
                         </p>
-                        <div v-for="cls in clpResult.reasoning.triggered_classes" :key="cls.h_code"
-                            class="cl-r-class-card">
+                        <div
+                            v-for="cls in clpResult.reasoning.triggered_classes"
+                            :key="cls.h_code"
+                            class="cl-r-class-card"
+                        >
                             <div class="cl-r-class-head">
                                 <div class="cl-r-class-left">
-                                    <span class="cl-r-hcode cl-r-hcode--lg">{{ cls.h_code }}</span>
-                                    <span class="cl-r-class-text">{{ cls.h_text }}</span>
+                                    <span class="cl-r-hcode cl-r-hcode--lg">{{
+                                        cls.h_code
+                                    }}</span>
+                                    <span class="cl-r-class-text">{{
+                                        cls.h_text
+                                    }}</span>
                                 </div>
                                 <div class="cl-r-class-right">
-                                    <span v-if="cls.signal" class="cl-r-signal"
-                                        :class="cls.signal === 'Danger' ? 'cl-r-signal--danger' : 'cl-r-signal--warning'">
+                                    <span
+                                        v-if="cls.signal"
+                                        class="cl-r-signal"
+                                        :class="
+                                            cls.signal === 'Danger'
+                                                ? 'cl-r-signal--danger'
+                                                : 'cl-r-signal--warning'
+                                        "
+                                    >
                                         {{ cls.signal }}
                                     </span>
-                                    <span class="cl-r-cat">Cat {{ cls.category }}</span>
+                                    <span class="cl-r-cat"
+                                        >Cat {{ cls.category }}</span
+                                    >
                                 </div>
                             </div>
                             <div class="cl-r-class-meta">
-                                <span><strong>Threshold:</strong> {{ cls.threshold }}</span>
-                                <span v-if="cls.sum !== null"><strong>Sum:</strong> {{ cls.sum }}%</span>
-                                <span><strong>Contributors:</strong> {{ cls.contributors.join(', ') || 'n/a' }}</span>
+                                <span
+                                    ><strong>Threshold:</strong>
+                                    {{ cls.threshold }}</span
+                                >
+                                <span v-if="cls.sum !== null"
+                                    ><strong>Sum:</strong> {{ cls.sum }}%</span
+                                >
+                                <span
+                                    ><strong>Contributors:</strong>
+                                    {{
+                                        cls.contributors.join(', ') || 'n/a'
+                                    }}</span
+                                >
                             </div>
                         </div>
                     </div>
@@ -394,40 +587,63 @@ async function exportPictogramsPdf() {
                     <!-- Signal word determination -->
                     <div class="cl-r-section">
                         <h4 class="cl-r-title">Signal word determination</h4>
-                        <p class="cl-r-prose">{{ clpResult.reasoning.signal_word }}</p>
+                        <p class="cl-r-prose">
+                            {{ clpResult.reasoning.signal_word }}
+                        </p>
                     </div>
 
                     <!-- P statement sources -->
                     <div class="cl-r-section">
-                        <h4 class="cl-r-title">Precautionary statements — why each was included</h4>
-                        <p v-if="!clpResult.reasoning.p_statement_sources.length" class="cl-r-empty">
+                        <h4 class="cl-r-title">
+                            Precautionary statements: why each was included
+                        </h4>
+                        <p
+                            v-if="
+                                !clpResult.reasoning.p_statement_sources.length
+                            "
+                            class="cl-r-empty"
+                        >
                             No precautionary statements required.
                         </p>
                         <div v-else class="cl-r-table-wrap">
                             <table class="cl-r-table">
                                 <thead>
                                     <tr>
-                                        <th class="cl-r-th" style="width:80px">Code</th>
+                                        <th class="cl-r-th" style="width: 80px">
+                                            Code
+                                        </th>
                                         <th class="cl-r-th">Statement</th>
                                         <th class="cl-r-th">Triggered by</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="p in clpResult.reasoning.p_statement_sources" :key="p.code"
-                                        class="cl-r-row">
-                                        <td class="cl-r-td"><span class="cl-r-pcode">{{ p.code }}</span></td>
-                                        <td class="cl-r-td cl-r-td--stmt">{{ p.text }}</td>
-                                        <td class="cl-r-td"><span class="cl-r-trigger">{{ p.triggered_by }}</span></td>
+                                    <tr
+                                        v-for="p in clpResult.reasoning
+                                            .p_statement_sources"
+                                        :key="p.code"
+                                        class="cl-r-row"
+                                    >
+                                        <td class="cl-r-td">
+                                            <span class="cl-r-pcode">{{
+                                                p.code
+                                            }}</span>
+                                        </td>
+                                        <td class="cl-r-td cl-r-td--stmt">
+                                            {{ p.text }}
+                                        </td>
+                                        <td class="cl-r-td">
+                                            <span class="cl-r-trigger">{{
+                                                p.triggered_by
+                                            }}</span>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
-
     </AdminLayout>
 </template>
 
@@ -436,23 +652,7 @@ async function exportPictogramsPdf() {
 .cl-header,
 .cl-selector-card,
 .cl-result {
-    --bb-navy: #1a1a2e;
-    --bb-cream: #faf9f7;
-    --bb-surface: #ffffff;
-    --bb-border: #ece8e2;
-    --bb-text: #1a1a2e;
-    --bb-muted: #7a7a9a;
-    --bb-red: #e05c6e;
-    --bb-red-bg: #fdeef0;
-    --bb-green: #4caf7d;
-    --bb-green-bg: #eef7f2;
-    --bb-lav: #c9b8f0;
-    --bb-lav-d: #9b84d4;
-    --bb-blush: #f2c4ce;
-    --bb-blush-d: #d4899a;
-    --bb-peach: #f5d5b8;
-    --bb-peach-d: #c8820a;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
 }
 
 /* ── Header ── */
@@ -466,16 +666,18 @@ async function exportPictogramsPdf() {
 }
 
 .cl-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--bb-text);
+    font-family: var(--adm-display);
+    font-style: italic;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--adm-ink);
     margin-bottom: 0.2rem;
 }
 
 .cl-sub {
     font-size: 0.82rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .cl-export-btn {
@@ -484,21 +686,25 @@ async function exportPictogramsPdf() {
     gap: 0.45rem;
     padding: 0.58rem 1rem;
     border-radius: 8px;
-    border: 1px solid var(--bb-border);
-    background: var(--bb-surface);
-    color: var(--bb-muted);
-    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--adm-line);
+    background: var(--adm-paper-raised);
+    color: var(--adm-ink-dim);
+    font-family: var(--adm-font);
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+    transition:
+        background 0.15s,
+        color 0.15s,
+        border-color 0.15s,
+        transform 0.15s;
     white-space: nowrap;
 }
 
 .cl-export-btn:hover:not(:disabled) {
-    background: var(--bb-lav);
-    border-color: var(--bb-lav-d);
-    color: var(--bb-navy);
+    background: var(--adm-stamp-dim);
+    border-color: var(--adm-stamp-deep);
+    color: var(--adm-charcoal);
     transform: translateY(-1px);
 }
 
@@ -509,9 +715,9 @@ async function exportPictogramsPdf() {
 
 /* ── Selector ── */
 .cl-selector-card {
-    background: var(--bb-surface);
+    background: var(--adm-paper-raised);
     border-radius: 14px;
-    border: 1px solid var(--bb-border);
+    border: 1px solid var(--adm-line);
     box-shadow: 0 1px 6px rgba(26, 26, 46, 0.05);
     padding: 1.25rem;
     display: flex;
@@ -523,24 +729,26 @@ async function exportPictogramsPdf() {
 .cl-label {
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .cl-select {
     width: 100%;
     padding: 0.65rem 0.85rem;
     border-radius: 8px;
-    border: 1px solid var(--bb-border);
-    background: var(--bb-cream);
-    color: var(--bb-text);
-    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--adm-line);
+    background: var(--adm-paper);
+    color: var(--adm-ink);
+    font-family: var(--adm-font);
     font-size: 0.9rem;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 
 .cl-select:focus {
-    border-color: var(--bb-lav-d);
+    border-color: var(--adm-stamp-deep);
     box-shadow: 0 0 0 3px rgba(201, 184, 240, 0.2);
 }
 
@@ -551,7 +759,7 @@ async function exportPictogramsPdf() {
     gap: 0.65rem;
     padding: 1.25rem;
     font-size: 0.85rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-style: italic;
 }
 
@@ -574,9 +782,9 @@ async function exportPictogramsPdf() {
 
 /* ── Result card ── */
 .cl-result {
-    background: var(--bb-surface);
+    background: var(--adm-paper-raised);
     border-radius: 14px;
-    border: 1px solid var(--bb-border);
+    border: 1px solid var(--adm-line);
     box-shadow: 0 1px 8px rgba(26, 26, 46, 0.06);
     overflow: hidden;
 }
@@ -586,8 +794,8 @@ async function exportPictogramsPdf() {
     align-items: center;
     justify-content: space-between;
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--bb-border);
-    background: var(--bb-cream);
+    border-bottom: 1px solid var(--adm-line);
+    background: var(--adm-paper);
     flex-wrap: wrap;
     gap: 0.75rem;
 }
@@ -597,14 +805,14 @@ async function exportPictogramsPdf() {
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-bottom: 0.2rem;
 }
 
 .cl-result-name {
     font-size: 1.1rem;
     font-weight: 700;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .cl-print-btn {
@@ -614,13 +822,15 @@ async function exportPictogramsPdf() {
     padding: 0.5rem 0.9rem;
     border-radius: 8px;
     border: none;
-    background: var(--bb-navy);
-    color: #fff;
-    font-family: 'DM Sans', sans-serif;
+    background: var(--adm-charcoal);
+    color: var(--adm-paper-raised);
+    font-family: var(--adm-font);
     font-size: 0.8rem;
     font-weight: 600;
     text-decoration: none;
-    transition: opacity 0.15s, transform 0.15s;
+    transition:
+        opacity 0.15s,
+        transform 0.15s;
     white-space: nowrap;
 }
 
@@ -632,7 +842,7 @@ async function exportPictogramsPdf() {
 /* ── Sections ── */
 .cl-section {
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid var(--bb-border);
+    border-bottom: 1px solid var(--adm-line);
 }
 
 .cl-section:last-child {
@@ -644,7 +854,7 @@ async function exportPictogramsPdf() {
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-bottom: 0.75rem;
 }
 
@@ -659,15 +869,15 @@ async function exportPictogramsPdf() {
 }
 
 .cl-signal--danger {
-    background: #fff0f0;
-    color: var(--bb-red);
-    border-color: var(--bb-red);
+    background: var(--adm-danger-bg);
+    color: var(--adm-danger);
+    border-color: var(--adm-danger);
 }
 
 .cl-signal--warning {
-    background: #fffbf0;
-    color: var(--bb-peach-d);
-    border-color: var(--bb-peach-d);
+    background: var(--adm-warning-bg);
+    color: var(--adm-warning);
+    border-color: var(--adm-warning);
 }
 
 .cl-no-hazard {
@@ -676,11 +886,11 @@ async function exportPictogramsPdf() {
     gap: 0.4rem;
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--bb-green);
-    background: var(--bb-green-bg);
+    color: var(--adm-success);
+    background: var(--adm-success-bg);
     padding: 0.45rem 0.85rem;
     border-radius: 8px;
-    border: 1px solid #b8dfc8;
+    border: 1px solid var(--adm-success-line);
 }
 
 /* Pictograms */
@@ -701,7 +911,7 @@ async function exportPictogramsPdf() {
 .cl-pic-img {
     width: 56px;
     height: 56px;
-    border: 2px solid #1a1a2e;
+    border: 2px solid var(--adm-ink);
     border-radius: 6px;
     object-fit: contain;
     background: #fff;
@@ -714,15 +924,15 @@ async function exportPictogramsPdf() {
     align-items: center;
     justify-content: center;
     font-size: 0.6rem;
-    color: var(--bb-muted);
-    border: 2px solid var(--bb-border);
+    color: var(--adm-ink-dim);
+    border: 2px solid var(--adm-line);
     border-radius: 6px;
-    background: var(--bb-cream);
+    background: var(--adm-paper);
 }
 
 .cl-pic-label {
     font-size: 0.6rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     max-width: 60px;
     line-height: 1.3;
 }
@@ -743,7 +953,7 @@ async function exportPictogramsPdf() {
 }
 
 .cl-statement-code {
-    font-family: monospace;
+    font-family: var(--adm-font);
     font-size: 0.75rem;
     font-weight: 700;
     padding: 0.1rem 0.45rem;
@@ -752,29 +962,29 @@ async function exportPictogramsPdf() {
 }
 
 .cl-statement-code--h {
-    background: #fff8e6;
-    color: var(--bb-peach-d);
+    background: var(--adm-warning-bg);
+    color: var(--adm-warning);
 }
 
 .cl-statement-code--p {
-    background: #f0edf8;
-    color: var(--bb-lav-d);
+    background: var(--adm-stamp-dim);
+    color: var(--adm-stamp-deep);
 }
 
 .cl-statement-text {
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .cl-no-statements {
     padding: 1.25rem 1.5rem;
     font-size: 0.85rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-style: italic;
 }
 
 /* ── Reasoning panel ── */
 .cl-reasoning {
-    border-top: 1px solid var(--bb-border);
+    border-top: 1px solid var(--adm-line);
 }
 
 .cl-reasoning-toggle {
@@ -788,27 +998,27 @@ async function exportPictogramsPdf() {
     cursor: pointer;
     text-align: left;
     transition: background 0.12s;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
 }
 
 .cl-reasoning-toggle:hover {
-    background: var(--bb-cream);
+    background: var(--adm-paper);
 }
 
 .cl-reasoning-toggle-title {
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .cl-reasoning-toggle-sub {
     font-size: 0.72rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-top: 0.1rem;
 }
 
 .cl-chevron {
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     transition: transform 0.2s;
     flex-shrink: 0;
 }
@@ -822,8 +1032,8 @@ async function exportPictogramsPdf() {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
-    border-top: 1px solid var(--bb-border);
-    background: var(--bb-cream);
+    border-top: 1px solid var(--adm-line);
+    background: var(--adm-paper);
 }
 
 /* Reasoning sections */
@@ -839,20 +1049,20 @@ async function exportPictogramsPdf() {
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--bb-border);
+    border-bottom: 1px solid var(--adm-line);
 }
 
 .cl-r-empty {
     font-size: 0.82rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-style: italic;
 }
 
 .cl-r-prose {
     font-size: 0.82rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     line-height: 1.6;
 }
 
@@ -860,14 +1070,14 @@ async function exportPictogramsPdf() {
 .cl-r-table-wrap {
     overflow-x: auto;
     border-radius: 8px;
-    border: 1px solid var(--bb-border);
+    border: 1px solid var(--adm-line);
 }
 
 .cl-r-table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.78rem;
-    background: var(--bb-surface);
+    background: var(--adm-paper-raised);
 }
 
 .cl-r-th {
@@ -877,9 +1087,9 @@ async function exportPictogramsPdf() {
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--bb-muted);
-    background: var(--bb-cream);
-    border-bottom: 1px solid var(--bb-border);
+    color: var(--adm-ink-dim);
+    background: var(--adm-paper);
+    border-bottom: 1px solid var(--adm-line);
     white-space: nowrap;
 }
 
@@ -888,7 +1098,7 @@ async function exportPictogramsPdf() {
 }
 
 .cl-r-row {
-    border-bottom: 1px solid var(--bb-border);
+    border-bottom: 1px solid var(--adm-line);
     transition: background 0.1s;
 }
 
@@ -897,13 +1107,13 @@ async function exportPictogramsPdf() {
 }
 
 .cl-r-row:hover {
-    background: #fdfcfb;
+    background: var(--adm-paper);
 }
 
 .cl-r-td {
     padding: 0.6rem 0.85rem;
     vertical-align: top;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .cl-r-td--name {
@@ -915,12 +1125,12 @@ async function exportPictogramsPdf() {
 }
 
 .cl-r-td--pct {
-    color: var(--bb-muted);
-    font-family: monospace;
+    color: var(--adm-ink-dim);
+    font-family: var(--adm-font);
 }
 
 .cl-r-td--stmt {
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .cl-r-base-tag {
@@ -929,25 +1139,25 @@ async function exportPictogramsPdf() {
     font-size: 0.6rem;
     padding: 0.05rem 0.35rem;
     border-radius: 4px;
-    background: var(--bb-lav);
-    color: #3d2e8a;
+    background: var(--adm-stamp-dim);
+    color: var(--adm-stamp-deep);
 }
 
 .cl-r-none {
     font-style: italic;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .cl-r-hcode {
     display: inline-block;
     margin-right: 0.25rem;
-    font-family: monospace;
+    font-family: var(--adm-font);
     font-size: 0.72rem;
     font-weight: 700;
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
-    background: #fff8e6;
-    color: var(--bb-peach-d);
+    background: var(--adm-warning-bg);
+    color: var(--adm-warning);
 }
 
 .cl-r-hcode--lg {
@@ -956,27 +1166,27 @@ async function exportPictogramsPdf() {
 }
 
 .cl-r-pcode {
-    font-family: monospace;
+    font-family: var(--adm-font);
     font-size: 0.72rem;
     font-weight: 700;
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
-    background: #f0edf8;
-    color: var(--bb-lav-d);
+    background: var(--adm-stamp-dim);
+    color: var(--adm-stamp-deep);
 }
 
 .cl-r-trigger {
-    font-family: monospace;
+    font-family: var(--adm-font);
     font-size: 0.72rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 /* Triggered class cards */
 .cl-r-class-card {
     padding: 0.85rem;
     border-radius: 8px;
-    border: 1px solid var(--bb-border);
-    background: var(--bb-surface);
+    border: 1px solid var(--adm-line);
+    background: var(--adm-paper-raised);
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -1006,7 +1216,7 @@ async function exportPictogramsPdf() {
 
 .cl-r-class-text {
     font-size: 0.8rem;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .cl-r-signal {
@@ -1017,18 +1227,18 @@ async function exportPictogramsPdf() {
 }
 
 .cl-r-signal--danger {
-    background: #fff0f0;
-    color: var(--bb-red);
+    background: var(--adm-danger-bg);
+    color: var(--adm-danger);
 }
 
 .cl-r-signal--warning {
-    background: #fffbf0;
-    color: var(--bb-peach-d);
+    background: var(--adm-warning-bg);
+    color: var(--adm-warning);
 }
 
 .cl-r-cat {
     font-size: 0.72rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .cl-r-class-meta {
@@ -1036,11 +1246,11 @@ async function exportPictogramsPdf() {
     gap: 1.25rem;
     flex-wrap: wrap;
     font-size: 0.75rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .cl-r-class-meta strong {
-    color: var(--bb-text);
+    color: var(--adm-ink);
     font-weight: 600;
 }
 </style>

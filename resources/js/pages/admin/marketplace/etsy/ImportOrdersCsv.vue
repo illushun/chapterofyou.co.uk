@@ -42,67 +42,132 @@ const submit = () => {
 
 <template>
     <AdminLayout>
-        <Head title="Import Etsy Orders — Admin" />
+        <Head title="Import Etsy Orders : Admin" />
 
         <!-- Header -->
         <div class="adm-header">
             <div>
                 <div class="adm-breadcrumb">
-                    <Link :href="route('admin.marketplace.etsy.index')">Marketplaces</Link>
+                    <Link :href="route('admin.marketplace.etsy.index')"
+                        >Marketplaces</Link
+                    >
                     <span class="adm-breadcrumb-sep">/</span>
-                    <Link :href="route('admin.marketplace.etsy.orders')">Etsy Orders</Link>
+                    <Link :href="route('admin.marketplace.etsy.orders')"
+                        >Etsy Orders</Link
+                    >
                     <span class="adm-breadcrumb-sep">/</span>
                     <span>Import from CSV</span>
                 </div>
                 <h1 class="adm-title">Import Etsy Orders from CSV</h1>
-                <p class="adm-sub">Upload an Etsy orders CSV to import orders without the API</p>
+                <p class="adm-sub">
+                    Upload an Etsy orders CSV to import orders without the API
+                </p>
             </div>
-            <Link :href="route('admin.marketplace.etsy.orders')" class="adm-btn adm-btn--ghost adm-btn--sm">
+            <Link
+                :href="route('admin.marketplace.etsy.orders')"
+                class="adm-btn adm-btn--ghost adm-btn--sm"
+            >
                 View Orders
             </Link>
         </div>
 
         <!-- Flash -->
-        <div v-if="flash.success" class="adm-flash adm-flash--success" style="margin-bottom:1.25rem">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+        <div
+            v-if="flash.success"
+            class="adm-flash adm-flash--success"
+            style="margin-bottom: 1.25rem"
+        >
+            <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+            >
+                <path d="M20 6 9 17l-5-5" />
+            </svg>
             {{ flash.success }}
         </div>
-        <div v-if="flash.error" class="adm-flash adm-flash--error" style="margin-bottom:1.25rem">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        <div
+            v-if="flash.error"
+            class="adm-flash adm-flash--error"
+            style="margin-bottom: 1.25rem"
+        >
+            <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+            >
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4M12 16h.01" />
+            </svg>
             {{ flash.error }}
         </div>
 
         <div class="ic-layout">
-
             <!-- Instructions card -->
             <div class="adm-card ic-instructions">
-                <h2 class="ic-section-title">How to download your Etsy orders CSV</h2>
+                <h2 class="ic-section-title">
+                    How to download your Etsy orders CSV
+                </h2>
                 <ol class="ic-steps">
                     <li class="ic-step">
                         <span class="ic-step-num">1</span>
                         <div>
                             <p class="ic-step-title">Open Etsy Shop Manager</p>
-                            <p class="ic-step-desc">Go to <strong>etsy.com/your/shops/me/sold</strong> or navigate to <em>Shop Manager → Orders &amp; Shipping</em>.</p>
+                            <p class="ic-step-desc">
+                                Go to
+                                <strong>etsy.com/your/shops/me/sold</strong> or
+                                navigate to
+                                <em>Shop Manager → Orders &amp; Shipping</em>.
+                            </p>
                         </div>
                     </li>
                     <li class="ic-step">
                         <span class="ic-step-num">2</span>
                         <div>
                             <p class="ic-step-title">Download the CSV</p>
-                            <p class="ic-step-desc">Click the <strong>Download CSV</strong> button (usually a cloud/download icon near the top of the orders list). Choose your date range if prompted.</p>
+                            <p class="ic-step-desc">
+                                Click the <strong>Download CSV</strong> button
+                                (usually a cloud/download icon near the top of
+                                the orders list). Choose your date range if
+                                prompted.
+                            </p>
                         </div>
                     </li>
                     <li class="ic-step">
                         <span class="ic-step-num">3</span>
                         <div>
                             <p class="ic-step-title">Upload it here</p>
-                            <p class="ic-step-desc">Select the downloaded CSV file below. Duplicate orders are automatically skipped.</p>
+                            <p class="ic-step-desc">
+                                Select the downloaded CSV file below. Duplicate
+                                orders are automatically skipped.
+                            </p>
                         </div>
                     </li>
                 </ol>
                 <div class="ic-note">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-                    Products are matched automatically via Listing ID or SKU/MPN. Unmatched items are still imported — you can review them in the order detail.
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                    >
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 8v4M12 16h.01" />
+                    </svg>
+                    Products are matched automatically via Listing ID or
+                    SKU/MPN. Unmatched items are still imported. You can review
+                    them in the order detail.
                 </div>
             </div>
 
@@ -111,46 +176,101 @@ const submit = () => {
                 <h2 class="ic-section-title">Upload CSV</h2>
 
                 <form @submit.prevent="submit">
-                    <div class="ic-drop-zone" :class="{ 'ic-drop-zone--filled': !!form.csv_file }"
-                        @click="fileInput?.click()">
-                        <svg v-if="!form.csv_file" width="32" height="32" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-                            class="ic-drop-icon">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
+                    <div
+                        class="ic-drop-zone"
+                        :class="{ 'ic-drop-zone--filled': !!form.csv_file }"
+                        @click="fileInput?.click()"
+                    >
+                        <svg
+                            v-if="!form.csv_file"
+                            width="32"
+                            height="32"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="ic-drop-icon"
+                        >
+                            <path
+                                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                            />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
                         </svg>
-                        <svg v-else width="32" height="32" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
-                            class="ic-drop-icon ic-drop-icon--ok">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14 2 14 8 20 8"/>
-                            <line x1="16" y1="13" x2="8" y2="13"/>
-                            <line x1="16" y1="17" x2="8" y2="17"/>
-                            <polyline points="10 9 9 9 8 9"/>
+                        <svg
+                            v-else
+                            width="32"
+                            height="32"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="ic-drop-icon ic-drop-icon--ok"
+                        >
+                            <path
+                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                            />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                            <polyline points="10 9 9 9 8 9" />
                         </svg>
                         <p v-if="!form.csv_file" class="ic-drop-label">
-                            Click to select an Etsy orders <strong>.csv</strong> file
+                            Click to select an Etsy orders
+                            <strong>.csv</strong> file
                         </p>
-                        <p v-else class="ic-drop-label ic-drop-label--file">{{ fileName }}</p>
-                        <input ref="fileInput" type="file" accept=".csv,text/csv" class="ic-file-input"
-                            @change="onFileChange" />
+                        <p v-else class="ic-drop-label ic-drop-label--file">
+                            {{ fileName }}
+                        </p>
+                        <input
+                            ref="fileInput"
+                            type="file"
+                            accept=".csv,text/csv"
+                            class="ic-file-input"
+                            @change="onFileChange"
+                        />
                     </div>
 
-                    <div v-if="form.errors.csv_file" class="ic-field-error">{{ form.errors.csv_file }}</div>
+                    <div v-if="form.errors.csv_file" class="ic-field-error">
+                        {{ form.errors.csv_file }}
+                    </div>
 
                     <div class="ic-upload-actions">
-                        <button v-if="form.csv_file" type="button" class="adm-btn adm-btn--ghost adm-btn--sm"
-                            @click="form.csv_file = null; fileName = ''">
+                        <button
+                            v-if="form.csv_file"
+                            type="button"
+                            class="adm-btn adm-btn--ghost adm-btn--sm"
+                            @click="
+                                form.csv_file = null;
+                                fileName = '';
+                            "
+                        >
                             Clear
                         </button>
-                        <button type="submit" :disabled="!form.csv_file || form.processing"
-                            class="adm-btn adm-btn--primary">
-                            <svg v-if="form.processing" class="adm-spinner" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2.5">
-                                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                        <button
+                            type="submit"
+                            :disabled="!form.csv_file || form.processing"
+                            class="adm-btn adm-btn--primary"
+                        >
+                            <svg
+                                v-if="form.processing"
+                                class="adm-spinner"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                            >
+                                <path
+                                    d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"
+                                />
                             </svg>
-                            {{ form.processing ? 'Importing…' : 'Import Orders' }}
+                            {{
+                                form.processing ? 'Importing…' : 'Import Orders'
+                            }}
                         </button>
                     </div>
                 </form>
@@ -169,28 +289,46 @@ const submit = () => {
                         <div class="ic-result-val">{{ result.skipped }}</div>
                         <div class="ic-result-label">Skipped (duplicates)</div>
                     </div>
-                    <div class="ic-result-stat" :class="result.errors.length ? 'ic-result-stat--red' : 'ic-result-stat--muted'">
-                        <div class="ic-result-val">{{ result.errors.length }}</div>
+                    <div
+                        class="ic-result-stat"
+                        :class="
+                            result.errors.length
+                                ? 'ic-result-stat--red'
+                                : 'ic-result-stat--muted'
+                        "
+                    >
+                        <div class="ic-result-val">
+                            {{ result.errors.length }}
+                        </div>
                         <div class="ic-result-label">Errors</div>
                     </div>
                 </div>
 
                 <div v-if="result.errors.length" class="ic-errors">
-                    <p class="ic-errors-title">The following orders could not be imported:</p>
+                    <p class="ic-errors-title">
+                        The following orders could not be imported:
+                    </p>
                     <ul class="ic-error-list">
-                        <li v-for="err in result.errors" :key="err" class="ic-error-item">{{ err }}</li>
+                        <li
+                            v-for="err in result.errors"
+                            :key="err"
+                            class="ic-error-item"
+                        >
+                            {{ err }}
+                        </li>
                     </ul>
                 </div>
 
                 <div v-if="result.imported > 0" class="ic-result-action">
-                    <Link :href="route('admin.marketplace.etsy.orders')" class="adm-btn adm-btn--primary">
+                    <Link
+                        :href="route('admin.marketplace.etsy.orders')"
+                        class="adm-btn adm-btn--primary"
+                    >
                         View Imported Orders
                     </Link>
                 </div>
             </div>
-
         </div>
-
     </AdminLayout>
 </template>
 
@@ -205,7 +343,7 @@ const submit = () => {
 .ic-section-title {
     font-size: 0.9rem;
     font-weight: 700;
-    color: var(--bb-text);
+    color: var(--adm-ink);
     margin-bottom: 1rem;
 }
 
@@ -228,8 +366,8 @@ const submit = () => {
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: var(--bb-lav, #a78bfa);
-    color: #fff;
+    background: var(--adm-stamp-dim, #a78bfa);
+    color: var(--adm-paper-raised);
     font-size: 0.7rem;
     font-weight: 700;
     display: flex;
@@ -242,13 +380,13 @@ const submit = () => {
 .ic-step-title {
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--bb-text);
+    color: var(--adm-ink);
     margin-bottom: 0.2rem;
 }
 
 .ic-step-desc {
     font-size: 0.8rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     line-height: 1.5;
 }
 
@@ -257,49 +395,58 @@ const submit = () => {
     align-items: flex-start;
     gap: 0.5rem;
     font-size: 0.78rem;
-    color: var(--bb-muted);
-    background: var(--bb-surface, #f8f8f8);
-    border-radius: var(--bb-radius-sm, 6px);
+    color: var(--adm-ink-dim);
+    background: var(--adm-paper-raised, #f8f8f8);
+    border-radius: var(--adm-radius-sm, 6px);
     padding: 0.65rem 0.75rem;
     line-height: 1.5;
 }
 
-.ic-note svg { flex-shrink: 0; margin-top: 1px; }
+.ic-note svg {
+    flex-shrink: 0;
+    margin-top: 1px;
+}
 
 /* Upload */
 .ic-drop-zone {
-    border: 2px dashed var(--bb-border);
-    border-radius: var(--bb-radius-md, 10px);
+    border: 2px dashed var(--adm-line);
+    border-radius: var(--adm-radius-md, 10px);
     padding: 2rem 1.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 0.6rem;
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
+    transition:
+        border-color 0.15s,
+        background 0.15s;
     position: relative;
     margin-bottom: 1rem;
 }
 
 .ic-drop-zone:hover,
 .ic-drop-zone--filled {
-    border-color: var(--bb-accent, #7c3aed);
-    background: var(--bb-surface, #f8f8f8);
+    border-color: var(--adm-stamp, #7c3aed);
+    background: var(--adm-paper-raised, #f8f8f8);
 }
 
-.ic-drop-icon { color: var(--bb-muted); }
-.ic-drop-icon--ok { color: var(--bb-green, #16a34a); }
+.ic-drop-icon {
+    color: var(--adm-ink-dim);
+}
+.ic-drop-icon--ok {
+    color: var(--adm-success, #16a34a);
+}
 
 .ic-drop-label {
     font-size: 0.85rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     text-align: center;
 }
 
 .ic-drop-label--file {
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .ic-file-input {
@@ -313,7 +460,7 @@ const submit = () => {
 
 .ic-field-error {
     font-size: 0.78rem;
-    color: var(--bb-red, #dc2626);
+    color: var(--adm-danger, #dc2626);
     margin-top: -0.5rem;
     margin-bottom: 0.75rem;
 }
@@ -333,7 +480,10 @@ const submit = () => {
     flex-wrap: wrap;
 }
 
-.ic-result-stat { text-align: center; min-width: 80px; }
+.ic-result-stat {
+    text-align: center;
+    min-width: 80px;
+}
 
 .ic-result-val {
     font-size: 1.6rem;
@@ -346,17 +496,23 @@ const submit = () => {
     font-weight: 600;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-top: 0.2rem;
 }
 
-.ic-result-stat--green .ic-result-val { color: var(--bb-green, #16a34a); }
-.ic-result-stat--red   .ic-result-val { color: var(--bb-red, #dc2626); }
-.ic-result-stat--muted .ic-result-val { color: var(--bb-muted); }
+.ic-result-stat--green .ic-result-val {
+    color: var(--adm-success, #16a34a);
+}
+.ic-result-stat--red .ic-result-val {
+    color: var(--adm-danger, #dc2626);
+}
+.ic-result-stat--muted .ic-result-val {
+    color: var(--adm-ink-dim);
+}
 
 .ic-errors {
-    background: var(--bb-red-bg, #fef2f2);
-    border-radius: var(--bb-radius-sm, 6px);
+    background: var(--adm-danger-bg, #fef2f2);
+    border-radius: var(--adm-radius-sm, 6px);
     padding: 0.75rem 1rem;
     margin-bottom: 1rem;
 }
@@ -364,17 +520,24 @@ const submit = () => {
 .ic-errors-title {
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--bb-red, #dc2626);
+    color: var(--adm-danger, #dc2626);
     margin-bottom: 0.5rem;
 }
 
-.ic-error-list { list-style: none; display: flex; flex-direction: column; gap: 0.25rem; }
+.ic-error-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
 
 .ic-error-item {
     font-size: 0.78rem;
     font-family: monospace;
-    color: var(--bb-red, #dc2626);
+    color: var(--adm-danger, #dc2626);
 }
 
-.ic-result-action { margin-top: 0.5rem; }
+.ic-result-action {
+    margin-top: 0.5rem;
+}
 </style>

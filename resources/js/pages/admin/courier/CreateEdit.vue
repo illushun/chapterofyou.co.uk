@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { computed, watch } from 'vue';
-import { debounce } from 'lodash';
+import { computed } from 'vue';
 
-// Interfaces for data structure
 interface Courier {
     id: number;
     name: string;
@@ -13,148 +11,220 @@ interface Courier {
     cost: number;
 }
 
-// Define props passed from AdminProductController
 const props = defineProps<{
-    courier?: Courier; // Only present when editing
+    courier?: Courier;
     isEditing: boolean;
     errors: Record<string, string>;
 }>();
 
-// Initialize the form state
 const form = useForm({
     name: props.courier?.name || '',
     type: props.courier?.type || 'Royal Mail',
     status: props.courier?.status || 'enabled',
-    cost: props.courier?.cost.toString() || '0.00', //
+    cost: props.courier?.cost.toString() || '0.00',
 });
 
-// Computed properties
-const title = computed(() => (props.isEditing ? `Edit Courier: ${props.courier?.name}` : 'Create New Courier'));
-const submitLabel = computed(() => (props.isEditing ? 'Update Courier' : 'Create Courier'));
+const title = computed(() =>
+    props.isEditing ? `Edit Courier: ${props.courier?.name}` : 'New Courier',
+);
+const submitLabel = computed(() =>
+    props.isEditing ? 'Save Changes' : 'Create Courier',
+);
 
-// --- Form submission logic ---
 const submit = () => {
-    // Convert string cost back to number for submission (though Laravel validation handles it)
     form.data().cost = parseFloat(form.cost);
 
     if (props.isEditing && props.courier) {
-        // When updating an existing product, files must be sent via POST,
-        // and we use transform to inject the _method: 'put' field for method spoofing.
-        form.transform((data) => ({
-            ...data,
-            // Explicitly set _method to 'put' for Laravel to handle multipart/form-data POST as a PUT request
-            _method: 'put',
-        }))
-            // Use form.post() when uploading files, even for PUT requests
-            .post(route('admin.couriers.update', props.courier.id), {
-                preserveScroll: true,
-                // Reset image arrays after successful submission
-                onSuccess: () => { }
-            });
+        form.transform((data) => ({ ...data, _method: 'put' })).post(
+            route('admin.couriers.update', props.courier.id),
+            { preserveScroll: true },
+        );
     } else {
-        // POST request for creation (no method spoofing needed)
-        form.post(route('admin.couriers.store'), {
-            preserveScroll: true,
-            onSuccess: () => { }
-        });
+        form.post(route('admin.couriers.store'), { preserveScroll: true });
     }
 };
 </script>
 
 <template>
     <AdminLayout>
+        <Head :title="`${title} : Admin`" />
 
-        <Head :title="title" />
-
-        <div class="mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">{{ title }}</h2>
-            <p class="text-copy-light mt-1">{{ isEditing ? 'Modify courier details' :
-                'Enter details for a new courier.' }}</p>
+        <!-- Header -->
+        <div class="adm-header">
+            <div>
+                <div class="adm-breadcrumb">
+                    <Link
+                        :href="route('admin.couriers.index')"
+                        class="adm-breadcrumb a"
+                        >Couriers</Link
+                    >
+                    <span class="adm-breadcrumb-sep">/</span>
+                    <span>{{ isEditing ? 'Edit' : 'New' }}</span>
+                </div>
+                <h1 class="adm-title">{{ title }}</h1>
+                <p class="adm-sub">
+                    {{
+                        isEditing
+                            ? 'Update courier details.'
+                            : 'Enter details for a new courier.'
+                    }}
+                </p>
+            </div>
+            <div v-if="form.isDirty" class="adm-unsaved">
+                <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v4M12 16h.01" />
+                </svg>
+                Unsaved changes
+            </div>
         </div>
 
-        <form @submit.prevent="submit" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            <div class="lg:col-span-2 space-y-6">
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">General
-                            Information</h3>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="mb-4">
-                                <label for="name" class="block text-sm font-medium text-copy mb-1">Name</label>
-                                <input type="text" id="name" v-model="form.name" required
-                                    class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                    :class="{ 'border-error': form.errors.name }" />
-                                <div v-if="form.errors.name" class="text-xs text-error mt-1">{{ form.errors.name }}
-                                </div>
-                            </div>
-
-                            <div class="mb-4">
-                                <label for="parent_product_id"
-                                    class="block text-sm font-medium text-copy mb-1">Type</label>
-                                <select id="type" v-model="form.type"
-                                    class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                    :class="{ 'border-error': form.errors.type }">
-                                    <option value="Royal Mail">Royal Mail</option>
-                                    <option value="FedEx">FedEx</option>
-                                    <option value="Evri">Evri</option>
-                                    <option value="DPD">DPD</option>
-                                </select>
-                                <div v-if="form.errors.type" class="text-xs text-error mt-1">{{
-                                    form.errors.type }}</div>
-                            </div>
+        <form @submit.prevent="submit" class="adm-form-grid">
+            <!-- Left column -->
+            <div class="adm-form-left">
+                <section class="adm-card">
+                    <h2 class="adm-card-title">General Information</h2>
+                    <div class="adm-field-row">
+                        <div class="adm-field">
+                            <label class="adm-label" for="name">Name</label>
+                            <input
+                                id="name"
+                                type="text"
+                                v-model="form.name"
+                                required
+                                class="adm-input"
+                                :class="{ 'adm-input--err': form.errors.name }"
+                            />
+                            <p v-if="form.errors.name" class="adm-err">
+                                {{ form.errors.name }}
+                            </p>
+                        </div>
+                        <div class="adm-field">
+                            <label class="adm-label" for="type">Type</label>
+                            <select
+                                id="type"
+                                v-model="form.type"
+                                class="adm-select"
+                                :class="{ 'adm-select--err': form.errors.type }"
+                            >
+                                <option value="Royal Mail">Royal Mail</option>
+                                <option value="FedEx">FedEx</option>
+                                <option value="Evri">Evri</option>
+                                <option value="DPD">DPD</option>
+                            </select>
+                            <p v-if="form.errors.type" class="adm-err">
+                                {{ form.errors.type }}
+                            </p>
                         </div>
                     </div>
-                </div>
+                </section>
 
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Pricing</h3>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="mb-4">
-                                <label for="cost" class="block text-sm font-medium text-copy mb-1">Delivery
-                                    Charge</label>
-                                <input type="number" id="cost" v-model="form.cost" required min="0.01" step="0.01"
-                                    class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm"
-                                    :class="{ 'border-error': form.errors.cost }" />
-                                <div v-if="form.errors.cost" class="text-xs text-error mt-1">{{ form.errors.cost }}
-                                </div>
-                            </div>
+                <section class="adm-card">
+                    <h2 class="adm-card-title">Pricing</h2>
+                    <div class="adm-field">
+                        <label class="adm-label" for="cost"
+                            >Delivery Charge</label
+                        >
+                        <div class="adm-prefix-wrap">
+                            <span class="adm-prefix">£</span>
+                            <input
+                                id="cost"
+                                type="number"
+                                v-model="form.cost"
+                                required
+                                min="0.01"
+                                step="0.01"
+                                class="adm-input adm-input--prefixed"
+                                :class="{ 'adm-input--err': form.errors.cost }"
+                            />
                         </div>
+                        <p v-if="form.errors.cost" class="adm-err">
+                            {{ form.errors.cost }}
+                        </p>
                     </div>
-                </div>
+                </section>
             </div>
 
-            <div class="lg:col-span-1 space-y-6">
-
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Status & Actions
-                        </h3>
-
-                        <div class="mb-4">
-                            <label for="status" class="block text-sm font-medium text-copy mb-1">Courier Status</label>
-                            <select id="status" v-model="form.status" required
-                                class="w-full rounded-lg border-2 border-copy bg-foreground p-3 text-copy focus:border-primary focus:ring-primary shadow-sm">
-                                <option value="enabled">Enabled</option>
-                                <option value="disabled">Disabled</option>
-                            </select>
-                            <div v-if="form.errors.status" class="text-xs text-error mt-1">{{ form.errors.status }}
-                            </div>
+            <!-- Right column -->
+            <div class="adm-form-right">
+                <section class="adm-card adm-card--sticky">
+                    <h2 class="adm-card-title">Status &amp; Actions</h2>
+                    <div class="adm-field">
+                        <label class="adm-label">Courier Status</label>
+                        <div class="adm-status-btns">
+                            <button
+                                type="button"
+                                @click="form.status = 'enabled'"
+                                class="adm-status-btn"
+                                :class="{
+                                    'adm-status-btn--on':
+                                        form.status === 'enabled',
+                                }"
+                            >
+                                <span
+                                    class="adm-status-dot adm-status-dot--green"
+                                ></span>
+                                Active
+                            </button>
+                            <button
+                                type="button"
+                                @click="form.status = 'disabled'"
+                                class="adm-status-btn"
+                                :class="{
+                                    'adm-status-btn--off':
+                                        form.status === 'disabled',
+                                }"
+                            >
+                                <span
+                                    class="adm-status-dot adm-status-dot--grey"
+                                ></span>
+                                Inactive
+                            </button>
                         </div>
-
-                        <button type="submit" :disabled="form.processing"
-                            class="mt-4 w-full py-3 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                            style="background-color: var(--primary); color: var(--primary-content);">
-                            {{ form.processing ? 'Saving...' : submitLabel }}
-                        </button>
-
-                        <div v-if="form.isDirty" class="mt-2 text-center text-sm text-yellow-600 font-medium">Unsaved
-                            changes</div>
+                        <p v-if="form.errors.status" class="adm-err">
+                            {{ form.errors.status }}
+                        </p>
                     </div>
-                </div>
+                    <button
+                        type="submit"
+                        :disabled="form.processing"
+                        class="adm-submit"
+                    >
+                        <svg
+                            v-if="form.processing"
+                            class="adm-spinner"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="rgba(255,255,255,0.3)"
+                                stroke-width="3"
+                            />
+                            <path
+                                d="M12 2a10 10 0 0 1 10 10"
+                                stroke="var(--adm-paper-raised)"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                            />
+                        </svg>
+                        {{ form.processing ? 'Saving...' : submitLabel }}
+                    </button>
+                    <p v-if="form.isDirty" class="adm-unsaved-inline">
+                        Unsaved changes
+                    </p>
+                </section>
             </div>
         </form>
     </AdminLayout>

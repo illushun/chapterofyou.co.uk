@@ -25,10 +25,18 @@ defineProps<{
 const search = ref('');
 
 function applySearch() {
-    router.get(route('admin.journal.index'), { search: search.value }, { preserveState: true });
+    router.get(
+        route('admin.journal.index'),
+        { search: search.value },
+        { preserveState: true },
+    );
 }
 function filterStatus(status: string) {
-    router.get(route('admin.journal.index'), { status }, { preserveState: true });
+    router.get(
+        route('admin.journal.index'),
+        { status },
+        { preserveState: true },
+    );
 }
 function deletePost(id: number, title: string) {
     if (!confirm(`Delete "${title}"? This cannot be undone.`)) return;
@@ -41,33 +49,84 @@ function deletePost(id: number, title: string) {
         <div class="adm-header">
             <div>
                 <h1 class="adm-title">Journal</h1>
-                <p class="adm-sub">Write articles to improve your SEO and connect with customers.</p>
+                <p class="adm-sub">
+                    Write articles to improve your SEO and connect with
+                    customers.
+                </p>
             </div>
-            <div style="display:flex; gap:0.6rem;">
-                <Link :href="route('admin.journal.auto-generator.edit')" class="adm-btn adm-btn--ghost">
-                Auto Generator
+            <div style="display: flex; gap: 0.6rem">
+                <Link
+                    :href="route('admin.journal.auto-generator.edit')"
+                    class="adm-btn adm-btn--ghost"
+                >
+                    Auto Generator
                 </Link>
-                <Link :href="route('admin.journal.create')" class="adm-btn adm-btn--primary">
-                + New Post
+                <Link
+                    :href="route('admin.journal.create')"
+                    class="adm-btn adm-btn--primary"
+                >
+                    + New Post
                 </Link>
             </div>
         </div>
 
         <!-- Filters -->
-        <div class="adm-card adm-card--sm"
-            style="margin-bottom: 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+        <div
+            class="adm-card adm-card--sm"
+            style="
+                margin-bottom: 1.25rem;
+                display: flex;
+                gap: 0.75rem;
+                flex-wrap: wrap;
+                align-items: center;
+            "
+        >
             <div class="adm-status-btns">
-                <button @click="filterStatus('')" class="adm-status-btn"
-                    :class="!filters.status ? 'adm-status-btn--active' : ''">All</button>
-                <button @click="filterStatus('published')" class="adm-status-btn"
-                    :class="filters.status === 'published' ? 'adm-status-btn--active' : ''">Published</button>
-                <button @click="filterStatus('draft')" class="adm-status-btn"
-                    :class="filters.status === 'draft' ? 'adm-status-btn--active' : ''">Drafts</button>
+                <button
+                    @click="filterStatus('')"
+                    class="adm-status-btn"
+                    :class="!filters.status ? 'adm-status-btn--active' : ''"
+                >
+                    All
+                </button>
+                <button
+                    @click="filterStatus('published')"
+                    class="adm-status-btn"
+                    :class="
+                        filters.status === 'published'
+                            ? 'adm-status-btn--active'
+                            : ''
+                    "
+                >
+                    Published
+                </button>
+                <button
+                    @click="filterStatus('draft')"
+                    class="adm-status-btn"
+                    :class="
+                        filters.status === 'draft'
+                            ? 'adm-status-btn--active'
+                            : ''
+                    "
+                >
+                    Drafts
+                </button>
             </div>
-            <div style="display:flex; gap:0.5rem; flex:1; min-width:200px;">
-                <input v-model="search" type="text" class="adm-input" placeholder="Search posts…"
-                    @keyup.enter="applySearch" style="flex:1;" />
-                <button @click="applySearch" class="adm-btn adm-btn--ghost adm-btn--sm">Search</button>
+            <div style="display: flex; gap: 0.5rem; flex: 1; min-width: 200px">
+                <input
+                    v-model="search"
+                    type="text"
+                    class="adm-input"
+                    placeholder="Search posts…"
+                    @keyup.enter="applySearch"
+                    style="flex: 1"
+                />
+                <button
+                    @click="applySearch"
+                    class="adm-btn adm-btn--ghost adm-btn--sm"
+                >
+                    Search
+                </button>
             </div>
         </div>
 
@@ -85,43 +144,114 @@ function deletePost(id: number, title: string) {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="post in posts.data" :key="post.id" class="adm-row">
+                    <tr
+                        v-for="post in posts.data"
+                        :key="post.id"
+                        class="adm-row"
+                    >
                         <td class="adm-td">
-                            <div style="display:flex; align-items:center; gap:0.4rem;">
-                                <span style="font-weight:600; color: var(--bb-text);">{{ post.title }}</span>
-                                <span v-if="post.is_ai_generated" class="adm-badge adm-badge--on"
-                                    title="Generated by the auto-generator">AI</span>
+                            <div
+                                style="
+                                    display: flex;
+                                    align-items: center;
+                                    gap: 0.4rem;
+                                "
+                            >
+                                <span
+                                    style="
+                                        font-weight: 600;
+                                        color: var(--adm-ink);
+                                    "
+                                    >{{ post.title }}</span
+                                >
+                                <span
+                                    v-if="post.is_ai_generated"
+                                    class="adm-badge adm-badge--on"
+                                    title="Generated by the auto-generator"
+                                    >AI</span
+                                >
                             </div>
-                            <div style="font-size:0.75rem; color: var(--bb-muted); font-family: monospace;">{{ post.slug
-                                }}</div>
+                            <div
+                                style="
+                                    font-size: 0.75rem;
+                                    color: var(--adm-ink-dim);
+                                    font-family: monospace;
+                                "
+                            >
+                                {{ post.slug }}
+                            </div>
                         </td>
                         <td class="adm-td">
-                            <span class="adm-badge" :class="post.status === 'published' ? 'adm-badge--on' : 'adm-badge--warn'">
+                            <span
+                                class="adm-badge"
+                                :class="
+                                    post.status === 'published'
+                                        ? 'adm-badge--on'
+                                        : 'adm-badge--warn'
+                                "
+                            >
                                 {{ post.status }}
                             </span>
                         </td>
-                        <td class="adm-td" style="font-size:0.82rem; color: var(--bb-muted);">
-                            {{ post.published_at ?? '—' }}
+                        <td
+                            class="adm-td"
+                            style="
+                                font-size: 0.82rem;
+                                color: var(--adm-ink-dim);
+                            "
+                        >
+                            {{ post.published_at ?? '-' }}
                         </td>
-                        <td class="adm-td" style="font-size:0.82rem; color:var(--bb-muted);">
+                        <td
+                            class="adm-td"
+                            style="
+                                font-size: 0.82rem;
+                                color: var(--adm-ink-dim);
+                            "
+                        >
                             {{ post.views.toLocaleString() }}
                         </td>
-                        <td class="adm-td" style="font-size:0.82rem;">
-                            {{ post.author?.name ?? '—' }}
+                        <td class="adm-td" style="font-size: 0.82rem">
+                            {{ post.author?.name ?? '-' }}
                         </td>
                         <td class="adm-td adm-td--actions">
-                            <a :href="`/journal/${post.slug}`" target="_blank" class="adm-action adm-action--edit"
-                                title="View live">↗</a>
-                            <Link :href="route('admin.journal.edit', post.id)" class="adm-action adm-action--edit">Edit</Link>
-                            <button @click="deletePost(post.id, post.title)" class="adm-action adm-action--del">Delete</button>
+                            <a
+                                :href="`/journal/${post.slug}`"
+                                target="_blank"
+                                class="adm-action adm-action--edit"
+                                title="View live"
+                                >↗</a
+                            >
+                            <Link
+                                :href="route('admin.journal.edit', post.id)"
+                                class="adm-action adm-action--edit"
+                                >Edit</Link
+                            >
+                            <button
+                                @click="deletePost(post.id, post.title)"
+                                class="adm-action adm-action--del"
+                            >
+                                Delete
+                            </button>
                         </td>
                     </tr>
                     <tr v-if="!posts.data.length">
-                        <td colspan="5" class="adm-td"
-                            style="text-align:center; padding:3rem; color:var(--bb-muted); font-style:italic;">
+                        <td
+                            colspan="5"
+                            class="adm-td"
+                            style="
+                                text-align: center;
+                                padding: 3rem;
+                                color: var(--adm-ink-dim);
+                                font-style: italic;
+                            "
+                        >
                             No posts yet.
-                            <Link :href="route('admin.journal.create')" style="color:var(--bb-lav-d);">Write your first
-                            article</Link>
+                            <Link
+                                :href="route('admin.journal.create')"
+                                style="color: var(--adm-stamp-deep)"
+                                >Write your first article</Link
+                            >
                         </td>
                     </tr>
                 </tbody>
@@ -133,49 +263,120 @@ function deletePost(id: number, title: string) {
             <div v-for="post in posts.data" :key="post.id" class="adm-mob-card">
                 <div class="je-mob-head">
                     <div class="je-mob-info">
-                        <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
-                            <span style="font-weight:600; color: var(--bb-text);">{{ post.title }}</span>
-                            <span v-if="post.is_ai_generated" class="adm-badge adm-badge--on"
-                                title="Generated by the auto-generator">AI</span>
+                        <div
+                            style="
+                                display: flex;
+                                align-items: center;
+                                gap: 0.4rem;
+                                flex-wrap: wrap;
+                            "
+                        >
+                            <span
+                                style="font-weight: 600; color: var(--adm-ink)"
+                                >{{ post.title }}</span
+                            >
+                            <span
+                                v-if="post.is_ai_generated"
+                                class="adm-badge adm-badge--on"
+                                title="Generated by the auto-generator"
+                                >AI</span
+                            >
                         </div>
-                        <p style="font-size:0.75rem; color: var(--bb-muted); font-family: var(--bb-mono);">{{ post.slug }}</p>
+                        <p
+                            style="
+                                font-size: 0.75rem;
+                                color: var(--adm-ink-dim);
+                                font-family: var(--adm-font);
+                            "
+                        >
+                            {{ post.slug }}
+                        </p>
                     </div>
-                    <span class="adm-badge" :class="post.status === 'published' ? 'adm-badge--on' : 'adm-badge--warn'">
+                    <span
+                        class="adm-badge"
+                        :class="
+                            post.status === 'published'
+                                ? 'adm-badge--on'
+                                : 'adm-badge--warn'
+                        "
+                    >
                         {{ post.status }}
                     </span>
                 </div>
                 <div class="je-mob-meta">
                     <div>
                         <p class="je-mob-stat-label">Published</p>
-                        <p class="je-mob-stat-val">{{ post.published_at ?? '—' }}</p>
+                        <p class="je-mob-stat-val">
+                            {{ post.published_at ?? '-' }}
+                        </p>
                     </div>
                     <div>
                         <p class="je-mob-stat-label">Views</p>
-                        <p class="je-mob-stat-val">{{ post.views.toLocaleString() }}</p>
+                        <p class="je-mob-stat-val">
+                            {{ post.views.toLocaleString() }}
+                        </p>
                     </div>
                     <div>
                         <p class="je-mob-stat-label">Author</p>
-                        <p class="je-mob-stat-val">{{ post.author?.name ?? '—' }}</p>
+                        <p class="je-mob-stat-val">
+                            {{ post.author?.name ?? '-' }}
+                        </p>
                     </div>
                 </div>
                 <div class="je-mob-actions">
-                    <a :href="`/journal/${post.slug}`" target="_blank" class="adm-action adm-action--edit">↗ View</a>
-                    <Link :href="route('admin.journal.edit', post.id)" class="adm-action adm-action--edit">Edit</Link>
-                    <button @click="deletePost(post.id, post.title)" class="adm-action adm-action--del">Delete</button>
+                    <a
+                        :href="`/journal/${post.slug}`"
+                        target="_blank"
+                        class="adm-action adm-action--edit"
+                        >↗ View</a
+                    >
+                    <Link
+                        :href="route('admin.journal.edit', post.id)"
+                        class="adm-action adm-action--edit"
+                        >Edit</Link
+                    >
+                    <button
+                        @click="deletePost(post.id, post.title)"
+                        class="adm-action adm-action--del"
+                    >
+                        Delete
+                    </button>
                 </div>
             </div>
-            <p v-if="!posts.data.length" style="text-align:center; padding:3rem 1rem; color:var(--bb-muted); font-style:italic;">
+            <p
+                v-if="!posts.data.length"
+                style="
+                    text-align: center;
+                    padding: 3rem 1rem;
+                    color: var(--adm-ink-dim);
+                    font-style: italic;
+                "
+            >
                 No posts yet.
-                <Link :href="route('admin.journal.create')" style="color:var(--bb-lav-d);">Write your first article</Link>
+                <Link
+                    :href="route('admin.journal.create')"
+                    style="color: var(--adm-stamp-deep)"
+                    >Write your first article</Link
+                >
             </p>
         </div>
 
         <!-- Pagination -->
         <div v-if="posts.links?.length > 3" class="adm-pagination">
             <template v-for="link in posts.links" :key="link.label">
-                <button v-if="link.url" @click="router.visit(link.url)" class="adm-page-btn"
-                    :class="{ 'adm-page-btn--active': link.active }" v-html="link.label" />
-                <span v-else class="adm-page-btn" style="opacity:0.35;" v-html="link.label" />
+                <button
+                    v-if="link.url"
+                    @click="router.visit(link.url)"
+                    class="adm-page-btn"
+                    :class="{ 'adm-page-btn--active': link.active }"
+                    v-html="link.label"
+                />
+                <span
+                    v-else
+                    class="adm-page-btn"
+                    style="opacity: 0.35"
+                    v-html="link.label"
+                />
             </template>
         </div>
     </AdminLayout>
@@ -207,12 +408,12 @@ function deletePost(id: number, title: string) {
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .je-mob-stat-val {
     font-size: 0.82rem;
-    color: var(--bb-text);
+    color: var(--adm-ink);
     margin-top: 0.1rem;
 }
 

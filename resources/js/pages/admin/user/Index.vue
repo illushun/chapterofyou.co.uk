@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { useAdmin } from '@/composables/useAdmin';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import { Users } from 'lucide-vue-next';
 
 interface User {
     id: number;
@@ -16,145 +18,173 @@ interface UsersPaginated {
     last_page: number;
 }
 
-const props = defineProps<{
+defineProps<{
     users: UsersPaginated;
 }>();
 
-const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString('en-GB', {
+const { paginate } = useAdmin();
+
+const formatDate = (dateString: string): string =>
+    new Date(dateString).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
     });
-};
-
-const paginate = (url: string | null) => {
-    if (url) {
-        router.get(url, {}, { preserveState: true, preserveScroll: true });
-    }
-};
 </script>
 
 <template>
     <AdminLayout>
+        <Head title="Users : Admin" />
 
-        <Head title="Manage Users" />
-
-        <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">Registered Users</h2>
+        <!-- Header -->
+        <div class="adm-header">
+            <div>
+                <h1 class="adm-title">Users</h1>
+                <p class="adm-sub">Registered customers and admins</p>
+            </div>
         </div>
 
-        <div v-if="users.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
-
-            <!--
-                DESKTOP TABLE VIEW
-                (Hidden below 'md' breakpoint, uses full table structure)
-            -->
-            <div class="hidden md:block relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
-                <table class="min-w-full text-sm divide-y divide-copy-light/50">
+        <!-- Table card -->
+        <div class="adm-card adm-card--flush" style="margin-bottom: 1.5rem">
+            <!-- Desktop table -->
+            <div v-if="users.data.length" class="adm-table-wrap">
+                <table class="adm-table">
                     <thead>
-                        <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
-                            <th class="px-4 py-3">#</th>
-                            <th class="px-4 py-3">Name</th>
-                            <th class="px-4 py-3">Email</th>
-                            <th class="px-4 py-3">Joined</th>
-                            <th class="px-4 py-3">Role</th>
-                            <th class="px-4 py-3 text-right">Actions</th>
+                        <tr class="adm-thead">
+                            <th class="adm-th">#</th>
+                            <th class="adm-th">Name</th>
+                            <th class="adm-th">Email</th>
+                            <th class="adm-th">Joined</th>
+                            <th class="adm-th">Role</th>
+                            <th class="adm-th adm-th--right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-copy-light/50">
-                        <tr v-for="user in users.data" :key="user.id" class="hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-semibold">{{ user.id }}</td>
-                            <td class="px-4 py-3">{{ user.name }}</td>
-                            <td class="px-4 py-3">{{ user.email }}</td>
-                            <td class="px-4 py-3 text-copy-light">{{ formatDate(user.created_at) }}</td>
-                            <td class="px-4 py-3">
-                                <span v-if="user.is_admin"
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary text-primary-content border border-primary-dark">
-                                    Admin
-                                </span>
-                                <span v-else
-                                    class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-gray-500/20 text-gray-700 border border-gray-700">
-                                    Customer
+                    <tbody>
+                        <tr
+                            v-for="user in users.data"
+                            :key="user.id"
+                            class="adm-row"
+                        >
+                            <td class="adm-td adm-td--mono">{{ user.id }}</td>
+                            <td class="adm-td">{{ user.name }}</td>
+                            <td
+                                class="adm-td"
+                                style="color: var(--adm-ink-dim)"
+                            >
+                                {{ user.email }}
+                            </td>
+                            <td
+                                class="adm-td"
+                                style="color: var(--adm-ink-dim)"
+                            >
+                                {{ formatDate(user.created_at) }}
+                            </td>
+                            <td class="adm-td">
+                                <span
+                                    class="adm-badge"
+                                    :class="
+                                        user.is_admin
+                                            ? 'adm-badge--blush'
+                                            : 'adm-badge--off'
+                                    "
+                                >
+                                    {{ user.is_admin ? 'Admin' : 'Customer' }}
                                 </span>
                             </td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <Link :href="route('admin.users.show', user.id)"
-                                    class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                View
-                                </Link>
+                            <td class="adm-td adm-td--actions">
+                                <Link
+                                    :href="route('admin.users.show', user.id)"
+                                    class="adm-action adm-action--edit"
+                                >
+                                    View</Link
+                                >
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!--
-                MOBILE CARD VIEW
-                (Visible below 'md' breakpoint, stacked layout for small screens)
-            -->
-            <div class="md:hidden divide-y divide-copy-light/50">
-                <div v-for="user in users.data" :key="user.id"
-                    class="p-4 bg-foreground hover:bg-secondary-light transition">
-
-                    <!-- Header: Name, ID, Role -->
-                    <div class="flex justify-between items-start border-b border-copy-light/30 pb-2 mb-2">
-                        <div>
-                            <Link :href="route('admin.users.show', user.id)"
-                                class="text-lg font-bold text-copy hover:underline">
-                            {{ user.name }}
-                            </Link>
-                        </div>
-                        <span v-if="user.is_admin"
-                            class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-primary text-primary-content border border-primary-dark flex-shrink-0">
-                            Admin
+            <!-- Mobile cards -->
+            <div v-if="users.data.length" class="adm-mob-list">
+                <Link
+                    v-for="user in users.data"
+                    :key="user.id"
+                    :href="route('admin.users.show', user.id)"
+                    class="adm-mob-card"
+                    style="text-decoration: none"
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                        "
+                    >
+                        <span style="font-weight: 600; color: var(--adm-ink)">{{
+                            user.name
+                        }}</span>
+                        <span
+                            class="adm-badge"
+                            :class="
+                                user.is_admin
+                                    ? 'adm-badge--blush'
+                                    : 'adm-badge--off'
+                            "
+                        >
+                            {{ user.is_admin ? 'Admin' : 'Customer' }}
                         </span>
-                        <span v-else
-                            class="px-2 py-0.5 rounded-full text-xs font-semibold uppercase bg-gray-500/20 text-gray-700 border border-gray-700 flex-shrink-0">
-                            Customer
-                        </span>
                     </div>
-
-                    <!-- Details: Email and Joined Date -->
-                    <div class="flex justify-between items-center py-2">
-                        <!-- Email -->
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-end;
+                        "
+                    >
                         <div>
-                            <div class="text-xs text-copy-light uppercase font-medium">Email</div>
-                            <div class="text-sm text-copy truncate">{{ user.email }}</div>
+                            <p class="adm-label--sm">Email</p>
+                            <p style="color: var(--adm-ink)">
+                                {{ user.email }}
+                            </p>
                         </div>
-
-                        <!-- Joined Date -->
-                        <div class="text-right">
-                            <div class="text-xs text-copy-light uppercase font-medium">Joined</div>
-                            <div class="text-sm text-copy">{{ formatDate(user.created_at) }}</div>
+                        <div style="text-align: right">
+                            <p class="adm-label--sm">Joined</p>
+                            <p style="color: var(--adm-ink)">
+                                {{ formatDate(user.created_at) }}
+                            </p>
                         </div>
                     </div>
+                </Link>
+            </div>
 
-                    <!-- Actions -->
-                    <div class="pt-3 text-right border-t border-copy-light/30 mt-3">
-                        <Link :href="route('admin.users.show', user.id)"
-                            class="px-3 py-1 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
-                        View
-                        </Link>
-                    </div>
+            <div v-if="!users.data.length" class="adm-empty">
+                <div class="adm-empty-icon">
+                    <Users :size="28" :stroke-width="1.5" />
                 </div>
+                <p class="adm-empty-title">No users yet</p>
+                <p class="adm-empty-sub">
+                    Registered customers will appear here.
+                </p>
             </div>
         </div>
 
-        <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-secondary-light/50">
-            <p class="text-xl font-semibold text-copy mb-2">No users found.</p>
-        </div>
-
-        <div v-if="users.last_page > 1" class="mt-6 flex justify-center">
-            <ol class="flex gap-2 text-sm font-medium">
-                <li v-for="link in users.links" :key="link.label">
-                    <button @click.prevent="paginate(link.url)" :disabled="!link.url"
-                        :class="{ 'px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold': true, 'bg-primary text-primary-content shadow-md': link.active, 'bg-foreground hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed': !link.active }"
-                        v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')"
-                        :aria-label="link.label">
-                    </button>
-                </li>
-            </ol>
+        <!-- Pagination -->
+        <div v-if="users.last_page > 1" class="adm-pagination">
+            <div class="adm-page-btns">
+                <button
+                    v-for="link in users.links"
+                    :key="link.label"
+                    @click.prevent="paginate(link.url)"
+                    :disabled="!link.url"
+                    class="adm-page-btn"
+                    :class="{ 'adm-page-btn--active': link.active }"
+                    v-html="
+                        link.label
+                            .replace('&laquo; Previous', '←')
+                            .replace('Next &raquo;', '→')
+                    "
+                ></button>
+            </div>
         </div>
     </AdminLayout>
 </template>

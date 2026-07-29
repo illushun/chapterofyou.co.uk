@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { useAdmin } from '@/composables/useAdmin';
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { PackageSearch } from 'lucide-vue-next';
 
-// Interfaces for data structure
 interface User {
     id: number;
     name: string;
@@ -15,7 +15,13 @@ interface Order {
     user_id: number | null;
     user: User | null;
     grand_total: number;
-    status: 'pending' | 'successful' | 'failed' | 'processing' | 'shipped' | 'cancelled';
+    status:
+        | 'pending'
+        | 'successful'
+        | 'failed'
+        | 'processing'
+        | 'shipped'
+        | 'cancelled';
     created_at: string;
 }
 
@@ -25,182 +31,247 @@ interface OrdersPaginated {
     last_page: number;
 }
 
-const props = defineProps<{
+defineProps<{
     orders: OrdersPaginated;
 }>();
 
-const formatCurrency = (amount: number | string | null | undefined): string => {
-    const numericAmount = Number(amount) || 0;
-    return `£${numericAmount.toFixed(2)}`;
-};
+const { paginate, fmtCurrency } = useAdmin();
 
-const formatDate = (dateString: string): string => {
-    // Standard format for cards and tables
-    return new Date(dateString).toLocaleDateString('en-GB', {
+const formatDate = (dateString: string): string =>
+    new Date(dateString).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
     });
-};
-
-const getStatusClasses = (status: Order['status']) => {
-    switch (status) {
-        case 'successful':
-        case 'shipped':
-            return 'bg-green-500/20 text-green-700 border border-green-700';
-        case 'processing':
-            return 'bg-blue-500/20 text-blue-700 border border-blue-700';
-        case 'pending':
-            return 'bg-yellow-500/20 text-yellow-700 border border-yellow-700';
-        case 'failed':
-        case 'cancelled':
-            return 'bg-red-500/20 text-error border border-error-dark';
-        default:
-            return 'bg-gray-500/20 text-gray-700 border border-gray-700';
-    }
-};
-
-const paginate = (url: string | null) => {
-    if (url) {
-        router.get(url, {}, { preserveState: true, preserveScroll: true });
-    }
-};
 </script>
 
 <template>
     <AdminLayout>
+        <Head title="Orders : Admin" />
 
-        <Head title="Manage Orders" />
-
-        <div class="flex justify-between items-center mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">Orders (Recent)</h2>
+        <!-- Header -->
+        <div class="adm-header">
+            <div>
+                <h1 class="adm-title">Orders</h1>
+                <p class="adm-sub">Recent orders placed through the store</p>
+            </div>
         </div>
 
-        <div v-if="orders.data.length" class="rounded-lg border-2 border-copy bg-[var(--primary-content)]">
-
-            <!--
-                DESKTOP TABLE VIEW
-                (Hidden below 'md' breakpoint, uses full table structure)
-            -->
-            <div class="hidden md:block relative rounded-lg -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
-                <table class="min-w-full text-sm divide-y divide-copy-light/50">
+        <!-- Table card -->
+        <div class="adm-card adm-card--flush" style="margin-bottom: 1.5rem">
+            <!-- Desktop table -->
+            <div v-if="orders.data.length" class="adm-table-wrap">
+                <table class="adm-table">
                     <thead>
-                        <tr class="text-left bg-secondary-light font-bold text-copy uppercase border-b-2 border-copy">
-                            <th class="px-4 py-3">#</th>
-                            <th class="px-4 py-3">Customer</th>
-                            <th class="px-4 py-3">Date</th>
-                            <th class="px-4 py-3">Total</th>
-                            <th class="px-4 py-3">Status</th>
-                            <th class="px-4 py-3 text-right">Actions</th>
+                        <tr class="adm-thead">
+                            <th class="adm-th">Order</th>
+                            <th class="adm-th">Customer</th>
+                            <th class="adm-th">Date</th>
+                            <th class="adm-th">Total</th>
+                            <th class="adm-th">Status</th>
+                            <th class="adm-th adm-th--right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-copy-light/50">
-                        <tr v-for="order in orders.data" :key="order.id" class="hover:bg-secondary-light transition">
-                            <td class="px-4 py-3 font-semibold">COY-{{ order.id }}</td>
-                            <td class="px-4 py-3">
+                    <tbody>
+                        <tr
+                            v-for="order in orders.data"
+                            :key="order.id"
+                            class="adm-row"
+                        >
+                            <td class="adm-td adm-td--mono">
+                                COY-{{ order.id }}
+                            </td>
+                            <td class="adm-td">
                                 <span v-if="order.user">
-                                    <Link :href="route('admin.users.show', order.user.id)" class="hover:underline">{{
-                                        order.user.name }}</Link><br>
-                                    <span class="text-xs text-copy-light">{{ order.user.email }}</span>
+                                    <Link
+                                        :href="
+                                            route(
+                                                'admin.users.show',
+                                                order.user.id,
+                                            )
+                                        "
+                                        class="or-name-link"
+                                        >{{ order.user.name }}</Link
+                                    >
+                                    <p
+                                        class="adm-sub"
+                                        style="margin-top: 0.1rem"
+                                    >
+                                        {{ order.user.email }}
+                                    </p>
                                 </span>
-                                <span v-else class="text-copy-light italic">Guest</span>
-                            </td>
-                            <td class="px-4 py-3">{{ formatDate(order.created_at) }}</td>
-                            <td class="px-4 py-3 font-bold text-primary-content">{{ formatCurrency(order.grand_total) }}
-                            </td>
-                            <td class="px-4 py-3">
                                 <span
-                                    :class="['px-3 py-1 rounded-full text-xs font-semibold uppercase', getStatusClasses(order.status)]">
-                                    {{ order.status }}
-                                </span>
+                                    v-else
+                                    class="adm-td--mono"
+                                    style="font-style: italic"
+                                    >Guest</span
+                                >
                             </td>
-                            <td class="px-4 py-3 text-right whitespace-nowrap">
-                                <Link :href="route('admin.orders.show', order.id)"
-                                    class="text-blue-500 hover:text-blue-700 transition font-semibold">
-                                View
-                                </Link>
+                            <td
+                                class="adm-td"
+                                style="color: var(--adm-ink-dim)"
+                            >
+                                {{ formatDate(order.created_at) }}
+                            </td>
+                            <td class="adm-td adm-td--price">
+                                {{ fmtCurrency(order.grand_total) }}
+                            </td>
+                            <td class="adm-td">
+                                <span
+                                    class="adm-badge"
+                                    :class="{
+                                        'adm-badge--on':
+                                            order.status === 'successful' ||
+                                            order.status === 'shipped',
+                                        'adm-badge--lav':
+                                            order.status === 'processing',
+                                        'adm-badge--warn':
+                                            order.status === 'pending',
+                                        'adm-badge--red':
+                                            order.status === 'cancelled' ||
+                                            order.status === 'failed',
+                                    }"
+                                    >{{ order.status }}</span
+                                >
+                            </td>
+                            <td class="adm-td adm-td--actions">
+                                <Link
+                                    :href="route('admin.orders.show', order.id)"
+                                    class="adm-action adm-action--edit"
+                                >
+                                    View</Link
+                                >
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <!--
-                MOBILE CARD VIEW
-                (Visible below 'md' breakpoint, stacked layout for small screens)
-            -->
-            <div class="md:hidden divide-y divide-copy-light/50">
-                <div v-for="order in orders.data" :key="order.id"
-                    class="p-4 bg-foreground hover:bg-secondary-light transition">
-
-                    <!-- Order ID and Status -->
-                    <div class="flex justify-between items-start mb-3 border-b border-copy-light/30 pb-2">
-                        <div>
-                            <Link :href="route('admin.orders.show', order.id)"
-                                class="text-xl font-bold hover:underline">
-                            #{{ order.id }}
-                            </Link>
-                        </div>
+            <!-- Mobile cards -->
+            <div v-if="orders.data.length" class="adm-mob-list">
+                <Link
+                    v-for="order in orders.data"
+                    :key="order.id"
+                    :href="route('admin.orders.show', order.id)"
+                    class="adm-mob-card"
+                    style="text-decoration: none"
+                >
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-start;
+                        "
+                    >
                         <span
-                            :class="['mt-1 px-3 py-1 rounded-full text-xs font-semibold uppercase flex-shrink-0', getStatusClasses(order.status)]">
-                            {{ order.status }}
-                        </span>
+                            class="adm-td--mono"
+                            style="font-weight: 600; color: var(--adm-ink)"
+                            >COY-{{ order.id }}</span
+                        >
+                        <span
+                            class="adm-badge"
+                            :class="{
+                                'adm-badge--on':
+                                    order.status === 'successful' ||
+                                    order.status === 'shipped',
+                                'adm-badge--lav': order.status === 'processing',
+                                'adm-badge--warn': order.status === 'pending',
+                                'adm-badge--red':
+                                    order.status === 'cancelled' ||
+                                    order.status === 'failed',
+                            }"
+                            >{{ order.status }}</span
+                        >
                     </div>
-
-                    <!-- Customer Info -->
-                    <div class="py-2 border-b border-copy-light/30">
-                        <div class="text-xs text-copy-light uppercase font-medium">Customer</div>
-                        <div v-if="order.user" class="mt-1">
-                            <Link :href="route('admin.users.show', order.user.id)"
-                                class="font-semibold text-copy hover:underline">{{ order.user.name }}</Link>
-                            <div class="text-sm text-copy-light">{{ order.user.email }}</div>
-                        </div>
-                        <div v-else class="text-copy-light italic mt-1 text-sm">Guest Checkout</div>
+                    <div>
+                        <p class="adm-label--sm">Customer</p>
+                        <p v-if="order.user" style="color: var(--adm-ink)">
+                            {{ order.user.name }}
+                        </p>
+                        <p
+                            v-else
+                            style="
+                                font-style: italic;
+                                color: var(--adm-ink-dim);
+                            "
+                        >
+                            Guest checkout
+                        </p>
                     </div>
-
-                    <!-- Date, Total, and Actions -->
-                    <div class="flex justify-between items-end pt-3">
-                        <!-- Date & Total -->
-                        <div class="flex flex-col space-y-1">
-                            <div>
-                                <div class="text-xs text-copy-light uppercase font-medium">Total</div>
-                                <div class="font-bold text-lg text-primary-content">{{ formatCurrency(order.grand_total)
-                                }}
-                                </div>
-                            </div>
-                            <div class="text-xs text-copy-light italic">
-                                Placed: {{ formatDate(order.created_at) }}
-                            </div>
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: flex-end;
+                        "
+                    >
+                        <div>
+                            <p class="adm-label--sm">Total</p>
+                            <p
+                                class="adm-td--price"
+                                style="color: var(--adm-ink)"
+                            >
+                                {{ fmtCurrency(order.grand_total) }}
+                            </p>
                         </div>
-
-                        <!-- Actions -->
-                        <div class="flex-shrink-0">
-                            <Link :href="route('admin.orders.show', order.id)"
-                                class="px-4 py-2 text-sm font-semibold transition border-2 border-copy bg-primary text-primary-content hover:bg-primary-dark rounded-lg shadow-md">
-                            View
-                            </Link>
-                        </div>
+                        <p
+                            style="
+                                font-size: 0.72rem;
+                                color: var(--adm-ink-dim);
+                                font-style: italic;
+                            "
+                        >
+                            {{ formatDate(order.created_at) }}
+                        </p>
                     </div>
+                </Link>
+            </div>
 
+            <div v-if="!orders.data.length" class="adm-empty">
+                <div class="adm-empty-icon">
+                    <PackageSearch :size="28" :stroke-width="1.5" />
                 </div>
+                <p class="adm-empty-title">No orders yet</p>
+                <p class="adm-empty-sub">
+                    Orders placed through the store will appear here.
+                </p>
             </div>
         </div>
-        <div v-else class="text-center p-12 border-4 border-dashed border-copy-light rounded-2xl bg-secondary-light/50">
-            <p class="text-xl font-semibold text-copy mb-2">No orders found.</p>
-        </div>
 
-        <div v-if="orders.last_page > 1" class="mt-6 flex justify-center">
-            <ol class="flex gap-2 text-sm font-medium">
-                <li v-for="link in orders.links" :key="link.label">
-                    <button @click.prevent="paginate(link.url)" :disabled="!link.url"
-                        :class="{ 'px-4 py-2 border-2 border-copy transition relative -m-0.5 font-bold': true, 'bg-primary text-primary-content shadow-md': link.active, 'bg-foreground hover:bg-secondary-light disabled:opacity-50 disabled:cursor-not-allowed': !link.active }"
-                        v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')"
-                        :aria-label="link.label">
-                    </button>
-                </li>
-            </ol>
+        <!-- Pagination -->
+        <div v-if="orders.last_page > 1" class="adm-pagination">
+            <div class="adm-page-btns">
+                <button
+                    v-for="link in orders.links"
+                    :key="link.label"
+                    @click.prevent="paginate(link.url)"
+                    :disabled="!link.url"
+                    class="adm-page-btn"
+                    :class="{ 'adm-page-btn--active': link.active }"
+                    v-html="
+                        link.label
+                            .replace('&laquo; Previous', '←')
+                            .replace('Next &raquo;', '→')
+                    "
+                ></button>
+            </div>
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.or-name-link {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--adm-ink);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.or-name-link:hover {
+    color: var(--adm-stamp-deep);
+    text-decoration: underline;
+}
+</style>

@@ -33,20 +33,23 @@ const flash = computed(() => (page.props.flash as any) ?? {});
 const fmtDate = (d: string | null) =>
     d
         ? new Date(d).toLocaleDateString('en-GB', {
-              day: 'numeric', month: 'long', year: 'numeric',
-              hour: '2-digit', minute: '2-digit',
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
           })
-        : '—';
+        : '-';
 
 function deletePost() {
-    if (!confirm(`Delete "${props.post.title}"? This cannot be undone.`)) return;
+    if (!confirm(`Delete "${props.post.title}"? This cannot be undone.`))
+        return;
     router.delete(route('admin.journal.destroy', props.post.id));
 }
 </script>
 
 <template>
     <AdminLayout>
-
         <Head :title="post.title" />
 
         <div class="adm-header">
@@ -57,28 +60,65 @@ function deletePost() {
                     <span>{{ post.title }}</span>
                 </div>
                 <h1 class="adm-title">{{ post.title }}</h1>
-                <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.35rem;">
-                    <span class="adm-badge" :class="post.status === 'published' ? 'adm-badge--on' : 'adm-badge--warn'">
+                <div
+                    style="
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        margin-top: 0.35rem;
+                    "
+                >
+                    <span
+                        class="adm-badge"
+                        :class="
+                            post.status === 'published'
+                                ? 'adm-badge--on'
+                                : 'adm-badge--warn'
+                        "
+                    >
                         {{ post.status }}
                     </span>
-                    <span v-if="post.is_ai_generated" class="adm-badge adm-badge--lav">AI generated</span>
+                    <span
+                        v-if="post.is_ai_generated"
+                        class="adm-badge adm-badge--lav"
+                        >AI generated</span
+                    >
                 </div>
             </div>
-            <div style="display:flex; gap:0.6rem;">
-                <a v-if="post.status === 'published'" :href="`/journal/${post.slug}`" target="_blank"
-                    class="adm-btn adm-btn--ghost">↗ View Live</a>
-                <Link :href="route('admin.journal.edit', post.id)" class="adm-btn adm-btn--ghost">Edit</Link>
-                <button @click="deletePost" class="adm-btn adm-btn--danger">Delete</button>
+            <div style="display: flex; gap: 0.6rem">
+                <a
+                    v-if="post.status === 'published'"
+                    :href="`/journal/${post.slug}`"
+                    target="_blank"
+                    class="adm-btn adm-btn--ghost"
+                    >↗ View Live</a
+                >
+                <Link
+                    :href="route('admin.journal.edit', post.id)"
+                    class="adm-btn adm-btn--ghost"
+                    >Edit</Link
+                >
+                <button @click="deletePost" class="adm-btn adm-btn--danger">
+                    Delete
+                </button>
             </div>
         </div>
 
-        <div v-if="flash.success" class="adm-flash adm-flash--success">{{ flash.success }}</div>
-        <div v-if="flash.error" class="adm-flash adm-flash--error">{{ flash.error }}</div>
+        <div v-if="flash.success" class="adm-flash adm-flash--success">
+            {{ flash.success }}
+        </div>
+        <div v-if="flash.error" class="adm-flash adm-flash--error">
+            {{ flash.error }}
+        </div>
 
         <div class="je-layout">
             <div class="je-main">
                 <div v-if="post.cover_image" class="adm-card adm-card--flush">
-                    <img :src="post.cover_image" :alt="post.title" class="js-cover" />
+                    <img
+                        :src="post.cover_image"
+                        :alt="post.title"
+                        class="js-cover"
+                    />
                 </div>
 
                 <div v-if="post.excerpt" class="adm-card">
@@ -97,7 +137,14 @@ function deletePost() {
                     <h2 class="adm-card-title">Details</h2>
                     <div class="adm-field">
                         <label class="adm-label adm-label--sm">Slug</label>
-                        <p style="font-family: var(--bb-mono); font-size:0.82rem;">/journal/{{ post.slug }}</p>
+                        <p
+                            style="
+                                font-family: var(--adm-font);
+                                font-size: 0.82rem;
+                            "
+                        >
+                            /journal/{{ post.slug }}
+                        </p>
                     </div>
                     <div class="adm-field">
                         <label class="adm-label adm-label--sm">Published</label>
@@ -105,39 +152,51 @@ function deletePost() {
                     </div>
                     <div class="adm-field">
                         <label class="adm-label adm-label--sm">Author</label>
-                        <p>{{ post.author?.name ?? '—' }}</p>
+                        <p>{{ post.author?.name ?? '-' }}</p>
                     </div>
                     <div class="adm-field">
                         <label class="adm-label adm-label--sm">Views</label>
                         <p>{{ post.views.toLocaleString() }}</p>
                     </div>
                     <div class="adm-field">
-                        <label class="adm-label adm-label--sm">Reading time</label>
+                        <label class="adm-label adm-label--sm"
+                            >Reading time</label
+                        >
                         <p>{{ post.reading_time }} min</p>
                     </div>
                 </div>
 
                 <div v-if="post.tags_array.length" class="adm-card">
                     <h2 class="adm-card-title">Tags</h2>
-                    <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
-                        <span v-for="tag in post.tags_array" :key="tag" class="adm-badge adm-badge--off">{{ tag }}</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem">
+                        <span
+                            v-for="tag in post.tags_array"
+                            :key="tag"
+                            class="adm-badge adm-badge--off"
+                            >{{ tag }}</span
+                        >
                     </div>
                 </div>
 
                 <div class="adm-card">
                     <h2 class="adm-card-title">SEO</h2>
                     <div class="adm-field">
-                        <label class="adm-label adm-label--sm">Meta Title</label>
+                        <label class="adm-label adm-label--sm"
+                            >Meta Title</label
+                        >
                         <p>{{ post.meta_title || post.title }}</p>
                     </div>
                     <div class="adm-field">
-                        <label class="adm-label adm-label--sm">Meta Description</label>
-                        <p>{{ post.meta_description || post.excerpt || '—' }}</p>
+                        <label class="adm-label adm-label--sm"
+                            >Meta Description</label
+                        >
+                        <p>
+                            {{ post.meta_description || post.excerpt || '-' }}
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
-
     </AdminLayout>
 </template>
 
@@ -184,7 +243,7 @@ function deletePost() {
 .js-body {
     font-size: 0.92rem;
     line-height: 1.7;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .js-body :deep(h2) {
@@ -214,19 +273,19 @@ function deletePost() {
 }
 
 .js-body :deep(a) {
-    color: var(--bb-lav-d);
+    color: var(--adm-stamp-deep);
 }
 
 .js-body :deep(blockquote) {
-    border-left: 3px solid var(--bb-border);
+    border-left: 3px solid var(--adm-line);
     padding-left: 1rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-style: italic;
     margin: 1rem 0;
 }
 
 .js-body :deep(img) {
     max-width: 100%;
-    border-radius: var(--bb-radius);
+    border-radius: var(--adm-radius);
 }
 </style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, router, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 declare const route: any;
@@ -37,9 +37,12 @@ const toggleCollapse = (id: number) => {
 const buildTree = (items: ProductNode[]): TreeNode[] => {
     const map: Record<number, TreeNode> = {};
     const roots: TreeNode[] = [];
-    items.forEach(item => { map[item.id] = { ...item, children: [], collapsed: false }; });
-    items.forEach(item => {
-        if (item.parent_id && map[item.parent_id]) map[item.parent_id].children.push(map[item.id]);
+    items.forEach((item) => {
+        map[item.id] = { ...item, children: [], collapsed: false };
+    });
+    items.forEach((item) => {
+        if (item.parent_id && map[item.parent_id])
+            map[item.parent_id].children.push(map[item.id]);
         else if (!item.parent_id) roots.push(map[item.id]);
     });
     return roots;
@@ -50,35 +53,52 @@ const filteredTree = computed(() => {
     const q = searchQuery.value.toLowerCase();
     const matchingIds = new Set<number>();
     const ancestorIds = new Set<number>();
-    props.productsData.forEach(p => {
+    props.productsData.forEach((p) => {
         if (p.name.toLowerCase().includes(q) || String(p.id).includes(q)) {
             matchingIds.add(p.id);
             let current = p;
             while (current.parent_id) {
                 ancestorIds.add(current.parent_id);
-                const parent = props.productsData.find(x => x.id === current.parent_id);
+                const parent = props.productsData.find(
+                    (x) => x.id === current.parent_id,
+                );
                 if (!parent) break;
                 current = parent;
             }
         }
     });
-    return buildTree(props.productsData.filter(p => matchingIds.has(p.id) || ancestorIds.has(p.id)));
+    return buildTree(
+        props.productsData.filter(
+            (p) => matchingIds.has(p.id) || ancestorIds.has(p.id),
+        ),
+    );
 });
 
 const totalProducts = computed(() => props.productsData.length);
-const parentProducts = computed(() => props.productsData.filter(p => !p.parent_id).length);
-const childProducts = computed(() => props.productsData.filter(p => p.parent_id).length);
+const parentProducts = computed(
+    () => props.productsData.filter((p) => !p.parent_id).length,
+);
+const childProducts = computed(
+    () => props.productsData.filter((p) => p.parent_id).length,
+);
 const orphans = computed(() => {
-    const parentIds = new Set(props.productsData.filter(p => !p.parent_id).map(p => p.id));
-    return props.productsData.filter(p => p.parent_id && !parentIds.has(p.parent_id)).length;
+    const parentIds = new Set(
+        props.productsData.filter((p) => !p.parent_id).map((p) => p.id),
+    );
+    return props.productsData.filter(
+        (p) => p.parent_id && !parentIds.has(p.parent_id),
+    ).length;
 });
 
-const childOptions = computed(() => props.productsData.filter(p => p.id !== parentId.value));
+const childOptions = computed(() =>
+    props.productsData.filter((p) => p.id !== parentId.value),
+);
 
 function assignRelationship() {
     if (!parentId.value || !childId.value) return;
     submitting.value = true;
-    router.post(route('admin.products.assign-relationship'),
+    router.post(
+        route('admin.products.assign-relationship'),
         { parent_id: parentId.value, child_id: childId.value },
         {
             preserveScroll: true,
@@ -86,28 +106,39 @@ function assignRelationship() {
                 flash.value = 'Relationship assigned successfully.';
                 parentId.value = null;
                 childId.value = null;
-                setTimeout(() => { flash.value = null; }, 3000);
+                setTimeout(() => {
+                    flash.value = null;
+                }, 3000);
             },
-            onFinish: () => { submitting.value = false; },
-        }
+            onFinish: () => {
+                submitting.value = false;
+            },
+        },
     );
 }
 
 function removeRelationship(productId: number) {
-    router.post(route('admin.products.remove-relationship'), { product_id: productId }, { preserveScroll: true });
+    router.post(
+        route('admin.products.remove-relationship'),
+        { product_id: productId },
+        { preserveScroll: true },
+    );
 }
 </script>
 
 <template>
     <AdminLayout>
-
-        <Head title="Product Relationships — Admin" />
+        <Head title="Product Relationships : Admin" />
 
         <!-- Header -->
         <div class="rp-header">
             <div>
                 <div class="rp-breadcrumb">
-                    <Link :href="route('admin.products.index')" class="rp-breadcrumb-link">Products</Link>
+                    <Link
+                        :href="route('admin.products.index')"
+                        class="rp-breadcrumb-link"
+                        >Products</Link
+                    >
                     <span class="rp-breadcrumb-sep">/</span>
                     <span>Relationships</span>
                 </div>
@@ -119,8 +150,16 @@ function removeRelationship(productId: number) {
         <!-- Flash -->
         <Transition name="rp-fade">
             <div v-if="flash" class="rp-flash">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
                     <path d="M20 6 9 17l-5-5" />
                 </svg>
                 {{ flash }}
@@ -141,7 +180,10 @@ function removeRelationship(productId: number) {
                 <p class="rp-stat-val">{{ childProducts }}</p>
                 <p class="rp-stat-label">Children</p>
             </div>
-            <div class="rp-stat" :class="orphans > 0 ? 'rp-stat--warn' : 'rp-stat--sage'">
+            <div
+                class="rp-stat"
+                :class="orphans > 0 ? 'rp-stat--warn' : 'rp-stat--sage'"
+            >
                 <p class="rp-stat-val">{{ orphans }}</p>
                 <p class="rp-stat-label">Orphaned</p>
             </div>
@@ -149,20 +191,26 @@ function removeRelationship(productId: number) {
 
         <!-- Grid -->
         <div class="rp-grid">
-
             <!-- Left sidebar -->
             <div class="rp-sidebar">
-
                 <!-- Assign form -->
                 <section class="rp-card">
                     <h2 class="rp-card-title">Assign Relationship</h2>
-                    <p class="rp-card-hint">Link a child product to a parent.</p>
+                    <p class="rp-card-hint">
+                        Link a child product to a parent.
+                    </p>
 
                     <div class="rp-field">
                         <label class="rp-label">Parent Product</label>
                         <select v-model="parentId" class="rp-select">
                             <option :value="null">Select parent…</option>
-                            <option v-for="p in productsData" :key="p.id" :value="p.id">{{ p.name }}</option>
+                            <option
+                                v-for="p in productsData"
+                                :key="p.id"
+                                :value="p.id"
+                            >
+                                {{ p.name }}
+                            </option>
                         </select>
                     </div>
 
@@ -170,17 +218,43 @@ function removeRelationship(productId: number) {
                         <label class="rp-label">Child Product</label>
                         <select v-model="childId" class="rp-select">
                             <option :value="null">Select child…</option>
-                            <option v-for="p in childOptions" :key="p.id" :value="p.id">
-                                {{ p.name }}<template v-if="p.parent_id"> (has parent)</template>
+                            <option
+                                v-for="p in childOptions"
+                                :key="p.id"
+                                :value="p.id"
+                            >
+                                {{ p.name
+                                }}<template v-if="p.parent_id">
+                                    (has parent)</template
+                                >
                             </option>
                         </select>
                     </div>
 
-                    <button @click="assignRelationship" :disabled="!parentId || !childId || submitting"
-                        class="rp-assign-btn">
-                        <svg v-if="submitting" class="rp-spinner" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
-                            <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                    <button
+                        @click="assignRelationship"
+                        :disabled="!parentId || !childId || submitting"
+                        class="rp-assign-btn"
+                    >
+                        <svg
+                            v-if="submitting"
+                            class="rp-spinner"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="rgba(255,255,255,0.3)"
+                                stroke-width="3"
+                            />
+                            <path
+                                d="M12 2a10 10 0 0 1 10 10"
+                                stroke="var(--adm-paper-raised)"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                            />
                         </svg>
                         {{ submitting ? 'Saving…' : 'Assign Relationship' }}
                     </button>
@@ -203,31 +277,54 @@ function removeRelationship(productId: number) {
                             <span>Orphaned (parent missing)</span>
                         </div>
                         <div class="rp-legend-tips">
-                            <p>▶ / ▼ — expand / collapse children</p>
+                            <p>Use the arrow to expand or collapse children</p>
                             <p>Click name to edit product</p>
-                            <p>✕ — remove from parent</p>
+                            <p>Use the cross to remove from parent</p>
                         </div>
                     </div>
                 </section>
-
             </div>
 
             <!-- Tree panel -->
             <div class="rp-tree-panel">
                 <div class="rp-card rp-card--flush">
-
                     <!-- Search -->
                     <div class="rp-search">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="rp-search-icon">
+                        <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="rp-search-icon"
+                        >
                             <circle cx="11" cy="11" r="8" />
                             <path d="m21 21-4.3-4.3" />
                         </svg>
-                        <input v-model="searchQuery" type="text" placeholder="Search products…"
-                            class="rp-search-input" />
-                        <button v-if="searchQuery" @click="searchQuery = ''" class="rp-search-clear" aria-label="Clear">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round">
+                        <input
+                            v-model="searchQuery"
+                            type="text"
+                            placeholder="Search products…"
+                            class="rp-search-input"
+                        />
+                        <button
+                            v-if="searchQuery"
+                            @click="searchQuery = ''"
+                            class="rp-search-clear"
+                            aria-label="Clear"
+                        >
+                            <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                            >
                                 <path d="M18 6 6 18M6 6l12 12" />
                             </svg>
                         </button>
@@ -235,24 +332,40 @@ function removeRelationship(productId: number) {
 
                     <!-- Tree -->
                     <div class="rp-tree-scroll">
-                        <p v-if="filteredTree.length === 0" class="rp-tree-empty">
-                            {{ searchQuery ? 'No products match your search.' : 'No products found.' }}
+                        <p
+                            v-if="filteredTree.length === 0"
+                            class="rp-tree-empty"
+                        >
+                            {{
+                                searchQuery
+                                    ? 'No products match your search.'
+                                    : 'No products found.'
+                            }}
                         </p>
                         <div v-for="root in filteredTree" :key="root.id">
-                            <TreeNodeRow :node="root" :depth="0" :collapsed-map="collapsed" @toggle="toggleCollapse"
-                                @edit="id => router.get(route('admin.products.edit', id))"
-                                @remove="removeRelationship" />
+                            <TreeNodeRow
+                                :node="root"
+                                :depth="0"
+                                :collapsed-map="collapsed"
+                                @toggle="toggleCollapse"
+                                @edit="
+                                    (id) =>
+                                        router.get(
+                                            route('admin.products.edit', id),
+                                        )
+                                "
+                                @remove="removeRelationship"
+                            />
                         </div>
                     </div>
-
                 </div>
             </div>
-
         </div>
     </AdminLayout>
 </template>
 
 <script lang="ts">
+import { ChevronDown, ChevronRight, X } from 'lucide-vue-next';
 import { defineComponent, h, PropType } from 'vue';
 
 interface TreeNodeDef {
@@ -270,7 +383,10 @@ const TreeNodeRow = defineComponent({
     props: {
         node: { type: Object as PropType<TreeNodeDef>, required: true },
         depth: { type: Number, default: 0 },
-        collapsedMap: { type: Object as PropType<Record<number, boolean>>, required: true },
+        collapsedMap: {
+            type: Object as PropType<Record<number, boolean>>,
+            required: true,
+        },
     },
     emits: ['toggle', 'edit', 'remove'],
     setup(props, { emit }) {
@@ -282,74 +398,112 @@ const TreeNodeRow = defineComponent({
             const indent = props.depth * 20;
 
             // ── Row ──
-            const row = h('div', {
-                class: 'rp-tree-row',
-                style: { paddingLeft: `${indent + 10}px` },
-            }, [
-                // Toggle arrow
-                h('button', {
-                    class: 'rp-tree-toggle',
-                    style: !hasChildren ? { opacity: '0', pointerEvents: 'none' } : {},
-                    onClick: () => hasChildren && emit('toggle', node.id),
-                }, isCollapsed ? '▶' : '▼'),
+            const row = h(
+                'div',
+                {
+                    class: 'rp-tree-row',
+                    style: { paddingLeft: `${indent + 10}px` },
+                },
+                [
+                    // Toggle arrow
+                    h(
+                        'button',
+                        {
+                            class: 'rp-tree-toggle',
+                            style: !hasChildren
+                                ? { opacity: '0', pointerEvents: 'none' }
+                                : {},
+                            onClick: () =>
+                                hasChildren && emit('toggle', node.id),
+                        },
+                        h(isCollapsed ? ChevronRight : ChevronDown, {
+                            size: 13,
+                            strokeWidth: 2.5,
+                        }),
+                    ),
 
-                // Colour dot
-                h('span', {
-                    class: [
-                        'rp-tree-dot',
-                        isRoot ? 'rp-tree-dot--root' : 'rp-tree-dot--child',
-                    ],
-                }),
+                    // Colour dot
+                    h('span', {
+                        class: [
+                            'rp-tree-dot',
+                            isRoot ? 'rp-tree-dot--root' : 'rp-tree-dot--child',
+                        ],
+                    }),
 
-                // Name
-                h('button', {
-                    class: ['rp-tree-name', isRoot ? 'rp-tree-name--root' : ''],
-                    onClick: () => emit('edit', node.id),
-                    title: `Edit: ${node.name}`,
-                }, node.name),
+                    // Name
+                    h(
+                        'button',
+                        {
+                            class: [
+                                'rp-tree-name',
+                                isRoot ? 'rp-tree-name--root' : '',
+                            ],
+                            onClick: () => emit('edit', node.id),
+                            title: `Edit: ${node.name}`,
+                        },
+                        node.name,
+                    ),
 
-                // MPN chip
-                node.mpn && h('span', { class: 'rp-tree-mpn' }, node.mpn),
+                    // MPN chip
+                    node.mpn && h('span', { class: 'rp-tree-mpn' }, node.mpn),
 
-                // Children count pill
-                hasChildren && h('span', { class: 'rp-tree-count' }, node.children.length),
+                    // Children count pill
+                    hasChildren &&
+                        h(
+                            'span',
+                            { class: 'rp-tree-count' },
+                            node.children.length,
+                        ),
 
-                // Status dot
-                node.status && h('span', {
-                    class: [
-                        'rp-tree-status',
-                        node.status === 'enabled' ? 'rp-tree-status--on' : 'rp-tree-status--off',
-                    ],
-                }),
+                    // Status dot
+                    node.status &&
+                        h('span', {
+                            class: [
+                                'rp-tree-status',
+                                node.status === 'enabled'
+                                    ? 'rp-tree-status--on'
+                                    : 'rp-tree-status--off',
+                            ],
+                        }),
 
-                // Remove button (children only, revealed on row hover)
-                !isRoot && h('button', {
-                    class: 'rp-tree-remove',
-                    title: 'Remove from parent',
-                    onClick: (e: Event) => { e.stopPropagation(); emit('remove', node.id); },
-                }, '✕'),
-            ]);
+                    // Remove button (children only, revealed on row hover)
+                    !isRoot &&
+                        h(
+                            'button',
+                            {
+                                class: 'rp-tree-remove',
+                                title: 'Remove from parent',
+                                onClick: (e: Event) => {
+                                    e.stopPropagation();
+                                    emit('remove', node.id);
+                                },
+                            },
+                            h(X, { size: 11, strokeWidth: 2.5 }),
+                        ),
+                ],
+            );
 
             // ── Children ──
-            const children = (!isCollapsed && hasChildren)
-                ? h('div', { class: 'rp-tree-children' }, [
-                    h('div', {
-                        class: 'rp-tree-connector',
-                        style: { left: `${indent + 20}px` },
-                    }),
-                    ...node.children.map(child =>
-                        h(TreeNodeRow, {
-                            key: child.id,
-                            node: child,
-                            depth: props.depth + 1,
-                            collapsedMap: props.collapsedMap,
-                            onToggle: (id: number) => emit('toggle', id),
-                            onEdit: (id: number) => emit('edit', id),
-                            onRemove: (id: number) => emit('remove', id),
-                        })
-                    ),
-                ])
-                : null;
+            const children =
+                !isCollapsed && hasChildren
+                    ? h('div', { class: 'rp-tree-children' }, [
+                          h('div', {
+                              class: 'rp-tree-connector',
+                              style: { left: `${indent + 20}px` },
+                          }),
+                          ...node.children.map((child) =>
+                              h(TreeNodeRow, {
+                                  key: child.id,
+                                  node: child,
+                                  depth: props.depth + 1,
+                                  collapsedMap: props.collapsedMap,
+                                  onToggle: (id: number) => emit('toggle', id),
+                                  onEdit: (id: number) => emit('edit', id),
+                                  onRemove: (id: number) => emit('remove', id),
+                              }),
+                          ),
+                      ])
+                    : null;
 
             return h('div', {}, [row, children]);
         };
@@ -364,22 +518,7 @@ export default { components: { TreeNodeRow } };
 .rp-header,
 .rp-stats,
 .rp-grid {
-    --bb-navy: #1a1a2e;
-    --bb-cream: #faf9f7;
-    --bb-surface: #ffffff;
-    --bb-border: #ece8e2;
-    --bb-text: #1a1a2e;
-    --bb-muted: #7a7a9a;
-    --bb-red: #e05c6e;
-    --bb-green: #4caf7d;
-    --bb-blush: #f2c4ce;
-    --bb-blush-d: #d4899a;
-    --bb-lav: #c9b8f0;
-    --bb-lav-d: #9b84d4;
-    --bb-sage: #b8d9b8;
-    --bb-sage-d: #4caf7d;
-    --bb-warn-d: #c8820a;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
 }
 
 /* ── Header ── */
@@ -392,18 +531,18 @@ export default { components: { TreeNodeRow } };
     align-items: center;
     gap: 0.4rem;
     font-size: 0.78rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-bottom: 0.35rem;
 }
 
 .rp-breadcrumb-link {
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     text-decoration: none;
     transition: color 0.15s;
 }
 
 .rp-breadcrumb-link:hover {
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .rp-breadcrumb-sep {
@@ -411,15 +550,17 @@ export default { components: { TreeNodeRow } };
 }
 
 .rp-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--bb-text);
+    font-family: var(--adm-display);
+    font-style: italic;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--adm-ink);
 }
 
 .rp-sub {
     font-size: 0.82rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-top: 0.2rem;
 }
 
@@ -431,16 +572,18 @@ export default { components: { TreeNodeRow } };
     padding: 0.6rem 1rem;
     border-radius: 8px;
     margin-bottom: 1.25rem;
-    background: #eef7f2;
-    border: 1px solid #b8dfc8;
-    color: #2a7a50;
+    background: var(--adm-success-bg);
+    border: 1px solid var(--adm-success-line);
+    color: var(--adm-success);
     font-size: 0.85rem;
     font-weight: 600;
 }
 
 .rp-fade-enter-active,
 .rp-fade-leave-active {
-    transition: opacity 0.3s, transform 0.3s;
+    transition:
+        opacity 0.3s,
+        transform 0.3s;
 }
 
 .rp-fade-enter-from,
@@ -464,62 +607,62 @@ export default { components: { TreeNodeRow } };
 }
 
 .rp-stat {
-    background: var(--bb-surface);
-    border-radius: 12px;
-    border: 1px solid var(--bb-border);
+    background: var(--adm-paper-raised);
+    border-radius: var(--adm-radius-md);
+    border: 1px solid var(--adm-line);
     padding: 1rem 0.85rem;
     text-align: center;
-    box-shadow: 0 1px 4px rgba(26, 26, 46, 0.04);
+    box-shadow: var(--adm-shadow-sm);
 }
 
 .rp-stat--blush {
-    background: #fff5f7;
-    border-color: var(--bb-blush);
+    background: var(--adm-stamp-dim);
+    border-color: var(--adm-stamp);
 }
 
 .rp-stat--lav {
-    background: #f8f6ff;
-    border-color: var(--bb-lav);
+    background: var(--adm-stamp-dim);
+    border-color: var(--adm-stamp);
 }
 
 .rp-stat--sage {
-    background: #f2faf2;
-    border-color: var(--bb-sage);
+    background: var(--adm-success-bg);
+    border-color: var(--adm-success-line);
 }
 
 .rp-stat--warn {
-    background: #fffbf0;
-    border-color: #f5d5a0;
+    background: var(--adm-warning-bg);
+    border-color: var(--adm-warning-line);
 }
 
 .rp-stat-val {
     font-size: 1.6rem;
     font-weight: 700;
-    color: var(--bb-text);
+    color: var(--adm-ink);
     line-height: 1.1;
     letter-spacing: -0.02em;
 }
 
 .rp-stat--blush .rp-stat-val {
-    color: var(--bb-blush-d);
+    color: var(--adm-stamp-deep);
 }
 
 .rp-stat--lav .rp-stat-val {
-    color: var(--bb-lav-d);
+    color: var(--adm-stamp-deep);
 }
 
 .rp-stat--sage .rp-stat-val {
-    color: var(--bb-sage-d);
+    color: var(--adm-success);
 }
 
 .rp-stat--warn .rp-stat-val {
-    color: var(--bb-warn-d);
+    color: var(--adm-warning);
 }
 
 .rp-stat-label {
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-top: 0.2rem;
     letter-spacing: 0.04em;
 }
@@ -546,9 +689,9 @@ export default { components: { TreeNodeRow } };
 
 /* ── Cards ── */
 .rp-card {
-    background: var(--bb-surface);
+    background: var(--adm-paper-raised);
     border-radius: 14px;
-    border: 1px solid var(--bb-border);
+    border: 1px solid var(--adm-line);
     box-shadow: 0 1px 6px rgba(26, 26, 46, 0.05);
     padding: 1.25rem;
     display: flex;
@@ -567,14 +710,14 @@ export default { components: { TreeNodeRow } };
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--bb-border);
+    border-bottom: 1px solid var(--adm-line);
 }
 
 .rp-card-hint {
     font-size: 0.8rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-style: italic;
     margin-top: -0.25rem;
 }
@@ -591,24 +734,26 @@ export default { components: { TreeNodeRow } };
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .rp-select {
     width: 100%;
     padding: 0.6rem 0.8rem;
     border-radius: 8px;
-    border: 1px solid var(--bb-border);
-    background: var(--bb-cream);
-    color: var(--bb-text);
-    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--adm-line);
+    background: var(--adm-paper);
+    color: var(--adm-ink);
+    font-family: var(--adm-font);
     font-size: 0.85rem;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 
 .rp-select:focus {
-    border-color: var(--bb-lav-d);
+    border-color: var(--adm-stamp-deep);
     box-shadow: 0 0 0 3px rgba(201, 184, 240, 0.2);
 }
 
@@ -621,13 +766,15 @@ export default { components: { TreeNodeRow } };
     padding: 0.65rem;
     border-radius: 8px;
     border: none;
-    background: var(--bb-navy);
-    color: #fff;
-    font-family: 'DM Sans', sans-serif;
+    background: var(--adm-charcoal);
+    color: var(--adm-paper-raised);
+    font-family: var(--adm-font);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.15s, transform 0.15s;
+    transition:
+        opacity 0.15s,
+        transform 0.15s;
 }
 
 .rp-assign-btn:hover:not(:disabled) {
@@ -668,7 +815,7 @@ export default { components: { TreeNodeRow } };
     align-items: center;
     gap: 0.6rem;
     font-size: 0.82rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .rp-dot {
@@ -679,26 +826,26 @@ export default { components: { TreeNodeRow } };
 }
 
 .rp-dot--blush {
-    background: var(--bb-blush-d);
+    background: var(--adm-stamp-deep);
 }
 
 .rp-dot--lav {
-    background: var(--bb-lav-d);
+    background: var(--adm-stamp-deep);
 }
 
 .rp-dot--warn {
-    background: var(--bb-warn-d);
+    background: var(--adm-warning);
 }
 
 .rp-legend-tips {
-    border-top: 1px solid var(--bb-border);
+    border-top: 1px solid var(--adm-line);
     padding-top: 0.5rem;
     margin-top: 0.1rem;
     display: flex;
     flex-direction: column;
     gap: 0.18rem;
     font-size: 0.72rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 /* ── Search ── */
@@ -707,12 +854,12 @@ export default { components: { TreeNodeRow } };
     align-items: center;
     gap: 0.6rem;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid var(--bb-border);
-    background: var(--bb-cream);
+    border-bottom: 1px solid var(--adm-line);
+    background: var(--adm-paper);
 }
 
 .rp-search-icon {
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     flex-shrink: 0;
 }
 
@@ -721,13 +868,13 @@ export default { components: { TreeNodeRow } };
     background: transparent;
     border: none;
     outline: none;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
     font-size: 0.88rem;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .rp-search-input::placeholder {
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .rp-search-clear {
@@ -736,17 +883,19 @@ export default { components: { TreeNodeRow } };
     border-radius: 50%;
     border: none;
     background: none;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.12s, color 0.12s;
+    transition:
+        background 0.12s,
+        color 0.12s;
 }
 
 .rp-search-clear:hover {
-    background: var(--bb-border);
-    color: var(--bb-text);
+    background: var(--adm-line);
+    color: var(--adm-ink);
 }
 
 /* ── Tree ── */
@@ -758,7 +907,7 @@ export default { components: { TreeNodeRow } };
 
 .rp-tree-empty {
     font-size: 0.85rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-style: italic;
     text-align: center;
     padding: 3rem 1rem;
@@ -775,16 +924,16 @@ export default { components: { TreeNodeRow } };
     border-radius: 8px;
     margin-bottom: 1px;
     transition: background 0.12s;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
 }
 
 .rp-tree-row:hover {
-    background: #faf9f7;
+    background: var(--adm-paper);
 }
 
 .rp-tree-toggle {
     font-size: 0.52rem;
-    color: #7a7a9a;
+    color: var(--adm-ink-dim);
     background: none;
     border: none;
     width: 14px;
@@ -797,7 +946,7 @@ export default { components: { TreeNodeRow } };
 }
 
 .rp-tree-toggle:hover {
-    color: #1a1a2e;
+    color: var(--adm-ink);
 }
 
 .rp-tree-dot {
@@ -808,11 +957,11 @@ export default { components: { TreeNodeRow } };
 }
 
 .rp-tree-dot--root {
-    background: #d4899a;
+    background: var(--adm-stamp);
 }
 
 .rp-tree-dot--child {
-    background: #9b84d4;
+    background: var(--adm-ink-faint);
 }
 
 .rp-tree-name {
@@ -822,10 +971,10 @@ export default { components: { TreeNodeRow } };
     background: none;
     border: none;
     padding: 0;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
     font-size: 0.88rem;
     font-weight: 500;
-    color: #1a1a2e;
+    color: var(--adm-ink);
     cursor: pointer;
     white-space: nowrap;
     overflow: hidden;
@@ -834,7 +983,7 @@ export default { components: { TreeNodeRow } };
 }
 
 .rp-tree-name:hover {
-    color: #9b84d4;
+    color: var(--adm-stamp-deep);
 }
 
 .rp-tree-name--root {
@@ -843,8 +992,8 @@ export default { components: { TreeNodeRow } };
 
 .rp-tree-mpn {
     font-size: 0.62rem;
-    font-family: monospace;
-    color: #7a7a9a;
+    font-family: var(--adm-font);
+    color: var(--adm-ink-dim);
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -854,8 +1003,8 @@ export default { components: { TreeNodeRow } };
     font-weight: 700;
     padding: 0.08rem 0.4rem;
     border-radius: 999px;
-    background: #f0edf8;
-    color: #9b84d4;
+    background: var(--adm-stamp-dim);
+    color: var(--adm-stamp-deep);
     flex-shrink: 0;
 }
 
@@ -867,23 +1016,25 @@ export default { components: { TreeNodeRow } };
 }
 
 .rp-tree-status--on {
-    background: #4caf7d;
+    background: var(--adm-success);
 }
 
 .rp-tree-status--off {
-    background: #7a7a9a;
+    background: var(--adm-ink-faint);
 }
 
 .rp-tree-remove {
     font-size: 0.68rem;
     background: none;
     border: none;
-    color: #7a7a9a;
+    color: var(--adm-ink-dim);
     cursor: pointer;
     padding: 0 0.15rem;
     flex-shrink: 0;
     opacity: 0;
-    transition: opacity 0.12s, color 0.12s;
+    transition:
+        opacity 0.12s,
+        color 0.12s;
 }
 
 .rp-tree-row:hover .rp-tree-remove {
@@ -891,7 +1042,7 @@ export default { components: { TreeNodeRow } };
 }
 
 .rp-tree-remove:hover {
-    color: #e05c6e;
+    color: var(--adm-danger);
 }
 
 .rp-tree-children {
@@ -903,6 +1054,6 @@ export default { components: { TreeNodeRow } };
     top: 0;
     bottom: 8px;
     width: 1px;
-    background: #ece8e2;
+    background: var(--adm-line);
 }
 </style>

@@ -1,5 +1,5 @@
 /**
- * useAdmin — shared logic for all admin pages.
+ * useAdmin: shared logic for all admin pages.
  *
  * Usage:
  *   import { useAdmin } from '@/composables/useAdmin';
@@ -9,10 +9,10 @@
 import { router } from '@inertiajs/vue3';
 
 export function useAdmin() {
-
     /** Navigate to a paginated URL, preserving scroll & state. */
     function paginate(url: string | null) {
-        if (url) router.get(url, {}, { preserveState: true, preserveScroll: true });
+        if (url)
+            router.get(url, {}, { preserveState: true, preserveScroll: true });
     }
 
     /**
@@ -55,9 +55,16 @@ export function useAdmin() {
      */
     function stockLabel(qty: number): { text: string; cls: string } {
         if (qty === 0) return { text: 'Out of stock', cls: 'adm-stock--nil' };
-        if (qty < 10) return { text: `Low — ${qty}`, cls: 'adm-stock--low' };
+        if (qty < 10) return { text: `Low (${qty})`, cls: 'adm-stock--low' };
         return { text: String(qty), cls: 'adm-stock--ok' };
     }
 
-    return { paginate, confirmDelete, duplicateRecord, fmtCurrency, fmtSize, stockLabel };
+    return {
+        paginate,
+        confirmDelete,
+        duplicateRecord,
+        fmtCurrency,
+        fmtSize,
+        stockLabel,
+    };
 }

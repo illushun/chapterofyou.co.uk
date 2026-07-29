@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useAdmin } from '@/composables/useAdmin';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
@@ -37,13 +38,10 @@ const props = defineProps<{
     cart: Cart;
 }>();
 
-const formatCurrency = (amount: number | string | null | undefined): string => {
-    const numericAmount = Number(amount) || 0;
-    return `£${numericAmount.toFixed(2)}`;
-};
+const { fmtCurrency } = useAdmin();
 
 const formatDate = (dateString: string | null): string => {
-    if (!dateString) return 'N/A';
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-GB', {
         day: 'numeric',
         month: 'short',
@@ -54,86 +52,202 @@ const formatDate = (dateString: string | null): string => {
 };
 
 const subtotal = computed(() => {
-    return props.cart.items.reduce((sum, item) => sum + (item.product.cost * item.quantity), 0);
+    return props.cart.items.reduce(
+        (sum, item) => sum + item.product.cost * item.quantity,
+        0,
+    );
 });
 
-const cartType = computed(() => props.cart.user_id ? 'Registered User Cart' : 'Guest Cart');
+const cartType = computed(() =>
+    props.cart.user_id ? 'Registered user cart' : 'Guest cart',
+);
 </script>
 
 <template>
     <AdminLayout>
-        <Head :title="`Cart #${cart.id}`" />
+        <Head :title="`Cart #${cart.id} : Admin`" />
 
-        <div class="mb-6 border-b-2 border-copy pb-2">
-            <h2 class="text-3xl font-black">Cart Details #{{ cart.id }}</h2>
-            <p class="text-copy-light">Last updated: {{ formatDate(cart.updated_at) }}</p>
+        <!-- Header -->
+        <div class="adm-header">
+            <div>
+                <div class="adm-breadcrumb">
+                    <Link
+                        :href="route('admin.carts.index')"
+                        class="adm-breadcrumb a"
+                        >Carts</Link
+                    >
+                    <span class="adm-breadcrumb-sep">/</span>
+                    <span>#{{ cart.id }}</span>
+                </div>
+                <h1 class="adm-title">Cart #{{ cart.id }}</h1>
+                <p class="adm-sub">
+                    Last updated {{ formatDate(cart.updated_at) }}
+                </p>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-6">
-
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">Cart Contents ({{ cart.items.length }} unique products)</h3>
-                        <div v-if="cart.items.length">
-                            <div v-for="item in cart.items" :key="item.id" class="flex items-center justify-between py-3 border-b border-copy-light/50 last:border-b-0">
-                                <div class="flex flex-col">
-                                    <span class="font-semibold text-copy">{{ item.product.name }}</span>
-                                    <span class="text-xs text-copy-light">MPN: {{ item.product.mpn }} | Unit Price: {{ formatCurrency(item.product.cost) }}</span>
-                                </div>
-                                <div class="text-right">
-                                    <span class="font-bold text-lg block">{{ formatCurrency(item.product.cost * item.quantity) }}</span>
-                                    <span class="text-sm text-copy-light">Qty: {{ item.quantity }}</span>
-                                </div>
+        <div class="adm-form-grid">
+            <!-- Left column -->
+            <div class="adm-form-left">
+                <section class="adm-card adm-card--flush">
+                    <div style="padding: 1.5rem 1.5rem 0.85rem">
+                        <h2
+                            class="adm-card-title"
+                            style="border: none; padding: 0; margin: 0"
+                        >
+                            Cart contents ({{ cart.items.length }} unique
+                            product{{ cart.items.length !== 1 ? 's' : '' }})
+                        </h2>
+                    </div>
+                    <div v-if="cart.items.length">
+                        <div
+                            v-for="item in cart.items"
+                            :key="item.id"
+                            class="adm-row"
+                            style="
+                                display: flex;
+                                align-items: center;
+                                justify-content: space-between;
+                                padding: 0.85rem 1.5rem;
+                            "
+                        >
+                            <div>
+                                <p
+                                    style="
+                                        font-weight: 600;
+                                        color: var(--adm-ink);
+                                    "
+                                >
+                                    {{ item.product.name }}
+                                </p>
+                                <p
+                                    class="adm-td--mono"
+                                    style="margin-top: 0.15rem"
+                                >
+                                    {{ item.product.mpn }} &middot;
+                                    {{ fmtCurrency(item.product.cost) }} each
+                                </p>
+                            </div>
+                            <div style="text-align: right">
+                                <p
+                                    class="adm-td--price"
+                                    style="font-size: 1.05rem"
+                                >
+                                    {{
+                                        fmtCurrency(
+                                            item.product.cost * item.quantity,
+                                        )
+                                    }}
+                                </p>
+                                <p class="adm-sub">Qty: {{ item.quantity }}</p>
                             </div>
                         </div>
-                        <p v-else class="text-copy-light italic">This cart is currently empty.</p>
                     </div>
-                </div>
+                    <p v-else class="adm-empty-sub" style="padding: 1.5rem">
+                        This cart is currently empty.
+                    </p>
+                </section>
             </div>
 
-            <div class="lg:col-span-1 space-y-6">
-                <div class="sticky top-8 rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-2xl font-black text-copy mb-4 border-b-2 border-copy-light pb-3">Cart Status</h3>
+            <!-- Right column -->
+            <div class="adm-form-right">
+                <section class="adm-card adm-card--sticky">
+                    <h2 class="adm-card-title">Cart Status</h2>
 
-                        <div class="space-y-3 text-copy text-lg">
-                            <div class="flex justify-between">
-                                <span>Type</span>
-                                <span class="font-bold">{{ cartType }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span>Total Value</span>
-                                <span class="text-2xl font-black text-primary">{{ formatCurrency(subtotal) }}</span>
-                            </div>
-                            <div class="flex justify-between border-t border-copy-light pt-3">
-                                <span>Expires</span>
-                                <span class="font-bold">{{ formatDate(cart.expires_at) }}</span>
-                            </div>
-                        </div>
-
-                        <div class="mt-4 pt-4 border-t border-copy-light text-sm">
-                            <p v-if="cart.user">
-                                <span class="font-semibold">Associated User:</span>
-                                <Link :href="route('admin.users.show', cart.user_id)" class="text-primary hover:underline">
-                                    {{ cart.user.name }} ({{ cart.user.email }})
-                                </Link>
-                            </p>
-                            <p v-else>
-                                <span class="font-semibold">Session ID:</span>
-                                <span class="text-xs break-all">{{ cart.session_id || 'N/A' }}</span>
-                            </p>
-                        </div>
-
-                        <button
-                            class="mt-6 w-full py-3 border-2 border-copy text-lg font-bold shadow-lg transition-colors duration-300 rounded-lg bg-error-light hover:bg-error text-error-content"
-                            disabled
+                    <div class="adm-field">
+                        <div
+                            style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                            "
                         >
-                            Clear Cart (Future Feature)
-                        </button>
+                            <span class="adm-sub">Type</span>
+                            <span
+                                style="font-weight: 600; color: var(--adm-ink)"
+                                >{{ cartType }}</span
+                            >
+                        </div>
                     </div>
-                </div>
+                    <div class="adm-field">
+                        <div
+                            style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                            "
+                        >
+                            <span class="adm-sub">Total Value</span>
+                            <span
+                                class="adm-stat-val"
+                                style="font-size: 1.4rem"
+                                >{{ fmtCurrency(subtotal) }}</span
+                            >
+                        </div>
+                    </div>
+                    <div
+                        class="adm-field"
+                        style="
+                            border-top: 1px dashed var(--adm-line);
+                            padding-top: 0.85rem;
+                        "
+                    >
+                        <div
+                            style="
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: center;
+                            "
+                        >
+                            <span class="adm-sub">Expires</span>
+                            <span
+                                style="font-weight: 600; color: var(--adm-ink)"
+                                >{{ formatDate(cart.expires_at) }}</span
+                            >
+                        </div>
+                    </div>
+
+                    <div
+                        class="adm-field"
+                        style="
+                            border-top: 1px dashed var(--adm-line);
+                            padding-top: 0.85rem;
+                        "
+                    >
+                        <template v-if="cart.user">
+                            <p class="adm-label--sm">Associated user</p>
+                            <Link
+                                :href="route('admin.users.show', cart.user_id!)"
+                                class="or-name-link"
+                            >
+                                {{ cart.user.name }} ({{ cart.user.email }})
+                            </Link>
+                        </template>
+                        <template v-else>
+                            <p class="adm-label--sm">Session ID</p>
+                            <p
+                                class="adm-td--mono"
+                                style="word-break: break-all"
+                            >
+                                {{ cart.session_id || '-' }}
+                            </p>
+                        </template>
+                    </div>
+                </section>
             </div>
         </div>
     </AdminLayout>
 </template>
+
+<style scoped>
+.or-name-link {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--adm-stamp-deep);
+    text-decoration: none;
+}
+
+.or-name-link:hover {
+    text-decoration: underline;
+}
+</style>

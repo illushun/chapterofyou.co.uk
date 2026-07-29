@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import { Download } from 'lucide-vue-next';
 
 interface Sheet {
     id: number;
@@ -34,157 +35,254 @@ defineProps<{ sheet: Sheet }>();
 
 <template>
     <AdminLayout>
+        <Head :title="`Batch Sheet: ${sheet.batch_number} : Admin`" />
 
-        <Head :title="`Batch Sheet: ${sheet.batch_number}`" />
-
-        <!-- Actions bar -->
-        <div class="mb-6 flex flex-wrap items-center justify-between gap-3 border-b-2 border-copy pb-2">
+        <!-- Header -->
+        <div class="adm-header">
             <div>
-                <h2 class="text-3xl font-black font-mono">{{ sheet.batch_number }}</h2>
-                <p class="text-copy-light mt-1">{{ sheet.blend_name }} · Created {{ sheet.created_at }}</p>
+                <div class="adm-breadcrumb">
+                    <Link
+                        :href="route('admin.batch-sheets.index')"
+                        class="adm-breadcrumb a"
+                        >Batch Sheets</Link
+                    >
+                    <span class="adm-breadcrumb-sep">/</span>
+                    <span>{{ sheet.batch_number }}</span>
+                </div>
+                <h1 class="adm-title adm-td--mono" style="font-style: normal">
+                    {{ sheet.batch_number }}
+                </h1>
+                <p class="adm-sub">
+                    {{ sheet.blend_name }} &middot; Created
+                    {{ sheet.created_at }}
+                </p>
             </div>
-            <div class="flex gap-2">
-                <a :href="route('admin.batch-sheets.pdf', { batch_sheet: sheet.id })" target="_blank"
-                    class="rounded-lg border-2 border-copy px-4 py-2 text-sm font-bold transition hover:bg-secondary-light">
-                    Download PDF</a>
-                <a :href="route('admin.batch-sheets.edit', { batch_sheet: sheet.id })"
-                    class="rounded-lg border-2 border-copy px-4 py-2 text-sm font-bold transition"
-                    style="background-color: var(--primary); color: var(--primary-content);">Edit</a>
-                <a :href="route('admin.batch-sheets.index')"
-                    class="rounded-lg border-2 border-copy px-4 py-2 text-sm font-medium text-copy-light hover:text-copy hover:bg-secondary-light transition">←
-                    All Sheets</a>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap">
+                <a
+                    :href="
+                        route('admin.batch-sheets.pdf', {
+                            batch_sheet: sheet.id,
+                        })
+                    "
+                    target="_blank"
+                    class="adm-btn adm-btn--ghost"
+                >
+                    <Download :size="13" :stroke-width="2.5" /> Download PDF
+                </a>
+                <Link
+                    :href="
+                        route('admin.batch-sheets.edit', {
+                            batch_sheet: sheet.id,
+                        })
+                    "
+                    class="adm-btn adm-btn--primary"
+                    >Edit</Link
+                >
             </div>
         </div>
 
-        <div class="max-w-4xl space-y-6">
-
+        <div
+            style="
+                max-width: 56rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1.25rem;
+            "
+        >
             <!-- Batch info -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                    <h3 class="text-lg font-bold text-copy mb-4 border-b border-copy-light pb-2">Batch Information</h3>
-                    <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">Batch Number</dt>
-                            <dd class="font-mono font-bold text-copy mt-0.5">{{ sheet.batch_number }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">Blend Name</dt>
-                            <dd class="font-semibold text-copy mt-0.5">{{ sheet.blend_name }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">Date of Manufacture
-                            </dt>
-                            <dd class="text-copy mt-0.5">{{ sheet.date_of_manufacture }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">Produced By</dt>
-                            <dd class="text-copy mt-0.5">{{ sheet.produced_by }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">Bottle Size</dt>
-                            <dd class="text-copy mt-0.5">{{ sheet.bottle_size_ml }} ml</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">Total Units</dt>
-                            <dd class="text-copy mt-0.5">{{ sheet.total_units_produced }}</dd>
-                        </div>
-                        <div v-if="sheet.order">
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">Linked Order</dt>
-                            <dd class="font-mono text-copy mt-0.5">{{ sheet.order.label }}</dd>
-                        </div>
-                        <div v-if="sheet.product">
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">Product</dt>
-                            <dd class="text-copy mt-0.5">{{ sheet.product.name }} <span
-                                    class="font-mono text-xs text-copy-light">({{ sheet.product.mpn }})</span></dd>
-                        </div>
-                    </dl>
+            <section class="adm-card">
+                <h2 class="adm-card-title">Batch Information</h2>
+                <div
+                    class="adm-field-row"
+                    style="grid-template-columns: repeat(2, 1fr); row-gap: 1rem"
+                >
+                    <div class="adm-field">
+                        <p class="adm-label--sm">Batch Number</p>
+                        <p
+                            class="adm-td--mono"
+                            style="font-weight: 700; color: var(--adm-ink)"
+                        >
+                            {{ sheet.batch_number }}
+                        </p>
+                    </div>
+                    <div class="adm-field">
+                        <p class="adm-label--sm">Blend Name</p>
+                        <p style="font-weight: 600; color: var(--adm-ink)">
+                            {{ sheet.blend_name }}
+                        </p>
+                    </div>
+                    <div class="adm-field">
+                        <p class="adm-label--sm">Date of Manufacture</p>
+                        <p style="color: var(--adm-ink)">
+                            {{ sheet.date_of_manufacture }}
+                        </p>
+                    </div>
+                    <div class="adm-field">
+                        <p class="adm-label--sm">Produced By</p>
+                        <p style="color: var(--adm-ink)">
+                            {{ sheet.produced_by }}
+                        </p>
+                    </div>
+                    <div class="adm-field">
+                        <p class="adm-label--sm">Bottle Size</p>
+                        <p style="color: var(--adm-ink)">
+                            {{ sheet.bottle_size_ml }} ml
+                        </p>
+                    </div>
+                    <div class="adm-field">
+                        <p class="adm-label--sm">Total Units</p>
+                        <p style="color: var(--adm-ink)">
+                            {{ sheet.total_units_produced }}
+                        </p>
+                    </div>
+                    <div v-if="sheet.order" class="adm-field">
+                        <p class="adm-label--sm">Linked Order</p>
+                        <p class="adm-td--mono">{{ sheet.order.label }}</p>
+                    </div>
+                    <div v-if="sheet.product" class="adm-field">
+                        <p class="adm-label--sm">Product</p>
+                        <p style="color: var(--adm-ink)">
+                            {{ sheet.product.name }}
+                            <span class="adm-td--mono"
+                                >({{ sheet.product.mpn }})</span
+                            >
+                        </p>
+                    </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Ingredients -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-hidden">
-                    <div class="px-5 py-4 border-b border-copy-light">
-                        <h3 class="text-lg font-bold text-copy">Ingredients Used</h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead>
-                                <tr
-                                    class="bg-gray-50 text-xs uppercase tracking-wider text-copy-light border-b border-copy-light">
-                                    <th class="px-4 py-2 text-left font-medium">Ingredient</th>
-                                    <th class="px-4 py-2 text-left font-medium">Supplier</th>
-                                    <th class="px-4 py-2 text-left font-medium">Lot/Batch No.</th>
-                                    <th class="px-4 py-2 text-center font-medium">% Used</th>
-                                    <th class="px-4 py-2 text-center font-medium">Weight (g)</th>
-                                    <th class="px-4 py-2 text-left font-medium">SDS/IFRA Ref.</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-if="!sheet.ingredients.length">
-                                    <td colspan="6" class="px-4 py-6 text-center text-copy-light italic">No ingredients
-                                        recorded.</td>
-                                </tr>
-                                <tr v-for="(row, i) in sheet.ingredients" :key="i"
-                                    class="border-b border-copy-light last:border-b-0"
-                                    :class="i % 2 === 0 ? '' : 'bg-gray-50'">
-                                    <td class="px-4 py-2 font-medium text-copy">{{ row.ingredient || '—' }}</td>
-                                    <td class="px-4 py-2 text-copy-light">{{ row.supplier || '—' }}</td>
-                                    <td class="px-4 py-2 font-mono text-xs text-copy-light">{{ row.lot_batch_no || '—'
-                                    }}</td>
-                                    <td class="px-4 py-2 text-center text-copy">{{ row.percent_used || '—' }}</td>
-                                    <td class="px-4 py-2 text-center text-copy">{{ row.weight_g || '—' }}</td>
-                                    <td class="px-4 py-2 text-copy-light">{{ row.sds_ifra_ref || '—' }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+            <section class="adm-card adm-card--flush">
+                <div style="padding: 1.1rem 1.25rem 0.85rem">
+                    <h2
+                        class="adm-card-title"
+                        style="border: none; padding: 0; margin: 0"
+                    >
+                        Ingredients Used
+                    </h2>
                 </div>
-            </div>
+                <div class="adm-table-wrap" style="display: block">
+                    <table class="adm-table">
+                        <thead>
+                            <tr class="adm-thead">
+                                <th class="adm-th">Ingredient</th>
+                                <th class="adm-th">Supplier</th>
+                                <th class="adm-th">Lot/Batch No.</th>
+                                <th class="adm-th">% Used</th>
+                                <th class="adm-th">Weight (g)</th>
+                                <th class="adm-th">SDS/IFRA Ref.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-if="!sheet.ingredients.length">
+                                <td
+                                    colspan="6"
+                                    class="adm-empty-sub"
+                                    style="
+                                        text-align: center;
+                                        padding: 2rem 1rem;
+                                    "
+                                >
+                                    No ingredients recorded.
+                                </td>
+                            </tr>
+                            <tr
+                                v-for="(row, i) in sheet.ingredients"
+                                :key="i"
+                                class="adm-row"
+                            >
+                                <td class="adm-td" style="font-weight: 500">
+                                    {{ row.ingredient || '-' }}
+                                </td>
+                                <td
+                                    class="adm-td"
+                                    style="color: var(--adm-ink-dim)"
+                                >
+                                    {{ row.supplier || '-' }}
+                                </td>
+                                <td class="adm-td adm-td--mono">
+                                    {{ row.lot_batch_no || '-' }}
+                                </td>
+                                <td class="adm-td">
+                                    {{ row.percent_used || '-' }}
+                                </td>
+                                <td class="adm-td">
+                                    {{ row.weight_g || '-' }}
+                                </td>
+                                <td
+                                    class="adm-td"
+                                    style="color: var(--adm-ink-dim)"
+                                >
+                                    {{ row.sds_ifra_ref || '-' }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
 
             <!-- Compliance -->
-            <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                    <h3 class="text-lg font-bold text-copy mb-4 border-b border-copy-light pb-2">Compliance Checks</h3>
-                    <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">IFRA Certificate
-                                Checked</dt>
-                            <dd class="mt-0.5 font-semibold"
-                                :class="sheet.ifra_certificate_checked ? 'text-green-700' : 'text-red-700'">
-                                {{ sheet.ifra_certificate_checked ? '✓ Yes' : '✗ No' }}
-                            </dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">CLP Label Prepared
-                            </dt>
-                            <dd class="mt-0.5 font-semibold"
-                                :class="sheet.clp_label_prepared ? 'text-green-700' : 'text-red-700'">
-                                {{ sheet.clp_label_prepared ? '✓ Yes' : '✗ No' }}
-                            </dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">Max % Allowed</dt>
-                            <dd class="text-copy mt-0.5">{{ sheet.max_percent_allowed || '—' }}</dd>
-                        </div>
-                        <div>
-                            <dt class="text-xs uppercase tracking-wider text-copy-light font-medium">SDS Hazards Noted
-                            </dt>
-                            <dd class="text-copy mt-0.5">{{ sheet.sds_hazards_noted || '—' }}</dd>
-                        </div>
-                    </dl>
+            <section class="adm-card">
+                <h2 class="adm-card-title">Compliance Checks</h2>
+                <div
+                    class="adm-field-row"
+                    style="grid-template-columns: repeat(2, 1fr); row-gap: 1rem"
+                >
+                    <div class="adm-field">
+                        <p class="adm-label--sm">IFRA Certificate Checked</p>
+                        <span
+                            class="adm-badge"
+                            :class="
+                                sheet.ifra_certificate_checked
+                                    ? 'adm-badge--on'
+                                    : 'adm-badge--red'
+                            "
+                        >
+                            {{ sheet.ifra_certificate_checked ? 'Yes' : 'No' }}
+                        </span>
+                    </div>
+                    <div class="adm-field">
+                        <p class="adm-label--sm">CLP Label Prepared</p>
+                        <span
+                            class="adm-badge"
+                            :class="
+                                sheet.clp_label_prepared
+                                    ? 'adm-badge--on'
+                                    : 'adm-badge--red'
+                            "
+                        >
+                            {{ sheet.clp_label_prepared ? 'Yes' : 'No' }}
+                        </span>
+                    </div>
+                    <div class="adm-field">
+                        <p class="adm-label--sm">Max % Allowed</p>
+                        <p style="color: var(--adm-ink)">
+                            {{ sheet.max_percent_allowed || '-' }}
+                        </p>
+                    </div>
+                    <div class="adm-field">
+                        <p class="adm-label--sm">SDS Hazards Noted</p>
+                        <p style="color: var(--adm-ink)">
+                            {{ sheet.sds_hazards_noted || '-' }}
+                        </p>
+                    </div>
                 </div>
-            </div>
+            </section>
 
             <!-- Notes -->
-            <div v-if="sheet.notes" class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-                <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                    <h3 class="text-lg font-bold text-copy mb-3 border-b border-copy-light pb-2">Notes &amp;
-                        Observations</h3>
-                    <p class="text-sm text-copy leading-relaxed whitespace-pre-wrap">{{ sheet.notes }}</p>
-                </div>
-            </div>
-
+            <section v-if="sheet.notes" class="adm-card">
+                <h2 class="adm-card-title">Notes &amp; Observations</h2>
+                <p
+                    style="
+                        font-size: 0.9rem;
+                        color: var(--adm-ink);
+                        line-height: 1.7;
+                        white-space: pre-wrap;
+                    "
+                >
+                    {{ sheet.notes }}
+                </p>
+            </section>
         </div>
     </AdminLayout>
 </template>

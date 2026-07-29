@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { Head, Link } from '@inertiajs/vue3';
 
 interface Message {
     id: number;
@@ -13,7 +12,7 @@ interface Message {
     created_at: string;
 }
 
-const props = defineProps<{
+defineProps<{
     message: Message;
 }>();
 
@@ -29,64 +28,101 @@ const formatDate = (dateString: string): string =>
 
 <template>
     <AdminLayout>
+        <Head :title="`Message #${message.id} : Admin`" />
 
-        <Head :title="`Message #${message.id}`" />
-
-        <div class="flex justify-between items-start mb-6 border-b-2 border-copy pb-2">
+        <!-- Header -->
+        <div class="adm-header">
             <div>
-                <h2 class="text-3xl font-black">Message #{{ message.id }}</h2>
-                <p class="text-copy-light">Created at {{ formatDate(message.created_at) }}</p>
+                <div class="adm-breadcrumb">
+                    <Link
+                        :href="route('admin.messages.index')"
+                        class="adm-breadcrumb a"
+                        >Messages</Link
+                    >
+                    <span class="adm-breadcrumb-sep">/</span>
+                    <span>#{{ message.id }}</span>
+                </div>
+                <h1 class="adm-title">Message #{{ message.id }}</h1>
+                <p class="adm-sub">
+                    Received {{ formatDate(message.created_at) }}
+                </p>
             </div>
-            <span :class="['px-4 py-1.5 rounded-full text-lg font-bold uppercase border-2']">
-                {{ message.is_read }}
+            <span
+                class="adm-badge"
+                :class="message.is_read ? 'adm-badge--off' : 'adm-badge--blush'"
+            >
+                {{ message.is_read ? 'Read' : 'Unread' }}
             </span>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div class="lg:col-span-2 space-y-6">
+        <div class="adm-form-grid">
+            <!-- Left column -->
+            <div class="adm-form-left">
+                <section class="adm-card">
+                    <h2 class="adm-card-title">
+                        <span v-if="message.subject">{{
+                            message.subject
+                        }}</span>
+                        <span v-else class="adm-card-title-note"
+                            >No subject</span
+                        >
+                    </h2>
+                    <p
+                        style="
+                            color: var(--adm-ink);
+                            line-height: 1.7;
+                            white-space: pre-wrap;
+                        "
+                    >
+                        {{ message.message }}
+                    </p>
+                </section>
 
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">
-                            <span v-if="message.subject">{{ message.subject }}</span>
-                            <span v-else class="italic">No Subject</span>
-                        </h3>
-
-                        <div class="text-copy-light text-md leading-relaxed">
-                            <p class="text-copy">{{ message.message }}</p>
+                <section class="adm-card">
+                    <h2 class="adm-card-title">Sender Details</h2>
+                    <div class="adm-field-row">
+                        <div class="adm-field">
+                            <p class="adm-label--sm">Name</p>
+                            <p style="color: var(--adm-ink)">
+                                {{ message.name }}
+                            </p>
+                        </div>
+                        <div class="adm-field">
+                            <p class="adm-label--sm">Email</p>
+                            <a
+                                :href="`mailto:${message.email}`"
+                                style="color: var(--adm-stamp-deep)"
+                                >{{ message.email }}</a
+                            >
                         </div>
                     </div>
-                </div>
-
-                <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-xl font-bold text-copy mb-4 border-b-2 border-copy-light pb-2">User Details
-                        </h3>
-                        <div class="grid grid-cols-2 gap-4 text-copy">
-                            <div><span class="font-semibold">Name:</span> {{ message.name }}
-                            </div>
-                            <div><span class="font-semibold">Email:</span> <a :href="`mailto:${message.email}`"
-                                    class="text-primary hover:underline">{{ message.email }}</a></div>
-                        </div>
-                    </div>
-                </div>
+                </section>
             </div>
 
-            <div class="lg:col-span-1 space-y-6">
-                <div class="sticky top-8 rounded-xl border-2 border-copy bg-[var(--primary-content)] shadow-xl">
-                    <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground p-6">
-                        <h3 class="text-2xl font-black text-copy mb-4 border-b-2 border-copy-light pb-3">Message Actions
-                        </h3>
-
-                        <div class="space-y-3 text-copy text-lg mb-6">
-                            <div class="flex justify-between">
-                                <span>Have Read:</span>
-                                <span :class="['font-bold uppercase']">{{ message.is_read
-                                    }}</span>
-                            </div>
-                        </div>
+            <!-- Right column -->
+            <div class="adm-form-right">
+                <section class="adm-card adm-card--sticky">
+                    <h2 class="adm-card-title">Status</h2>
+                    <div
+                        style="
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                        "
+                    >
+                        <span class="adm-sub">Read status</span>
+                        <span
+                            class="adm-badge"
+                            :class="
+                                message.is_read
+                                    ? 'adm-badge--off'
+                                    : 'adm-badge--blush'
+                            "
+                        >
+                            {{ message.is_read ? 'Read' : 'Unread' }}
+                        </span>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
     </AdminLayout>

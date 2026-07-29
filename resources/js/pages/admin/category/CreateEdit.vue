@@ -25,25 +25,33 @@ const form = useForm({
     description: props.category?.description ?? '',
     meta_title: props.category?.meta_title ?? '',
     meta_description: props.category?.meta_description ?? '',
-    status: props.category?.status ?? 'enabled' as 'enabled' | 'disabled',
+    status: props.category?.status ?? ('enabled' as 'enabled' | 'disabled'),
     new_image: null as File | null,
     remove_image: false,
 });
 
-const title = computed(() => props.isEditing ? `Edit: ${props.category?.name}` : 'New Category');
-const submitLabel = computed(() => props.isEditing ? 'Save Changes' : 'Create Category');
+const title = computed(() =>
+    props.isEditing ? `Edit: ${props.category?.name}` : 'New Category',
+);
+const submitLabel = computed(() =>
+    props.isEditing ? 'Save Changes' : 'Create Category',
+);
 
 // Auto-generate slug from name when creating
 const slugEdited = ref(props.isEditing);
-watch(() => form.name, (val) => {
-    if (!slugEdited.value) {
-        form.slug = val.toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .trim();
-    }
-});
+watch(
+    () => form.name,
+    (val) => {
+        if (!slugEdited.value) {
+            form.slug = val
+                .toLowerCase()
+                .replace(/[^a-z0-9\s-]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .trim();
+        }
+    },
+);
 
 const showSeo = ref(false);
 const metaDescCount = computed(() => form.meta_description.length);
@@ -52,8 +60,10 @@ const metaTitleCount = computed(() => form.meta_title.length);
 // Image handling
 const imagePreview = ref<string | null>(
     props.category?.image
-        ? (props.category.image.startsWith('http') ? props.category.image : `/storage/${props.category.image}`)
-        : null
+        ? props.category.image.startsWith('http')
+            ? props.category.image
+            : `/storage/${props.category.image}`
+        : null,
 );
 
 const handleFileUpload = (e: Event) => {
@@ -80,7 +90,9 @@ const markImageForRemoval = () => {
 const undoRemoval = () => {
     form.remove_image = false;
     imagePreview.value = props.category?.image
-        ? (props.category.image.startsWith('http') ? props.category.image : `/storage/${props.category.image}`)
+        ? props.category.image.startsWith('http')
+            ? props.category.image
+            : `/storage/${props.category.image}`
         : null;
 };
 
@@ -92,17 +104,23 @@ const fmtSize = (b: number) => {
 
 const submit = () => {
     if (props.isEditing && props.category) {
-        form.transform(d => ({ ...d, _method: 'put' }))
-            .post(route('admin.categories.update', props.category.id), {
+        form.transform((d) => ({ ...d, _method: 'put' })).post(
+            route('admin.categories.update', props.category.id),
+            {
                 forceFormData: true,
                 preserveScroll: true,
-                onSuccess: () => { form.new_image = null; },
-            });
+                onSuccess: () => {
+                    form.new_image = null;
+                },
+            },
+        );
     } else {
         form.post(route('admin.categories.store'), {
             forceFormData: true,
             preserveScroll: true,
-            onSuccess: () => { form.new_image = null; },
+            onSuccess: () => {
+                form.new_image = null;
+            },
         });
     }
 };
@@ -110,24 +128,40 @@ const submit = () => {
 
 <template>
     <AdminLayout>
-
-        <Head :title="`${title} — Admin`" />
+        <Head :title="`${title} : Admin`" />
 
         <!-- Header -->
         <div class="cc-header">
             <div>
                 <div class="cc-breadcrumb">
-                    <Link :href="route('admin.categories.index')" class="cc-breadcrumb-link">Categories</Link>
+                    <Link
+                        :href="route('admin.categories.index')"
+                        class="cc-breadcrumb-link"
+                        >Categories</Link
+                    >
                     <span class="cc-breadcrumb-sep">/</span>
                     <span>{{ isEditing ? 'Edit' : 'New' }}</span>
                 </div>
                 <h1 class="cc-title">{{ title }}</h1>
-                <p class="cc-sub">{{ isEditing ? 'Update category details and SEO.' :
-                    'Fill in the details for a new category.' }}</p>
+                <p class="cc-sub">
+                    {{
+                        isEditing
+                            ? 'Update category details and SEO.'
+                            : 'Fill in the details for a new category.'
+                    }}
+                </p>
             </div>
             <div v-if="form.isDirty" class="cc-unsaved">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                    width="13"
+                    height="13"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
                     <circle cx="12" cy="12" r="10" />
                     <path d="M12 8v4M12 16h.01" />
                 </svg>
@@ -136,19 +170,25 @@ const submit = () => {
         </div>
 
         <form @submit.prevent="submit" class="cc-grid">
-
             <!-- ── Left column ── -->
             <div class="cc-left">
-
                 <!-- General info -->
                 <section class="cc-card">
                     <h2 class="cc-card-title">General Information</h2>
 
                     <div class="cc-field">
                         <label class="cc-label" for="name">Category Name</label>
-                        <input id="name" type="text" v-model="form.name" required class="cc-input"
-                            :class="{ 'cc-input--err': form.errors.name }" />
-                        <p v-if="form.errors.name" class="cc-err">{{ form.errors.name }}</p>
+                        <input
+                            id="name"
+                            type="text"
+                            v-model="form.name"
+                            required
+                            class="cc-input"
+                            :class="{ 'cc-input--err': form.errors.name }"
+                        />
+                        <p v-if="form.errors.name" class="cc-err">
+                            {{ form.errors.name }}
+                        </p>
                     </div>
 
                     <!-- Slug -->
@@ -156,20 +196,34 @@ const submit = () => {
                         <label class="cc-label cc-label--sm">URL Slug</label>
                         <div class="cc-slug-wrap">
                             <span class="cc-slug-prefix">/category/</span>
-                            <input v-model="form.slug" type="text" class="cc-slug-input" @input="slugEdited = true"
-                                placeholder="auto-generated-from-name" />
+                            <input
+                                v-model="form.slug"
+                                type="text"
+                                class="cc-slug-input"
+                                @input="slugEdited = true"
+                                placeholder="auto-generated-from-name"
+                            />
                         </div>
-                        <p v-if="form.errors.slug" class="cc-err">{{ form.errors.slug }}</p>
+                        <p v-if="form.errors.slug" class="cc-err">
+                            {{ form.errors.slug }}
+                        </p>
                     </div>
 
                     <!-- Description -->
                     <div class="cc-field">
                         <label class="cc-label cc-label--sm">
                             Description
-                            <span class="cc-label-note">(shown on category landing page — helps SEO)</span>
+                            <span class="cc-label-note"
+                                >(shown on category landing page, helps
+                                SEO)</span
+                            >
                         </label>
-                        <textarea v-model="form.description" rows="4" class="cc-textarea"
-                            placeholder="Describe this category. What makes these products special? Who are they for?&#10;&#10;This text appears on the public category page and helps Google understand what the page is about."></textarea>
+                        <textarea
+                            v-model="form.description"
+                            rows="4"
+                            class="cc-textarea"
+                            placeholder="Describe this category. What makes these products special? Who are they for?&#10;&#10;This text appears on the public category page and helps Google understand what the page is about."
+                        ></textarea>
                     </div>
                 </section>
 
@@ -182,75 +236,177 @@ const submit = () => {
 
                     <!-- Removal notice -->
                     <div v-if="form.remove_image" class="cc-del-notice">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path
-                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                            />
                             <line x1="12" y1="9" x2="12" y2="13" />
                             <line x1="12" y1="17" x2="12.01" y2="17" />
                         </svg>
                         Current image will be removed on save.
-                        <button type="button" @click="undoRemoval" class="cc-del-undo">Undo</button>
+                        <button
+                            type="button"
+                            @click="undoRemoval"
+                            class="cc-del-undo"
+                        >
+                            Undo
+                        </button>
                     </div>
 
                     <!-- Current image preview -->
                     <div v-else-if="imagePreview" class="cc-existing">
-                        <p class="cc-existing-label">{{ form.new_image ? 'New image' : 'Current image' }}</p>
+                        <p class="cc-existing-label">
+                            {{ form.new_image ? 'New image' : 'Current image' }}
+                        </p>
                         <div class="cc-img-card">
-                            <img :src="imagePreview" alt="Category image preview" class="cc-img-thumb" />
+                            <img
+                                :src="imagePreview"
+                                alt="Category image preview"
+                                class="cc-img-thumb"
+                            />
                             <div class="cc-img-actions">
-                                <button type="button" @click="form.new_image ? removeNewImage() : markImageForRemoval()"
-                                    class="cc-img-btn cc-img-btn--del" title="Remove image">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <button
+                                    type="button"
+                                    @click="
+                                        form.new_image
+                                            ? removeNewImage()
+                                            : markImageForRemoval()
+                                    "
+                                    class="cc-img-btn cc-img-btn--del"
+                                    title="Remove image"
+                                >
+                                    <svg
+                                        width="12"
+                                        height="12"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
                                         <path d="M3 6h18" />
-                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                        <path
+                                            d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
+                                        />
+                                        <path
+                                            d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
+                                        />
                                     </svg>
                                 </button>
                             </div>
                         </div>
                         <!-- Allow replacing image even when one is already queued/shown -->
-                        <label for="file-upload-replace" class="cc-replace-link">
+                        <label
+                            for="file-upload-replace"
+                            class="cc-replace-link"
+                        >
                             Replace image
-                            <input type="file" id="file-upload-replace" accept="image/jpeg,image/png,image/webp"
-                                @change="handleFileUpload" class="cc-upload-input" />
+                            <input
+                                type="file"
+                                id="file-upload-replace"
+                                accept="image/jpeg,image/png,image/webp"
+                                @change="handleFileUpload"
+                                class="cc-upload-input"
+                            />
                         </label>
                     </div>
 
-                    <!-- Upload zone — shown when no image -->
+                    <!-- Upload zone, shown when no image -->
                     <label v-else for="file-upload" class="cc-upload-zone">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path
+                                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                            />
                             <polyline points="17 8 12 3 7 8" />
                             <line x1="12" y1="3" x2="12" y2="15" />
                         </svg>
                         <span>Click to upload or drag &amp; drop</span>
-                        <span class="cc-upload-note">JPEG, PNG, WebP — max 2 MB</span>
-                        <input type="file" id="file-upload" accept="image/jpeg,image/png,image/webp"
-                            @change="handleFileUpload" class="cc-upload-input" />
+                        <span class="cc-upload-note"
+                            >JPEG, PNG, WebP (max 2 MB)</span
+                        >
+                        <input
+                            type="file"
+                            id="file-upload"
+                            accept="image/jpeg,image/png,image/webp"
+                            @change="handleFileUpload"
+                            class="cc-upload-input"
+                        />
                     </label>
 
-                    <p v-if="form.errors.new_image" class="cc-err">{{ form.errors.new_image }}</p>
+                    <p v-if="form.errors.new_image" class="cc-err">
+                        {{ form.errors.new_image }}
+                    </p>
 
                     <!-- New file queued info -->
-                    <div v-if="form.new_image && !imagePreview" class="cc-queue-item">
+                    <div
+                        v-if="form.new_image && !imagePreview"
+                        class="cc-queue-item"
+                    >
                         <div class="cc-queue-thumb">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <rect
+                                    x="3"
+                                    y="3"
+                                    width="18"
+                                    height="18"
+                                    rx="2"
+                                />
                                 <circle cx="8.5" cy="8.5" r="1.5" />
                                 <polyline points="21 15 16 10 5 21" />
                             </svg>
                         </div>
                         <div class="cc-queue-info">
-                            <p class="cc-queue-name">{{ form.new_image.name }}</p>
-                            <p class="cc-queue-size">{{ fmtSize(form.new_image.size) }}</p>
+                            <p class="cc-queue-name">
+                                {{ form.new_image.name }}
+                            </p>
+                            <p class="cc-queue-size">
+                                {{ fmtSize(form.new_image.size) }}
+                            </p>
                         </div>
-                        <button type="button" @click="removeNewImage" class="cc-queue-remove" aria-label="Remove">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <button
+                            type="button"
+                            @click="removeNewImage"
+                            class="cc-queue-remove"
+                            aria-label="Remove"
+                        >
+                            <svg
+                                width="13"
+                                height="13"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
                                 <path d="M18 6 6 18M6 6l12 12" />
                             </svg>
                         </button>
@@ -259,11 +415,23 @@ const submit = () => {
 
                 <!-- SEO -->
                 <section class="cc-card">
-                    <button type="button" class="cc-seo-toggle" @click="showSeo = !showSeo">
+                    <button
+                        type="button"
+                        class="cc-seo-toggle"
+                        @click="showSeo = !showSeo"
+                    >
                         <span>SEO Settings</span>
-                        <svg :style="showSeo ? 'transform:rotate(180deg)' : ''" width="14" height="14"
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                            stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            :style="showSeo ? 'transform:rotate(180deg)' : ''"
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="m6 9 6 6 6-6" />
                         </svg>
                     </button>
@@ -272,43 +440,89 @@ const submit = () => {
                         <div class="cc-field">
                             <label class="cc-label cc-label--sm">
                                 Meta Title
-                                <span class="cc-label-note" :class="{ 'cc-label-note--warn': metaTitleCount > 55 }">
+                                <span
+                                    class="cc-label-note"
+                                    :class="{
+                                        'cc-label-note--warn':
+                                            metaTitleCount > 55,
+                                    }"
+                                >
                                     {{ metaTitleCount }}/60
                                 </span>
                             </label>
-                            <input v-model="form.meta_title" type="text" class="cc-input" maxlength="60"
-                                :placeholder="form.name ? `${form.name} | Chapter of You` : 'Auto-filled from name'" />
-                            <p v-if="form.errors.meta_title" class="cc-err">{{ form.errors.meta_title }}</p>
+                            <input
+                                v-model="form.meta_title"
+                                type="text"
+                                class="cc-input"
+                                maxlength="60"
+                                :placeholder="
+                                    form.name
+                                        ? `${form.name} | Chapter of You`
+                                        : 'Auto-filled from name'
+                                "
+                            />
+                            <p v-if="form.errors.meta_title" class="cc-err">
+                                {{ form.errors.meta_title }}
+                            </p>
                         </div>
 
                         <div class="cc-field">
                             <label class="cc-label cc-label--sm">
                                 Meta Description
-                                <span class="cc-label-note" :class="{ 'cc-label-note--warn': metaDescCount > 155 }">
+                                <span
+                                    class="cc-label-note"
+                                    :class="{
+                                        'cc-label-note--warn':
+                                            metaDescCount > 155,
+                                    }"
+                                >
                                     {{ metaDescCount }}/160
                                 </span>
                             </label>
-                            <textarea v-model="form.meta_description" rows="3" class="cc-textarea" maxlength="160"
-                                :placeholder="form.description ? form.description.slice(0, 155) + '…' : 'Describe this category for search engines…'"></textarea>
-                            <p v-if="form.errors.meta_description" class="cc-err">{{ form.errors.meta_description }}</p>
+                            <textarea
+                                v-model="form.meta_description"
+                                rows="3"
+                                class="cc-textarea"
+                                maxlength="160"
+                                :placeholder="
+                                    form.description
+                                        ? form.description.slice(0, 155) + '…'
+                                        : 'Describe this category for search engines…'
+                                "
+                            ></textarea>
+                            <p
+                                v-if="form.errors.meta_description"
+                                class="cc-err"
+                            >
+                                {{ form.errors.meta_description }}
+                            </p>
                         </div>
 
                         <!-- Live Google SERP preview -->
                         <div class="cc-serp">
                             <p class="cc-serp-label">Google preview</p>
                             <p class="cc-serp-title">
-                                {{ form.meta_title || (form.name ? `${form.name} | Chapter of You` : 'Category name') }}
+                                {{
+                                    form.meta_title ||
+                                    (form.name
+                                        ? `${form.name} | Chapter of You`
+                                        : 'Category name')
+                                }}
                             </p>
                             <p class="cc-serp-url">
-                                chapterofyou.co.uk › category › {{ form.slug || 'category-slug' }}
+                                chapterofyou.co.uk › category ›
+                                {{ form.slug || 'category-slug' }}
                             </p>
                             <p class="cc-serp-desc">
-                                {{ form.meta_description || form.description || 'Meta description will appear here.' }}
+                                {{
+                                    form.meta_description ||
+                                    form.description ||
+                                    'Meta description will appear here.'
+                                }}
                             </p>
                         </div>
                     </div>
                 </section>
-
             </div>
 
             <!-- ── Right column ── -->
@@ -319,38 +533,87 @@ const submit = () => {
                     <div class="cc-field">
                         <label class="cc-label">Category Status</label>
                         <div class="cc-status-btns">
-                            <button type="button" @click="form.status = 'enabled'" class="cc-status-btn"
-                                :class="{ 'cc-status-btn--on': form.status === 'enabled' }">
-                                <span class="cc-status-dot cc-status-dot--green"></span>
+                            <button
+                                type="button"
+                                @click="form.status = 'enabled'"
+                                class="cc-status-btn"
+                                :class="{
+                                    'cc-status-btn--on':
+                                        form.status === 'enabled',
+                                }"
+                            >
+                                <span
+                                    class="cc-status-dot cc-status-dot--green"
+                                ></span>
                                 Active
                             </button>
-                            <button type="button" @click="form.status = 'disabled'" class="cc-status-btn"
-                                :class="{ 'cc-status-btn--off': form.status === 'disabled' }">
-                                <span class="cc-status-dot cc-status-dot--grey"></span>
+                            <button
+                                type="button"
+                                @click="form.status = 'disabled'"
+                                class="cc-status-btn"
+                                :class="{
+                                    'cc-status-btn--off':
+                                        form.status === 'disabled',
+                                }"
+                            >
+                                <span
+                                    class="cc-status-dot cc-status-dot--grey"
+                                ></span>
                                 Inactive
                             </button>
                         </div>
-                        <p v-if="form.errors.status" class="cc-err">{{ form.errors.status }}</p>
+                        <p v-if="form.errors.status" class="cc-err">
+                            {{ form.errors.status }}
+                        </p>
                     </div>
 
-                    <button type="submit" :disabled="form.processing" class="cc-submit-btn">
-                        <svg v-if="form.processing" class="cc-spinner" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
-                            <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                    <button
+                        type="submit"
+                        :disabled="form.processing"
+                        class="cc-submit-btn"
+                    >
+                        <svg
+                            v-if="form.processing"
+                            class="cc-spinner"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="rgba(255,255,255,0.3)"
+                                stroke-width="3"
+                            />
+                            <path
+                                d="M12 2a10 10 0 0 1 10 10"
+                                stroke="var(--adm-paper-raised)"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                            />
                         </svg>
                         {{ form.processing ? 'Saving…' : submitLabel }}
                     </button>
 
                     <!-- View live page (edit mode, published) -->
-                    <a v-if="isEditing && category?.slug && category?.status === 'enabled'"
-                        :href="`/category/${category.slug}`" target="_blank" class="cc-view-live-btn">
+                    <a
+                        v-if="
+                            isEditing &&
+                            category?.slug &&
+                            category?.status === 'enabled'
+                        "
+                        :href="`/category/${category.slug}`"
+                        target="_blank"
+                        class="cc-view-live-btn"
+                    >
                         ↗ View Category Page
                     </a>
 
-                    <p v-if="form.isDirty" class="cc-unsaved-inline">Unsaved changes</p>
+                    <p v-if="form.isDirty" class="cc-unsaved-inline">
+                        Unsaved changes
+                    </p>
                 </section>
             </div>
-
         </form>
     </AdminLayout>
 </template>
@@ -358,18 +621,7 @@ const submit = () => {
 <style scoped>
 .cc-header,
 .cc-card {
-    --bb-navy: #1a1a2e;
-    --bb-cream: #faf9f7;
-    --bb-surface: #ffffff;
-    --bb-border: #ece8e2;
-    --bb-text: #1a1a2e;
-    --bb-muted: #7a7a9a;
-    --bb-red: #e05c6e;
-    --bb-red-bg: #fdeef0;
-    --bb-green: #4caf7d;
-    --bb-green-bg: #eef7f2;
-    --bb-lav-d: #9b84d4;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
 }
 
 /* Header */
@@ -387,18 +639,18 @@ const submit = () => {
     align-items: center;
     gap: 0.4rem;
     font-size: 0.78rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-bottom: 0.35rem;
 }
 
 .cc-breadcrumb-link {
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     text-decoration: none;
     transition: color 0.15s;
 }
 
 .cc-breadcrumb-link:hover {
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .cc-breadcrumb-sep {
@@ -406,15 +658,17 @@ const submit = () => {
 }
 
 .cc-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--bb-text);
+    font-family: var(--adm-display);
+    font-style: italic;
+    font-size: 2rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--adm-ink);
 }
 
 .cc-sub {
     font-size: 0.82rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-top: 0.2rem;
 }
 
@@ -424,9 +678,9 @@ const submit = () => {
     gap: 0.4rem;
     padding: 0.4rem 0.85rem;
     border-radius: 999px;
-    background: #fff8e6;
-    border: 1px solid #e0c060;
-    color: #8a6000;
+    background: var(--adm-warning-bg);
+    border: 1px solid var(--adm-warning-line);
+    color: var(--adm-warning);
     font-size: 0.78rem;
     font-weight: 600;
 }
@@ -466,9 +720,9 @@ const submit = () => {
 
 /* Cards */
 .cc-card {
-    background: var(--bb-surface);
+    background: var(--adm-paper-raised);
     border-radius: 14px;
-    border: 1px solid var(--bb-border);
+    border: 1px solid var(--adm-line);
     box-shadow: 0 1px 6px rgba(26, 26, 46, 0.05);
     padding: 1.5rem;
     display: flex;
@@ -481,9 +735,9 @@ const submit = () => {
     font-weight: 700;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     padding-bottom: 0.85rem;
-    border-bottom: 1px solid var(--bb-border);
+    border-bottom: 1px solid var(--adm-line);
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -495,7 +749,7 @@ const submit = () => {
     text-transform: none;
     letter-spacing: 0;
     font-style: italic;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     opacity: 0.75;
 }
 
@@ -509,90 +763,94 @@ const submit = () => {
 .cc-label {
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .cc-label--sm {
     font-size: 0.74rem;
     font-weight: 600;
-    color: var(--bb-text);
+    color: var(--adm-ink);
 }
 
 .cc-label-note {
     font-weight: 400;
     font-style: italic;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-left: 0.25rem;
 }
 
 .cc-label-note--warn {
-    color: var(--bb-red) !important;
+    color: var(--adm-danger) !important;
 }
 
 .cc-input {
     width: 100%;
     padding: 0.62rem 0.85rem;
     border-radius: 8px;
-    border: 1px solid var(--bb-border);
-    background: var(--bb-cream);
-    color: var(--bb-text);
-    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--adm-line);
+    background: var(--adm-paper);
+    color: var(--adm-ink);
+    font-family: var(--adm-font);
     font-size: 0.9rem;
     outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 
 .cc-input:focus {
-    border-color: var(--bb-lav-d);
+    border-color: var(--adm-stamp-deep);
     box-shadow: 0 0 0 3px rgba(201, 184, 240, 0.2);
 }
 
 .cc-input--err {
-    border-color: var(--bb-red);
+    border-color: var(--adm-danger);
 }
 
 .cc-textarea {
     width: 100%;
     padding: 0.62rem 0.85rem;
     border-radius: 8px;
-    border: 1px solid var(--bb-border);
-    background: var(--bb-cream);
-    color: var(--bb-text);
-    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--adm-line);
+    background: var(--adm-paper);
+    color: var(--adm-ink);
+    font-family: var(--adm-font);
     font-size: 0.9rem;
     outline: none;
     resize: vertical;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
 }
 
 .cc-textarea:focus {
-    border-color: var(--bb-lav-d);
+    border-color: var(--adm-stamp-deep);
     box-shadow: 0 0 0 3px rgba(201, 184, 240, 0.2);
 }
 
 .cc-err {
     font-size: 0.75rem;
-    color: var(--bb-red);
+    color: var(--adm-danger);
 }
 
 /* Slug */
 .cc-slug-wrap {
     display: flex;
     align-items: center;
-    border: 1px solid var(--bb-border);
+    border: 1px solid var(--adm-line);
     border-radius: 8px;
     overflow: hidden;
-    background: var(--bb-cream);
+    background: var(--adm-paper);
 }
 
 .cc-slug-prefix {
     padding: 0.62rem 0.75rem;
-    background: var(--bb-border);
+    background: var(--adm-line);
     font-size: 0.82rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     font-family: monospace;
     white-space: nowrap;
-    border-right: 1px solid var(--bb-border);
+    border-right: 1px solid var(--adm-line);
 }
 
 .cc-slug-input {
@@ -600,7 +858,7 @@ const submit = () => {
     padding: 0.62rem 0.75rem;
     border: none;
     background: transparent;
-    color: var(--bb-text);
+    color: var(--adm-ink);
     font-family: monospace;
     font-size: 0.85rem;
     outline: none;
@@ -615,19 +873,21 @@ const submit = () => {
     gap: 0.4rem;
     padding: 1.75rem 1rem;
     border-radius: 10px;
-    border: 2px dashed var(--bb-border);
-    background: var(--bb-cream);
-    color: var(--bb-muted);
+    border: 2px dashed var(--adm-line);
+    background: var(--adm-paper);
+    color: var(--adm-ink-dim);
     cursor: pointer;
     text-align: center;
     font-size: 0.85rem;
     font-weight: 500;
-    transition: border-color 0.15s, background 0.15s;
+    transition:
+        border-color 0.15s,
+        background 0.15s;
 }
 
 .cc-upload-zone:hover {
-    border-color: var(--bb-lav-d);
-    background: #faf8ff;
+    border-color: var(--adm-stamp-deep);
+    background: var(--adm-stamp-dim);
 }
 
 .cc-upload-note {
@@ -646,7 +906,7 @@ const submit = () => {
     gap: 0.3rem;
     font-size: 0.78rem;
     font-weight: 600;
-    color: var(--bb-lav-d);
+    color: var(--adm-stamp-deep);
     cursor: pointer;
     margin-top: 0.25rem;
 }
@@ -662,16 +922,16 @@ const submit = () => {
     gap: 0.65rem;
     padding: 0.55rem 0.75rem;
     border-radius: 8px;
-    background: var(--bb-cream);
-    border: 1px solid var(--bb-border);
+    background: var(--adm-paper);
+    border: 1px solid var(--adm-line);
 }
 
 .cc-queue-thumb {
     width: 30px;
     height: 30px;
     border-radius: 6px;
-    background: #e8e4f0;
-    color: var(--bb-lav-d);
+    background: var(--adm-stamp-dim);
+    color: var(--adm-stamp-deep);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -686,7 +946,7 @@ const submit = () => {
 .cc-queue-name {
     font-size: 0.82rem;
     font-weight: 500;
-    color: var(--bb-text);
+    color: var(--adm-ink);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -694,7 +954,7 @@ const submit = () => {
 
 .cc-queue-size {
     font-size: 0.7rem;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .cc-queue-remove {
@@ -703,17 +963,19 @@ const submit = () => {
     border-radius: 50%;
     border: none;
     background: none;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s, color 0.15s;
+    transition:
+        background 0.15s,
+        color 0.15s;
 }
 
 .cc-queue-remove:hover {
-    background: var(--bb-red-bg);
-    color: var(--bb-red);
+    background: var(--adm-danger-bg);
+    color: var(--adm-danger);
 }
 
 /* Existing image */
@@ -728,14 +990,14 @@ const submit = () => {
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
 }
 
 .cc-img-card {
     position: relative;
     display: inline-block;
     border-radius: 10px;
-    border: 1px solid var(--bb-border);
+    border: 1px solid var(--adm-line);
     overflow: hidden;
     max-width: 200px;
 }
@@ -767,7 +1029,7 @@ const submit = () => {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: #fff;
+    color: var(--adm-paper-raised);
     transition: opacity 0.15s;
 }
 
@@ -776,7 +1038,7 @@ const submit = () => {
 }
 
 .cc-img-btn--del {
-    background: var(--bb-red);
+    background: var(--adm-danger);
 }
 
 /* Deletion notice */
@@ -786,9 +1048,9 @@ const submit = () => {
     gap: 0.5rem;
     padding: 0.6rem 0.85rem;
     border-radius: 8px;
-    background: var(--bb-red-bg);
-    border: 1px solid #f5b8c0;
-    color: var(--bb-red);
+    background: var(--adm-danger-bg);
+    border: 1px solid var(--adm-danger-line);
+    color: var(--adm-danger);
     font-size: 0.82rem;
     font-weight: 500;
 }
@@ -799,10 +1061,10 @@ const submit = () => {
     font-weight: 700;
     background: none;
     border: none;
-    color: var(--bb-red);
+    color: var(--adm-danger);
     cursor: pointer;
     text-decoration: underline;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
 }
 
 /* SEO */
@@ -814,10 +1076,10 @@ const submit = () => {
     background: none;
     border: none;
     cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
     font-size: 0.85rem;
     font-weight: 700;
-    color: var(--bb-text);
+    color: var(--adm-ink);
     padding: 0;
 }
 
@@ -831,7 +1093,7 @@ const submit = () => {
     gap: 1rem;
     margin-top: 1rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--bb-border);
+    border-top: 1px solid var(--adm-line);
 }
 
 .cc-serp {
@@ -847,9 +1109,9 @@ const submit = () => {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--bb-muted);
+    color: var(--adm-ink-dim);
     margin-bottom: 0.5rem;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--adm-font);
 }
 
 .cc-serp-title {
@@ -887,26 +1149,29 @@ const submit = () => {
     gap: 0.4rem;
     padding: 0.55rem 0.85rem;
     border-radius: 8px;
-    border: 1px solid var(--bb-border);
-    background: var(--bb-cream);
-    color: var(--bb-muted);
-    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--adm-line);
+    background: var(--adm-paper);
+    color: var(--adm-ink-dim);
+    font-family: var(--adm-font);
     font-size: 0.82rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    transition:
+        background 0.15s,
+        border-color 0.15s,
+        color 0.15s;
 }
 
 .cc-status-btn--on {
-    background: var(--bb-green-bg);
-    border-color: var(--bb-green);
-    color: #2a7a50;
+    background: var(--adm-success-bg);
+    border-color: var(--adm-success);
+    color: var(--adm-success);
 }
 
 .cc-status-btn--off {
-    background: var(--bb-red-bg);
-    border-color: var(--bb-red);
-    color: var(--bb-red);
+    background: var(--adm-danger-bg);
+    border-color: var(--adm-danger);
+    color: var(--adm-danger);
 }
 
 .cc-status-dot {
@@ -918,11 +1183,11 @@ const submit = () => {
 }
 
 .cc-status-dot--green {
-    background: var(--bb-green);
+    background: var(--adm-success);
 }
 
 .cc-status-dot--grey {
-    background: #b0b0c0;
+    background: var(--adm-ink-faint);
 }
 
 /* Submit */
@@ -935,13 +1200,15 @@ const submit = () => {
     padding: 0.72rem 1.25rem;
     border-radius: 8px;
     border: none;
-    background: var(--bb-navy);
-    color: #fff;
-    font-family: 'DM Sans', sans-serif;
+    background: var(--adm-charcoal);
+    color: var(--adm-paper-raised);
+    font-family: var(--adm-font);
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.15s, transform 0.15s;
+    transition:
+        opacity 0.15s,
+        transform 0.15s;
 }
 
 .cc-submit-btn:hover:not(:disabled) {
@@ -959,26 +1226,28 @@ const submit = () => {
     text-align: center;
     padding: 0.55rem 1rem;
     border-radius: 8px;
-    border: 1px solid var(--bb-border);
-    background: var(--bb-cream);
-    color: var(--bb-muted);
-    font-family: 'DM Sans', sans-serif;
+    border: 1px solid var(--adm-line);
+    background: var(--adm-paper);
+    color: var(--adm-ink-dim);
+    font-family: var(--adm-font);
     font-size: 0.82rem;
     font-weight: 500;
     text-decoration: none;
-    transition: border-color 0.15s, color 0.15s;
+    transition:
+        border-color 0.15s,
+        color 0.15s;
     margin-top: 0.25rem;
 }
 
 .cc-view-live-btn:hover {
-    border-color: var(--bb-lav-d);
-    color: var(--bb-text);
+    border-color: var(--adm-stamp-deep);
+    color: var(--adm-ink);
 }
 
 .cc-unsaved-inline {
     text-align: center;
     font-size: 0.75rem;
-    color: #8a6000;
+    color: var(--adm-warning);
     font-weight: 500;
 }
 

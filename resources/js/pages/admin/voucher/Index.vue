@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import AdminLayout from '@/layouts/AdminLayout.vue';
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Tag } from 'lucide-vue-next';
 import { ref } from 'vue';
 
-interface Product { id: number; name: string; }
+interface Product {
+    id: number;
+    name: string;
+}
 
 interface Voucher {
     id: number;
@@ -41,7 +45,9 @@ const confirmingDelete = ref<number | null>(null);
 function deleteVoucher(id: number) {
     router.delete(route('admin.vouchers.destroy', { voucher: id }), {
         preserveScroll: true,
-        onSuccess: () => { confirmingDelete.value = null; },
+        onSuccess: () => {
+            confirmingDelete.value = null;
+        },
     });
 }
 
@@ -51,140 +57,275 @@ function formatDiscount(v: Voucher) {
         : `£${parseFloat(v.value).toFixed(2)}`;
 }
 
-function statusBadge(v: Voucher): { label: string; class: string } {
-    if (!v.is_active) return { label: 'Inactive', class: 'bg-gray-100 text-gray-600' };
-    if (v.valid_until && new Date(v.valid_until) < new Date()) return { label: 'Expired', class: 'bg-red-100 text-red-700' };
-    if (v.max_uses !== null && v.uses_count >= v.max_uses) return { label: 'Exhausted', class: 'bg-amber-100 text-amber-700' };
-    return { label: 'Active', class: 'bg-green-100 text-green-700' };
+function statusBadge(v: Voucher): { label: string; cls: string } {
+    if (!v.is_active) return { label: 'Inactive', cls: 'adm-badge--off' };
+    if (v.valid_until && new Date(v.valid_until) < new Date())
+        return { label: 'Expired', cls: 'adm-badge--red' };
+    if (v.max_uses !== null && v.uses_count >= v.max_uses)
+        return { label: 'Exhausted', cls: 'adm-badge--warn' };
+    return { label: 'Active', cls: 'adm-badge--on' };
 }
 </script>
 
 <template>
     <AdminLayout>
+        <Head title="Vouchers : Admin" />
 
-        <Head title="Vouchers & Discounts" />
-
-        <div class="mb-6 flex items-center justify-between border-b-2 border-copy pb-2">
+        <!-- Header -->
+        <div class="adm-header">
             <div>
-                <h2 class="text-3xl font-black">Vouchers & Discounts</h2>
-                <p class="text-copy-light mt-1">{{ vouchers.total }} voucher{{ vouchers.total !== 1 ? 's' : '' }} total
+                <h1 class="adm-title">Vouchers &amp; Discounts</h1>
+                <p class="adm-sub">
+                    {{ vouchers.total }} voucher{{
+                        vouchers.total !== 1 ? 's' : ''
+                    }}
+                    total
                 </p>
             </div>
-            <a :href="route('admin.vouchers.create')"
-                class="rounded-lg border-2 border-copy px-4 py-2 font-bold text-sm transition hover:bg-foreground"
-                style="background-color: var(--primary); color: var(--primary-content);">
-                + New Voucher
-            </a>
+            <Link
+                :href="route('admin.vouchers.create')"
+                class="adm-btn adm-btn--primary"
+            >
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                >
+                    <path d="M12 5v14M5 12h14" />
+                </svg>
+                New Voucher
+            </Link>
         </div>
 
-        <!-- Table -->
-        <div class="rounded-xl border-2 border-copy bg-[var(--primary-content)]">
-            <div class="relative rounded-xl -m-0.5 border-2 border-copy bg-foreground overflow-x-auto">
-                <table class="w-full text-sm">
+        <!-- Table card -->
+        <div class="adm-card adm-card--flush" style="margin-bottom: 1.5rem">
+            <div v-if="vouchers.data.length" class="adm-table-wrap">
+                <table class="adm-table">
                     <thead>
-                        <tr
-                            class="border-b-2 border-copy-light text-left text-xs uppercase tracking-wider text-copy-light">
-                            <th class="px-4 py-3">Code</th>
-                            <th class="px-4 py-3">Discount</th>
-                            <th class="px-4 py-3">Status</th>
-                            <th class="px-4 py-3">Uses</th>
-                            <th class="px-4 py-3">Valid Until</th>
-                            <th class="px-4 py-3">Restrictions</th>
-                            <th class="px-4 py-3 text-right">Actions</th>
+                        <tr class="adm-thead">
+                            <th class="adm-th">Code</th>
+                            <th class="adm-th">Discount</th>
+                            <th class="adm-th">Status</th>
+                            <th class="adm-th">Uses</th>
+                            <th class="adm-th">Valid Until</th>
+                            <th class="adm-th">Restrictions</th>
+                            <th class="adm-th adm-th--right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-if="vouchers.data.length === 0">
-                            <td colspan="7" class="px-4 py-8 text-center text-copy-light italic">
-                                No vouchers yet. Create one above.
-                            </td>
-                        </tr>
-                        <tr v-for="v in vouchers.data" :key="v.id"
-                            class="border-b border-copy-light last:border-b-0 hover:bg-secondary-light transition">
+                        <tr
+                            v-for="v in vouchers.data"
+                            :key="v.id"
+                            class="adm-row"
+                        >
                             <!-- Code -->
-                            <td class="px-4 py-3">
-                                <span class="font-mono font-bold text-copy">{{ v.code }}</span>
-                                <p v-if="v.description" class="text-xs text-copy-light mt-0.5 max-w-[180px] truncate">{{
-                                    v.description }}</p>
+                            <td class="adm-td">
+                                <span
+                                    class="adm-td--mono"
+                                    style="
+                                        font-weight: 700;
+                                        color: var(--adm-ink);
+                                    "
+                                    >{{ v.code }}</span
+                                >
+                                <p
+                                    v-if="v.description"
+                                    class="adm-sub"
+                                    style="
+                                        margin-top: 0.15rem;
+                                        max-width: 180px;
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                        white-space: nowrap;
+                                    "
+                                >
+                                    {{ v.description }}
+                                </p>
                             </td>
 
                             <!-- Discount -->
-                            <td class="px-4 py-3 font-bold text-primary">{{ formatDiscount(v) }}</td>
+                            <td class="adm-td adm-td--price">
+                                {{ formatDiscount(v) }}
+                            </td>
 
                             <!-- Status -->
-                            <td class="px-4 py-3">
-                                <span class="inline-block rounded-full px-2 py-0.5 text-xs font-semibold"
-                                    :class="statusBadge(v).class">{{ statusBadge(v).label }}</span>
+                            <td class="adm-td">
+                                <span
+                                    class="adm-badge"
+                                    :class="statusBadge(v).cls"
+                                    >{{ statusBadge(v).label }}</span
+                                >
                             </td>
 
                             <!-- Uses -->
-                            <td class="px-4 py-3 text-copy">
+                            <td class="adm-td">
                                 {{ v.uses_count }}
-                                <span v-if="v.max_uses !== null" class="text-copy-light">/ {{ v.max_uses }}</span>
-                                <span v-else class="text-copy-light">/ ∞</span>
+                                <span style="color: var(--adm-ink-dim)"
+                                    >/
+                                    {{
+                                        v.max_uses !== null
+                                            ? v.max_uses
+                                            : 'unlimited'
+                                    }}</span
+                                >
                             </td>
 
                             <!-- Valid Until -->
-                            <td class="px-4 py-3 text-copy-light text-xs">
-                                <span v-if="v.valid_until">{{ new Date(v.valid_until).toLocaleDateString('en-GB')
-                                    }}</span>
+                            <td
+                                class="adm-td"
+                                style="
+                                    color: var(--adm-ink-dim);
+                                    font-size: 0.8rem;
+                                "
+                            >
+                                <span v-if="v.valid_until">{{
+                                    new Date(v.valid_until).toLocaleDateString(
+                                        'en-GB',
+                                    )
+                                }}</span>
                                 <span v-else>No expiry</span>
                             </td>
 
                             <!-- Restrictions -->
-                            <td class="px-4 py-3">
-                                <div class="flex flex-wrap gap-1">
-                                    <span v-if="!v.applies_to_all_products"
-                                        class="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700">
-                                        {{ v.products.length }} product{{ v.products.length !== 1 ? 's' : '' }}
+                            <td class="adm-td">
+                                <div
+                                    style="
+                                        display: flex;
+                                        flex-wrap: wrap;
+                                        gap: 0.3rem;
+                                    "
+                                >
+                                    <span
+                                        v-if="!v.applies_to_all_products"
+                                        class="adm-badge adm-badge--lav"
+                                    >
+                                        {{ v.products.length }} product{{
+                                            v.products.length !== 1 ? 's' : ''
+                                        }}
                                     </span>
-                                    <span v-if="v.new_customers_only"
-                                        class="rounded bg-purple-50 px-1.5 py-0.5 text-xs text-purple-700">New
-                                        customers</span>
-                                    <span v-if="v.single_use_per_user"
-                                        class="rounded bg-orange-50 px-1.5 py-0.5 text-xs text-orange-700">1/user</span>
-                                    <span v-if="v.minimum_order_value"
-                                        class="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
-                                        Min £{{ parseFloat(v.minimum_order_value).toFixed(2) }}
+                                    <span
+                                        v-if="v.new_customers_only"
+                                        class="adm-badge adm-badge--blush"
+                                        >New customers</span
+                                    >
+                                    <span
+                                        v-if="v.single_use_per_user"
+                                        class="adm-badge adm-badge--warn"
+                                        >1/user</span
+                                    >
+                                    <span
+                                        v-if="v.minimum_order_value"
+                                        class="adm-badge adm-badge--off"
+                                    >
+                                        Min £{{
+                                            parseFloat(
+                                                v.minimum_order_value,
+                                            ).toFixed(2)
+                                        }}
                                     </span>
-                                    <span v-if="v.stackable"
-                                        class="rounded bg-teal-50 px-1.5 py-0.5 text-xs text-teal-700">Stackable</span>
+                                    <span
+                                        v-if="v.stackable"
+                                        class="adm-badge adm-badge--on"
+                                        >Stackable</span
+                                    >
                                 </div>
                             </td>
 
                             <!-- Actions -->
-                            <td class="px-4 py-3 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    <a :href="route('admin.vouchers.usage', { voucher: v.id })"
-                                        class="rounded border border-copy-light px-2 py-1 text-xs font-medium text-copy-light hover:text-copy transition">Usage
-                                        log</a>
-                                    <a :href="route('admin.vouchers.edit', { voucher: v.id })"
-                                        class="rounded border border-copy-light px-2 py-1 text-xs font-medium text-copy hover:bg-secondary-light transition">Edit</a>
+                            <td class="adm-td adm-td--actions">
+                                <Link
+                                    :href="
+                                        route('admin.vouchers.usage', {
+                                            voucher: v.id,
+                                        })
+                                    "
+                                    class="adm-action adm-action--edit"
+                                    >Usage log</Link
+                                >
+                                <Link
+                                    :href="
+                                        route('admin.vouchers.edit', {
+                                            voucher: v.id,
+                                        })
+                                    "
+                                    class="adm-action adm-action--edit"
+                                    >Edit</Link
+                                >
 
-                                    <!-- Delete confirm inline -->
-                                    <template v-if="confirmingDelete === v.id">
-                                        <span class="text-xs text-error font-medium">Sure?</span>
-                                        <button @click="deleteVoucher(v.id)"
-                                            class="rounded border border-error px-2 py-1 text-xs font-medium text-error hover:bg-red-50 transition">Yes</button>
-                                        <button @click="confirmingDelete = null"
-                                            class="rounded border border-copy-light px-2 py-1 text-xs font-medium text-copy-light hover:text-copy transition">No</button>
-                                    </template>
-                                    <button v-else @click="confirmingDelete = v.id"
-                                        class="rounded border border-error px-2 py-1 text-xs font-medium text-error hover:bg-red-50 transition">Delete</button>
-                                </div>
+                                <!-- Delete confirm inline -->
+                                <template v-if="confirmingDelete === v.id">
+                                    <span
+                                        style="
+                                            font-size: 0.75rem;
+                                            color: var(--adm-danger);
+                                            font-weight: 600;
+                                        "
+                                        >Sure?</span
+                                    >
+                                    <button
+                                        @click="deleteVoucher(v.id)"
+                                        class="adm-action adm-action--del"
+                                    >
+                                        Yes
+                                    </button>
+                                    <button
+                                        @click="confirmingDelete = null"
+                                        class="adm-action adm-action--edit"
+                                    >
+                                        No
+                                    </button>
+                                </template>
+                                <button
+                                    v-else
+                                    @click="confirmingDelete = v.id"
+                                    class="adm-action adm-action--del"
+                                >
+                                    Delete
+                                </button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <div v-else class="adm-empty">
+                <div class="adm-empty-icon">
+                    <Tag :size="28" :stroke-width="1.5" />
+                </div>
+                <p class="adm-empty-title">No vouchers yet</p>
+                <p class="adm-empty-sub">
+                    Create one to start offering discounts.
+                </p>
+                <Link
+                    :href="route('admin.vouchers.create')"
+                    class="adm-btn adm-btn--primary"
+                    >Add Voucher</Link
+                >
+            </div>
         </div>
 
         <!-- Pagination -->
-        <div v-if="vouchers.last_page > 1" class="mt-4 flex justify-center gap-2">
-            <a v-for="page in vouchers.last_page" :key="page" :href="route('admin.vouchers.index', { page })"
-                class="rounded border px-3 py-1 text-sm transition" :class="page === vouchers.current_page
-                    ? 'border-copy bg-copy text-foreground font-bold'
-                    : 'border-copy-light text-copy-light hover:border-copy hover:text-copy'">{{ page }}</a>
+        <div v-if="vouchers.last_page > 1" class="adm-pagination">
+            <p class="adm-page-info">
+                Page <strong>{{ vouchers.current_page }}</strong> of
+                <strong>{{ vouchers.last_page }}</strong>
+            </p>
+            <div class="adm-page-btns">
+                <a
+                    v-for="page in vouchers.last_page"
+                    :key="page"
+                    :href="route('admin.vouchers.index', { page })"
+                    class="adm-page-btn"
+                    :class="{
+                        'adm-page-btn--active': page === vouchers.current_page,
+                    }"
+                    >{{ page }}</a
+                >
+            </div>
         </div>
     </AdminLayout>
 </template>
