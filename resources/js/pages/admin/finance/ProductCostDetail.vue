@@ -576,12 +576,41 @@ const categoryTotal = (key: string) =>
                                 </div>
                                 <div>
                                     <p class="pcd-mob-label">Qty / Product</p>
-                                    <p class="pcd-mob-val">
+                                    <template v-if="editingQty === item.id">
+                                        <input
+                                            v-model="qtyValue"
+                                            type="number"
+                                            step="0.0001"
+                                            min="0.0001"
+                                            class="adm-input adm-input--sm pcd-qty-input"
+                                            style="margin-top: 0.2rem"
+                                            @keydown.enter="saveQty(item)"
+                                            @keydown.escape="cancelEditQty"
+                                        />
+                                    </template>
+                                    <p v-else class="pcd-mob-val">
                                         {{ item.qty_per_unit }}
                                     </p>
                                 </div>
                             </div>
-                            <div style="display: flex; gap: 0.5rem">
+                            <div
+                                v-if="editingQty === item.id"
+                                style="display: flex; gap: 0.5rem"
+                            >
+                                <button
+                                    @click="saveQty(item)"
+                                    class="adm-btn adm-btn--primary adm-btn--sm"
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    @click="cancelEditQty"
+                                    class="adm-btn adm-btn--ghost adm-btn--sm"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                            <div v-else style="display: flex; gap: 0.5rem">
                                 <button
                                     @click="startEditQty(item)"
                                     class="adm-btn adm-btn--ghost adm-btn--sm"
