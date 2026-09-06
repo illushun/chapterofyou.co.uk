@@ -27,3 +27,6 @@ yarn-error.log
 /.vscode
 /.zed
 /CLAUDE.md
+/AGENTS.md
+/CODEBASE_REVIEW.md
+/REFACTOR.md
