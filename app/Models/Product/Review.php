@@ -2,11 +2,11 @@
 
 namespace App\Models\Product;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Builder;
-use App\Models\User;
 use App\Models\Product;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Review extends Model
 {
@@ -14,11 +14,7 @@ class Review extends Model
 
     protected $table = 'product_review';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    /** @var list<string> */
     protected $fillable = [
         'product_id',
         'user_id',
@@ -29,18 +25,10 @@ class Review extends Model
         'admin_reply',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
+    /** @var list<string> */
     protected $hidden = [];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
+    /** @var array */
     protected $casts = [
         'rating' => 'integer',
         'review_images' => 'array',

@@ -1,5 +1,5 @@
 // Mirrors Product::SCENT_FAMILIES / Product::MOOD_TAGS / Product::ROOMS in app/Models/Product.php.
-// Keep in sync — these are the only values the backend will accept.
+// Keep in sync - these are the only values the backend will accept.
 
 export interface ScentOption {
     value: string;
@@ -34,13 +34,13 @@ export const ROOMS: ScentOption[] = [
 ];
 
 export function scentFamilyLabel(value: string): string {
-    return SCENT_FAMILIES.find(f => f.value === value)?.label ?? value;
+    return SCENT_FAMILIES.find((f) => f.value === value)?.label ?? value;
 }
 
 export function moodTagLabel(value: string): string {
-    return MOOD_TAGS.find(m => m.value === value)?.label ?? value;
+    return MOOD_TAGS.find((m) => m.value === value)?.label ?? value;
 }
 
 export function roomLabel(value: string): string {
-    return ROOMS.find(r => r.value === value)?.label ?? value;
+    return ROOMS.find((r) => r.value === value)?.label ?? value;
 }

@@ -25,31 +25,31 @@ class ConfirmationController extends Controller
         $order = $query->firstOrFail();
 
         $items = $order->items->map(fn ($item) => [
-            'name'     => $item->product->name ?? 'Unknown Product',
+            'name' => $item->product->name ?? 'Unknown Product',
             'quantity' => $item->quantity,
-            'price'    => $item->product_cost,
-            'total'    => $item->product_total,
+            'price' => $item->product_cost,
+            'total' => $item->product_total,
         ]);
 
         return Inertia::render('order/Confirmation', [
             'order' => [
-                'id'               => $order->id,
-                'status'           => $order->status,
-                'email'            => $order->email,
-                'first_name'       => $order->first_name,
-                'subtotal'         => $order->cost_total,
-                'shipping'         => $order->shipping_total,
-                'tax'              => $order->tax_total,
+                'id' => $order->id,
+                'status' => $order->status,
+                'email' => $order->email,
+                'first_name' => $order->first_name,
+                'subtotal' => $order->cost_total,
+                'shipping' => $order->shipping_total,
+                'tax' => $order->tax_total,
                 'voucher_discount' => $order->voucher_discount ?? 0,
-                'total'            => $order->grand_total,
-                'items'            => $items,
+                'total' => $order->grand_total,
+                'items' => $items,
                 'shipping_address' => [
-                    'line_1'   => $order->shipping_line_1,
-                    'line_2'   => $order->shipping_line_2,
-                    'city'     => $order->shipping_city,
-                    'county'   => $order->shipping_county,
+                    'line_1' => $order->shipping_line_1,
+                    'line_2' => $order->shipping_line_2,
+                    'city' => $order->shipping_city,
+                    'county' => $order->shipping_county,
                     'postcode' => $order->shipping_postcode,
-                    'country'  => $order->shipping_country,
+                    'country' => $order->shipping_country,
                 ],
                 'created_at' => $order->created_at->format('d M Y, H:i'),
             ],

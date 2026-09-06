@@ -6,12 +6,13 @@ use App\Mail\AbandonedCart;
 use App\Models\AbandonedCartEmail;
 use App\Models\Cart;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class SendAbandonedCartEmails extends Command
 {
-    protected $signature   = 'email:send:abandoned-cart';
+    protected $signature = 'email:send:abandoned-cart';
+
     protected $description = 'Send recovery emails to customers who abandoned their cart 1 hour ago.';
 
     public function handle()
@@ -32,7 +33,7 @@ class SendAbandonedCartEmails extends Command
             ->filter(
                 fn ($cart) =>
                 // Exclude carts where user has placed an order in the last 24h
-                !$cart->user->orders()
+                ! $cart->user->orders()
                     ->where('status', 'successful')
                     ->where('created_at', '>=', now()->subHours(24))
                     ->exists()
@@ -40,12 +41,13 @@ class SendAbandonedCartEmails extends Command
 
         if ($carts->isEmpty()) {
             $this->info('No abandoned carts to email.');
+
             return Command::SUCCESS;
         }
 
         $this->info("Found {$carts->count()} abandoned cart(s).");
 
-        $sent   = 0;
+        $sent = 0;
         $failed = 0;
 
         foreach ($carts as $cart) {
@@ -54,7 +56,7 @@ class SendAbandonedCartEmails extends Command
 
                 AbandonedCartEmail::create([
                     'cart_id' => $cart->id,
-                    'email'   => $cart->user->email,
+                    'email' => $cart->user->email,
                     'sent_at' => now(),
                 ]);
 
@@ -63,8 +65,8 @@ class SendAbandonedCartEmails extends Command
             } catch (\Exception $e) {
                 Log::error('[AbandonedCart] Failed to send', [
                     'cart_id' => $cart->id,
-                    'email'   => $cart->user->email,
-                    'error'   => $e->getMessage(),
+                    'email' => $cart->user->email,
+                    'error' => $e->getMessage(),
                 ]);
                 $this->error("Failed for {$cart->user->email}: {$e->getMessage()}");
                 $failed++;
@@ -72,6 +74,7 @@ class SendAbandonedCartEmails extends Command
         }
 
         $this->info("Done. Sent: {$sent}, Failed: {$failed}.");
+
         return Command::SUCCESS;
     }
 }

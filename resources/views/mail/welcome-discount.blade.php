@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Your 10% off code — Chapter of You</title>
+    <title>Your 10% off code - Chapter of You</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Georgia', serif; background: #fdf4f3; color: #2d1a1a; padding: 2rem 1rem; }
@@ -62,13 +62,13 @@
             </div>
         </div>
         <div class="card">
-            <p class="greeting">Thank you for joining — here's your little gift.</p>
+            <p class="greeting">Thank you for joining - here's your little gift.</p>
             <p class="body-text">
                 Welcome to the Chapter of You community. I'm so glad you're here.
             </p>
             <p class="body-text">
                 As a thank you for signing up, I'd love to give you 10% off your first order.
-                Use the code below at checkout — it's yours, valid for 30 days.
+                Use the code below at checkout - it's yours, valid for 30 days.
             </p>
             <div class="code-block">
                 <p class="code-label">Your exclusive discount code</p>
@@ -76,7 +76,7 @@
                 <p class="code-note">10% off &nbsp;·&nbsp; One use &nbsp;·&nbsp; Valid for 30 days</p>
             </div>
             <p class="body-text">
-                Head over to the shop and find your scent — every diffuser is hand-poured with care, made just for you.
+                Head over to the shop and find your scent - every diffuser is hand-poured with care, made just for you.
             </p>
             <div class="cta-wrap">
                 <a href="{{ config('app.url') }}/products" class="cta-btn">Shop the Collection</a>

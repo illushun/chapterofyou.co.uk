@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Account;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
-use App\Models\Order;
 
 class OrderController extends Controller
 {
     public function index()
     {
-        if (!Auth::check()) {
+        if (! Auth::check()) {
             return redirect()->route('login');
         }
 
@@ -20,9 +20,9 @@ class OrderController extends Controller
             ->orderByDesc('created_at')
             ->get()
             ->map(fn (Order $o) => [
-                'id'     => $o->id,
-                'date'   => $o->created_at->toISOString(),
-                'total'  => (float) $o->grand_total,
+                'id' => $o->id,
+                'date' => $o->created_at->toISOString(),
+                'total' => (float) $o->grand_total,
                 'status' => $o->status,
             ]);
 

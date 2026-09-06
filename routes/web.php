@@ -1,46 +1,45 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminBatchSheetController;
-use App\Http\Controllers\Admin\AdminBroadcastEmailController;
-use App\Http\Controllers\Admin\AdminCourierController;
-use App\Http\Controllers\Admin\AdminMessageController;
-use App\Http\Controllers\Admin\AdminReviewController;
-use App\Http\Controllers\Admin\AdminVoucherController;
-use App\Http\Controllers\Admin\AdminWishlistController;
-use App\Http\Controllers\Admin\Label\OilController;
-use App\Http\Controllers\Cart\VoucherController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\MarketingOptInController;
-use App\Http\Controllers\Order\ConfirmationController;
-use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\WaitlistController;
-use App\Http\Controllers\Product\ProductController;
-use App\Http\Controllers\Cart\CartController;
-use App\Http\Controllers\Cart\CheckoutController;
-use App\Http\Controllers\Category\CategoryController;
 use App\Http\Controllers\Account\AccountController;
 use App\Http\Controllers\Account\OrderController;
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\AdminProductController;
-use App\Http\Controllers\Admin\AdminOrderController;
-use App\Http\Controllers\Admin\AdminCategoryController;
-use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminBatchSheetController;
+use App\Http\Controllers\Admin\AdminBroadcastEmailController;
 use App\Http\Controllers\Admin\AdminCartController;
+use App\Http\Controllers\Admin\AdminCategoryController;
+use App\Http\Controllers\Admin\AdminCourierController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminFinanceController;
+use App\Http\Controllers\Admin\AdminGiftVoucherController;
+use App\Http\Controllers\Admin\AdminJournalAutoGeneratorController;
+use App\Http\Controllers\Admin\AdminJournalController;
+use App\Http\Controllers\Admin\AdminMessageController;
+use App\Http\Controllers\Admin\AdminOrderController;
+use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\AdminReviewController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminVoucherController;
+use App\Http\Controllers\Admin\AdminWishlistController;
 use App\Http\Controllers\Admin\Label\CLPLabelController;
+use App\Http\Controllers\Admin\Label\OilController;
+use App\Http\Controllers\Admin\Marketplace\EtsyController;
 use App\Http\Controllers\Auth\SocialiteController;
+use App\Http\Controllers\Cart\CartController;
+use App\Http\Controllers\Cart\CheckoutController;
+use App\Http\Controllers\Cart\VoucherController;
+use App\Http\Controllers\Category\CategoryController;
+use App\Http\Controllers\GiftVoucherController;
+use App\Http\Controllers\GoogleShoppingFeedController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\JournalController;
+use App\Http\Controllers\MarketingOptInController;
+use App\Http\Controllers\Order\ConfirmationController;
+use App\Http\Controllers\Product\ProductController;
+use App\Http\Controllers\ScentFinderController;
+use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\WishlistController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
-use App\Http\Controllers\GiftVoucherController;
-use App\Http\Controllers\Admin\AdminGiftVoucherController;
-use App\Http\Controllers\JournalController;
-use App\Http\Controllers\Admin\AdminJournalController;
-use App\Http\Controllers\Admin\AdminJournalAutoGeneratorController;
-use App\Http\Controllers\Admin\Marketplace\EtsyController;
-use App\Http\Controllers\InvoiceController;
-use App\Http\Controllers\Admin\AdminFinanceController;
-use App\Http\Controllers\GoogleShoppingFeedController;
-use App\Http\Controllers\ScentFinderController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [HomeController::class, 'about'])->name('about');
@@ -64,6 +63,7 @@ Route::get('/gift-vouchers', [GiftVoucherController::class, 'index'])->name('gif
 Route::post('/gift-vouchers/checkout', [GiftVoucherController::class, 'checkout'])->name('gift-vouchers.checkout');
 Route::post('/gift-vouchers/remove-from-cart', function () {
     session()->forget('pending_gift_voucher');
+
     return back();
 })->name('gift-vouchers.remove-from-cart');
 
@@ -104,7 +104,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/wishlist/{id}', [WishlistController::class, 'remove'])->name('wishlist.remove');
 
     Route::get('/orders/{order}/invoice', [InvoiceController::class, 'download'])
-    ->name('orders.invoice');
+        ->name('orders.invoice');
 });
 
 Route::get('sl/{provider}', [SocialiteController::class, 'redirectToProvider'])->name('socialite.redirect');
@@ -175,26 +175,26 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/clp-labels/{product}/print', [CLPLabelController::class, 'print'])
         ->name('clp-labels.print');
 
-    Route::get('/vouchers', [AdminVoucherController::class, 'index'])       ->name('vouchers.index');
-    Route::get('/vouchers/create', [AdminVoucherController::class, 'create'])      ->name('vouchers.create');
-    Route::post('/vouchers', [AdminVoucherController::class, 'store'])       ->name('vouchers.store');
-    Route::get('/vouchers/{voucher}/edit', [AdminVoucherController::class, 'edit'])        ->name('vouchers.edit');
-    Route::put('/vouchers/{voucher}', [AdminVoucherController::class, 'update'])      ->name('vouchers.update');
-    Route::delete('/vouchers/{voucher}', [AdminVoucherController::class, 'destroy'])     ->name('vouchers.destroy');
-    Route::get('/vouchers/{voucher}/usage', [AdminVoucherController::class, 'usage'])       ->name('vouchers.usage');
+    Route::get('/vouchers', [AdminVoucherController::class, 'index'])->name('vouchers.index');
+    Route::get('/vouchers/create', [AdminVoucherController::class, 'create'])->name('vouchers.create');
+    Route::post('/vouchers', [AdminVoucherController::class, 'store'])->name('vouchers.store');
+    Route::get('/vouchers/{voucher}/edit', [AdminVoucherController::class, 'edit'])->name('vouchers.edit');
+    Route::put('/vouchers/{voucher}', [AdminVoucherController::class, 'update'])->name('vouchers.update');
+    Route::delete('/vouchers/{voucher}', [AdminVoucherController::class, 'destroy'])->name('vouchers.destroy');
+    Route::get('/vouchers/{voucher}/usage', [AdminVoucherController::class, 'usage'])->name('vouchers.usage');
     Route::get('/vouchers/generate-code', [AdminVoucherController::class, 'generateCode'])->name('vouchers.generate-code');
 
     Route::get('/wishlists', [AdminWishlistController::class, 'index'])->name('wishlists.index');
     Route::get('/wishlists/{user}', [AdminWishlistController::class, 'show'])->name('wishlists.show');
 
-    Route::get('/batch-sheets', [AdminBatchSheetController::class, 'index'])  ->name('batch-sheets.index');
-    Route::get('/batch-sheets/create', [AdminBatchSheetController::class, 'create']) ->name('batch-sheets.create');
-    Route::post('/batch-sheets', [AdminBatchSheetController::class, 'store'])  ->name('batch-sheets.store');
-    Route::get('/batch-sheets/{batch_sheet}', [AdminBatchSheetController::class, 'show'])   ->name('batch-sheets.show');
-    Route::get('/batch-sheets/{batch_sheet}/edit', [AdminBatchSheetController::class, 'edit'])   ->name('batch-sheets.edit');
-    Route::put('/batch-sheets/{batch_sheet}', [AdminBatchSheetController::class, 'update']) ->name('batch-sheets.update');
+    Route::get('/batch-sheets', [AdminBatchSheetController::class, 'index'])->name('batch-sheets.index');
+    Route::get('/batch-sheets/create', [AdminBatchSheetController::class, 'create'])->name('batch-sheets.create');
+    Route::post('/batch-sheets', [AdminBatchSheetController::class, 'store'])->name('batch-sheets.store');
+    Route::get('/batch-sheets/{batch_sheet}', [AdminBatchSheetController::class, 'show'])->name('batch-sheets.show');
+    Route::get('/batch-sheets/{batch_sheet}/edit', [AdminBatchSheetController::class, 'edit'])->name('batch-sheets.edit');
+    Route::put('/batch-sheets/{batch_sheet}', [AdminBatchSheetController::class, 'update'])->name('batch-sheets.update');
     Route::delete('/batch-sheets/{batch_sheet}', [AdminBatchSheetController::class, 'destroy'])->name('batch-sheets.destroy');
-    Route::get('/batch-sheets/{batch_sheet}/pdf', [AdminBatchSheetController::class, 'pdf'])    ->name('batch-sheets.pdf');
+    Route::get('/batch-sheets/{batch_sheet}/pdf', [AdminBatchSheetController::class, 'pdf'])->name('batch-sheets.pdf');
 
     Route::get('broadcasts', [AdminBroadcastEmailController::class, 'index'])->name('broadcasts.index');
     Route::get('broadcasts/create', [AdminBroadcastEmailController::class, 'create'])->name('broadcasts.create');
@@ -207,7 +207,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::post('gift-vouchers/{giftVoucherOrder}/dispatch', [AdminGiftVoucherController::class, 'markDispatched'])->name('gift-vouchers.dispatch');
     Route::post('gift-vouchers/{giftVoucherOrder}/resend', [AdminGiftVoucherController::class, 'resendEmail'])->name('gift-vouchers.resend');
 
-    // Marketplace — Etsy
+    // Marketplace - Etsy
     Route::prefix('marketplace')->name('marketplace.')->group(function () {
         Route::get('etsy', [EtsyController::class, 'index'])->name('etsy.index');
         Route::get('etsy/connect', [EtsyController::class, 'connect'])->name('etsy.connect');
@@ -252,11 +252,11 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('journal', AdminJournalController::class)
         ->except(['index'])
         ->names([
-            'create'  => 'journal.create',
-            'store'   => 'journal.store',
-            'show'    => 'journal.show',
-            'edit'    => 'journal.edit',
-            'update'  => 'journal.update',
+            'create' => 'journal.create',
+            'store' => 'journal.store',
+            'show' => 'journal.show',
+            'edit' => 'journal.edit',
+            'update' => 'journal.update',
             'destroy' => 'journal.destroy',
         ]);
     Route::get('journal', [AdminJournalController::class, 'index'])->name('journal.index');
@@ -270,6 +270,5 @@ Route::post('/unsubscribe/confirm/{user}', [MarketingOptInController::class, 'un
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/feed/google-shopping.xml', GoogleShoppingFeedController::class)->name('feed.google-shopping');
 
-
-require __DIR__ . '/settings.php';
-require __DIR__ . '/auth.php';
+require __DIR__.'/settings.php';
+require __DIR__.'/auth.php';

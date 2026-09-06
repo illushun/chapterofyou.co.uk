@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
 interface OrderItem {
     name: string;
@@ -37,7 +37,7 @@ interface Order {
     created_at: string;
 }
 
-const props = defineProps<{ order: Order }>();
+defineProps<{ order: Order }>();
 
 const seo = useSeoHead({ noIndex: true });
 
@@ -46,20 +46,21 @@ const fmt = (v: number | string): string => {
     return isNaN(n) ? '£0.00' : `£${n.toFixed(2)}`;
 };
 
-const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
+const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 </script>
 
 <template>
     <NavBar />
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="cf">
         <div class="cf-wrap">
-
             <!-- Hero -->
             <header class="cf-hero">
                 <div class="cf-petals" aria-hidden="true">
@@ -71,16 +72,25 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                 </div>
 
                 <div class="cf-check-ring">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="M20 6 9 17l-5-5" />
                     </svg>
                 </div>
 
                 <h1 class="cf-hero-title">Order Confirmed!</h1>
                 <p class="cf-hero-sub">
-                    Thank you, <em>{{ order.first_name }}</em>. Your payment has been processed
-                    and your order is on its way.
+                    Thank you, <em>{{ order.first_name }}</em
+                    >. Your payment has been processed and your order is on its
+                    way.
                 </p>
                 <p class="cf-hero-email">
                     A confirmation has been sent to
@@ -100,18 +110,23 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                     <div class="cf-stat-sep" aria-hidden="true">✿</div>
                     <div class="cf-stat">
                         <span class="cf-stat-label">Total paid</span>
-                        <span class="cf-stat-val cf-stat-val--accent">{{ fmt(order.total) }}</span>
+                        <span class="cf-stat-val cf-stat-val--accent">{{
+                            fmt(order.total)
+                        }}</span>
                     </div>
                 </div>
             </header>
 
             <!-- Content grid -->
             <div class="cf-grid">
-
                 <div class="cf-card">
                     <h2 class="cf-card-title">Order Summary</h2>
                     <div class="cf-items">
-                        <div v-for="item in order.items" :key="item.name" class="cf-item">
+                        <div
+                            v-for="item in order.items"
+                            :key="item.name"
+                            class="cf-item"
+                        >
                             <div class="cf-item-info">
                                 <p class="cf-item-name">{{ item.name }}</p>
                                 <p class="cf-item-qty">× {{ item.quantity }}</p>
@@ -126,20 +141,36 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                         </div>
                         <div class="cf-total-row">
                             <span class="cf-total-lbl">Shipping</span>
-                            <span>{{ Number(order.shipping) === 0 ? 'FREE' : fmt(order.shipping) }}</span>
+                            <span>{{
+                                Number(order.shipping) === 0
+                                    ? 'FREE'
+                                    : fmt(order.shipping)
+                            }}</span>
                         </div>
                         <div v-if="vatRegistered" class="cf-total-row">
                             <span class="cf-total-lbl">VAT</span>
                             <span
-                                style="font-style:italic; color:#9a7070; font-weight:400; font-size:0.82rem;">Included</span>
+                                style="
+                                    font-style: italic;
+                                    color: #9a7070;
+                                    font-weight: 400;
+                                    font-size: 0.82rem;
+                                "
+                                >Included</span
+                            >
                         </div>
-                        <div v-if="Number(order.voucher_discount) > 0" class="cf-total-row cf-total-row--discount">
+                        <div
+                            v-if="Number(order.voucher_discount) > 0"
+                            class="cf-total-row cf-total-row--discount"
+                        >
                             <span>Discount applied</span>
                             <span>−{{ fmt(order.voucher_discount) }}</span>
                         </div>
                         <div class="cf-total-grand">
                             <span>Order Total</span>
-                            <span class="cf-grand-val">{{ fmt(order.total) }}</span>
+                            <span class="cf-grand-val">{{
+                                fmt(order.total)
+                            }}</span>
                         </div>
                     </div>
                 </div>
@@ -148,14 +179,19 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                     <h2 class="cf-card-title">Shipping Address</h2>
                     <address class="cf-address">
                         <span>{{ order.shipping_address.line_1 }}</span>
-                        <span v-if="order.shipping_address.line_2">{{ order.shipping_address.line_2 }}</span>
-                        <span>{{ order.shipping_address.city }}<template v-if="order.shipping_address.county">, {{
-                            order.shipping_address.county }}</template></span>
+                        <span v-if="order.shipping_address.line_2">{{
+                            order.shipping_address.line_2
+                        }}</span>
+                        <span
+                            >{{ order.shipping_address.city
+                            }}<template v-if="order.shipping_address.county"
+                                >, {{ order.shipping_address.county }}</template
+                            ></span
+                        >
                         <span>{{ order.shipping_address.postcode }}</span>
                         <span>{{ order.shipping_address.country }}</span>
                     </address>
                 </div>
-
             </div>
 
             <!-- What happens next -->
@@ -166,8 +202,10 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                         <div class="cf-step-num">1</div>
                         <div>
                             <p class="cf-step-head">We prepare your order</p>
-                            <p class="cf-step-body">Your order is carefully handcrafted and packaged within 2–3 working
-                                days.</p>
+                            <p class="cf-step-body">
+                                Your order is carefully handcrafted and packaged
+                                within 2–3 working days.
+                            </p>
                         </div>
                     </div>
                     <div class="cf-step-arrow" aria-hidden="true">→</div>
@@ -175,9 +213,10 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                         <div class="cf-step-num">2</div>
                         <div>
                             <p class="cf-step-head">Dispatched with care</p>
-                            <p class="cf-step-body">You'll receive a dispatch email with tracking details as soon as
-                                it's on its
-                                way.</p>
+                            <p class="cf-step-body">
+                                You'll receive a dispatch email with tracking
+                                details as soon as it's on its way.
+                            </p>
                         </div>
                     </div>
                     <div class="cf-step-arrow" aria-hidden="true">→</div>
@@ -185,8 +224,9 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                         <div class="cf-step-num">3</div>
                         <div>
                             <p class="cf-step-head">Enjoy your order</p>
-                            <p class="cf-step-body">Your Chapter of You order arrives, ready to bring calm and beauty to
-                                your space.
+                            <p class="cf-step-body">
+                                Your Chapter of You order arrives, ready to
+                                bring calm and beauty to your space.
                             </p>
                         </div>
                     </div>
@@ -196,22 +236,37 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
             <!-- Actions -->
             <div class="cf-actions">
                 <a href="/products" class="cf-btn cf-btn--ghost">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="m12 19-7-7 7-7M19 12H5" />
                     </svg>
                     Continue Shopping
                 </a>
                 <a href="/account" class="cf-btn cf-btn--primary">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
                         <circle cx="12" cy="7" r="4" />
                     </svg>
                     My Account
                 </a>
             </div>
-
         </div>
     </main>
 
@@ -337,7 +392,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     justify-content: center;
     margin: 0 auto 1.25rem;
     box-shadow: 0 6px 20px rgba(168, 80, 88, 0.3);
-    animation: cf-pop 0.5s cubic-bezier(.34, 1.56, .64, 1) 0.2s both;
+    animation: cf-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
     position: relative;
     z-index: 1;
 }
@@ -684,7 +739,9 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     font-size: 0.92rem;
     font-weight: 600;
     text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 }
 
 .cf-btn--ghost {

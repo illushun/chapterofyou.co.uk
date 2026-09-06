@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { computed } from 'vue';
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { computed } from 'vue';
 
 interface Order {
     id: number;
@@ -20,21 +19,34 @@ const seo = useSeoHead({ noIndex: true });
 const hasOrders = computed(() => props.orders && props.orders.length > 0);
 
 const fmt = (v: number) =>
-    new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(Number(v) || 0);
+    new Intl.NumberFormat('en-GB', {
+        style: 'currency',
+        currency: 'GBP',
+    }).format(Number(v) || 0);
 
 const fmtDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    new Date(d).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+    });
 
 const statusStyle = (s: string): string => {
     switch (s.toLowerCase()) {
         case 'successful':
-        case 'delivered': return 'status--green';
-        case 'shipped': return 'status--blue';
-        case 'processing': return 'status--amber';
-        case 'pending': return 'status--yellow';
+        case 'delivered':
+            return 'status--green';
+        case 'shipped':
+            return 'status--blue';
+        case 'processing':
+            return 'status--amber';
+        case 'pending':
+            return 'status--yellow';
         case 'cancelled':
-        case 'failed': return 'status--red';
-        default: return 'status--grey';
+        case 'failed':
+            return 'status--red';
+        default:
+            return 'status--grey';
     }
 };
 
@@ -49,47 +61,78 @@ const statusLabel = (s: string): string => {
 
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="op">
         <div class="op-wrap">
-
             <!-- Header -->
             <header class="op-header">
                 <a href="/account" class="op-back">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="m15 18-6-6 6-6" />
                     </svg>
                     Back to Account
                 </a>
                 <h1 class="op-title">My Orders</h1>
                 <p class="op-sub">
-                    {{ hasOrders ? `${orders.length} order${orders.length !== 1 ? 's' : ''}` : 'No orders placed yet' }}
+                    {{
+                        hasOrders
+                            ? `${orders.length} order${orders.length !== 1 ? 's' : ''}`
+                            : 'No orders placed yet'
+                    }}
                 </p>
             </header>
 
             <!-- Empty state -->
             <div v-if="!hasOrders" class="op-empty">
-                <svg class="op-empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 3H8l-2 4h12l-2-4z" />
+                <svg
+                    class="op-empty-icon"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"
+                    />
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M16 3H8l-2 4h12l-2-4z"
+                    />
                 </svg>
                 <h2>Nothing here yet</h2>
-                <p>You haven't placed any orders with us yet.<br />Explore our collection and find your signature scent.
+                <p>
+                    You haven't placed any orders with us yet.<br />Explore our
+                    collection and find your signature scent.
                 </p>
                 <a href="/products" class="btn-rose">Browse the collection</a>
             </div>
 
             <!-- Orders list -->
             <div v-else class="order-list">
-                <a v-for="order in orders" :key="order.id" :href="`/account/orders/${order.id}`" class="order-card">
-
+                <a
+                    v-for="order in orders"
+                    :key="order.id"
+                    :href="`/account/orders/${order.id}`"
+                    class="order-card"
+                >
                     <div class="order-card-inner">
-
                         <!-- Order ref + date -->
                         <div class="order-ref">
                             <p class="order-label">Order</p>
@@ -99,7 +142,12 @@ const statusLabel = (s: string): string => {
 
                         <!-- Status badge -->
                         <div class="order-status-wrap">
-                            <span :class="['status-badge', statusStyle(order.status)]">
+                            <span
+                                :class="[
+                                    'status-badge',
+                                    statusStyle(order.status),
+                                ]"
+                            >
                                 {{ statusLabel(order.status) }}
                             </span>
                         </div>
@@ -107,21 +155,29 @@ const statusLabel = (s: string): string => {
                         <!-- Total -->
                         <div class="order-total">
                             <p class="order-label">Total</p>
-                            <p class="order-total-val">{{ fmt(order.total) }}</p>
+                            <p class="order-total-val">
+                                {{ fmt(order.total) }}
+                            </p>
                         </div>
 
                         <!-- Arrow -->
                         <div class="order-arrow">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
                                 <path d="M9 5l7 7-7 7" />
                             </svg>
                         </div>
-
                     </div>
                 </a>
             </div>
-
         </div>
     </main>
 
@@ -230,7 +286,9 @@ const statusLabel = (s: string): string => {
     color: inherit;
     position: relative;
     overflow: hidden;
-    transition: box-shadow 0.25s, transform 0.25s;
+    transition:
+        box-shadow 0.25s,
+        transform 0.25s;
 }
 
 .order-card::before {
@@ -371,7 +429,9 @@ const statusLabel = (s: string): string => {
 .order-arrow {
     flex-shrink: 0;
     color: #c9a4a4;
-    transition: color 0.2s, transform 0.2s;
+    transition:
+        color 0.2s,
+        transform 0.2s;
     display: flex;
     align-items: center;
 }
@@ -396,7 +456,9 @@ const statusLabel = (s: string): string => {
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 }
 
 .btn-rose:hover {

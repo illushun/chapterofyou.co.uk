@@ -2,351 +2,193 @@
 
 namespace App\Http\Controllers\Cart;
 
-use App\Mail\Order\NewOrderAlert;
 use App\Http\Controllers\Controller;
-use App\Models\Cart\Item;
-use App\Services\CartManager;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Stripe\Stripe;
-use Stripe\PaymentIntent;
-use Illuminate\Support\Facades\Auth;
-use Stripe\Exception\ApiErrorException;
+use App\Http\Requests\CheckoutRequest;
 use App\Models\Cart;
 use App\Models\Order;
-use App\Models\OrderItem;
-use App\Models\Voucher;
+use App\Services\CartManager;
+use App\Services\Checkout\CheckoutTotals;
+use App\Services\Checkout\CreateOrder;
+use App\Services\Checkout\OrderNotifications;
+use App\Services\Checkout\StripePayments;
 use App\Services\VoucherService;
-use App\Mail\Order\Confirmation;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Stripe\Exception\ApiErrorException;
+use Stripe\PaymentIntent;
+use Throwable;
 
 class CheckoutController extends Controller
 {
-    private $cartManager;
-    private $voucherService;
+    public function __construct(
+        private CartManager $cartManager,
+        private VoucherService $vouchers,
+        private CheckoutTotals $totals,
+        private StripePayments $payments,
+        private CreateOrder $orders,
+        private OrderNotifications $notifications,
+    ) {}
 
-    /**
-     * Inject the CartManager service.
-     */
-    public function __construct(CartManager $cartManager, VoucherService $voucherService)
-    {
-        $this->cartManager = $cartManager;
-        $this->voucherService = $voucherService;
-        Stripe::setApiKey(config('services.stripe.secret'));
-    }
-
-    /**
-     * Display the checkout summary page.
-     */
     public function index()
     {
-        $user               = Auth::user();
-        $shipping_addresses = $user
-            ? $user->addresses()->where('type', 'shipping')->orderBy('is_default', 'desc')->get()
-            : collect(); // empty collection for guests
-        $cart               = $this->cartManager->getCurrentCart();
+        $cart = $this->cartManager->getCurrentCart();
 
-        $hasPendingGiftVoucher = session('pending_gift_voucher') !== null;
-
-        if ($cart->items->isEmpty() && !$hasPendingGiftVoucher) {
+        if ($cart->items->isEmpty() && ! session('pending_gift_voucher')) {
             return redirect()->route('cart.view')->with('error', 'Your cart is empty.');
         }
 
-        $summary        = $this->calculateFinalTotal($cart);
-        $appliedVoucher = $this->voucherService->getFromSession();
+        try {
+            [$summary] = $this->quote($cart);
+        } catch (ValidationException $e) {
+            if (! isset($e->errors()['voucher'])) {
+                return redirect()->route('cart.view')->with('error', $e->getMessage());
+            }
+
+            $this->vouchers->clearFromSession();
+            session()->flash('error', $e->getMessage());
+            [$summary] = $this->quote($cart);
+        }
 
         return Inertia::render('checkout/View', [
-            'summary'        => $summary,
-            'cartItems'      => $cart->items->load('product'),
-            'addresses'      => $shipping_addresses,
-            'appliedVoucher' => $appliedVoucher, // null or ['code', 'discount', 'type', 'value']
-            'isGuest'        => !Auth::check(),
+            'summary' => $summary,
+            'cartItems' => $cart->items,
+            'addresses' => Auth::user()?->addresses()->where('type', 'shipping')->orderByDesc('is_default')->get() ?? collect(),
+            'appliedVoucher' => $this->vouchers->getFromSession(),
+            'isGuest' => ! Auth::check(),
             'giftVoucher' => session('pending_gift_voucher'),
         ]);
     }
 
-    /**
-     * Calculates the final, trusted total.
-     * * @param \App\Models\Cart $cart The current cart object.
-     * @return array Calculated totals.
-     */
-    public function calculateFinalTotal(Cart $cart, float $voucherDiscount = 0.0): array
-    {
-        $subtotal = 0;
-        $shippingCost = 0.00;
-        $has_per_items = false;
-        $product_shipping_prices = [];
-
-        foreach ($cart->items as $item) {
-            $productPrice = $item->product->cost ?? 0.00;
-            $subtotal += $productPrice * $item->quantity;
-
-            if ($item->product->courier->per_item == 'yes' && !$has_per_items) {
-                $has_per_items = true;
-            }
-            $product_shipping_prices[] = [
-                'cost'     => $item->product->courier->courier->cost,
-                'per_item' => $item->product->courier->per_item,
-                'quantity' => $item->quantity,
-            ];
-        }
-
-        // shipping
-        if (!$has_per_items) {
-            $lowestShipping = null;
-            foreach ($product_shipping_prices as $psp) {
-                if ($lowestShipping === null || $psp['cost'] < $lowestShipping) {
-                    $lowestShipping = $psp['cost'];
-                }
-            }
-            $shippingCost = $lowestShipping ?? 0.00;
-        }
-
-        if ($has_per_items) {
-            foreach ($product_shipping_prices as $psp) {
-                if ($psp['per_item'] == 'yes') {
-                    $shippingCost += $psp['cost'] * $psp['quantity'];
-                }
-            }
-        }
-
-        // Add gift voucher amount if present
-        $giftVoucher = session('pending_gift_voucher');
-        if ($giftVoucher) {
-            $subtotal += $giftVoucher['amount'];
-        }
-
-        // free shipping over 50
-        if ($subtotal >= 50) {
-            $shippingCost = 0.00;
-        }
-
-        // Add gift voucher amount to subtotal, and add shipping for physical vouchers
-        if ($giftVoucher && $giftVoucher['delivery_type'] === 'physical') {
-            $shippingCost += 2.99;
-        }
-
-        // Apply voucher discount to subtotal (never below zero)
-        $discountedSubtotal = max(0, $subtotal - $voucherDiscount);
-
-        $isVatRegistered = (bool) config('app.vat_number');
-        $vatRate       = 0.20;
-        $vatComponent    = $isVatRegistered
-            ? round($discountedSubtotal * ($vatRate / (1 + $vatRate)), 2)
-            : 0.00;
-        $finalTotal    = round($discountedSubtotal + $shippingCost, 2);
-
-        return [
-            'subtotal'         => round($subtotal, 2),
-            'voucher_discount' => round($voucherDiscount, 2),
-            'vat_component'    => $vatComponent,   // informational only — already included in prices
-            'shipping'         => $shippingCost,
-            'total'            => $finalTotal,
-        ];
-    }
-
-    /**
-     * API endpoint: Fetches a Stripe Payment Intent client secret.
-     */
     public function getPaymentIntent()
     {
-        $cart           = $this->cartManager->getCurrentCart();
-        $appliedVoucher = $this->voucherService->getFromSession();
-        $discount       = $appliedVoucher['discount'] ?? 0.0;
+        $cart = $this->cartManager->getCurrentCart();
 
-        $hasPendingGiftVoucher = session('pending_gift_voucher') !== null;
-
-        if ($cart->items->isEmpty() && !$hasPendingGiftVoucher) {
+        if ($cart->items->isEmpty() && ! session('pending_gift_voucher')) {
             return response()->json(['error' => 'Cannot create payment intent for empty cart.'], 400);
         }
 
-        $summary            = $this->calculateFinalTotal($cart, $discount);
-        $finalTotalInPence  = (int) ($summary['total'] * 100);
-
         try {
-            $paymentIntent = PaymentIntent::create([
-                'amount'                    => $finalTotalInPence,
-                'currency'                  => 'gbp',
+            [$summary, $voucher] = $this->quote($cart);
+            $intent = $this->payments->create([
+                'amount' => CheckoutTotals::pence($summary['total']),
+                'currency' => 'gbp',
                 'automatic_payment_methods' => ['enabled' => true],
-                'metadata'                  => [
-                    'cart_id'        => $cart->id,
-                    'user_id'        => Auth::id() ?? 'guest',
-                    'voucher_code'   => $appliedVoucher['code'] ?? null,
+                'metadata' => [
+                    'cart_id' => $cart->id,
+                    'user_id' => Auth::id() ?? 'guest',
+                    'voucher_code' => $voucher?->code,
                 ],
             ]);
 
             return response()->json([
-                'clientSecret'   => $paymentIntent->client_secret,
-                'paymentIntentId' => $paymentIntent->id,
+                'clientSecret' => $intent->client_secret,
+                'paymentIntentId' => $intent->id,
             ]);
-
+        } catch (ValidationException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
         } catch (ApiErrorException $e) {
-            Log::error('Stripe PI Creation Error: ' . $e->getMessage());
+            Log::error('Stripe payment initialization failed', ['error' => $e->getMessage()]);
+
             return response()->json(['error' => 'Payment initialization failed.'], 500);
         }
     }
 
-    /**
-     * Handles the final server-side payment processing and order creation.
-     */
-    public function processPayment(Request $request)
+    public function processPayment(CheckoutRequest $request)
     {
-        $request->validate([
-            'paymentIntentId' => 'required|string',
-            'paymentType'     => 'required|string',
-            'email'           => 'required|email',
-            'fullName'        => 'required|string',
-            'addressLine1'    => 'required|string',
-            'city'            => 'required|string',
-            'postcode'        => 'required|string',
-            'telephone'       => 'nullable|string',
-            'county'          => 'nullable|string',
-        ]);
+        $cart = $this->cartManager->getCurrentCart();
 
-        $cart           = $this->cartManager->getCurrentCart();
-        $appliedVoucher = $this->voucherService->getFromSession();
-        $discount       = $appliedVoucher['discount'] ?? 0.0;
-        $summary        = $this->calculateFinalTotal($cart, $discount);
-        $subtotalBefore = $summary['subtotal'] + $summary['shipping'];
-        $finalTotalInPence = (int) ($summary['total'] * 100);
+        try {
+            $intent = $this->payments->retrieve($request->validated('paymentIntentId'));
+            $this->validatePayment($intent, $cart);
 
-        return DB::transaction(function () use ($request, $cart, $summary, $finalTotalInPence, $appliedVoucher, $discount, $subtotalBefore) {
-            try {
-                $paymentIntent = PaymentIntent::retrieve($request->paymentIntentId);
+            $order = DB::transaction(function () use ($cart, $intent, $request) {
+                $cart = Cart::whereKey($cart->id)->lockForUpdate()->firstOrFail();
+                $existing = Order::where('payment_intent_id', $intent->id)->first();
 
-                if ($paymentIntent->status !== 'succeeded') {
-                    throw new \Exception("Payment failed. Status: {$paymentIntent->status}");
+                if ($existing) {
+                    abort_unless(
+                        Auth::check() ? $existing->user_id === Auth::id() : session('guest_order_id') === $existing->id,
+                        403,
+                    );
+
+                    return $existing;
                 }
 
-                if ($paymentIntent->amount !== $finalTotalInPence) {
-                    throw new \Exception('Payment amount mismatch detected.');
+                $cart->load('items.product.courier.courier');
+                [$summary, $voucher] = $this->quote($cart, lockVoucher: true);
+
+                if ($intent->amount !== CheckoutTotals::pence($summary['total'])) {
+                    throw ValidationException::withMessages(['payment' => 'Your cart total has changed. Please reload checkout.']);
                 }
 
-                $order = $this->createOrderAndClearCart($cart, $summary, $request->all(), $paymentIntent);
+                $order = $this->orders->create($cart, $summary, $request->validated(), $intent, session('pending_gift_voucher'));
 
-                // Record voucher usage
-                if ($appliedVoucher && $discount > 0) {
-                    $voucher = Voucher::where('code', $appliedVoucher['code'])->first();
-                    if ($voucher) {
-                        $this->voucherService->recordUsage(
-                            voucher:      $voucher,
-                            order:        $order,
-                            discountApplied: $discount,
-                            totalBefore:  round($subtotalBefore, 2),
-                            totalAfter:   $summary['total'],
-                            ipAddress:    $request->ip(),
-                        );
-                    }
-                    $this->voucherService->clearFromSession();
+                if ($voucher && $summary['voucher_discount'] > 0) {
+                    $this->vouchers->recordUsage(
+                        voucher: $voucher,
+                        order: $order,
+                        discountApplied: $summary['voucher_discount'],
+                        totalBefore: $summary['subtotal'] + $summary['shipping'],
+                        totalAfter: $summary['total'],
+                        ipAddress: $request->ip(),
+                    );
                 }
 
-                return redirect()->route('order.confirmation', ['id' => $order->id])
-                    ->with('success', "Order #{$order->id} successfully placed.");
-            } catch (\Exception $e) {
-                Log::error('[CheckoutController] Order Processing Error: ' . $e->getMessage());
-                return redirect()->back()->with('error', 'Payment confirmation failed. Please try again.')->withInput();
+                return $order;
+            });
+        } catch (Throwable $e) {
+            Log::error('Order processing failed', ['error' => $e->getMessage()]);
+
+            return back()->with('error', 'Payment confirmation failed. Please try again.')->withInput();
+        }
+
+        if ($order->wasRecentlyCreated) {
+            session()->forget('pending_gift_voucher');
+            $this->vouchers->clearFromSession();
+
+            if (! Auth::check()) {
+                session(['guest_order_id' => $order->id]);
             }
-        });
+
+            $this->notifications->send($order);
+        }
+
+        return redirect()->route('order.confirmation', ['id' => $order->id])
+            ->with('success', "Order #{$order->id} successfully placed.");
     }
 
-    /**
-     * Creates the Order and Order Items, and then clears the Cart.
-     */
-    private function createOrderAndClearCart(Cart $cart, array $summary, array $formData, PaymentIntent $paymentIntent): Order
+    private function quote(Cart $cart, bool $lockVoucher = false): array
     {
-        $names = explode(' ', $formData['fullName'], 2);
-        $firstName = $names[0];
-        $lastName = $names[1] ?? $names[0];
+        $cart->loadMissing('items.product.courier.courier');
+        $applied = $this->vouchers->getFromSession();
+        $voucher = null;
+        $discount = 0.0;
 
-        $orderData = [
-            'user_id' => Auth::id(),
-            'payment_intent_id' => $paymentIntent->id,
-            'payment_type' => $paymentIntent->payment_method_types[0] ?? $formData['paymentType'],
+        if ($applied) {
+            $subtotal = $cart->items->sum(fn ($item) => ($item->product->cost ?? 0) * $item->quantity);
+            $result = $this->vouchers->validate($applied['code'], $cart, $subtotal, $lockVoucher);
 
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $formData['email'],
-            'telephone' => $formData['telephone'] ?? null,
-
-            'cost_total' => $summary['subtotal'],
-            'shipping_total' => $summary['shipping'],
-            'voucher_discount' => $summary['voucher_discount'],
-            'tax_total'        => $summary['vat_component'],
-            'grand_total' => $summary['total'],
-
-            'billing_line_1' => $formData['addressLine1'],
-            'billing_line_2' => $formData['addressLine2'] ?? null,
-            'billing_city' => $formData['city'],
-            'billing_county' => $formData['county'] ?? null,
-            'billing_postcode' => $formData['postcode'],
-            'billing_country' => $formData['country'],
-            'shipping_line_1' => $formData['addressLine1'],
-            'shipping_line_2' => $formData['addressLine2'] ?? null,
-            'shipping_city' => $formData['city'],
-            'shipping_county' => $formData['county'] ?? null,
-            'shipping_postcode' => $formData['postcode'],
-            'shipping_country' => $formData['country'],
-
-            'status' => 'successful',
-        ];
-
-        // Create the Order
-        $order = Order::create($orderData);
-
-        // Prepare and save Order Items
-        $orderItems = $cart->items->map(function ($item) use ($order) {
-            $productCost = $item->product->cost ?? 0.00;
-            return new OrderItem([
-                'order_id' => $order->id,
-                'product_id' => $item->product_id,
-                'quantity' => $item->quantity,
-                'product_cost' => $productCost,
-                'product_total' => round($productCost * $item->quantity, 2),
-            ]);
-        });
-
-        $order->items()->saveMany($orderItems);
-
-        $pendingGiftVoucher = session('pending_gift_voucher');
-        if ($pendingGiftVoucher) {
-
-            // Save as an order item so it shows in the order
-            $gvProduct = \App\Models\Product::where('mpn', 'GIFT-VOUCHER')->first();
-            if ($gvProduct) {
-                $order->items()->create([
-                    'order_id'      => $order->id,
-                    'product_id'    => $gvProduct->id,
-                    'quantity'      => 1,
-                    'product_cost'  => $pendingGiftVoucher['amount'],
-                    'product_total' => $pendingGiftVoucher['amount'],
-                ]);
+            if (! $result['valid']) {
+                throw ValidationException::withMessages(['voucher' => $result['message']]);
             }
 
-            // Create the voucher record and send the e-voucher email
-            app(\App\Services\GiftVoucherService::class)->createFromOrder(
-                order:           $order,
-                amount:          (float) $pendingGiftVoucher['amount'],
-                deliveryType:    $pendingGiftVoucher['delivery_type'],
-                recipientName:   $pendingGiftVoucher['recipient_name'],
-                recipientEmail:  $pendingGiftVoucher['recipient_email'] ?? null,
-                personalMessage: $pendingGiftVoucher['personal_message'] ?? null,
-            );
-
-            // Clear the session
-            session()->forget('pending_gift_voucher');
+            $voucher = $result['voucher'];
+            $discount = $result['discount'];
+            $this->vouchers->applyToSession($voucher, $discount);
         }
 
-        Mail::to($order->email)->send(new Confirmation($order));
-        Mail::to('contact@chapterofyou.co.uk')->send(new NewOrderAlert($order));
-        $this->cartManager->clearCart($cart);
+        return [$this->totals->calculate($cart, $discount, session('pending_gift_voucher')), $voucher];
+    }
 
-        // Store order ID in session so guests can view their confirmation page
-        if (!Auth::check()) {
-            session(['guest_order_id' => $order->id]);
+    private function validatePayment(PaymentIntent $intent, Cart $cart): void
+    {
+        if ($intent->status !== 'succeeded'
+            || $intent->currency !== 'gbp'
+            || (string) ($intent->metadata->cart_id ?? '') !== (string) $cart->id) {
+            throw ValidationException::withMessages(['payment' => 'This payment does not match your checkout.']);
         }
-
-        return $order;
     }
 }

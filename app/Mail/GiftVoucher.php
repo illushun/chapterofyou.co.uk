@@ -14,32 +14,30 @@ class GiftVoucher extends Mailable
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public readonly GiftVoucherOrder $giftVoucherOrder)
-    {
-    }
+    public function __construct(public readonly GiftVoucherOrder $giftVoucherOrder) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "A little something, just for you 🤍",
+            subject: 'A little something, just for you 🤍',
         );
     }
 
     public function content(): Content
     {
-        $gvo     = $this->giftVoucherOrder->load(['voucher', 'order']);
+        $gvo = $this->giftVoucherOrder->load(['voucher', 'order']);
         $voucher = $gvo->voucher;
 
         return new Content(
             view: 'mail.gift-voucher',
             with: [
-                'recipientName'   => $gvo->recipient_name,
-                'purchaserName'   => $gvo->order->first_name,
+                'recipientName' => $gvo->recipient_name,
+                'purchaserName' => $gvo->order->first_name,
                 'personalMessage' => $gvo->personal_message,
-                'voucherCode'     => $voucher->code,
-                'amount'          => $voucher->value,
-                'validUntil'      => $voucher->valid_until->format('d F Y'),
-                'shopUrl'         => url('/products'),
+                'voucherCode' => $voucher->code,
+                'amount' => $voucher->value,
+                'validUntil' => $voucher->valid_until->format('d F Y'),
+                'shopUrl' => url('/products'),
             ],
         );
     }

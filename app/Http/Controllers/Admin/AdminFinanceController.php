@@ -13,12 +13,12 @@ use Inertia\Response;
 class AdminFinanceController extends Controller
 {
     public const CATEGORIES = [
-        'packaging'  => 'Packaging',
-        'fragrance'  => 'Fragrance',
-        'material'   => 'Material',
-        'labour'     => 'Labour',
-        'overhead'   => 'Overhead',
-        'other'      => 'Other',
+        'packaging' => 'Packaging',
+        'fragrance' => 'Fragrance',
+        'material' => 'Material',
+        'labour' => 'Labour',
+        'overhead' => 'Overhead',
+        'other' => 'Other',
     ];
 
     // ──────────────────────────────────────────────────
@@ -33,7 +33,7 @@ class AdminFinanceController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('name', 'like', "%{$s}%")
-                  ->orWhere('supplier_name', 'like', "%{$s}%");
+                    ->orWhere('supplier_name', 'like', "%{$s}%");
             });
         }
 
@@ -44,29 +44,29 @@ class AdminFinanceController extends Controller
         $items = $query->get();
 
         $stats = [
-            'total_items'      => CostItem::count(),
-            'total_spend'      => CostItem::sum('purchase_price'),
-            'categories_used'  => CostItem::distinct('category')->count('category'),
+            'total_items' => CostItem::count(),
+            'total_spend' => CostItem::sum('purchase_price'),
+            'categories_used' => CostItem::distinct('category')->count('category'),
         ];
 
         return Inertia::render('admin/finance/Index', [
-            'items'      => $items,
-            'stats'      => $stats,
+            'items' => $items,
+            'stats' => $stats,
             'categories' => self::CATEGORIES,
-            'filters'    => $request->only(['search', 'category']),
+            'filters' => $request->only(['search', 'category']),
         ]);
     }
 
     public function storeCostItem(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'name'           => ['required', 'string', 'max:255'],
-            'category'       => ['required', 'string', 'in:' . implode(',', array_keys(self::CATEGORIES))],
-            'supplier_name'  => ['nullable', 'string', 'max:255'],
-            'supplier_url'   => ['nullable', 'url', 'max:500'],
+            'name' => ['required', 'string', 'max:255'],
+            'category' => ['required', 'string', 'in:'.implode(',', array_keys(self::CATEGORIES))],
+            'supplier_name' => ['nullable', 'string', 'max:255'],
+            'supplier_url' => ['nullable', 'url', 'max:500'],
             'purchase_price' => ['required', 'numeric', 'min:0'],
-            'purchase_qty'   => ['required', 'integer', 'min:1'],
-            'notes'          => ['nullable', 'string'],
+            'purchase_qty' => ['required', 'integer', 'min:1'],
+            'notes' => ['nullable', 'string'],
         ]);
 
         CostItem::create($data);
@@ -77,13 +77,13 @@ class AdminFinanceController extends Controller
     public function updateCostItem(Request $request, CostItem $costItem): RedirectResponse
     {
         $data = $request->validate([
-            'name'           => ['required', 'string', 'max:255'],
-            'category'       => ['required', 'string', 'in:' . implode(',', array_keys(self::CATEGORIES))],
-            'supplier_name'  => ['nullable', 'string', 'max:255'],
-            'supplier_url'   => ['nullable', 'url', 'max:500'],
+            'name' => ['required', 'string', 'max:255'],
+            'category' => ['required', 'string', 'in:'.implode(',', array_keys(self::CATEGORIES))],
+            'supplier_name' => ['nullable', 'string', 'max:255'],
+            'supplier_url' => ['nullable', 'url', 'max:500'],
             'purchase_price' => ['required', 'numeric', 'min:0'],
-            'purchase_qty'   => ['required', 'integer', 'min:1'],
-            'notes'          => ['nullable', 'string'],
+            'purchase_qty' => ['required', 'integer', 'min:1'],
+            'notes' => ['nullable', 'string'],
         ]);
 
         $costItem->update($data);
@@ -114,15 +114,15 @@ class AdminFinanceController extends Controller
             $s = $request->search;
             $query->where(function ($q) use ($s) {
                 $q->where('name', 'like', "%{$s}%")
-                  ->orWhere('mpn', 'like', "%{$s}%");
+                    ->orWhere('mpn', 'like', "%{$s}%");
             });
         }
 
         if ($request->filled('filter')) {
             match ($request->filter) {
-                'costed'   => $query->whereHas('costItems'),
+                'costed' => $query->whereHas('costItems'),
                 'uncosted' => $query->whereDoesntHave('costItems'),
-                default    => null,
+                default => null,
             };
         }
 
@@ -131,11 +131,12 @@ class AdminFinanceController extends Controller
         $products->getCollection()->transform(function ($product) {
             $totalCost = $product->costItems->sum(function ($item) {
                 $unitCost = $item->purchase_qty > 0 ? $item->purchase_price / $item->purchase_qty : 0;
+
                 return $unitCost * $item->pivot->qty_per_unit;
             });
 
             $product->total_cost = round($totalCost, 4);
-            $product->margin     = $product->cost > 0
+            $product->margin = $product->cost > 0
                 ? round((($product->cost - $totalCost) / $product->cost) * 100, 1)
                 : null;
 
@@ -144,7 +145,7 @@ class AdminFinanceController extends Controller
 
         return Inertia::render('admin/finance/ProductCosts', [
             'products' => $products,
-            'filters'  => $request->only(['search', 'filter']),
+            'filters' => $request->only(['search', 'filter']),
         ]);
     }
 
@@ -154,17 +155,18 @@ class AdminFinanceController extends Controller
 
         $costItems = $product->costItems->map(function ($item) {
             $unitCost = $item->purchase_qty > 0 ? $item->purchase_price / $item->purchase_qty : 0;
+
             return [
-                'id'            => $item->id,
-                'name'          => $item->name,
-                'category'      => $item->category,
+                'id' => $item->id,
+                'name' => $item->name,
+                'category' => $item->category,
                 'supplier_name' => $item->supplier_name,
-                'supplier_url'  => $item->supplier_url,
-                'purchase_price'=> (float) $item->purchase_price,
-                'purchase_qty'  => $item->purchase_qty,
-                'unit_cost'     => round($unitCost, 4),
-                'qty_per_unit'  => (float) $item->pivot->qty_per_unit,
-                'contribution'  => round($unitCost * $item->pivot->qty_per_unit, 4),
+                'supplier_url' => $item->supplier_url,
+                'purchase_price' => (float) $item->purchase_price,
+                'purchase_qty' => $item->purchase_qty,
+                'unit_cost' => round($unitCost, 4),
+                'qty_per_unit' => (float) $item->pivot->qty_per_unit,
+                'contribution' => round($unitCost * $item->pivot->qty_per_unit, 4),
             ];
         });
 
@@ -178,16 +180,16 @@ class AdminFinanceController extends Controller
         });
 
         return Inertia::render('admin/finance/ProductCostDetail', [
-            'product'    => [
-                'id'     => $product->id,
-                'mpn'    => $product->mpn,
-                'name'   => $product->name,
-                'cost'   => (float) $product->cost,
+            'product' => [
+                'id' => $product->id,
+                'mpn' => $product->mpn,
+                'name' => $product->name,
+                'cost' => (float) $product->cost,
                 'status' => $product->status,
                 'images' => $product->images,
             ],
-            'costItems'  => $costItems,
-            'allItems'   => $allItems,
+            'costItems' => $costItems,
+            'allItems' => $allItems,
             'categories' => self::CATEGORIES,
         ]);
     }

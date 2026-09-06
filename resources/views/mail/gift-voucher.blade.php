@@ -55,7 +55,7 @@
         /* Enough bottom padding so content clears the flower */
         padding: 28px 24px 36px;
         position: relative;
-        /* overflow hidden removed — was clipping content */
+        /* overflow hidden removed - was clipping content */
         overflow: visible;
     }
 
@@ -85,7 +85,7 @@
         font-weight: 700;
         letter-spacing: 0.2em;
         text-transform: uppercase;
-        color: #a0742a;  /* darker gold — was #c9a84c, too light */
+        color: #a0742a;  /* darker gold - was #c9a84c, too light */
         margin-bottom: 8px;
     }
     .voucher-brand {
@@ -107,7 +107,7 @@
         font-weight: 600;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #6b4f3a;  /* darker — was #8a6a5a */
+        color: #6b4f3a;  /* darker - was #8a6a5a */
         margin-bottom: 6px;
     }
     .voucher-code {
@@ -126,11 +126,11 @@
     .voucher-expiry {
         font-size: 14px;
         font-style: italic;
-        color: #5a3d2b;  /* darker — was #8a6a5a */
+        color: #5a3d2b;  /* darker - was #8a6a5a */
     }
     .voucher-terms {
         font-size: 13px;
-        color: #7a5a48;  /* darker — was #a08070 */
+        color: #7a5a48;  /* darker - was #a08070 */
         margin-top: 10px;
         line-height: 1.5;
     }
@@ -185,12 +185,12 @@
     .tagline {
         font-style: italic;
         font-size: 15px;
-        color: #6b4f4f;  /* darker — was #8a6a5a */
+        color: #6b4f4f;  /* darker - was #8a6a5a */
         margin-top: 6px;
         letter-spacing: 0.02em;
     }
 
-    /* Small print — darkened for legibility */
+    /* Small print - darkened for legibility */
     .small-print {
         font-size: 13px;
         color: #7a5a48;  /* was #a08070 */

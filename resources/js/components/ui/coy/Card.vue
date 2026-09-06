@@ -16,7 +16,7 @@ const props = defineProps<CardProps>();
 
 // Define the spring transition
 const springTransition = {
-  type: 'spring',
+  type: 'spring' as const,
   stiffness: 200,
   damping: 10,
   mass: 1,
@@ -29,24 +29,18 @@ const contentRef = ref<HTMLElement | null>(null);
 
 // Apply motion to the elements using the same logic as Framer Motion's variants (x:-8, y:-8)
 const motionCard = useMotion(cardRef, {
-  initial: { x: 0, y: 0 },
-  hovered: { x: -8, y: -8 },
-}, {
-  transition: springTransition,
+  initial: { x: 0, y: 0, transition: springTransition },
+  hovered: { x: -8, y: -8, transition: springTransition },
 });
 
 const motionInner = useMotion(innerRef, {
-  initial: { x: 0, y: 0 },
-  hovered: { x: -8, y: -8 },
-}, {
-  transition: springTransition,
+  initial: { x: 0, y: 0, transition: springTransition },
+  hovered: { x: -8, y: -8, transition: springTransition },
 });
 
 const motionContent = useMotion(contentRef, {
-  initial: { x: 0, y: 0 },
-  hovered: { x: -8, y: -8 },
-}, {
-  transition: springTransition,
+  initial: { x: 0, y: 0, transition: springTransition },
+  hovered: { x: -8, y: -8, transition: springTransition },
 });
 
 // --- Class Merging (replacing twMerge) ---

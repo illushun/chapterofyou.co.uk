@@ -266,7 +266,11 @@ function groupProgress(group: ChecklistGroup) {
 }
 
 function toggle(itemId: string) {
-    checked.has(itemId) ? checked.delete(itemId) : checked.add(itemId);
+    if (checked.has(itemId)) {
+        checked.delete(itemId);
+    } else {
+        checked.add(itemId);
+    }
     persist();
 }
 function toggleGroup(group: ChecklistGroup) {
@@ -277,7 +281,11 @@ function toggleGroup(group: ChecklistGroup) {
     persist();
 }
 function toggleCollapse(groupId: string) {
-    collapsed.has(groupId) ? collapsed.delete(groupId) : collapsed.add(groupId);
+    if (collapsed.has(groupId)) {
+        collapsed.delete(groupId);
+    } else {
+        collapsed.add(groupId);
+    }
     // Don't persist collapse state, it resets on each visit intentionally
 }
 function resetChecklist() {
@@ -1023,11 +1031,6 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 </template>
 
 <style scoped>
-/*
- * Page-specific styles only, prefix: os- (order show)
- * All shared styles come from admin-design-system.css
- */
-
 /* ── Two-column layout ── */
 .os-layout {
     display: grid;
@@ -1273,9 +1276,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     color: var(--adm-ink);
 }
 
-/* ══════════════════════════════════════════════════════════
-   ORDER CHECKLIST  prefix: cl-
-   ══════════════════════════════════════════════════════════ */
+/* ORDER CHECKLIST  prefix: cl- */
 
 /* Header row */
 .cl-header {

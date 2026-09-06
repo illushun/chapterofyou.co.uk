@@ -1,34 +1,50 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
-import SeoHead from '@/components/SeoHead.vue';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
-import { useSeoHead } from '@/composables/useSeoHead';
-import { Link, router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
-import axios from 'axios';
+import NavBar from '@/components/NavBar.vue';
+import SeoHead from '@/components/SeoHead.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
+import { useSeoHead } from '@/composables/useSeoHead';
+import { Link, router } from '@inertiajs/vue3';
+import axios from 'axios';
+import { computed, ref } from 'vue';
 
 interface RelatedProduct {
-    id: number; name: string; mpn: string; cost: number; stock_qty: number;
-    images?: { image: string }[]; total_unique_views?: number; seo?: { slug: string };
+    id: number;
+    name: string;
+    mpn: string;
+    cost: number;
+    stock_qty: number;
+    images?: { image: string }[];
+    total_unique_views?: number;
+    seo?: { slug: string };
 }
 
 const props = defineProps<{
     post: {
-        id: number; title: string; slug: string;
-        excerpt: string | null; body: string;
-        cover_image: string | null; tags: string[];
-        published_at: string; reading_time: number;
-        meta_title: string | null; meta_description: string | null;
+        id: number;
+        title: string;
+        slug: string;
+        excerpt: string | null;
+        body: string;
+        cover_image: string | null;
+        tags: string[];
+        published_at: string;
+        reading_time: number;
+        meta_title: string | null;
+        meta_description: string | null;
         author: string | null;
         views: number;
     };
     related: Array<{
-        id: number; title: string; slug: string;
-        excerpt: string | null; cover_image: string | null;
-        published_at: string; reading_time: number;
+        id: number;
+        title: string;
+        slug: string;
+        excerpt: string | null;
+        cover_image: string | null;
+        published_at: string;
+        reading_time: number;
     }>;
     relatedProducts?: RelatedProduct[];
     wishlistedIds?: number[];
@@ -38,20 +54,44 @@ const wishlistedIds = ref<number[]>(props.wishlistedIds ?? []);
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 
 const handleAddToCart = (product: RelatedProduct) => {
-    router.post('/cart/add', { product_id: product.id, quantity: 1 }, {
-        preserveScroll: true,
-        onSuccess: () => successToastRef.value?.show(`${product.name} added to cart!`, 'cart'),
-    });
+    router.post(
+        '/cart/add',
+        { product_id: product.id, quantity: 1 },
+        {
+            preserveScroll: true,
+            onSuccess: () =>
+                successToastRef.value?.show(
+                    `${product.name} added to cart!`,
+                    'cart',
+                ),
+        },
+    );
 };
 
 const handleFavourite = async (product: RelatedProduct) => {
     const idx = wishlistedIds.value.indexOf(product.id);
-    idx === -1 ? wishlistedIds.value.push(product.id) : wishlistedIds.value.splice(idx, 1);
+    if (idx === -1) {
+        wishlistedIds.value.push(product.id);
+    } else {
+        wishlistedIds.value.splice(idx, 1);
+    }
     try {
-        const { data } = await axios.post(route('wishlist.toggle'), { product_id: product.id });
-        successToastRef.value?.show(data.message, data.wishlisted ? 'favourite' : 'trash');
+        const { data } = await axios.post(route('wishlist.toggle'), {
+            product_id: product.id,
+        });
+        successToastRef.value?.show(
+            data.message,
+            data.wishlisted ? 'favourite' : 'trash',
+        );
     } catch (err: any) {
-        idx === -1 ? wishlistedIds.value.splice(wishlistedIds.value.indexOf(product.id), 1) : wishlistedIds.value.splice(idx, 0, product.id);
+        if (idx === -1) {
+            wishlistedIds.value.splice(
+                wishlistedIds.value.indexOf(product.id),
+                1,
+            );
+        } else {
+            wishlistedIds.value.splice(idx, 0, product.id);
+        }
         if (err.response?.status === 401) window.location.href = route('login');
     }
 };
@@ -64,28 +104,28 @@ const seo = useSeoHead({
     ogType: 'article',
 });
 
-// Article JSON-LD schema — helps Google show article rich results
+// Article JSON-LD schema - helps Google show article rich results
 const articleSchema = computed(() => ({
     '@context': 'https://schema.org',
     '@type': 'Article',
-    'headline': props.post.title,
-    'description': props.post.meta_description || props.post.excerpt,
-    'url': `https://www.chapterofyou.co.uk/journal/${props.post.slug}`,
-    'datePublished': props.post.published_at,
-    'author': {
+    headline: props.post.title,
+    description: props.post.meta_description || props.post.excerpt,
+    url: `https://www.chapterofyou.co.uk/journal/${props.post.slug}`,
+    datePublished: props.post.published_at,
+    author: {
         '@type': 'Person',
-        'name': props.post.author || 'Chapter of You',
+        name: props.post.author || 'Chapter of You',
     },
-    'publisher': {
+    publisher: {
         '@type': 'Organization',
-        'name': 'Chapter of You',
-        'url': 'https://www.chapterofyou.co.uk',
-        'logo': {
+        name: 'Chapter of You',
+        url: 'https://www.chapterofyou.co.uk',
+        logo: {
             '@type': 'ImageObject',
-            'url': 'https://www.chapterofyou.co.uk/storage/images/large_image.png',
+            url: 'https://www.chapterofyou.co.uk/storage/images/large_image.png',
         },
     },
-    ...(props.post.cover_image ? { 'image': props.post.cover_image } : {}),
+    ...(props.post.cover_image ? { image: props.post.cover_image } : {}),
 }));
 </script>
 
@@ -94,30 +134,38 @@ const articleSchema = computed(() => ({
     <SeoHead v-bind="seo" />
     <JsonLdSchema :schema="articleSchema" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="js">
-
         <!-- Cover image -->
         <div v-if="post.cover_image" class="js-cover">
-            <img :src="post.cover_image" :alt="post.title" class="js-cover-img" />
+            <img
+                :src="post.cover_image"
+                :alt="post.title"
+                class="js-cover-img"
+            />
             <div class="js-cover-overlay" aria-hidden="true"></div>
         </div>
 
         <div class="js-wrap">
-
             <!-- Article header -->
             <header class="js-header">
                 <nav class="js-breadcrumb" aria-label="Breadcrumb">
-                    <Link href="/journal" class="js-breadcrumb-link">Journal</Link>
+                    <Link href="/journal" class="js-breadcrumb-link"
+                        >Journal</Link
+                    >
                     <span aria-hidden="true">›</span>
                     <span>{{ post.title }}</span>
                 </nav>
 
                 <div v-if="post.tags.length" class="js-tags">
-                    <span v-for="tag in post.tags" :key="tag" class="js-tag">{{ tag }}</span>
+                    <span v-for="tag in post.tags" :key="tag" class="js-tag">{{
+                        tag
+                    }}</span>
                 </div>
 
                 <h1 class="js-title">{{ post.title }}</h1>
@@ -126,14 +174,29 @@ const articleSchema = computed(() => ({
                     <span>{{ post.published_at }}</span>
                     <span class="js-meta-sep" aria-hidden="true">·</span>
                     <span>{{ post.reading_time }} min read</span>
-                    <span v-if="post.author" class="js-meta-sep" aria-hidden="true">·</span>
+                    <span
+                        v-if="post.author"
+                        class="js-meta-sep"
+                        aria-hidden="true"
+                        >·</span
+                    >
                     <span v-if="post.author">By {{ post.author }}</span>
                     <span class="js-meta-sep" aria-hidden="true">·</span>
                     <span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                            style="display:inline; vertical-align:-1px;">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            style="display: inline; vertical-align: -1px"
+                        >
+                            <path
+                                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                            />
                             <circle cx="12" cy="12" r="3" />
                         </svg>
                         {{ post.views.toLocaleString() }}
@@ -155,8 +218,12 @@ const articleSchema = computed(() => ({
                 <h2 class="js-shop-title">Shop the scents in this post</h2>
                 <ul class="js-shop-grid">
                     <li v-for="product in relatedProducts" :key="product.id">
-                        <ProductSpringCard :product="product" :wishlisted="wishlistedIds.includes(product.id)"
-                            @add-to-cart="handleAddToCart(product)" @favourite="handleFavourite(product)" />
+                        <ProductSpringCard
+                            :product="product"
+                            :wishlisted="wishlistedIds.includes(product.id)"
+                            @add-to-cart="handleAddToCart(product)"
+                            @favourite="handleFavourite(product)"
+                        />
                     </li>
                 </ul>
             </section>
@@ -164,19 +231,31 @@ const articleSchema = computed(() => ({
             <!-- Tags footer -->
             <div v-if="post.tags.length" class="js-tags-footer">
                 <span class="js-tags-label">Tagged:</span>
-                <span v-for="tag in post.tags" :key="tag" class="js-tag">{{ tag }}</span>
+                <span v-for="tag in post.tags" :key="tag" class="js-tag">{{
+                    tag
+                }}</span>
             </div>
 
             <!-- Share nudge -->
             <div class="js-share">
-                <p class="js-share-text">Enjoyed this article? Share it with someone who'd love it.</p>
+                <p class="js-share-text">
+                    Enjoyed this article? Share it with someone who'd love it.
+                </p>
                 <div class="js-share-links">
-                    <a :href="`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.chapterofyou.co.uk/journal/' + post.slug)}`"
-                        target="_blank" rel="noopener noreferrer" class="js-share-btn">
+                    <a
+                        :href="`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.chapterofyou.co.uk/journal/' + post.slug)}`"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="js-share-btn"
+                    >
                         Facebook
                     </a>
-                    <a :href="`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://www.chapterofyou.co.uk/journal/' + post.slug)}&text=${encodeURIComponent(post.title)}`"
-                        target="_blank" rel="noopener noreferrer" class="js-share-btn">
+                    <a
+                        :href="`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://www.chapterofyou.co.uk/journal/' + post.slug)}&text=${encodeURIComponent(post.title)}`"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="js-share-btn"
+                    >
                         Twitter / X
                     </a>
                 </div>
@@ -186,16 +265,38 @@ const articleSchema = computed(() => ({
             <section v-if="related.length" class="js-related">
                 <h2 class="js-related-title">More from the Journal</h2>
                 <div class="js-related-grid">
-                    <article v-for="r in related" :key="r.id" class="js-related-card">
-                        <Link :href="`/journal/${r.slug}`" class="js-related-img-wrap">
-                        <img v-if="r.cover_image" :src="r.cover_image" :alt="r.title" class="js-related-img"
-                            loading="lazy" />
-                        <div v-else class="js-related-img-placeholder" aria-hidden="true">✿</div>
+                    <article
+                        v-for="r in related"
+                        :key="r.id"
+                        class="js-related-card"
+                    >
+                        <Link
+                            :href="`/journal/${r.slug}`"
+                            class="js-related-img-wrap"
+                        >
+                            <img
+                                v-if="r.cover_image"
+                                :src="r.cover_image"
+                                :alt="r.title"
+                                class="js-related-img"
+                                loading="lazy"
+                            />
+                            <div
+                                v-else
+                                class="js-related-img-placeholder"
+                                aria-hidden="true"
+                            >
+                                ✿
+                            </div>
                         </Link>
                         <div class="js-related-body">
-                            <p class="js-related-meta">{{ r.published_at }} · {{ r.reading_time }} min</p>
+                            <p class="js-related-meta">
+                                {{ r.published_at }} · {{ r.reading_time }} min
+                            </p>
                             <h3 class="js-related-heading">
-                                <Link :href="`/journal/${r.slug}`">{{ r.title }}</Link>
+                                <Link :href="`/journal/${r.slug}`">{{
+                                    r.title
+                                }}</Link>
                             </h3>
                         </div>
                     </article>
@@ -205,14 +306,21 @@ const articleSchema = computed(() => ({
             <!-- Back link -->
             <div class="js-back">
                 <Link href="/journal" class="js-back-link">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m12 19-7-7 7-7M19 12H5" />
-                </svg>
-                Back to Journal
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="m12 19-7-7 7-7M19 12H5" />
+                    </svg>
+                    Back to Journal
                 </Link>
             </div>
-
         </div>
     </main>
 
@@ -251,7 +359,11 @@ const articleSchema = computed(() => ({
 .js-cover-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, transparent 40%, rgba(253, 244, 243, 0.9) 100%);
+    background: linear-gradient(
+        to bottom,
+        transparent 40%,
+        rgba(253, 244, 243, 0.9) 100%
+    );
 }
 
 /* Wrap */
@@ -351,7 +463,7 @@ const articleSchema = computed(() => ({
     color: #c9a4a4;
 }
 
-/* Body — rich text styles */
+/* Body - rich text styles */
 .js-body {
     font-size: 1.05rem;
     line-height: 1.85;
@@ -509,7 +621,9 @@ const articleSchema = computed(() => ({
     color: #6b4f4f;
     text-decoration: none;
     background: #fdf4f3;
-    transition: border-color 0.15s, color 0.15s;
+    transition:
+        border-color 0.15s,
+        color 0.15s;
 }
 
 .js-share-btn:hover {

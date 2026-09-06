@@ -2,10 +2,10 @@
 
 namespace App\Models\Label;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\Product;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CLP extends Model
 {
@@ -20,20 +20,13 @@ class CLP extends Model
         'precautionary_statements', 'supplementary_info', 'ingredients_json',
     ];
 
-    /**
-     * The attributes that should be cast.
-     * Use 'array' cast for JSON columns in Eloquent.
-     */
     protected $casts = [
-        'required_pictograms'      => 'array',
-        'hazard_statements'        => 'array',
+        'required_pictograms' => 'array',
+        'hazard_statements' => 'array',
         'precautionary_statements' => 'array',
-        'ingredients_json'         => 'array',
+        'ingredients_json' => 'array',
     ];
 
-    /**
-     * Get the product that owns the CLP label.
-     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

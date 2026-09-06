@@ -17,13 +17,12 @@ class Dispatched extends Mailable
     public function __construct(
         public readonly Order $order,
         public readonly ?string $trackingUrl = null,
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Your self-care is on its way 🤍 — #COY-{$this->order->id}",
+            subject: "Your self-care is on its way 🤍 - #COY-{$this->order->id}",
         );
     }
 
@@ -32,19 +31,19 @@ class Dispatched extends Mailable
         $order = $this->order->load('items.product');
 
         $items = $order->items->map(fn ($item) => [
-            'name'     => $item->product->name ?? 'Unknown Product',
+            'name' => $item->product->name ?? 'Unknown Product',
             'quantity' => $item->quantity,
-            'price'    => $item->product_cost,
-            'total'    => $item->product_total,
+            'price' => $item->product_cost,
+            'total' => $item->product_total,
         ])->toArray();
 
         return new Content(
             view: 'mail.order.dispatched',
             with: [
-                'orderId'     => $order->id,
-                'firstName'   => $order->first_name,
-                'items'       => $items,
-                'total'       => $order->grand_total,
+                'orderId' => $order->id,
+                'firstName' => $order->first_name,
+                'items' => $items,
+                'total' => $order->grand_total,
                 'trackingUrl' => $this->trackingUrl,
             ],
         );

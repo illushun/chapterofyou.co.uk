@@ -29,14 +29,14 @@ const isLowStock = computed(() =>
 const imageUrl = computed(() => props.product.images?.[0]?.image || '/images/placeholder.jpg');
 const isTapped = ref(false);
 
-// Spring animation — gentler values to feel soft not mechanical
-const springTransition = { type: 'spring', stiffness: 180, damping: 18, mass: 1 };
+// Spring animation - gentler values to feel soft not mechanical
+const springTransition = { type: 'spring' as const, stiffness: 180, damping: 18, mass: 1 };
 const cardRef = ref<HTMLElement | null>(null);
 
 const motionCard = useMotion(cardRef, {
-    initial: { y: 0, scale: 1 },
-    hovered: { y: -5, scale: 1.01 },
-}, { transition: springTransition });
+    initial: { y: 0, scale: 1, transition: springTransition },
+    hovered: { y: -5, scale: 1.01, transition: springTransition },
+});
 
 const truncatedName = computed(() => {
     const max = 30;

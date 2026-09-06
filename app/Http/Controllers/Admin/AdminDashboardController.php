@@ -17,10 +17,10 @@ class AdminDashboardController extends Controller
 {
     public function index()
     {
-        $now    = now();
+        $now = now();
         $from30 = $now->copy()->subDays(30)->startOfDay();
         $from60 = $now->copy()->subDays(60)->startOfDay();
-        $from7  = $now->copy()->subDays(7)->startOfDay();
+        $from7 = $now->copy()->subDays(7)->startOfDay();
 
         // ── Revenue & orders: current 30d vs previous 30d ─────────────────
         $current = Order::where('status', 'successful')
@@ -43,7 +43,7 @@ class AdminDashboardController extends Controller
         // ── Daily trend (last 30 days) ─────────────────────────────────────
         $trend = Order::where('status', 'successful')
             ->whereBetween('created_at', [$from30, $now])
-            ->selectRaw("DATE(created_at) as date, COALESCE(SUM(grand_total),0) as revenue, COUNT(*) as orders")
+            ->selectRaw('DATE(created_at) as date, COALESCE(SUM(grand_total),0) as revenue, COUNT(*) as orders')
             ->groupBy('date')
             ->orderBy('date')
             ->get()
@@ -51,13 +51,13 @@ class AdminDashboardController extends Controller
 
         $trendPoints = collect();
         for ($i = 29; $i >= 0; $i--) {
-            $date  = $now->copy()->subDays($i)->format('Y-m-d');
+            $date = $now->copy()->subDays($i)->format('Y-m-d');
             $point = $trend->get($date);
             $trendPoints->push([
-                'date'    => $date,
-                'label'   => $now->copy()->subDays($i)->format('d M'),
+                'date' => $date,
+                'label' => $now->copy()->subDays($i)->format('d M'),
                 'revenue' => $point ? $point->revenue : 0,
-                'orders'  => $point ? $point->orders : 0,
+                'orders' => $point ? $point->orders : 0,
             ]);
         }
 
@@ -86,17 +86,17 @@ class AdminDashboardController extends Controller
             ->limit(6)
             ->get(['id', 'first_name', 'last_name', 'grand_total', 'status', 'created_at'])
             ->map(fn ($o) => [
-                'id'         => $o->id,
-                'name'       => "{$o->first_name} {$o->last_name}",
-                'total'      => $o->grand_total,
-                'status'     => $o->status,
+                'id' => $o->id,
+                'name' => "{$o->first_name} {$o->last_name}",
+                'total' => $o->grand_total,
+                'status' => $o->status,
                 'created_at' => $o->created_at->format('d M Y, H:i'),
             ]);
 
         // ── Customers ──────────────────────────────────────────────────────
-        $customersNew30  = User::where('is_admin', false)->whereBetween('created_at', [$from30, $now])->count();
-        $customersNew7   = User::where('is_admin', false)->whereBetween('created_at', [$from7,  $now])->count();
-        $customersTotal  = User::where('is_admin', false)->count();
+        $customersNew30 = User::where('is_admin', false)->whereBetween('created_at', [$from30, $now])->count();
+        $customersNew7 = User::where('is_admin', false)->whereBetween('created_at', [$from7,  $now])->count();
+        $customersTotal = User::where('is_admin', false)->count();
 
         // Returning = users who placed more than 1 successful order in last 30d
         $returning30 = Order::where('status', 'successful')
@@ -114,11 +114,11 @@ class AdminDashboardController extends Controller
             ->get(['id', 'status', 'stock_qty']);
 
         $productStats = [
-            'total'        => $products->count(),
-            'in_stock'     => $products->where('status', 'enabled')->where('stock_qty', '>', 0)->count(),
+            'total' => $products->count(),
+            'in_stock' => $products->where('status', 'enabled')->where('stock_qty', '>', 0)->count(),
             'out_of_stock' => $products->where('status', 'enabled')->where('stock_qty', '<=', 0)->count(),
-            'disabled'     => $products->where('status', 'disabled')->count(),
-            'low_stock'    => $products->where('status', 'enabled')->where('stock_qty', '>', 0)->where('stock_qty', '<=', 5)->count(),
+            'disabled' => $products->where('status', 'disabled')->count(),
+            'low_stock' => $products->where('status', 'enabled')->where('stock_qty', '>', 0)->where('stock_qty', '<=', 5)->count(),
         ];
 
         // ── Cart abandonment ───────────────────────────────────────────────
@@ -131,7 +131,7 @@ class AdminDashboardController extends Controller
             ->count();
 
         $totalCartActivity = $activeCarts + $completedOrders30;
-        $abandonmentRate   = $totalCartActivity > 0
+        $abandonmentRate = $totalCartActivity > 0
             ? round(($activeCarts / $totalCartActivity) * 100)
             : 0;
 
@@ -147,17 +147,16 @@ class AdminDashboardController extends Controller
 
         $giftVouchersSold = GiftVoucherOrder::whereHas(
             'order',
-            fn ($q) =>
-            $q->where('status', 'successful')
-              ->whereBetween('created_at', [$from30, $now])
+            fn ($q) => $q->where('status', 'successful')
+                ->whereBetween('created_at', [$from30, $now])
         )->count();
 
         $giftVouchersPending = GiftVoucherOrder::whereNull('fulfilled_at')->count();
 
         // ── Reviews ────────────────────────────────────────────────────────
-        $pendingReviews  = Review::where('status', 'pending')->count();
+        $pendingReviews = Review::where('status', 'pending')->count();
         $approvedReviews = Review::where('status', 'approved')->count();
-        $avgRating       = Review::where('status', 'approved')->avg('rating') ?? 0;
+        $avgRating = Review::where('status', 'approved')->avg('rating') ?? 0;
 
         // ── Journal ────────────────────────────────────────────────────────
         $journalTotal = JournalPost::published()->count();
@@ -167,59 +166,59 @@ class AdminDashboardController extends Controller
             ->limit(4)
             ->get(['id', 'title', 'slug', 'views', 'published_at'])
             ->map(fn ($p) => [
-                'id'           => $p->id,
-                'title'        => $p->title,
-                'slug'         => $p->slug,
-                'views'        => $p->views,
+                'id' => $p->id,
+                'title' => $p->title,
+                'slug' => $p->slug,
+                'views' => $p->views,
                 'published_at' => $p->published_at->format('d M Y'),
             ]);
 
         return Inertia::render('admin/Dashboard', [
             'stats' => [
-                'products'        => $productStats,
-                'current_period'  => [
-                    'orders'    => $current->orders,
-                    'revenue'   => $current->revenue,
+                'products' => $productStats,
+                'current_period' => [
+                    'orders' => $current->orders,
+                    'revenue' => $current->revenue,
                     'avg_order' => $current->avg_order,
                 ],
                 'previous_period' => [
-                    'orders'  => $previous->orders,
+                    'orders' => $previous->orders,
                     'revenue' => $previous->revenue,
                 ],
                 'pct_change' => [
-                    'orders'  => $pctOrders,
+                    'orders' => $pctOrders,
                     'revenue' => $pctRevenue,
                 ],
-                'trend'            => $trendPoints,
+                'trend' => $trendPoints,
                 'status_breakdown' => $statusBreakdown,
-                'top_products'     => $topProducts,
-                'recent_orders'    => $recentOrders,
+                'top_products' => $topProducts,
+                'recent_orders' => $recentOrders,
                 'customers' => [
-                    'total'        => $customersTotal,
-                    'new_30'       => $customersNew30,
-                    'new_7'        => $customersNew7,
+                    'total' => $customersTotal,
+                    'new_30' => $customersNew30,
+                    'new_7' => $customersNew7,
                     'returning_30' => $returning30,
                 ],
                 'vouchers' => [
-                    'orders_with_voucher'   => $ordersWithVoucher,
-                    'total_discount_given'  => $totalDiscountGiven,
-                    'gift_vouchers_sold'    => $giftVouchersSold,
+                    'orders_with_voucher' => $ordersWithVoucher,
+                    'total_discount_given' => $totalDiscountGiven,
+                    'gift_vouchers_sold' => $giftVouchersSold,
                     'gift_vouchers_pending' => $giftVouchersPending,
                 ],
                 'cart_abandonment' => [
-                    'active_carts'     => $activeCarts,
+                    'active_carts' => $activeCarts,
                     'completed_orders' => $completedOrders30,
                     'abandonment_rate' => $abandonmentRate,
                 ],
                 'reviews' => [
                     'pending_approval' => $pendingReviews,
-                    'average_rating'   => round($avgRating, 1),
-                    'total_approved'   => $approvedReviews,
+                    'average_rating' => round($avgRating, 1),
+                    'total_approved' => $approvedReviews,
                 ],
                 'journal' => [
                     'total_posts' => $journalTotal,
                     'total_views' => $journalViews,
-                    'top_posts'   => $topPosts,
+                    'top_posts' => $topPosts,
                 ],
             ],
         ]);

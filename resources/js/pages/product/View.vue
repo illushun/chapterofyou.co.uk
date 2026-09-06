@@ -1,49 +1,80 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
-import { Head, router } from '@inertiajs/vue3';
-import { ref, watch, reactive, nextTick, computed } from 'vue';
-import { debounce } from 'lodash';
-import axios from 'axios';
+import JsonLdSchema from '@/components/JsonLdSchema.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
-import JsonLdSchema from '@/components/JsonLdSchema.vue';
+import { router } from '@inertiajs/vue3';
+import { useDebounceFn as debounce } from '@vueuse/core';
+import axios from 'axios';
+import { computed, nextTick, reactive, ref, watch } from 'vue';
 
 import { Checkbox } from '@/components/ui/checkbox';
-import { CheckboxGroupRoot } from 'reka-ui';
-import { Label } from '@/components/ui/label';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
+import { Label } from '@/components/ui/label';
+import { CheckboxGroupRoot } from 'reka-ui';
 
-interface Category { id: number; name: string; }
-interface Product { id: number; name: string; description: string; details: string; mpn: string; cost: number; stock_qty: number; parent_product_id: number; }
+interface Category {
+    id: number;
+    name: string;
+}
+interface Product {
+    id: number;
+    name: string;
+    description: string;
+    details: string;
+    mpn: string;
+    cost: number;
+    stock_qty: number;
+    parent_product_id: number;
+}
 interface ProductsPaginated {
-    current_page: number; data: Product[]; last_page: number;
-    links: { url: string | null; label: string; active: boolean }[]; total: number;
+    current_page: number;
+    data: Product[];
+    last_page: number;
+    links: { url: string | null; label: string; active: boolean }[];
+    total: number;
 }
 interface ProductProps {
     products: ProductsPaginated;
     categories: Category[];
-    filters: { search: string; categories: number[]; min_price: string | null; max_price: string | null; sort: string; in_stock: string | boolean; };
+    filters: {
+        search: string;
+        categories: number[];
+        min_price: string | null;
+        max_price: string | null;
+        sort: string;
+        in_stock: string | boolean;
+    };
 }
 
 const BASE_URL = 'https://www.chapterofyou.co.uk';
 
 const props = defineProps<ProductProps & { wishlistedIds: number[] }>();
 
-const seo = computed(() => useSeoHead({
-    title: 'Shop Reed Diffusers',
-    description: 'Browse my full collection of hand-crafted reed diffusers. Free UK delivery on orders over £50.',
-    canonical: props.products.current_page > 1 ? `/products?page=${props.products.current_page}` : '/products',
-}));
+const seo = computed(() =>
+    useSeoHead({
+        title: 'Shop Reed Diffusers',
+        description:
+            'Browse my full collection of hand-crafted reed diffusers. Free UK delivery on orders over £50.',
+        canonical:
+            props.products.current_page > 1
+                ? `/products?page=${props.products.current_page}`
+                : '/products',
+    }),
+);
 
 const form = reactive({
     search: props.filters.search || '',
-    categories: Array.isArray(props.filters.categories) ? props.filters.categories.map(Number) : [],
+    categories: Array.isArray(props.filters.categories)
+        ? props.filters.categories.map(Number)
+        : [],
     min_price: Number(props.filters.min_price) || 0,
     max_price: Number(props.filters.max_price) || 500,
     sort: props.filters.sort || 'mpn,asc',
-    in_stock: props.filters.in_stock === 'true' || props.filters.in_stock === true,
+    in_stock:
+        props.filters.in_stock === 'true' || props.filters.in_stock === true,
 });
 
 const filterOpen = ref(false);
@@ -55,27 +86,55 @@ const maxPriceInput = ref(null);
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 const wishlistedIds = ref<number[]>(props.wishlistedIds ?? []);
 
-watch(form, debounce(() => {
-    isLoading.value = true;
-    router.get('/products', {
-        ...form,
-        in_stock: form.in_stock ? 'true' : undefined,
-        search: form.search || undefined,
-        categories: form.categories.length > 0 ? form.categories : undefined,
-        min_price: form.min_price > 0 ? form.min_price : undefined,
-        max_price: form.max_price !== 500 ? form.max_price : undefined,
-    }, { preserveState: true, preserveScroll: true, replace: true, onFinish: () => { isLoading.value = false; } });
-}, 300));
+watch(
+    form,
+    debounce(() => {
+        isLoading.value = true;
+        router.get(
+            '/products',
+            {
+                ...form,
+                in_stock: form.in_stock ? 'true' : undefined,
+                search: form.search || undefined,
+                categories:
+                    form.categories.length > 0 ? form.categories : undefined,
+                min_price: form.min_price > 0 ? form.min_price : undefined,
+                max_price: form.max_price !== 500 ? form.max_price : undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                onFinish: () => {
+                    isLoading.value = false;
+                },
+            },
+        );
+    }, 300),
+);
 
 const clearFilters = () => {
-    form.search = ''; form.categories = []; form.min_price = 0;
-    form.max_price = 500; form.sort = 'mpn,asc'; form.in_stock = false;
+    form.search = '';
+    form.categories = [];
+    form.min_price = 0;
+    form.max_price = 500;
+    form.sort = 'mpn,asc';
+    form.in_stock = false;
     filterOpen.value = false;
 };
 
 const paginate = (url: string) => {
     isLoading.value = true;
-    router.get(url, {}, { preserveScroll: true, onFinish: () => { isLoading.value = false; } });
+    router.get(
+        url,
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                isLoading.value = false;
+            },
+        },
+    );
 };
 
 const startEditMinPrice = () => {
@@ -83,7 +142,10 @@ const startEditMinPrice = () => {
     nextTick(() => (minPriceInput.value as any)?.focus());
 };
 const stopEditMinPrice = () => {
-    form.min_price = Math.max(0, Math.min(form.max_price, Number(form.min_price)));
+    form.min_price = Math.max(
+        0,
+        Math.min(form.max_price, Number(form.min_price)),
+    );
     isMinPriceEditing.value = false;
 };
 const startEditMaxPrice = () => {
@@ -91,28 +153,63 @@ const startEditMaxPrice = () => {
     nextTick(() => (maxPriceInput.value as any)?.focus());
 };
 const stopEditMaxPrice = () => {
-    form.max_price = Math.min(500, Math.max(form.min_price, Number(form.max_price)));
+    form.max_price = Math.min(
+        500,
+        Math.max(form.min_price, Number(form.max_price)),
+    );
     isMaxPriceEditing.value = false;
 };
 
-interface ProductCardData { id: number; name: string; mpn: string; cost: number; stock_qty: number; images?: { image: string }[]; total_unique_views?: number; }
+interface ProductCardData {
+    id: number;
+    name: string;
+    mpn: string;
+    cost: number;
+    stock_qty: number;
+    images?: { image: string }[];
+    total_unique_views?: number;
+}
 
 const handleAddToCart = (product: ProductCardData) => {
-    router.post('/cart/add', { product_id: product.id, quantity: 1 }, {
-        preserveScroll: true,
-        onSuccess: () => successToastRef.value?.show(`${product.name} added to cart!`, 'cart'),
-        onError: (e) => console.error('Failed to add to cart:', e),
-    });
+    router.post(
+        '/cart/add',
+        { product_id: product.id, quantity: 1 },
+        {
+            preserveScroll: true,
+            onSuccess: () =>
+                successToastRef.value?.show(
+                    `${product.name} added to cart!`,
+                    'cart',
+                ),
+            onError: (e) => console.error('Failed to add to cart:', e),
+        },
+    );
 };
 
 const handleFavourite = async (product: ProductCardData) => {
     const idx = wishlistedIds.value.indexOf(product.id);
-    idx === -1 ? wishlistedIds.value.push(product.id) : wishlistedIds.value.splice(idx, 1);
+    if (idx === -1) {
+        wishlistedIds.value.push(product.id);
+    } else {
+        wishlistedIds.value.splice(idx, 1);
+    }
     try {
-        const { data } = await axios.post(route('wishlist.toggle'), { product_id: product.id });
-        successToastRef.value?.show(data.message, data.wishlisted ? 'favourite' : 'trash');
+        const { data } = await axios.post(route('wishlist.toggle'), {
+            product_id: product.id,
+        });
+        successToastRef.value?.show(
+            data.message,
+            data.wishlisted ? 'favourite' : 'trash',
+        );
     } catch (err: any) {
-        idx === -1 ? wishlistedIds.value.splice(wishlistedIds.value.indexOf(product.id), 1) : wishlistedIds.value.splice(idx, 0, product.id);
+        if (idx === -1) {
+            wishlistedIds.value.splice(
+                wishlistedIds.value.indexOf(product.id),
+                1,
+            );
+        } else {
+            wishlistedIds.value.splice(idx, 0, product.id);
+        }
         if (err.response?.status === 401) window.location.href = route('login');
     }
 };
@@ -120,14 +217,16 @@ const handleFavourite = async (product: ProductCardData) => {
 const productListSchema = computed(() => ({
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    'name': 'Reed Diffusers',
-    'url': `${BASE_URL}/products`,
-    'itemListElement': (props.products?.data ?? []).map((p: any, index: number) => ({
-        '@type': 'ListItem',
-        'position': index + 1,
-        'url': `${BASE_URL}/product/${p.seo?.slug || p.id}`,
-        'name': p.name,
-    })),
+    name: 'Reed Diffusers',
+    url: `${BASE_URL}/products`,
+    itemListElement: (props.products?.data ?? []).map(
+        (p: any, index: number) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            url: `${BASE_URL}/product/${p.seo?.slug || p.id}`,
+            name: p.name,
+        }),
+    ),
 }));
 </script>
 
@@ -137,24 +236,41 @@ const productListSchema = computed(() => ({
     <SeoHead v-bind="seo" />
     <JsonLdSchema :schema="productListSchema" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="pv">
         <div class="pv-wrap">
-
             <!-- Page header + search -->
             <header class="pv-header">
                 <div>
                     <h1 class="pv-title">My Collection</h1>
-                    <p class="pv-sub">Handcrafted reed diffusers, made just for you.</p>
+                    <p class="pv-sub">
+                        Handcrafted reed diffusers, made just for you.
+                    </p>
                 </div>
                 <div class="pv-search-wrap">
-                    <input type="text" v-model="form.search" placeholder="Search by name or product code..."
-                        aria-label="Search products" class="pv-search" />
-                    <svg class="pv-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <input
+                        type="text"
+                        v-model="form.search"
+                        placeholder="Search by name or product code..."
+                        aria-label="Search products"
+                        class="pv-search"
+                    />
+                    <svg
+                        class="pv-search-icon"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <circle cx="11" cy="11" r="8" />
                         <path d="m21 21-4.3-4.3" />
                     </svg>
@@ -162,7 +278,6 @@ const productListSchema = computed(() => ({
             </header>
 
             <div class="pv-grid">
-
                 <!-- ── Desktop sidebar filter ── -->
                 <aside class="pv-sidebar">
                     <div class="pv-filter-card">
@@ -172,22 +287,37 @@ const productListSchema = computed(() => ({
                         <div class="pv-filter-section">
                             <h4 class="pv-filter-label">Availability</h4>
                             <Label for="FilterInStock" class="pv-check-label">
-                                <Checkbox id="FilterInStock" name="FilterInStock"
-                                    class="border-copy data-[state=checked]:bg-[var(--primary)] data-[state=checked]:text-primary-content"
-                                    v-model="form.in_stock" />
+                                <Checkbox
+                                    id="FilterInStock"
+                                    name="FilterInStock"
+                                    class="data-[state=checked]:text-primary-content border-copy data-[state=checked]:bg-[var(--primary)]"
+                                    v-model="form.in_stock"
+                                />
                                 <span>In Stock Only</span>
                             </Label>
                         </div>
 
                         <!-- Categories -->
-                        <div class="pv-filter-section pv-filter-section--border">
+                        <div
+                            class="pv-filter-section pv-filter-section--border"
+                        >
                             <h4 class="pv-filter-label">Product Types</h4>
                             <div class="pv-category-scroll">
-                                <CheckboxGroupRoot v-model="form.categories" as="ul" class="pv-category-list">
+                                <CheckboxGroupRoot
+                                    v-model="form.categories"
+                                    as="ul"
+                                    class="pv-category-list"
+                                >
                                     <li v-for="cat in categories" :key="cat.id">
-                                        <Label :for="'FilterCategory-' + cat.id" class="pv-check-label">
-                                            <Checkbox :id="'FilterCategory-' + cat.id" :value="cat.id"
-                                                class="border-copy data-[state=checked]:bg-[var(--primary)] data-[state=checked]:text-primary-content" />
+                                        <Label
+                                            :for="'FilterCategory-' + cat.id"
+                                            class="pv-check-label"
+                                        >
+                                            <Checkbox
+                                                :id="'FilterCategory-' + cat.id"
+                                                :value="cat.id"
+                                                class="data-[state=checked]:text-primary-content border-copy data-[state=checked]:bg-[var(--primary)]"
+                                            />
                                             <span>{{ cat.name }}</span>
                                         </Label>
                                     </li>
@@ -196,32 +326,82 @@ const productListSchema = computed(() => ({
                         </div>
 
                         <!-- Price range -->
-                        <div class="pv-filter-section pv-filter-section--border">
+                        <div
+                            class="pv-filter-section pv-filter-section--border"
+                        >
                             <h4 class="pv-filter-label">Price Range</h4>
                             <div class="pv-price-labels">
-                                <span class="pv-price-val" @click="startEditMinPrice">
-                                    <template v-if="!isMinPriceEditing">Min: £{{ form.min_price }}</template>
-                                    <input v-else ref="minPriceInput" type="number" v-model.number="form.min_price"
-                                        @blur="stopEditMinPrice" @keyup.enter="stopEditMinPrice" class="pv-price-input"
-                                        min="0" max="500" />
+                                <span
+                                    class="pv-price-val"
+                                    @click="startEditMinPrice"
+                                >
+                                    <template v-if="!isMinPriceEditing"
+                                        >Min: £{{ form.min_price }}</template
+                                    >
+                                    <input
+                                        v-else
+                                        ref="minPriceInput"
+                                        type="number"
+                                        v-model.number="form.min_price"
+                                        @blur="stopEditMinPrice"
+                                        @keyup.enter="stopEditMinPrice"
+                                        class="pv-price-input"
+                                        min="0"
+                                        max="500"
+                                    />
                                 </span>
-                                <span class="pv-price-val" @click="startEditMaxPrice">
-                                    <template v-if="!isMaxPriceEditing">Max: £{{ form.max_price }}</template>
-                                    <input v-else ref="maxPriceInput" type="number" v-model.number="form.max_price"
-                                        @blur="stopEditMaxPrice" @keyup.enter="stopEditMaxPrice" class="pv-price-input"
-                                        min="0" max="500" />
+                                <span
+                                    class="pv-price-val"
+                                    @click="startEditMaxPrice"
+                                >
+                                    <template v-if="!isMaxPriceEditing"
+                                        >Max: £{{ form.max_price }}</template
+                                    >
+                                    <input
+                                        v-else
+                                        ref="maxPriceInput"
+                                        type="number"
+                                        v-model.number="form.max_price"
+                                        @blur="stopEditMaxPrice"
+                                        @keyup.enter="stopEditMaxPrice"
+                                        class="pv-price-input"
+                                        min="0"
+                                        max="500"
+                                    />
                                 </span>
                             </div>
-                            <input type="range" v-model.number="form.min_price" min="0" max="500" step="10"
-                                class="pv-range" @mousedown="isMinPriceEditing = false" />
-                            <input type="range" v-model.number="form.max_price" min="0" max="500" step="10"
-                                class="pv-range" @mousedown="isMaxPriceEditing = false" />
+                            <input
+                                type="range"
+                                v-model.number="form.min_price"
+                                min="0"
+                                max="500"
+                                step="10"
+                                class="pv-range"
+                                @mousedown="isMinPriceEditing = false"
+                            />
+                            <input
+                                type="range"
+                                v-model.number="form.max_price"
+                                min="0"
+                                max="500"
+                                step="10"
+                                class="pv-range"
+                                @mousedown="isMaxPriceEditing = false"
+                            />
                         </div>
 
                         <!-- Clear -->
                         <button
-                            v-if="form.search || form.categories.length > 0 || form.min_price > 0 || form.max_price < 500 || form.in_stock"
-                            @click="clearFilters" class="pv-clear-btn">
+                            v-if="
+                                form.search ||
+                                form.categories.length > 0 ||
+                                form.min_price > 0 ||
+                                form.max_price < 500 ||
+                                form.in_stock
+                            "
+                            @click="clearFilters"
+                            class="pv-clear-btn"
+                        >
                             Clear all filters
                         </button>
                     </div>
@@ -229,28 +409,51 @@ const productListSchema = computed(() => ({
 
                 <!-- ── Product grid column ── -->
                 <div class="pv-main">
-
                     <!-- Toolbar -->
                     <div class="pv-toolbar">
                         <p class="pv-count">
-                            Showing <strong>{{ products.data.length }}</strong> of <strong>{{ products.total }}</strong>
+                            Showing
+                            <strong>{{ products.data.length }}</strong> of
+                            <strong>{{ products.total }}</strong>
                             products
                         </p>
                         <div class="pv-toolbar-right">
-                            <label for="SortBy" class="pv-sort-label">Sort by</label>
-                            <select id="SortBy" v-model="form.sort" class="pv-sort-select">
+                            <label for="SortBy" class="pv-sort-label"
+                                >Sort by</label
+                            >
+                            <select
+                                id="SortBy"
+                                v-model="form.sort"
+                                class="pv-sort-select"
+                            >
                                 <option value="name,asc">Name (A–Z)</option>
                                 <option value="name,desc">Name (Z–A)</option>
-                                <option value="cost,desc">Price (High–Low)</option>
-                                <option value="cost,asc">Price (Low–High)</option>
+                                <option value="cost,desc">
+                                    Price (High–Low)
+                                </option>
+                                <option value="cost,asc">
+                                    Price (Low–High)
+                                </option>
                             </select>
                             <!-- Mobile filter trigger -->
-                            <button @click="filterOpen = true" class="pv-filter-btn lg:hidden"
-                                aria-label="Open filters">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <button
+                                @click="filterOpen = true"
+                                class="pv-filter-btn lg:hidden"
+                                aria-label="Open filters"
+                            >
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path
-                                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414A1 1 0 0012 14.586V21a1 1 0 01-2 0v-6.414a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414A1 1 0 0012 14.586V21a1 1 0 01-2 0v-6.414a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                                    />
                                 </svg>
                                 Filters
                             </button>
@@ -258,42 +461,86 @@ const productListSchema = computed(() => ({
                     </div>
 
                     <!-- Product grid -->
-                    <div :class="{ 'opacity-40 pointer-events-none': isLoading }" class="transition duration-300">
+                    <div
+                        :class="{ 'pointer-events-none opacity-40': isLoading }"
+                        class="transition duration-300"
+                    >
                         <ul v-if="products.data.length" class="pv-product-grid">
-                            <li v-for="product in products.data" :key="product.id">
-                                <ProductSpringCard :product="product" :wishlisted="wishlistedIds.includes(product.id)"
-                                    @add-to-cart="handleAddToCart(product)" @favourite="handleFavourite(product)" />
+                            <li
+                                v-for="product in products.data"
+                                :key="product.id"
+                            >
+                                <ProductSpringCard
+                                    :product="product"
+                                    :wishlisted="
+                                        wishlistedIds.includes(product.id)
+                                    "
+                                    @add-to-cart="handleAddToCart(product)"
+                                    @favourite="handleFavourite(product)"
+                                />
                             </li>
                         </ul>
 
                         <!-- No results -->
                         <div v-else class="pv-empty">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" class="pv-empty-icon">
+                            <svg
+                                width="40"
+                                height="40"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="pv-empty-icon"
+                            >
                                 <circle cx="11" cy="11" r="8" />
                                 <path d="m21 21-4.3-4.3" />
                             </svg>
                             <p>No products match your search.</p>
-                            <button @click="clearFilters" class="btn-rose btn-rose--sm">Reset filters</button>
+                            <button
+                                @click="clearFilters"
+                                class="btn-rose btn-rose--sm"
+                            >
+                                Reset filters
+                            </button>
                         </div>
                     </div>
 
                     <!-- Pagination -->
                     <div v-if="products.last_page > 1" class="pv-pagination">
                         <ol class="pv-page-list">
-                            <li v-for="link in products.links" :key="link.label">
-                                <button v-if="link.url" @click.prevent="paginate(link.url)" class="pv-page-btn"
-                                    :class="{ 'pv-page-btn--active': link.active }"
-                                    v-html="link.label.replace('Previous', '←').replace('Next', '→')"
-                                    :aria-label="link.label">
-                                </button>
-                                <span v-else class="pv-page-btn pv-page-btn--disabled"
-                                    v-html="link.label.replace('Previous', '←').replace('Next', '→')">
+                            <li
+                                v-for="link in products.links"
+                                :key="link.label"
+                            >
+                                <button
+                                    v-if="link.url"
+                                    @click.prevent="paginate(link.url)"
+                                    class="pv-page-btn"
+                                    :class="{
+                                        'pv-page-btn--active': link.active,
+                                    }"
+                                    v-html="
+                                        link.label
+                                            .replace('Previous', '←')
+                                            .replace('Next', '→')
+                                    "
+                                    :aria-label="link.label"
+                                ></button>
+                                <span
+                                    v-else
+                                    class="pv-page-btn pv-page-btn--disabled"
+                                    v-html="
+                                        link.label
+                                            .replace('Previous', '←')
+                                            .replace('Next', '→')
+                                    "
+                                >
                                 </span>
                             </li>
                         </ol>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -301,13 +548,31 @@ const productListSchema = computed(() => ({
 
     <!-- Mobile filter slide-over -->
     <Transition name="slide-fade">
-        <div v-if="filterOpen" @click.self="filterOpen = false" class="pv-mobile-backdrop">
+        <div
+            v-if="filterOpen"
+            @click.self="filterOpen = false"
+            class="pv-mobile-backdrop"
+        >
             <div class="pv-mobile-panel">
                 <div class="pv-mobile-head">
-                    <h3 class="pv-filter-title" style="margin-bottom:0">Filters</h3>
-                    <button @click="filterOpen = false" class="pv-mobile-close" aria-label="Close filters">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <h3 class="pv-filter-title" style="margin-bottom: 0">
+                        Filters
+                    </h3>
+                    <button
+                        @click="filterOpen = false"
+                        class="pv-mobile-close"
+                        aria-label="Close filters"
+                    >
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="M18 6 6 18M6 6l12 12" />
                         </svg>
                     </button>
@@ -316,9 +581,16 @@ const productListSchema = computed(() => ({
                 <div class="pv-mobile-body">
                     <div class="pv-filter-section pv-filter-section--border">
                         <h4 class="pv-filter-label">Availability</h4>
-                        <label for="MobileFilterInStock" class="pv-check-label-native">
-                            <input type="checkbox" id="MobileFilterInStock" v-model="form.in_stock"
-                                class="pv-native-check" />
+                        <label
+                            for="MobileFilterInStock"
+                            class="pv-check-label-native"
+                        >
+                            <input
+                                type="checkbox"
+                                id="MobileFilterInStock"
+                                v-model="form.in_stock"
+                                class="pv-native-check"
+                            />
                             <span>In Stock Only</span>
                         </label>
                     </div>
@@ -327,9 +599,17 @@ const productListSchema = computed(() => ({
                         <h4 class="pv-filter-label">Product Types</h4>
                         <ul class="pv-category-list">
                             <li v-for="cat in categories" :key="cat.id">
-                                <label :for="'MobileFilterCategory-' + cat.id" class="pv-check-label-native">
-                                    <input type="checkbox" :id="'MobileFilterCategory-' + cat.id" :value="cat.id"
-                                        v-model="form.categories" class="pv-native-check" />
+                                <label
+                                    :for="'MobileFilterCategory-' + cat.id"
+                                    class="pv-check-label-native"
+                                >
+                                    <input
+                                        type="checkbox"
+                                        :id="'MobileFilterCategory-' + cat.id"
+                                        :value="cat.id"
+                                        v-model="form.categories"
+                                        class="pv-native-check"
+                                    />
                                     <span>{{ cat.name }}</span>
                                 </label>
                             </li>
@@ -339,20 +619,44 @@ const productListSchema = computed(() => ({
                     <div class="pv-filter-section pv-filter-section--border">
                         <h4 class="pv-filter-label">Price Range</h4>
                         <div class="pv-price-labels">
-                            <span class="pv-price-val">Min: £{{ form.min_price }}</span>
-                            <span class="pv-price-val">Max: £{{ form.max_price }}</span>
+                            <span class="pv-price-val"
+                                >Min: £{{ form.min_price }}</span
+                            >
+                            <span class="pv-price-val"
+                                >Max: £{{ form.max_price }}</span
+                            >
                         </div>
-                        <input type="range" v-model.number="form.min_price" min="0" max="500" step="10"
-                            class="pv-range" />
-                        <input type="range" v-model.number="form.max_price" min="0" max="500" step="10"
-                            class="pv-range" />
+                        <input
+                            type="range"
+                            v-model.number="form.min_price"
+                            min="0"
+                            max="500"
+                            step="10"
+                            class="pv-range"
+                        />
+                        <input
+                            type="range"
+                            v-model.number="form.max_price"
+                            min="0"
+                            max="500"
+                            step="10"
+                            class="pv-range"
+                        />
                     </div>
 
                     <div class="pv-mobile-actions">
-                        <button @click="filterOpen = false" class="btn-rose" style="width:100%;justify-content:center;">
+                        <button
+                            @click="filterOpen = false"
+                            class="btn-rose"
+                            style="width: 100%; justify-content: center"
+                        >
                             Show Results
                         </button>
-                        <button @click="clearFilters" class="pv-clear-btn" style="width:100%;text-align:center;">
+                        <button
+                            @click="clearFilters"
+                            class="pv-clear-btn"
+                            style="width: 100%; text-align: center"
+                        >
                             Reset All
                         </button>
                     </div>
@@ -425,7 +729,9 @@ const productListSchema = computed(() => ({
     font-family: 'Nunito', sans-serif;
     font-size: 1rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
 }
 
 .pv-search:focus {
@@ -791,7 +1097,10 @@ const productListSchema = computed(() => ({
     font-size: 0.925rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    transition:
+        background 0.15s,
+        border-color 0.15s,
+        color 0.15s;
 }
 
 .pv-page-btn:hover:not(.pv-page-btn--disabled) {
@@ -827,7 +1136,9 @@ const productListSchema = computed(() => ({
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
     cursor: pointer;
 }
 
@@ -885,7 +1196,9 @@ const productListSchema = computed(() => ({
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s;
+    transition:
+        background 0.2s,
+        color 0.2s;
 }
 
 .pv-mobile-close:hover {

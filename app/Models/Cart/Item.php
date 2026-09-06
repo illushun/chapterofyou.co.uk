@@ -2,12 +2,11 @@
 
 namespace App\Models\Cart;
 
+use App\Models\Cart as CartObj;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-use App\Models\Product;
-use App\Models\Cart as CartObj;
 
 class Item extends Model
 {
@@ -21,17 +20,11 @@ class Item extends Model
         'quantity',
     ];
 
-    /**
-     * An item belongs to a cart.
-     */
     public function cart(): BelongsTo
     {
         return $this->belongsTo(CartObj::class);
     }
 
-    /**
-     * An item belongs to a product.
-     */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class () extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('batch_sheets', function (Blueprint $table) {
@@ -23,7 +24,7 @@ return new class () extends Migration {
             $table->unsignedInteger('bottle_size_ml');
             $table->string('total_units_produced');
 
-            // Ingredients — stored as JSON array of rows
+            // Ingredients - stored as JSON array of rows
             // Each row: { ingredient, supplier, lot_batch_no, percent_used, weight_g, sds_ifra_ref }
             $table->json('ingredients');
 

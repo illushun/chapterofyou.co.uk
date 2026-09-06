@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
-import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
 
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 
@@ -29,7 +29,8 @@ const submit = () => {
 
 const seo = useSeoHead({
     title: 'Contact Me',
-    description: 'Get in touch with Chapter of You. I\'d love to hear from you and will respond within 1–2 working days.',
+    description:
+        "Get in touch with Chapter of You. I'd love to hear from you and will respond within 1–2 working days.",
     canonical: '/contact',
 });
 </script>
@@ -39,97 +40,180 @@ const seo = useSeoHead({
 
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="cp">
         <div class="cp-wrap">
-
             <!-- Header -->
             <header class="cp-header">
                 <h1 class="cp-title">Get in Touch</h1>
                 <p class="cp-sub">
-                    I'd love to hear from you. Fill out the form below and I'll get back to you as soon as possible.
+                    I'd love to hear from you. Fill out the form below and I'll
+                    get back to you as soon as possible.
                 </p>
             </header>
 
             <!-- Two-column layout: form + info -->
             <div class="cp-grid">
-
                 <!-- Contact form -->
                 <form @submit.prevent="submit" class="cp-card">
-
                     <div class="field-row">
                         <div class="field">
                             <label for="name" class="field-label">
-                                Your Name <span class="field-required" aria-hidden="true">*</span>
+                                Your Name
+                                <span class="field-required" aria-hidden="true"
+                                    >*</span
+                                >
                             </label>
-                            <input id="name" type="text" v-model="form.name" required class="field-input"
-                                :class="{ 'field-input--error': form.errors.name }" />
-                            <p v-if="form.errors.name" class="field-error">{{ form.errors.name }}</p>
+                            <input
+                                id="name"
+                                type="text"
+                                v-model="form.name"
+                                required
+                                class="field-input"
+                                :class="{
+                                    'field-input--error': form.errors.name,
+                                }"
+                            />
+                            <p v-if="form.errors.name" class="field-error">
+                                {{ form.errors.name }}
+                            </p>
                         </div>
                         <div class="field">
                             <label for="email" class="field-label">
-                                Email Address <span class="field-required" aria-hidden="true">*</span>
+                                Email Address
+                                <span class="field-required" aria-hidden="true"
+                                    >*</span
+                                >
                             </label>
-                            <input id="email" type="email" v-model="form.email" required class="field-input"
-                                :class="{ 'field-input--error': form.errors.email }" />
-                            <p v-if="form.errors.email" class="field-error">{{ form.errors.email }}</p>
+                            <input
+                                id="email"
+                                type="email"
+                                v-model="form.email"
+                                required
+                                class="field-input"
+                                :class="{
+                                    'field-input--error': form.errors.email,
+                                }"
+                            />
+                            <p v-if="form.errors.email" class="field-error">
+                                {{ form.errors.email }}
+                            </p>
                         </div>
                     </div>
 
                     <div class="field">
                         <label for="subject" class="field-label">
-                            Subject <span class="field-optional">(optional)</span>
+                            Subject
+                            <span class="field-optional">(optional)</span>
                         </label>
-                        <input id="subject" type="text" v-model="form.subject" class="field-input"
-                            :class="{ 'field-input--error': form.errors.subject }" />
-                        <p v-if="form.errors.subject" class="field-error">{{ form.errors.subject }}</p>
+                        <input
+                            id="subject"
+                            type="text"
+                            v-model="form.subject"
+                            class="field-input"
+                            :class="{
+                                'field-input--error': form.errors.subject,
+                            }"
+                        />
+                        <p v-if="form.errors.subject" class="field-error">
+                            {{ form.errors.subject }}
+                        </p>
                     </div>
 
                     <div class="field">
                         <label for="message" class="field-label">
-                            Message <span class="field-required" aria-hidden="true">*</span>
+                            Message
+                            <span class="field-required" aria-hidden="true"
+                                >*</span
+                            >
                         </label>
-                        <textarea id="message" v-model="form.message" rows="6" required
+                        <textarea
+                            id="message"
+                            v-model="form.message"
+                            rows="6"
+                            required
                             class="field-input field-textarea"
-                            :class="{ 'field-input--error': form.errors.message }"></textarea>
-                        <p v-if="form.errors.message" class="field-error">{{ form.errors.message }}</p>
+                            :class="{
+                                'field-input--error': form.errors.message,
+                            }"
+                        ></textarea>
+                        <p v-if="form.errors.message" class="field-error">
+                            {{ form.errors.message }}
+                        </p>
                     </div>
 
                     <div class="cp-form-footer">
-                        <button type="submit" :disabled="form.processing" class="btn-rose">
-                            <svg v-if="!form.processing" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <button
+                            type="submit"
+                            :disabled="form.processing"
+                            class="btn-rose"
+                        >
+                            <svg
+                                v-if="!form.processing"
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
                                 <path d="M22 2 11 13" />
                                 <path d="M22 2 15 22 11 13 2 9l20-7z" />
                             </svg>
-                            <svg v-else width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="spin">
+                            <svg
+                                v-else
+                                width="15"
+                                height="15"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                class="spin"
+                            >
                                 <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                             </svg>
-                            {{ form.processing ? 'Sending...' : 'Send Message' }}
+                            {{
+                                form.processing ? 'Sending...' : 'Send Message'
+                            }}
                         </button>
                     </div>
-
                 </form>
 
                 <!-- Contact info sidebar -->
                 <aside class="cp-info">
-
                     <div class="cp-info-card">
                         <div class="info-block">
                             <div class="info-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path
-                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                                    />
                                 </svg>
                             </div>
                             <div>
                                 <p class="info-label">Email</p>
-                                <a href="mailto:contact@chapterofyou.co.uk" class="info-value info-link">
+                                <a
+                                    href="mailto:contact@chapterofyou.co.uk"
+                                    class="info-value info-link"
+                                >
                                     contact@chapterofyou.co.uk
                                 </a>
                             </div>
@@ -139,15 +223,25 @@ const seo = useSeoHead({
 
                         <div class="info-block">
                             <div class="info-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <circle cx="12" cy="12" r="10" />
                                     <path d="M12 6v6l4 2" />
                                 </svg>
                             </div>
                             <div>
                                 <p class="info-label">Response Time</p>
-                                <p class="info-value">Within 1–2 working days</p>
+                                <p class="info-value">
+                                    Within 1–2 working days
+                                </p>
                             </div>
                         </div>
 
@@ -155,21 +249,30 @@ const seo = useSeoHead({
 
                         <div class="info-block">
                             <div class="info-icon">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path
-                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                    />
                                 </svg>
                             </div>
                             <div>
                                 <p class="info-label">Made with love</p>
-                                <p class="info-value">Every message is read personally by me.</p>
+                                <p class="info-value">
+                                    Every message is read personally by me.
+                                </p>
                             </div>
                         </div>
                     </div>
-
                 </aside>
-
             </div>
         </div>
     </main>
@@ -318,7 +421,9 @@ const seo = useSeoHead({
     font-family: 'Nunito', sans-serif;
     font-size: 0.95rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
     resize: none;
     width: 100%;
 }
@@ -457,7 +562,9 @@ const seo = useSeoHead({
     letter-spacing: 0.02em;
     cursor: pointer;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 }
 
 .btn-rose:hover:not(:disabled) {

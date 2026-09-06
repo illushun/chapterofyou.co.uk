@@ -4,21 +4,14 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\Cart\Item as CartItem;
-use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class CartManager
 {
-    /**
-     * The number of days a guest cart remains active before cleanup.
-     */
     private const GUEST_CART_LIFESPAN_DAYS = 7;
 
-    /**
-     * Retrieves the current active cart, creating it if necessary.
-     */
     public function getCurrentCart(): Cart
     {
         $user = Auth::user();
@@ -47,9 +40,6 @@ class CartManager
         return $cart->load('items.product');
     }
 
-    /**
-     * Adds a product to the cart.
-     */
     public function addItem(Cart $cart, int $productId, int $quantity = 1): CartItem
     {
         // Find existing item or create a new one
@@ -74,9 +64,6 @@ class CartManager
         return $cartItem;
     }
 
-    /**
-     * Updates the quantity of a cart item.
-     */
     public function updateItem(Cart $cart, int $productId, int $quantity): ?CartItem
     {
         $cartItem = $cart->items()->where('product_id', $productId)->first();
@@ -84,32 +71,30 @@ class CartManager
         if ($cartItem) {
             if ($quantity <= 0) {
                 $cartItem->delete();
+
                 return null;
             }
             $cartItem->quantity = $quantity;
             $cartItem->save();
             $cart->touch();
+
             return $cartItem;
         }
+
         return null;
     }
 
-    /**
-     * Removes an item from the cart.
-     */
     public function removeItem(Cart $cart, int $productId): bool
     {
         return $cart->items()->where('product_id', $productId)->delete() > 0;
     }
 
-    /**
-     * Generates or retrieves the unique session ID from the session store.
-     */
     private function getSessionId(): string
     {
-        if (!session()->has('cart_session_id')) {
+        if (! session()->has('cart_session_id')) {
             session()->put('cart_session_id', Str::uuid());
         }
+
         return session('cart_session_id');
     }
 
@@ -117,8 +102,8 @@ class CartManager
     {
         // Find the guest cart associated with the current session ID
         $guestCart = Cart::where('session_id', $guestSessionId)
-                         ->whereNull('user_id')
-                         ->first();
+            ->whereNull('user_id')
+            ->first();
 
         if ($guestCart && $guestCart->id !== $userCart->id) {
 

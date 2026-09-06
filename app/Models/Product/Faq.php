@@ -2,8 +2,8 @@
 
 namespace App\Models\Product;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Product as ProductModel;
+use Illuminate\Database\Eloquent\Model;
 
 class Faq extends Model
 {

@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Inertia\Inertia;
-use App\Models\Category;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class AdminCategoryController extends Controller
 {
@@ -19,8 +19,8 @@ class AdminCategoryController extends Controller
             Storage::disk('public')->delete($category->image);
         }
 
-        $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
-        $path     = $file->storeAs('category_images', $fileName, 'public');
+        $fileName = time().'_'.Str::random(10).'.'.$file->getClientOriginalExtension();
+        $path = $file->storeAs('category_images', $fileName, 'public');
 
         $category->update(['image' => $path]);
     }
@@ -47,13 +47,13 @@ class AdminCategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'             => ['required', 'string', 'max:255'],
-            'slug'             => ['nullable', 'string', 'max:255', Rule::unique('category', 'slug')],
-            'description'      => ['nullable', 'string'],
-            'meta_title'       => ['nullable', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['nullable', 'string', 'max:255', Rule::unique('category', 'slug')],
+            'description' => ['nullable', 'string'],
+            'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
-            'status'           => ['required', Rule::in(['enabled', 'disabled'])],
-            'new_image'        => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,webp'],
+            'status' => ['required', Rule::in(['enabled', 'disabled'])],
+            'new_image' => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,webp'],
         ]);
 
         return DB::transaction(function () use ($validated, $request) {
@@ -80,7 +80,7 @@ class AdminCategoryController extends Controller
     public function edit(Category $category)
     {
         return Inertia::render('admin/category/CreateEdit', [
-            'category'  => $category,
+            'category' => $category,
             'isEditing' => true,
         ]);
     }
@@ -88,19 +88,19 @@ class AdminCategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $validated = $request->validate([
-            'name'             => ['required', 'string', 'max:255'],
-            'slug'             => ['nullable', 'string', 'max:255',
-                                   Rule::unique('category', 'slug')->ignore($category->id)],
-            'description'      => ['nullable', 'string'],
-            'meta_title'       => ['nullable', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
+            'slug' => ['nullable', 'string', 'max:255',
+                Rule::unique('category', 'slug')->ignore($category->id)],
+            'description' => ['nullable', 'string'],
+            'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
-            'status'           => ['required', Rule::in(['enabled', 'disabled'])],
-            'new_image'        => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,webp'],
-            'remove_image'     => ['boolean'],
+            'status' => ['required', Rule::in(['enabled', 'disabled'])],
+            'new_image' => ['nullable', 'image', 'max:2048', 'mimes:jpeg,png,webp'],
+            'remove_image' => ['boolean'],
         ]);
 
         return DB::transaction(function () use ($request, $validated, $category) {
-            $imageFile   = $request->file('new_image');
+            $imageFile = $request->file('new_image');
             $removeImage = $request->boolean('remove_image');
 
             unset($validated['new_image'], $validated['remove_image']);

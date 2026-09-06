@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, nextTick } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 // Assuming 'cn' is a utility function for merging Tailwind classes,
 // if you don't have one, you can use a simple array approach for classes in the template.
 // For now, we'll assume it's imported or replaced with a simple function.
@@ -39,9 +39,6 @@ const start = ref(false);
 
 // --- Component Logic ---
 
-/**
- * Duplicates the list items to enable continuous scrolling and sets up CSS variables.
- */
 const addAnimation = () => {
     if (containerRef.value && scrollerRef.value) {
         const scrollerContent = Array.from(scrollerRef.value.children);
@@ -63,8 +60,12 @@ const addAnimation = () => {
 
 const getDirection = () => {
     if (containerRef.value) {
-        const directionValue = props.direction === 'left' ? 'forwards' : 'reverse';
-        containerRef.value.style.setProperty('--animation-direction', directionValue);
+        const directionValue =
+            props.direction === 'left' ? 'forwards' : 'reverse';
+        containerRef.value.style.setProperty(
+            '--animation-direction',
+            directionValue,
+        );
     }
 };
 
@@ -91,10 +92,12 @@ onMounted(() => {
 
 <template>
     <div
-        :class="cn(
-            'scroller relative z-20 max-w-7xl overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]',
-            props.className,
-        )"
+        :class="
+            cn(
+                'scroller relative z-20 max-w-7xl overflow-hidden [mask-image:linear-gradient(to_right,transparent,white_20%,white_80%,transparent)]',
+                props.className,
+            )
+        "
         ref="containerRef"
     >
         <ul
@@ -103,8 +106,8 @@ onMounted(() => {
                 'flex w-max min-w-full shrink-0 flex-nowrap gap-4 py-4',
                 {
                     'animate-scroll': start,
-                    'hover:[animation-play-state:paused]': props.pauseOnHover
-                }
+                    'hover:[animation-play-state:paused]': props.pauseOnHover,
+                },
             ]"
         >
             <li
@@ -117,40 +120,42 @@ onMounted(() => {
                         aria-hidden="true"
                         class="user-select-none pointer-events-none absolute -top-0.5 -left-0.5 -z-1 h-[calc(100%_+_4px)] w-[calc(100%_+_4px)]"
                     ></div>
-                    <span class="relative z-20 text-sm leading-[1.6] font-normal text-neutral-800 dark:text-gray-100">
+                    <span
+                        class="relative z-20 text-sm leading-[1.6] font-normal text-neutral-800 dark:text-gray-100"
+                    >
                         {{ item.quote }}
                     </span>
                     <div class="relative z-20 mt-6 flex flex-row items-center">
                         <span class="flex flex-col gap-1">
-                            <span class="text-sm leading-[1.6] font-normal text-neutral-500 dark:text-gray-400">
+                            <span
+                                class="text-sm leading-[1.6] font-normal text-neutral-500 dark:text-gray-400"
+                            >
                                 {{ item.name }}
                             </span>
-                            <span class="text-sm leading-[1.6] font-normal text-neutral-500 dark:text-gray-400">
+                            <span
+                                class="text-sm leading-[1.6] font-normal text-neutral-500 dark:text-gray-400"
+                            >
                                 {{ item.title }}
                             </span>
                         </span>
                     </div>
                 </blockquote>
             </li>
-            </ul>
+        </ul>
     </div>
 </template>
 
 <style>
-
 /* If you cannot modify tailwind.config.js, you must add the raw CSS: */
 @keyframes scroll {
     to {
-        /*
-         * Moves the list left by half its width plus half the gap size (1rem gap = 0.5rem half gap).
-         * This value is CRITICAL for smooth infinite loop after duplication.
-         */
         transform: translate(calc(-50% - 0.5rem));
     }
 }
 
 .animate-scroll {
-    animation: scroll var(--animation-duration, 40s) linear infinite var(--animation-direction, forwards);
+    animation: scroll var(--animation-duration, 40s) linear infinite
+        var(--animation-direction, forwards);
 }
 
 .scroller {
@@ -158,5 +163,4 @@ onMounted(() => {
     --animation-direction: forwards;
     --animation-duration: 40s;
 }
-
 </style>

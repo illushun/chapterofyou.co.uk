@@ -19,7 +19,7 @@ class UnsplashImageService
     }
 
     // Finds a photo matching the query, downloads it, and stores it under journal_images.
-    // Returns the stored relative path, or null if anything goes wrong — a missing cover
+    // Returns the stored relative path, or null if anything goes wrong - a missing cover
     // image should never block a journal post from being generated/published.
     public function fetch(string $query): ?string
     {

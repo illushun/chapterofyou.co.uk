@@ -4,17 +4,15 @@ namespace App\Models;
 
 use App\Models\Label\CLP;
 use App\Models\Product\Courier as ProductCourier;
+use App\Models\Product\Faq as ProductFaq;
+use App\Models\Product\Image;
 use App\Models\Product\Material;
 use App\Models\Product\Review;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Builder;
-use App\Models\Category;
-use App\Models\Product\Category as ProductCategory;
-use App\Models\Product\Image;
 use App\Models\Product\Seo;
 use App\Models\Product\View as ProductView;
-use App\Models\Product\Faq as ProductFaq;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
@@ -69,7 +67,7 @@ class Product extends Model
     protected $appends = [
         'total_unique_views',
         'average_rating',
-        'approved_reviews_count'
+        'approved_reviews_count',
     ];
 
     public function categories()
@@ -189,13 +187,7 @@ class Product extends Model
         return $this->hasOne(CLP::class);
     }
 
-    /**
-     * Scope a query to filter products.
-     *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param  array  $filters
-     * @return void
-     */
+    /** @return void */
     public function scopeFilter(Builder $query, array $filters)
     {
         // Only show top-level products on the main collection page
@@ -204,8 +196,8 @@ class Product extends Model
         // MPN and Name Search
         $query->when($filters['search'] ?? false, function ($query, $search) {
             $query->where(function ($q) use ($search) {
-                $q->where('mpn', 'like', '%' . $search . '%')
-                ->orWhere('name', 'like', '%' . $search . '%');
+                $q->where('mpn', 'like', '%'.$search.'%')
+                    ->orWhere('name', 'like', '%'.$search.'%');
             });
         });
 
@@ -242,32 +234,32 @@ class Product extends Model
     public function faqs()
     {
         return $this->hasMany(ProductFaq::class, 'product_id')
-                    ->orderBy('sort_order')
-                    ->orderBy('id');
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function etsySetting()
     {
         return $this->hasOne(\App\Models\MarketplaceProductSetting::class)
-                    ->where('marketplace', 'etsy');
+            ->where('marketplace', 'etsy');
     }
 
     public function etsyListing()
     {
         return $this->hasOne(\App\Models\MarketplaceListing::class)
-                    ->where('marketplace', 'etsy');
+            ->where('marketplace', 'etsy');
     }
 
     public function costItems()
     {
         return $this->belongsToMany(\App\Models\Finance\CostItem::class, 'finance_product_cost', 'product_id', 'cost_item_id')
-                    ->withPivot('qty_per_unit')
-                    ->withTimestamps();
+            ->withPivot('qty_per_unit')
+            ->withTimestamps();
     }
 
     public function journalPosts()
     {
         return $this->belongsToMany(JournalPost::class, 'journal_post_product')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 }

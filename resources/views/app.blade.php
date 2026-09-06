@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
-        <!-- Charset & viewport — truly global, never overridden -->
+        <!-- Charset & viewport - truly global, never overridden -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <!-- Author — static, fine to keep here -->
+        <!-- Author - static, fine to keep here -->
         <meta name="author" content="Chapter of You">
 
-        <!-- Keywords — low SEO value (ignored by Google) but harmless to keep -->
+        <!-- Keywords - low SEO value (ignored by Google) but harmless to keep -->
         <meta name="keywords" content="Reed Diffusers, Hand-made, Luxurious, Home Fragrance, Aromatherapy, Scented Oils, Relaxation, Wellness, Gift Ideas, Chapter of You">
 
         <!-- IE compatibility -->

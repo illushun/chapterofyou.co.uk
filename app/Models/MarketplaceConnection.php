@@ -23,8 +23,8 @@ class MarketplaceConnection extends Model
     ];
 
     protected $casts = [
-        'expires_at'            => 'datetime',
-        'last_order_import_at'  => 'datetime',
+        'expires_at' => 'datetime',
+        'last_order_import_at' => 'datetime',
     ];
 
     protected $hidden = [

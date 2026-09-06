@@ -19,11 +19,19 @@ defineProps<{
         <div class="rjp-header">
             <h2 class="rjp-title">{{ heading ?? 'From the Journal' }}</h2>
             <Link href="/journal" class="rjp-all-link">
-            View all
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+                View all
+                <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
             </Link>
         </div>
 
@@ -33,15 +41,31 @@ defineProps<{
 
         <div class="rjp-list">
             <article v-for="post in posts" :key="post.slug" class="rjp-item">
-                <Link :href="`/journal/${post.slug}`" class="rjp-img-wrap" v-if="post.cover_image">
-                <img :src="post.cover_image" :alt="post.title" class="rjp-img" loading="lazy" />
+                <Link
+                    :href="`/journal/${post.slug}`"
+                    class="rjp-img-wrap"
+                    v-if="post.cover_image"
+                >
+                    <img
+                        :src="post.cover_image"
+                        :alt="post.title"
+                        class="rjp-img"
+                        loading="lazy"
+                    />
                 </Link>
                 <div class="rjp-body">
-                    <p class="rjp-meta">{{ post.published_at }} · {{ post.reading_time }} min read</p>
+                    <p class="rjp-meta">
+                        {{ post.published_at }} · {{ post.reading_time }} min
+                        read
+                    </p>
                     <h3 class="rjp-item-title">
-                        <Link :href="`/journal/${post.slug}`">{{ post.title }}</Link>
+                        <Link :href="`/journal/${post.slug}`">{{
+                            post.title
+                        }}</Link>
                     </h3>
-                    <p v-if="post.excerpt" class="rjp-excerpt">{{ post.excerpt }}</p>
+                    <p v-if="post.excerpt" class="rjp-excerpt">
+                        {{ post.excerpt }}
+                    </p>
                 </div>
             </article>
         </div>

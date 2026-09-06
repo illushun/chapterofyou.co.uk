@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { router } from '@inertiajs/vue3';
 
-const props = defineProps<{
+defineProps<{
     user: { name: string; email: string };
     alreadyOut?: boolean;
     confirmed?: boolean;
@@ -15,9 +15,13 @@ const seo = useSeoHead({ noIndex: true });
 
 // Hit the confirm route (POST to signed URL preserved in the current URL)
 const confirm = () => {
-    router.post(window.location.href.replace('/unsubscribe/', '/unsubscribe/confirm/'), {}, {
-        preserveUrl: true,
-    });
+    router.post(
+        window.location.href.replace('/unsubscribe/', '/unsubscribe/confirm/'),
+        {},
+        {
+            preserveUrl: true,
+        },
+    );
 };
 </script>
 
@@ -26,28 +30,39 @@ const confirm = () => {
 
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;1,400&family=Nunito:wght@400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="us">
         <div class="us-card">
-
             <!-- Already confirmed -->
             <template v-if="confirmed">
                 <div class="us-icon us-icon--done">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="M20 6 9 17l-5-5" />
                     </svg>
                 </div>
                 <h1 class="us-title">You're unsubscribed</h1>
                 <p class="us-body">
-                    <strong>{{ user.name }}</strong>, you've been removed from our marketing list. You won't receive any
-                    further broadcast emails.
+                    <strong>{{ user.name }}</strong
+                    >, you've been removed from our marketing list. You won't
+                    receive any further broadcast emails.
                 </p>
                 <p class="us-note">
-                    You can re-enable marketing emails at any time from your account settings.
+                    You can re-enable marketing emails at any time from your
+                    account settings.
                 </p>
                 <a href="/account" class="btn-rose">Go to Account Settings</a>
             </template>
@@ -55,15 +70,24 @@ const confirm = () => {
             <!-- Already opted out -->
             <template v-else-if="alreadyOut">
                 <div class="us-icon us-icon--info">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <circle cx="12" cy="12" r="10" />
                         <path d="M12 8v4M12 16h.01" />
                     </svg>
                 </div>
                 <h1 class="us-title">Already unsubscribed</h1>
                 <p class="us-body">
-                    <strong>{{ user.email }}</strong> is already opted out of marketing emails from Chapter of You.
+                    <strong>{{ user.email }}</strong> is already opted out of
+                    marketing emails from Chapter of You.
                 </p>
                 <a href="/" class="us-ghost-btn">Return to homepage</a>
             </template>
@@ -71,19 +95,32 @@ const confirm = () => {
             <!-- Confirm prompt -->
             <template v-else>
                 <div class="us-icon us-icon--warn">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path
+                            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                        />
                         <polyline points="22,6 12,13 2,6" />
                     </svg>
                 </div>
                 <h1 class="us-title">Unsubscribe from marketing emails?</h1>
                 <p class="us-body">
-                    You're about to remove <strong>{{ user.email }}</strong> from the Chapter of You marketing list.
-                    You'll no longer receive newsletters, promotions, or updates.
+                    You're about to remove
+                    <strong>{{ user.email }}</strong> from the Chapter of You
+                    marketing list. You'll no longer receive newsletters,
+                    promotions, or updates.
                 </p>
                 <p class="us-note">
-                    You'll still receive order confirmation and dispatch emails, this only affects marketing.
+                    You'll still receive order confirmation and dispatch emails,
+                    this only affects marketing.
                 </p>
                 <div class="us-actions">
                     <button @click="confirm" class="btn-rose">
@@ -92,7 +129,6 @@ const confirm = () => {
                     <a href="/" class="us-ghost-btn">No, keep me subscribed</a>
                 </div>
             </template>
-
         </div>
     </main>
 
@@ -220,7 +256,9 @@ const confirm = () => {
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
     cursor: pointer;
     width: 100%;
 }

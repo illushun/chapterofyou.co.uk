@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
-import { Head } from '@inertiajs/vue3';
+import NavBar from '@/components/NavBar.vue';
+
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 
 const seo = useSeoHead({
     title: 'Delivery Information',
-    description: 'Everything you need to know about delivery at Chapter of You. Orders dispatched within 2–3 working days with tracking included.',
+    description:
+        'Everything you need to know about delivery at Chapter of You. Orders dispatched within 2–3 working days with tracking included.',
     canonical: '/delivery',
 });
 </script>
@@ -16,13 +17,14 @@ const seo = useSeoHead({
     <NavBar />
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="dv">
         <div class="dv-wrap">
-
             <!-- ── Page header ── -->
             <header class="dv-header">
                 <p class="dv-eyebrow">Chapter of You</p>
@@ -36,46 +38,72 @@ const seo = useSeoHead({
 
             <!-- ── Content grid ── -->
             <div class="dv-grid">
-
                 <!-- Processing time -->
                 <div class="dv-card">
                     <div class="dv-card-icon">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <circle cx="12" cy="12" r="10" />
                             <polyline points="12 6 12 12 16 14" />
                         </svg>
                     </div>
                     <h2 class="dv-card-title">Processing Time</h2>
                     <p class="dv-card-body">
-                        I aim to prepare and dispatch all orders as quickly as possible. Orders are typically processed
-                        within
-                        <strong>2–3 working days</strong>. During busier periods, this may take slightly longer, I
-                        appreciate your patience.
+                        I aim to prepare and dispatch all orders as quickly as
+                        possible. Orders are typically processed within
+                        <strong>2–3 working days</strong>. During busier
+                        periods, this may take slightly longer, I appreciate
+                        your patience.
                     </p>
                 </div>
 
                 <!-- Dispatch & tracking -->
                 <div class="dv-card">
                     <div class="dv-card-icon">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="M22 2 11 13" />
                             <path d="M22 2 15 22 11 13 2 9l20-7z" />
                         </svg>
                     </div>
                     <h2 class="dv-card-title">Dispatch &amp; Tracking</h2>
                     <p class="dv-card-body">
-                        Once your order has been dispatched, you will receive a confirmation email with your
-                        <strong>tracking details</strong> so you can follow your package every step of the way.
+                        Once your order has been dispatched, you will receive a
+                        confirmation email with your
+                        <strong>tracking details</strong> so you can follow your
+                        package every step of the way.
                     </p>
                 </div>
 
                 <!-- Delivery times -->
                 <div class="dv-card">
                     <div class="dv-card-icon">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <rect x="1" y="3" width="15" height="13" rx="1" />
                             <path d="M16 8h4l3 3v5h-7V8z" />
                             <circle cx="5.5" cy="18.5" r="2.5" />
@@ -84,57 +112,89 @@ const seo = useSeoHead({
                     </div>
                     <h2 class="dv-card-title">Delivery Times</h2>
                     <p class="dv-card-body">
-                        Delivery times may vary depending on your location and the courier service used.
-                        Please allow additional time during <strong>peak periods</strong> or in the event of any
-                        unforeseen delays.
+                        Delivery times may vary depending on your location and
+                        the courier service used. Please allow additional time
+                        during <strong>peak periods</strong> or in the event of
+                        any unforeseen delays.
                     </p>
                 </div>
 
                 <!-- Free delivery threshold -->
                 <div class="dv-card dv-card--highlight">
                     <div class="dv-card-icon dv-card-icon--highlight">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path
-                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                            />
                         </svg>
                     </div>
                     <h2 class="dv-card-title">Free Delivery</h2>
                     <p class="dv-card-body">
-                        Enjoy <strong>free UK delivery</strong> on all orders over <strong>£50</strong>. A small treat
-                        to say thank you for choosing Chapter of You.
+                        Enjoy <strong>free UK delivery</strong> on all orders
+                        over <strong>£50</strong>. A small treat to say thank
+                        you for choosing Chapter of You.
                     </p>
                 </div>
-
             </div>
 
             <!-- ── Contact banner ── -->
             <div class="dv-contact">
                 <div class="dv-contact-inner">
                     <p class="dv-contact-petal" aria-hidden="true">✿</p>
-                    <h2 class="dv-contact-title">Questions about your order?</h2>
+                    <h2 class="dv-contact-title">
+                        Questions about your order?
+                    </h2>
                     <p class="dv-contact-body">
-                        I'm always happy to help. Feel free to get in touch and I'll get back to you as soon as
-                        possible.
+                        I'm always happy to help. Feel free to get in touch and
+                        I'll get back to you as soon as possible.
                     </p>
-                    <a href="mailto:contact@chapterofyou.co.uk" class="dv-contact-btn">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <a
+                        href="mailto:contact@chapterofyou.co.uk"
+                        class="dv-contact-btn"
+                    >
+                        <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path
+                                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                            />
                             <polyline points="22,6 12,13 2,6" />
                         </svg>
                         contact@chapterofyou.co.uk
                     </a>
                     <a :href="route('contact')" class="dv-contact-link">
                         Or use our contact form
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
                 </div>
             </div>
-
         </div>
     </main>
 
@@ -222,7 +282,9 @@ const seo = useSeoHead({
     padding: 1.75rem 1.5rem;
     position: relative;
     overflow: hidden;
-    transition: box-shadow 0.2s, transform 0.2s;
+    transition:
+        box-shadow 0.2s,
+        transform 0.2s;
 }
 
 .dv-card:hover {
@@ -276,7 +338,11 @@ const seo = useSeoHead({
 }
 
 .dv-card-icon--highlight {
-    background: linear-gradient(135deg, rgba(196, 112, 120, 0.15), rgba(168, 80, 88, 0.1));
+    background: linear-gradient(
+        135deg,
+        rgba(196, 112, 120, 0.15),
+        rgba(168, 80, 88, 0.1)
+    );
     border-color: #d4a0aa;
 }
 
@@ -381,7 +447,9 @@ const seo = useSeoHead({
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
     margin-top: 0.25rem;
 }
 

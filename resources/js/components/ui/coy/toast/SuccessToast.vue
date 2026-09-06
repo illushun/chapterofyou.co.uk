@@ -11,12 +11,8 @@ const isVisible = ref(false);
 const toast = ref<ToastData>({ message: '', icon: '', color: '' });
 let timeoutId: number | null = null;
 
-/**
- * Shows the toast with dynamic content.
- * @param message - The main success message.
- * @param type - 'cart' or 'favourite' to determine icon and color.
- */
-const show = (message: string, type: 'cart' | 'favourite') => {
+
+const show = (message: string, type: 'cart' | 'favourite' | 'check' | 'trash' | 'star') => {
   if (timeoutId) {
     clearTimeout(timeoutId);
   }
@@ -33,6 +29,8 @@ const show = (message: string, type: 'cart' | 'favourite') => {
       icon: '❤️',
       color: 'bg-red-600',
     };
+  } else {
+    toast.value = { message, icon: { check: '✓', trash: '✓', star: '★' }[type], color: 'bg-green-600' };
   }
 
   isVisible.value = true;

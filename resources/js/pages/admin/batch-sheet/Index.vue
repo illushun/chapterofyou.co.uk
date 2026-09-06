@@ -48,9 +48,7 @@ function deleteSheet(id: number) {
             <div>
                 <h1 class="adm-title">Batch Sheets</h1>
                 <p class="adm-sub">
-                    {{ sheets.total }} sheet{{
-                        sheets.total !== 1 ? 's' : ''
-                    }}
+                    {{ sheets.total }} sheet{{ sheets.total !== 1 ? 's' : '' }}
                     recorded
                 </p>
             </div>

@@ -1,23 +1,3 @@
-/*
- * ============================================================
- *  Chapter of You  Admin Design System  "Workshop Docket"
- *
- *  Import this once in app.css:
- *    @import './admin-design-system.css';
- *
- *  All admin pages inherit these tokens and utility classes.
- *  Page-specific layout classes go in <style scoped> per page,
- *  using a short prefix (pi-, ce-, rp-, etc.) and should reference
- *  the --adm-* tokens below rather than hardcoding colors.
- *
- *  Mood: a maker's production docket. Stone paper, charcoal ink,
- *  one vermillion "rubber stamp" accent. Instrument Serif for big
- *  display moments, IBM Plex Mono for everything functional (nav,
- *  labels, table data, buttons) so numbers and SKUs read like
- *  ledger entries.
- * ============================================================
- */
-
 /* Fonts */
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Instrument+Serif:ital@0;1&display=swap');
 
@@ -84,10 +64,6 @@
     font-family: var(--adm-font);
     box-sizing: border-box;
 }
-
-/* ── Reusable background textures ──
-   Applied from AdminLayout.vue (or any page shell) via these classes
-   rather than duplicating gradient strings everywhere. */
 .adm-bg-grain {
     background-color: var(--adm-paper);
     background-image:
@@ -109,11 +85,6 @@
     );
     background-size: 16px 16px;
 }
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   MOTION
-   One orchestrated cascade per page load, not scattered fades.
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @keyframes adm-rise {
     from {
         opacity: 0;
@@ -124,9 +95,6 @@
         transform: translateY(0);
     }
 }
-
-/* Direct children of the content well cascade in as one sequence,
-   so every admin page gets this for free  no per-page markup needed. */
 .al-content > * {
     animation: adm-rise 0.5s cubic-bezier(0.16, 0.8, 0.3, 1) both;
 }
@@ -169,9 +137,6 @@
 .adm-stats > .adm-stat:nth-child(n + 5) {
     animation-delay: 250ms;
 }
-
-/* Generic index-based stagger for lists an individual page wants finer
-   control over  set style="--i: 2" on each item. */
 .adm-stagger-item {
     opacity: 0;
     animation: adm-rise 0.4s cubic-bezier(0.16, 0.8, 0.3, 1) forwards;
@@ -187,11 +152,6 @@
         transform: none !important;
     }
 }
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   PAGE HEADER
-   Usage: <div class="adm-header"> ... </div>
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .adm-header {
     display: flex;
     align-items: flex-start;
@@ -240,9 +200,7 @@
     opacity: 0.5;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   CARDS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* CARDS */
 .adm-card {
     background: var(--adm-paper-raised);
     border-radius: var(--adm-radius-lg);
@@ -289,11 +247,6 @@
         top: 80px;
     }
 }
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BUTTONS
-   A short "stamp press" on activation instead of a generic hover-lift.
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .adm-btn {
     display: inline-flex;
     align-items: center;
@@ -435,9 +388,7 @@
     border-color: var(--adm-danger-line);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   FORM ELEMENTS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* FORM ELEMENTS */
 .adm-field {
     display: flex;
     flex-direction: column;
@@ -652,9 +603,7 @@
     opacity: 0.75;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   BADGES  rendered like ink-stamped status marks
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* BADGES  rendered like ink-stamped status marks */
 .adm-badge {
     display: inline-block;
     font-family: var(--adm-font);
@@ -721,9 +670,7 @@
     color: var(--adm-danger);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   TABLE
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* TABLE */
 .adm-table-wrap {
     overflow-x: auto;
     display: none;
@@ -815,9 +762,7 @@
     background: var(--adm-paper);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   THUMBNAIL
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* THUMBNAIL */
 .adm-thumb {
     width: 40px;
     height: 40px;
@@ -844,9 +789,7 @@
     color: var(--adm-ink-dim);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   PAGINATION
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* PAGINATION */
 .adm-pagination {
     display: flex;
     align-items: center;
@@ -901,9 +844,7 @@
     cursor: not-allowed;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   FLASH / ALERTS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* FLASH / ALERTS */
 .adm-flash {
     display: inline-flex;
     align-items: center;
@@ -949,12 +890,6 @@
     color: var(--adm-warning);
     font-weight: 500;
 }
-
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   STAT CARDS
-   Neutral by default; only the metric that matters most on a given
-   page should wear the accent  restraint over a rainbow of tiles.
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .adm-stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -1038,9 +973,7 @@
     color: rgba(250, 246, 236, 0.6);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   CHECK / RADIO LISTS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* CHECK / RADIO LISTS */
 .adm-check-list {
     display: flex;
     flex-direction: column;
@@ -1077,9 +1010,7 @@
     flex-shrink: 0;
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   EMPTY STATE
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* EMPTY STATE */
 .adm-empty {
     padding: 4rem 2rem;
     text-align: center;
@@ -1106,9 +1037,7 @@
     color: var(--adm-ink-dim);
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   GRID LAYOUTS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* GRID LAYOUTS */
 
 /* Standard two-column form layout */
 .adm-form-grid {
@@ -1143,9 +1072,7 @@
     }
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   SPINNER
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* SPINNER */
 .adm-spinner {
     width: 15px;
     height: 15px;
@@ -1161,9 +1088,7 @@
     }
 }
 
-/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   VUE TRANSITIONS
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* VUE TRANSITIONS */
 .adm-fade-enter-active,
 .adm-fade-leave-active {
     transition:

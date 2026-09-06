@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\Order;
-use App\Models\User;
 use App\Models\Voucher;
 use App\Models\VoucherUsage;
 use Illuminate\Support\Facades\Auth;
@@ -13,26 +12,22 @@ class VoucherService
 {
     // ── Validation ─────────────────────────────────────────────────────────────
 
-    /**
-     * Validate a voucher code against a cart and user context.
-     * Returns ['valid' => true, 'voucher' => Voucher, 'discount' => float]
-     * or      ['valid' => false, 'message' => string]
-     */
-    public function validate(string $code, Cart $cart, float $subtotal): array
+    public function validate(string $code, Cart $cart, float $subtotal, bool $lock = false): array
     {
         $voucher = Voucher::where('code', strtoupper(trim($code)))
             ->with('products')
+            ->when($lock, fn ($query) => $query->lockForUpdate())
             ->first();
 
-        if (!$voucher) {
+        if (! $voucher) {
             return $this->fail('This voucher code is invalid.');
         }
 
-        if (!$voucher->is_active) {
+        if (! $voucher->is_active) {
             return $this->fail('This voucher is no longer active.');
         }
 
-        if (!$voucher->hasStarted()) {
+        if (! $voucher->hasStarted()) {
             return $this->fail('This voucher is not yet valid.');
         }
 
@@ -46,14 +41,14 @@ class VoucherService
 
         if ($voucher->minimum_order_value !== null && $subtotal < $voucher->minimum_order_value) {
             return $this->fail(
-                'This voucher requires a minimum order value of £' . number_format($voucher->minimum_order_value, 2) . '.'
+                'This voucher requires a minimum order value of £'.number_format($voucher->minimum_order_value, 2).'.'
             );
         }
 
         $user = Auth::user();
 
         if ($voucher->new_customers_only) {
-            if (!$user) {
+            if (! $user) {
                 return $this->fail('This voucher is only available to registered new customers.');
             }
             $hasOrders = Order::where('user_id', $user->id)
@@ -81,29 +76,26 @@ class VoucherService
         }
 
         return [
-            'valid'    => true,
-            'voucher'  => $voucher,
+            'valid' => true,
+            'voucher' => $voucher,
             'discount' => round($discount, 2),
         ];
     }
 
     // ── Discount calculation ───────────────────────────────────────────────────
 
-    /**
-     * Calculate the actual £ discount to apply.
-     * If the voucher is product-restricted, only eligible line items count.
-     */
     public function calculateDiscount(Voucher $voucher, Cart $cart, float $subtotal): float
     {
         $applicableSubtotal = $subtotal;
 
-        if (!$voucher->applies_to_all_products && $voucher->products->isNotEmpty()) {
+        if (! $voucher->applies_to_all_products && $voucher->products->isNotEmpty()) {
             $restrictedProductIds = $voucher->products->pluck('id')->toArray();
 
             $applicableSubtotal = $cart->items->reduce(function (float $carry, $item) use ($restrictedProductIds) {
                 if (in_array($item->product_id, $restrictedProductIds)) {
                     $carry += ($item->product->cost ?? 0) * $item->quantity;
                 }
+
                 return $carry;
             }, 0.0);
         }
@@ -118,27 +110,23 @@ class VoucherService
 
     // ── Recording usage ────────────────────────────────────────────────────────
 
-    /**
-     * Record that a voucher was used on an order.
-     * Call this after the order is created.
-     */
     public function recordUsage(
         Voucher $voucher,
         Order $order,
         float $discountApplied,
         float $totalBefore,
         float $totalAfter,
-        string $ipAddress = null
+        ?string $ipAddress = null
     ): VoucherUsage {
         $usage = VoucherUsage::create([
-            'voucher_id'         => $voucher->id,
-            'user_id'            => $order->user_id,
-            'order_id'           => $order->id,
-            'guest_email'        => $order->user_id ? null : $order->email,
-            'discount_applied'   => $discountApplied,
+            'voucher_id' => $voucher->id,
+            'user_id' => $order->user_id,
+            'order_id' => $order->id,
+            'guest_email' => $order->user_id ? null : $order->email,
+            'discount_applied' => $discountApplied,
             'order_total_before' => $totalBefore,
-            'order_total_after'  => $totalAfter,
-            'ip_address'         => $ipAddress,
+            'order_total_after' => $totalAfter,
+            'ip_address' => $ipAddress,
         ]);
 
         // Increment usage counter atomically
@@ -149,33 +137,24 @@ class VoucherService
 
     // ── Session helpers ────────────────────────────────────────────────────────
 
-    /**
-     * Store applied voucher data in the session.
-     */
     public function applyToSession(Voucher $voucher, float $discount): void
     {
         session([
             'voucher' => [
-                'id'       => $voucher->id,
-                'code'     => $voucher->code,
+                'id' => $voucher->id,
+                'code' => $voucher->code,
                 'discount' => $discount,
-                'type'     => $voucher->type,
-                'value'    => $voucher->value,
-            ]
+                'type' => $voucher->type,
+                'value' => $voucher->value,
+            ],
         ]);
     }
 
-    /**
-     * Clear any applied voucher from the session.
-     */
     public function clearFromSession(): void
     {
         session()->forget('voucher');
     }
 
-    /**
-     * Get the currently applied voucher from session (or null).
-     */
     public function getFromSession(): ?array
     {
         return session('voucher');

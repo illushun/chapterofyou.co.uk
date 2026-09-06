@@ -2,18 +2,6 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Third Party Services
-    |--------------------------------------------------------------------------
-    |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
-    |
-    */
-
     'postmark' => [
         'token' => env('POSTMARK_TOKEN'),
     ],
@@ -49,13 +37,13 @@ return [
 
     'stripe' => [
         'secret' => env('STRIPE_SECRET'),
-        'key'    => env('VITE_STRIPE_KEY'),
+        'key' => env('VITE_STRIPE_KEY'),
     ],
 
     'etsy' => [
-        'client_id'           => env('ETSY_CLIENT_ID'),
-        'client_secret'       => env('ETSY_CLIENT_SECRET'),
-        'redirect'            => env('ETSY_REDIRECT_URI', '/admin/marketplace/etsy/callback'),
+        'client_id' => env('ETSY_CLIENT_ID'),
+        'client_secret' => env('ETSY_CLIENT_SECRET'),
+        'redirect' => env('ETSY_REDIRECT_URI', '/admin/marketplace/etsy/callback'),
         'default_taxonomy_id' => env('ETSY_DEFAULT_TAXONOMY_ID', 1622),
     ],
 

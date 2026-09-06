@@ -1,77 +1,122 @@
 <template>
     <div
-        class="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-6 sm:p-10 font-serif [overscroll-behavior-y:none]">
-
-        <div class="max-w-3xl w-full">
-
-            <header class="text-center mb-12">
-                <div class="flex justify-center mb-4">
-                    <div class="h-16 w-16 rounded-full flex items-center justify-center shadow-xl"
-                        style="background-color: #9A7AA0;">
-                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        class="flex min-h-screen flex-col items-center justify-center [overscroll-behavior-y:none] bg-gray-50 p-6 font-serif sm:p-10"
+    >
+        <div class="w-full max-w-3xl">
+            <header class="mb-12 text-center">
+                <div class="mb-4 flex justify-center">
+                    <div
+                        class="flex h-16 w-16 items-center justify-center rounded-full shadow-xl"
+                        style="background-color: #9a7aa0"
+                    >
+                        <svg
+                            class="h-8 w-8 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            ></path>
                         </svg>
                     </div>
                 </div>
-                <h1 class="text-5xl font-light tracking-wider uppercase" style="color: #524057;">
+                <h1
+                    class="text-5xl font-light tracking-wider uppercase"
+                    style="color: #524057"
+                >
                     Chapter Of You
                 </h1>
-                <p class="text-lg text-gray-500 mt-2 italic">
+                <p class="mt-2 text-lg text-gray-500 italic">
                     Your Chapter, Your Self-Care
                 </p>
             </header>
 
-            <main class="bg-white p-10 sm:p-16 rounded-xl shadow-2xl border-t-4 border-primary-accent">
-
+            <main
+                class="border-primary-accent rounded-xl border-t-4 bg-white p-10 shadow-2xl sm:p-16"
+            >
                 <div class="text-center">
-
-                    <p class="text-xl font-semibold mb-3" style="color: #9A7AA0;">
+                    <p
+                        class="mb-3 text-xl font-semibold"
+                        style="color: #9a7aa0"
+                    >
                         A Moment for Yourself
                     </p>
 
-                    <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-6 leading-snug">
+                    <h2
+                        class="mb-6 text-4xl leading-snug font-bold text-gray-900 sm:text-5xl"
+                    >
                         Stay tuned, we're turning the page.
                     </h2>
 
-                    <p class="text-gray-600 text-lg mb-10">
-                        Launching soon to offer bespoke tailored beauty treatments alongside our hand-crafted
-                        aromatherapy diffusers.
+                    <p class="mb-10 text-lg text-gray-600">
+                        Launching soon to offer bespoke tailored beauty
+                        treatments alongside our hand-crafted aromatherapy
+                        diffusers.
                     </p>
                 </div>
 
                 <div class="flex justify-center">
-                    <form class="w-full max-w-xl" @submit.prevent="submitWaitlist">
-                        <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 items-center">
-                            <input type="email" placeholder="Receive an email when our chapter opens" v-model="email"
+                    <form
+                        class="w-full max-w-xl"
+                        @submit.prevent="submitWaitlist"
+                    >
+                        <div
+                            class="flex flex-col items-center space-y-4 sm:flex-row sm:space-y-0 sm:space-x-4"
+                        >
+                            <input
+                                type="email"
+                                placeholder="Receive an email when our chapter opens"
+                                v-model="email"
                                 :disabled="isSubmitting"
-                                class="flex-1 w-full px-5 py-3 border border-gray-300 rounded-full shadow-md text-gray-700 placeholder:text-gray-400 transition duration-300 focus:ring-[#9A7AA0] focus:border-[#9A7AA0]"
-                                required>
-                            <button type="submit" :disabled="isSubmitting"
-                                class="w-full sm:w-auto px-8 py-3 text-white font-semibold rounded-full shadow-lg transition duration-300 ease-in-out transform hover:scale-105 hover:opacity-90"
-                                style="background-color: #9A7AA0;">
-                                {{ isSubmitting ? 'Subscribing...' : 'Join the Waitlist' }} </button>
+                                class="w-full flex-1 rounded-full border border-gray-300 px-5 py-3 text-gray-700 shadow-md transition duration-300 placeholder:text-gray-400 focus:border-[#9A7AA0] focus:ring-[#9A7AA0]"
+                                required
+                            />
+                            <button
+                                type="submit"
+                                :disabled="isSubmitting"
+                                class="w-full transform rounded-full px-8 py-3 font-semibold text-white shadow-lg transition duration-300 ease-in-out hover:scale-105 hover:opacity-90 sm:w-auto"
+                                style="background-color: #9a7aa0"
+                            >
+                                {{
+                                    isSubmitting
+                                        ? 'Subscribing...'
+                                        : 'Join the Waitlist'
+                                }}
+                            </button>
                         </div>
 
-                        <p v-if="message"
-                            :class="{ 'text-green-600': messageType === 'success', 'text-red-600': messageType === 'error' }"
-                            class="mt-4 text-sm font-medium">
+                        <p
+                            v-if="message"
+                            :class="{
+                                'text-green-600': messageType === 'success',
+                                'text-red-600': messageType === 'error',
+                            }"
+                            class="mt-4 text-sm font-medium"
+                        >
                             {{ message }}
                         </p>
-
                     </form>
                 </div>
             </main>
 
-            <footer class="mt-12 text-center text-gray-500 text-sm">
-                <p>&copy; {{ new Date().getFullYear() }} Chapter Of You. All Rights Reserved.</p>
+            <footer class="mt-12 text-center text-sm text-gray-500">
+                <p>
+                    &copy; {{ new Date().getFullYear() }} Chapter Of You. All
+                    Rights Reserved.
+                </p>
                 <p class="mt-1">
-                    <a href="mailto:contact@chapterofyou.co.uk"
-                        class="hover:text-primary-accent transition duration-200">contact@chapterofyou.co.uk</a>
+                    <a
+                        href="mailto:contact@chapterofyou.co.uk"
+                        class="hover:text-primary-accent transition duration-200"
+                        >contact@chapterofyou.co.uk</a
+                    >
                 </p>
             </footer>
-
         </div>
     </div>
 </template>
@@ -85,14 +130,11 @@ const message = ref('');
 const messageType = ref<'success' | 'error' | ''>('');
 const isSubmitting = ref(false);
 
-/**
- * Function to get the CSRF token from the meta tag.
- * Throws an error if the token is not found.
- * @returns The CSRF token string.
- */
 const getCsrfToken = (): string => {
     // Explicitly define the type as HTMLMetaElement | null
-    const metaTag: HTMLMetaElement | null = document.head.querySelector('meta[name="csrf-token"]');
+    const metaTag: HTMLMetaElement | null = document.head.querySelector(
+        'meta[name="csrf-token"]',
+    );
 
     // Type narrowing: ensure metaTag is not null before accessing its content
     if (metaTag && metaTag.content) {
@@ -100,7 +142,7 @@ const getCsrfToken = (): string => {
     }
 
     // Throw an error if the token is critical but missing
-    throw new Error("CSRF token meta tag not found or content is empty.");
+    throw new Error('CSRF token meta tag not found or content is empty.');
 };
 
 // Interface for the expected structure of a validation error response from Laravel
@@ -136,18 +178,21 @@ const submitWaitlist = async () => {
                 'X-Requested-With': 'XMLHttpRequest',
             },
             body: JSON.stringify({
-                email: email.value
-            })
+                email: email.value,
+            }),
         });
 
         // The response data can be either the validation error type or the generic response type
-        const data: GenericResponse | LaravelValidationErrorResponse = await response.json();
+        const data: GenericResponse | LaravelValidationErrorResponse =
+            await response.json();
 
         if (response.ok) {
             // Handle success (status 200 or 201)
             // Type assertion to treat it as GenericResponse for easier access, though it's technically already in data
             const successData = data as GenericResponse;
-            message.value = successData.message || 'Thank you! You have been added to the waitlist.';
+            message.value =
+                successData.message ||
+                'Thank you! You have been added to the waitlist.';
             messageType.value = 'success';
             email.value = ''; // Clear the input field
         } else if (response.status === 422) {
@@ -157,20 +202,22 @@ const submitWaitlist = async () => {
             const validationErrors = errorData.errors?.email;
 
             // Use the first validation error if it exists, otherwise a generic one
-            message.value = validationErrors ? validationErrors[0] : 'Please enter a valid email address.';
+            message.value = validationErrors
+                ? validationErrors[0]
+                : 'Please enter a valid email address.';
             messageType.value = 'error';
         } else {
             // Handle other HTTP errors (e.g., 500, 404)
-            message.value = 'An unexpected server error occurred. Please try again.';
+            message.value =
+                'An unexpected server error occurred. Please try again.';
             messageType.value = 'error';
         }
-
     } catch (error) {
         // Explicitly define 'error' as 'unknown' and use type checks/assertions
-        console.error("Fetch error:", error);
+        console.error('Fetch error:', error);
 
         // Provide a meaningful message if the CSRF token was missing
-        if (error instanceof Error && error.message.includes("CSRF token")) {
+        if (error instanceof Error && error.message.includes('CSRF token')) {
             message.value = error.message;
         } else {
             message.value = 'Could not connect to the server.';
@@ -184,10 +231,8 @@ const submitWaitlist = async () => {
 </script>
 
 <style scoped>
-/* Define a CSS variable and a custom class for the border/hover effects
-   This helps keep the color consistent in the CSS block */
 :root {
-    --primary-color: #9A7AA0;
+    --primary-color: #9a7aa0;
     --dark-primary-color: #8c6e94;
     /* A slightly darker shade for hover/shadows */
 }

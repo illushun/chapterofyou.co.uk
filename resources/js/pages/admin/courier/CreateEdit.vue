@@ -32,8 +32,6 @@ const submitLabel = computed(() =>
 );
 
 const submit = () => {
-    form.data().cost = parseFloat(form.cost);
-
     if (props.isEditing && props.courier) {
         form.transform((data) => ({ ...data, _method: 'put' })).post(
             route('admin.couriers.update', props.courier.id),

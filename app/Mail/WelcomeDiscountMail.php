@@ -18,7 +18,7 @@ class WelcomeDiscountMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your 10% off code — Chapter of You ✦',
+            subject: 'Your 10% off code - Chapter of You ✦',
         );
     }
 

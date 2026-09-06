@@ -28,10 +28,10 @@ class BatchSheet extends Model
     ];
 
     protected $casts = [
-        'ingredients'              => 'array',
+        'ingredients' => 'array',
         'ifra_certificate_checked' => 'boolean',
-        'clp_label_prepared'       => 'boolean',
-        'date_of_manufacture'      => 'date',
+        'clp_label_prepared' => 'boolean',
+        'date_of_manufacture' => 'date',
     ];
 
     public function order(): BelongsTo

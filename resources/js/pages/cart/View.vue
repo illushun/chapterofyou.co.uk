@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { router, usePage } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
 
 interface CartItem {
     id: number;
@@ -30,8 +30,12 @@ const props = defineProps<{
 
 const seo = useSeoHead({ noIndex: true });
 
-const hasItems = computed(() => props.cartItems.length > 0 || !!props.giftVoucher);
-const itemCount = computed(() => props.cartItems.reduce((s, i) => s + Number(i.quantity), 0));
+const hasItems = computed(
+    () => props.cartItems.length > 0 || !!props.giftVoucher,
+);
+const itemCount = computed(() =>
+    props.cartItems.reduce((s, i) => s + Number(i.quantity), 0),
+);
 const n = (v: unknown) => Number(v) || 0;
 const fmt = (v: unknown) => `£${n(v).toFixed(2)}`;
 
@@ -44,15 +48,24 @@ const pending = ref<Record<number, boolean>>({});
 const removing = ref<Record<number, boolean>>({});
 
 const updateQty = (productId: number, qty: number) => {
-    const item = props.cartItems.find(i => i.product_id === productId);
+    const item = props.cartItems.find((i) => i.product_id === productId);
     if (!item) return;
-    if (qty < 1) { remove(productId); return; }
+    if (qty < 1) {
+        remove(productId);
+        return;
+    }
     qty = Math.min(qty, item.stock_qty);
     pending.value[productId] = true;
-    router.put(`/cart/update/${productId}`, { quantity: qty }, {
-        preserveScroll: true, preserveState: true, replace: true,
-        onFinish: () => delete pending.value[productId],
-    });
+    router.put(
+        `/cart/update/${productId}`,
+        { quantity: qty },
+        {
+            preserveScroll: true,
+            preserveState: true,
+            replace: true,
+            onFinish: () => delete pending.value[productId],
+        },
+    );
 };
 
 const remove = (productId: number) => {
@@ -66,13 +79,19 @@ const remove = (productId: number) => {
 const removingGiftVoucher = ref(false);
 const removeGiftVoucher = () => {
     removingGiftVoucher.value = true;
-    router.post(route('gift-vouchers.remove-from-cart'), {}, {
-        preserveScroll: true,
-        onFinish: () => { removingGiftVoucher.value = false; },
-    });
+    router.post(
+        route('gift-vouchers.remove-from-cart'),
+        {},
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                removingGiftVoucher.value = false;
+            },
+        },
+    );
 };
 
-const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
+const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 </script>
 
 <template>
@@ -80,27 +99,36 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="cp">
-
         <div class="cp-wrap">
-
             <!-- ── Header ── -->
             <header class="cp-head">
                 <div class="cp-head-left">
-
                     <div>
                         <h1 class="cp-title">
                             Your Basket
-                            <span v-if="hasItems" class="item-badge">{{ itemCount }} {{ itemCount === 1 ? 'item' :
-                                'items' }}</span>
+                            <span v-if="hasItems" class="item-badge"
+                                >{{ itemCount }}
+                                {{ itemCount === 1 ? 'item' : 'items' }}</span
+                            >
                         </h1>
                         <a href="/products" class="cp-back">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg
+                                width="13"
+                                height="13"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
                                 <path d="m15 18-6-6 6-6" />
                             </svg>
                             Continue shopping
@@ -111,36 +139,49 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                 <div v-if="hasItems" class="ship-nudge">
                     <p class="ship-text">
                         <span v-if="freeShip">Free shipping unlocked!</span>
-                        <span v-else>Add <em>{{ fmt(remaining) }}</em> more for free shipping</span>
+                        <span v-else
+                            >Add <em>{{ fmt(remaining) }}</em> more for free
+                            shipping</span
+                        >
                     </p>
                     <div class="ship-track">
-                        <div class="ship-fill" :style="{ width: progress + '%' }">
-
-                        </div>
+                        <div
+                            class="ship-fill"
+                            :style="{ width: progress + '%' }"
+                        ></div>
                     </div>
                 </div>
             </header>
 
             <!-- ── Grid ── -->
             <div class="cp-grid">
-
                 <!-- Items column -->
                 <section class="cp-items">
-
                     <!-- Empty state -->
                     <div v-if="!hasItems" class="cp-empty">
-
                         <h2>Your basket is empty</h2>
-                        <p>Nothing here yet, let's find you something lovely.</p>
-                        <a href="/products" class="btn-rose">Browse the collection</a>
+                        <p>
+                            Nothing here yet, let's find you something lovely.
+                        </p>
+                        <a href="/products" class="btn-rose"
+                            >Browse the collection</a
+                        >
                     </div>
 
-                    <TransitionGroup v-else name="card" tag="div" class="card-list">
-                        <div v-for="item in cartItems" :key="item.product_id" class="item-card"
-                            :class="{ 'item-card--out': removing[item.product_id] }">
-
-
-
+                    <TransitionGroup
+                        v-else
+                        name="card"
+                        tag="div"
+                        class="card-list"
+                    >
+                        <div
+                            v-for="item in cartItems"
+                            :key="item.product_id"
+                            class="item-card"
+                            :class="{
+                                'item-card--out': removing[item.product_id],
+                            }"
+                        >
                             <div class="ci-img">
                                 <img :src="item.image_url" :alt="item.name" />
                             </div>
@@ -149,66 +190,154 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                                 <div class="ci-top">
                                     <div>
                                         <h2 class="ci-name">{{ item.name }}</h2>
-                                        <p class="ci-unit">{{ fmt(item.cost) }} each</p>
+                                        <p class="ci-unit">
+                                            {{ fmt(item.cost) }} each
+                                        </p>
                                     </div>
-                                    <button @click="remove(item.product_id)" :disabled="removing[item.product_id]"
-                                        class="ci-remove" :aria-label="`Remove ${item.name}`">
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <button
+                                        @click="remove(item.product_id)"
+                                        :disabled="removing[item.product_id]"
+                                        class="ci-remove"
+                                        :aria-label="`Remove ${item.name}`"
+                                    >
+                                        <svg
+                                            width="11"
+                                            height="11"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2.5"
+                                            stroke-linecap="round"
+                                        >
                                             <path d="M18 6 6 18M6 6l12 12" />
                                         </svg>
                                     </button>
                                 </div>
 
                                 <div class="ci-bottom">
-                                    <div class="qty-wrap" :class="{ 'qty-wrap--busy': pending[item.product_id] }">
-                                        <button class="qty-btn" @click="updateQty(item.product_id, item.quantity - 1)"
-                                            :disabled="item.quantity <= 1 || !!pending[item.product_id]"
-                                            aria-label="Decrease">
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                                    <div
+                                        class="qty-wrap"
+                                        :class="{
+                                            'qty-wrap--busy':
+                                                pending[item.product_id],
+                                        }"
+                                    >
+                                        <button
+                                            class="qty-btn"
+                                            @click="
+                                                updateQty(
+                                                    item.product_id,
+                                                    item.quantity - 1,
+                                                )
+                                            "
+                                            :disabled="
+                                                item.quantity <= 1 ||
+                                                !!pending[item.product_id]
+                                            "
+                                            aria-label="Decrease"
+                                        >
+                                            <svg
+                                                width="10"
+                                                height="10"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="3"
+                                                stroke-linecap="round"
+                                            >
                                                 <path d="M5 12h14" />
                                             </svg>
                                         </button>
-                                        <span class="qty-num">{{ item.quantity }}</span>
-                                        <button class="qty-btn" @click="updateQty(item.product_id, item.quantity + 1)"
-                                            :disabled="item.quantity >= item.stock_qty || !!pending[item.product_id]"
-                                            aria-label="Increase">
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="3" stroke-linecap="round">
+                                        <span class="qty-num">{{
+                                            item.quantity
+                                        }}</span>
+                                        <button
+                                            class="qty-btn"
+                                            @click="
+                                                updateQty(
+                                                    item.product_id,
+                                                    item.quantity + 1,
+                                                )
+                                            "
+                                            :disabled="
+                                                item.quantity >=
+                                                    item.stock_qty ||
+                                                !!pending[item.product_id]
+                                            "
+                                            aria-label="Increase"
+                                        >
+                                            <svg
+                                                width="10"
+                                                height="10"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="3"
+                                                stroke-linecap="round"
+                                            >
                                                 <path d="M5 12h14" />
                                                 <path d="M12 5v14" />
                                             </svg>
                                         </button>
                                     </div>
-                                    <p class="ci-line-total">{{ fmt(n(item.cost) * n(item.quantity)) }}</p>
+                                    <p class="ci-line-total">
+                                        {{
+                                            fmt(n(item.cost) * n(item.quantity))
+                                        }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
-                        <div v-if="giftVoucher" key="gift-voucher" class="item-card gv-cart-card">
-                            <div class="gv-cart-icon" aria-hidden="true">🎁</div>
+                        <div
+                            v-if="giftVoucher"
+                            key="gift-voucher"
+                            class="item-card gv-cart-card"
+                        >
+                            <div class="gv-cart-icon" aria-hidden="true">
+                                🎁
+                            </div>
                             <div class="ci-body">
                                 <div class="ci-top">
                                     <div>
                                         <h2 class="ci-name">Gift Voucher</h2>
                                         <p class="ci-unit">
-                                            {{ giftVoucher.delivery_type === 'email' ? 'E-Voucher' : 'Physical Voucher'
+                                            {{
+                                                giftVoucher.delivery_type ===
+                                                'email'
+                                                    ? 'E-Voucher'
+                                                    : 'Physical Voucher'
                                             }}
-                                            · For: {{ giftVoucher.recipient_name }}
+                                            · For:
+                                            {{ giftVoucher.recipient_name }}
                                         </p>
                                     </div>
-                                    <button @click="removeGiftVoucher" :disabled="removingGiftVoucher" class="ci-remove"
-                                        aria-label="Remove gift voucher">
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <button
+                                        @click="removeGiftVoucher"
+                                        :disabled="removingGiftVoucher"
+                                        class="ci-remove"
+                                        aria-label="Remove gift voucher"
+                                    >
+                                        <svg
+                                            width="11"
+                                            height="11"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="2.5"
+                                            stroke-linecap="round"
+                                        >
                                             <path d="M18 6 6 18M6 6l12 12" />
                                         </svg>
                                     </button>
                                 </div>
                                 <div class="ci-bottom">
-                                    <span class="gv-cart-badge">Valid 1 year · All products</span>
-                                    <p class="ci-line-total">{{ fmt(giftVoucher.amount) }}</p>
+                                    <span class="gv-cart-badge"
+                                        >Valid 1 year · All products</span
+                                    >
+                                    <p class="ci-line-total">
+                                        {{ fmt(giftVoucher.amount) }}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -218,17 +347,65 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                 <!-- Summary sidebar -->
                 <aside v-if="hasItems" class="cp-summary">
                     <div class="sum-card">
-
                         <div class="sum-floral" aria-hidden="true">
-                            <svg viewBox="0 0 200 36" xmlns="http://www.w3.org/2000/svg" fill="none">
-                                <circle cx="100" cy="18" r="5" fill="#a85058" opacity=".4" />
-                                <circle cx="80" cy="18" r="3" fill="#a85058" opacity=".25" />
-                                <circle cx="120" cy="18" r="3" fill="#a85058" opacity=".25" />
-                                <circle cx="62" cy="18" r="2" fill="#a85058" opacity=".18" />
-                                <circle cx="138" cy="18" r="2" fill="#a85058" opacity=".18" />
-                                <line x1="0" y1="18" x2="56" y2="18" stroke="#a85058" stroke-width="0.8" opacity=".3" />
-                                <line x1="144" y1="18" x2="200" y2="18" stroke="#a85058" stroke-width="0.8"
-                                    opacity=".3" />
+                            <svg
+                                viewBox="0 0 200 36"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                            >
+                                <circle
+                                    cx="100"
+                                    cy="18"
+                                    r="5"
+                                    fill="#a85058"
+                                    opacity=".4"
+                                />
+                                <circle
+                                    cx="80"
+                                    cy="18"
+                                    r="3"
+                                    fill="#a85058"
+                                    opacity=".25"
+                                />
+                                <circle
+                                    cx="120"
+                                    cy="18"
+                                    r="3"
+                                    fill="#a85058"
+                                    opacity=".25"
+                                />
+                                <circle
+                                    cx="62"
+                                    cy="18"
+                                    r="2"
+                                    fill="#a85058"
+                                    opacity=".18"
+                                />
+                                <circle
+                                    cx="138"
+                                    cy="18"
+                                    r="2"
+                                    fill="#a85058"
+                                    opacity=".18"
+                                />
+                                <line
+                                    x1="0"
+                                    y1="18"
+                                    x2="56"
+                                    y2="18"
+                                    stroke="#a85058"
+                                    stroke-width="0.8"
+                                    opacity=".3"
+                                />
+                                <line
+                                    x1="144"
+                                    y1="18"
+                                    x2="200"
+                                    y2="18"
+                                    stroke="#a85058"
+                                    stroke-width="0.8"
+                                    opacity=".3"
+                                />
                             </svg>
                         </div>
 
@@ -255,32 +432,52 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 
                         <div class="sum-total-row">
                             <span class="sum-total-label">Total</span>
-                            <span class="sum-total-val">{{ fmt(finalTotal) }}</span>
+                            <span class="sum-total-val">{{
+                                fmt(finalTotal)
+                            }}</span>
                         </div>
 
                         <a href="/checkout" class="btn-checkout">
                             Checkout
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round">
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                            >
                                 <path d="M5 12h14" />
                                 <path d="m12 5 7 7-7 7" />
                             </svg>
                         </a>
 
                         <p class="sum-secure">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                            <svg
+                                width="10"
+                                height="10"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            >
+                                <rect
+                                    x="3"
+                                    y="11"
+                                    width="18"
+                                    height="11"
+                                    rx="2"
+                                />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
                             Secure checkout · Stripe
                         </p>
                     </div>
                 </aside>
-
             </div>
         </div>
-
     </main>
 
     <Footer />
@@ -294,7 +491,6 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     background: #fdf4f3;
     color: #2d1a1a;
 }
-
 
 .cp-wrap {
     max-width: 1060px;
@@ -391,7 +587,7 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     height: 100%;
     background: linear-gradient(90deg, #e8a4a8, #c9747a);
     border-radius: 999px;
-    transition: width 0.6s cubic-bezier(.34, 1.56, .64, 1);
+    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     position: relative;
 }
 
@@ -462,7 +658,10 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     background: #fffafa;
     box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
     position: relative;
-    transition: box-shadow 0.25s, transform 0.25s, opacity 0.3s;
+    transition:
+        box-shadow 0.25s,
+        transform 0.25s,
+        opacity 0.3s;
     overflow: hidden;
 }
 
@@ -501,7 +700,6 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     opacity: 0.35;
     pointer-events: none;
 }
-
 
 .ci-img {
     width: 82px;
@@ -566,7 +764,10 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    transition:
+        background 0.2s,
+        color 0.2s,
+        border-color 0.2s;
 }
 
 .ci-remove:hover {
@@ -743,7 +944,9 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     letter-spacing: 0.04em;
     text-decoration: none;
     box-shadow: 0 4px 18px rgba(168, 80, 88, 0.22);
-    transition: box-shadow 0.25s, transform 0.25s;
+    transition:
+        box-shadow 0.25s,
+        transform 0.25s;
 }
 
 .btn-checkout:hover {
@@ -765,7 +968,9 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 14px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 }
 
 .btn-rose:hover {
@@ -786,11 +991,15 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 
 /* Transitions */
 .card-enter-active {
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    transition:
+        opacity 0.4s ease,
+        transform 0.4s ease;
 }
 
 .card-leave-active {
-    transition: opacity 0.28s ease, transform 0.28s ease;
+    transition:
+        opacity 0.28s ease,
+        transform 0.28s ease;
 }
 
 .card-enter-from {

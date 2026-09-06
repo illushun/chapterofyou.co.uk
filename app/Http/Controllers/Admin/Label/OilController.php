@@ -7,31 +7,29 @@ use App\Models\Oil;
 use App\Models\OilComponent;
 use App\Models\OilHazard;
 use App\Models\SDSDocument;
-use App\Services\CLP\CLPCalculator;
 use App\Services\CLP\SdsParser;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
-use App\Models\Product;
-use App\Models\Label\CLP as CLPLabel;
 
 class OilController extends Controller
 {
     public function index()
     {
         $oils = Oil::with(['sdsdocuments', 'hazards', 'components'])->latest()->get();
+
         return Inertia::render('admin/label/oil/Index', compact('oils'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'name'        => 'required|string',
-            'supplier'    => 'nullable|string',
+            'name' => 'required|string',
+            'supplier' => 'nullable|string',
             'cas_primary' => 'nullable|string',
         ]);
 
         Oil::create($request->only('name', 'supplier', 'cas_primary'));
+
         return back()->with('success', 'Oil created.');
     }
 
@@ -50,17 +48,17 @@ class OilController extends Controller
         $path = $file->store("sds/{$oil->id}", 'local');
 
         $doc = SDSDocument::create([
-            'oil_id'        => $oil->id,
-            'file_path'     => $path,
+            'oil_id' => $oil->id,
+            'file_path' => $path,
             'document_hash' => $hash,
-            'parsed'        => false,
+            'parsed' => false,
         ]);
 
         // Parse immediately (in production, dispatch a job instead)
         try {
             $parser->parse($doc);
         } catch (\Exception $e) {
-            logger()->error('SDS parse failed: ' . $e->getMessage());
+            logger()->error('SDS parse failed: '.$e->getMessage());
         }
 
         return back()->with('success', 'SDS uploaded and parsed.');
@@ -75,6 +73,7 @@ class OilController extends Controller
             'signal_word',
             'pictogram'
         ));
+
         return back()->with('success', 'Hazard updated.');
     }
 
@@ -84,6 +83,7 @@ class OilController extends Controller
             $request->only('hazard_code', 'hazard_class', 'category', 'signal_word', 'pictogram'),
             ['oil_id' => $oil->id]
         ));
+
         return back()->with('success', 'Hazard added.');
     }
 
@@ -91,6 +91,7 @@ class OilController extends Controller
     {
         abort_if($hazard->oil_id !== $oil->id, 403);
         $hazard->delete();
+
         return response()->json(['success' => true]);
     }
 
@@ -98,6 +99,7 @@ class OilController extends Controller
     {
         abort_if($component->oil_id !== $oil->id, 403);
         $component->delete();
+
         return response()->json(['success' => true]);
     }
 }

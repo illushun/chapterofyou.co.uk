@@ -1,19 +1,4 @@
 <script setup lang="ts">
-/**
- * SeoHead — drop-in SEO <Head> block for every page.
- *
- * Usage in any page:
- *
- *   import SeoHead from '@/components/SeoHead.vue';
- *
- *   // In <script setup>:
- *   const seo = useSeoHead({ title: 'Products', description: '...', canonical: '/products' });
- *
- *   // In <template>:
- *   <SeoHead v-bind="seo" />
- *
- * That's it. No need to write out all 12 meta tags on every page.
- */
 import { Head } from '@inertiajs/vue3';
 
 defineProps<{
@@ -28,7 +13,6 @@ defineProps<{
 </script>
 
 <template>
-
     <Head>
         <title>{{ title }}</title>
         <meta name="description" :content="description" />

@@ -5,14 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ContactMessage;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class AdminMessageController extends Controller
 {
-    /**
-     * Display a listing of messages.
-     */
     public function index(Request $request)
     {
         $messages = ContactMessage::query()
@@ -25,9 +21,6 @@ class AdminMessageController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified message.
-     */
     public function show(ContactMessage $message)
     {
         return Inertia::render('admin/message/Show', [

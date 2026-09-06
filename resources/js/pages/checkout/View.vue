@@ -1,52 +1,75 @@
 <script setup lang="ts">
-import { Head, router, useForm, usePage } from '@inertiajs/vue3';
-import { onMounted, ref, computed, nextTick } from 'vue';
-import axios from 'axios';
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { router, useForm, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { computed, nextTick, onMounted, ref } from 'vue';
 
 declare const Stripe: any;
 declare const route: any;
 
 const getRoute = (name: string, params: any = {}, absolute: boolean = true) => {
-    if (typeof window.route === 'function') return window.route(name, params, absolute);
+    if (typeof window.route === 'function')
+        return window.route(name, params, absolute);
     return `/${name}`;
 };
 
-const loadStripeScript = (): Promise<void> => new Promise((resolve) => {
-    if (typeof Stripe !== 'undefined') return resolve();
-    const scriptId = 'stripe-script';
-    let script = document.getElementById(scriptId) as HTMLScriptElement;
-    if (script) { script.onload = () => resolve(); }
-    else {
-        script = document.createElement('script');
-        script.src = 'https://js.stripe.com/v3/';
-        script.id = scriptId;
-        script.onload = () => resolve();
-        document.head.appendChild(script);
-    }
-});
+const loadStripeScript = (): Promise<void> =>
+    new Promise((resolve) => {
+        if (typeof Stripe !== 'undefined') return resolve();
+        const scriptId = 'stripe-script';
+        let script = document.getElementById(scriptId) as HTMLScriptElement;
+        if (script) {
+            script.onload = () => resolve();
+        } else {
+            script = document.createElement('script');
+            script.src = 'https://js.stripe.com/v3/';
+            script.id = scriptId;
+            script.onload = () => resolve();
+            document.head.appendChild(script);
+        }
+    });
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface CartItem {
-    id: number; product_id: number;
-    product: { name: string; cost: number; image_url: string; }
+    id: number;
+    product_id: number;
+    product: { name: string; cost: number; image_url: string };
     quantity: number;
 }
-interface Summary { subtotal: number; vat_component: number; shipping: number; total: number; voucher_discount: number; }
+interface Summary {
+    subtotal: number;
+    vat_component: number;
+    shipping: number;
+    total: number;
+    voucher_discount: number;
+}
 interface Address {
-    id: number; user_id: number; type: string; is_default: boolean;
-    line_1: string; line_2: string; city: string; county: string; postcode: string; country: string;
+    id: number;
+    user_id: number;
+    type: string;
+    is_default: boolean;
+    line_1: string;
+    line_2: string;
+    city: string;
+    county: string;
+    postcode: string;
+    country: string;
 }
 
 const props = defineProps<{
     cartItems: CartItem[];
     summary: Summary;
     addresses: Address[];
-    appliedVoucher: { code: string; discount: number; type: string; value: number } | null;
+    appliedVoucher: {
+        code: string;
+        discount: number;
+        type: string;
+        value: number;
+    } | null;
     isGuest: boolean;
     giftVoucher: {
         amount: number;
@@ -72,26 +95,42 @@ const voucherSuccess = ref<string | null>(null);
 const activeVoucher = ref(props.appliedVoucher ?? null);
 
 const voucherDiscount = computed(() => activeVoucher.value?.discount ?? 0);
-const computedTotal = computed(() =>
-    Math.max(0, Number(props.summary.subtotal) - voucherDiscount.value) + (Number(props.summary.shipping) || 0)
+const computedTotal = computed(
+    () =>
+        Math.max(0, Number(props.summary.subtotal) - voucherDiscount.value) +
+        (Number(props.summary.shipping) || 0),
 );
 
 async function applyVoucher() {
     if (!voucherCode.value.trim()) return;
-    voucherLoading.value = true; voucherError.value = null; voucherSuccess.value = null;
+    voucherLoading.value = true;
+    voucherError.value = null;
+    voucherSuccess.value = null;
     try {
-        const { data } = await axios.post(route('checkout.voucher.apply'), { code: voucherCode.value.trim() });
-        activeVoucher.value = data; voucherSuccess.value = data.message; voucherCode.value = '';
+        const { data } = await axios.post(route('checkout.voucher.apply'), {
+            code: voucherCode.value.trim(),
+        });
+        activeVoucher.value = data;
+        voucherSuccess.value = data.message;
+        voucherCode.value = '';
         await initializeStripe();
     } catch (err: any) {
         const r = err.response;
-        voucherError.value = r?.data?.error || r?.data?.errors?.code?.[0] || r?.data?.message || `Server error (${r?.status ?? 'unknown'}).`;
-    } finally { voucherLoading.value = false; }
+        voucherError.value =
+            r?.data?.error ||
+            r?.data?.errors?.code?.[0] ||
+            r?.data?.message ||
+            `Server error (${r?.status ?? 'unknown'}).`;
+    } finally {
+        voucherLoading.value = false;
+    }
 }
 
 async function removeVoucher() {
     await axios.post(route('checkout.voucher.remove'));
-    activeVoucher.value = null; voucherSuccess.value = null; voucherError.value = null;
+    activeVoucher.value = null;
+    voucherSuccess.value = null;
+    voucherError.value = null;
     await initializeStripe();
 }
 
@@ -103,17 +142,34 @@ const clientSecret = ref('');
 const paymentIntentId = ref('');
 
 const addressForm = useForm({
-    email: '', fullName: '', telephone: '',
-    addressLine1: '', addressLine2: '',
-    city: '', county: '', postcode: '', country: 'United Kingdom',
+    email: '',
+    fullName: '',
+    telephone: '',
+    addressLine1: '',
+    addressLine2: '',
+    city: '',
+    county: '',
+    postcode: '',
+    country: 'United Kingdom',
     saveInfo: false,
 });
 
 const formatAddress = (address: Address): string[] =>
-    [address.line_1, address.line_2, address.city, address.county, address.postcode, address.country].filter(Boolean);
+    [
+        address.line_1,
+        address.line_2,
+        address.city,
+        address.county,
+        address.postcode,
+        address.country,
+    ].filter(Boolean);
 
-const hasItems = computed(() => props.cartItems.length > 0 || !!props.giftVoucher);
-const isShippingAddressVisible = computed(() => selectedAddressId.value !== null || isManualAddressVisible.value);
+const hasItems = computed(
+    () => props.cartItems.length > 0 || !!props.giftVoucher,
+);
+const isShippingAddressVisible = computed(
+    () => selectedAddressId.value !== null || isManualAddressVisible.value,
+);
 
 const fmt = (amount: number | string): string => {
     const n = Number(amount);
@@ -122,17 +178,23 @@ const fmt = (amount: number | string): string => {
 
 const selectAddress = (address: Address) => {
     selectedAddressId.value = address.id;
-    addressForm.addressLine1 = address.line_1; addressForm.addressLine2 = address.line_2;
-    addressForm.city = address.city; addressForm.county = address.county;
-    addressForm.postcode = address.postcode; addressForm.country = address.country;
+    addressForm.addressLine1 = address.line_1;
+    addressForm.addressLine2 = address.line_2;
+    addressForm.city = address.city;
+    addressForm.county = address.county;
+    addressForm.postcode = address.postcode;
+    addressForm.country = address.country;
     isManualAddressVisible.value = true;
 };
 
 const clearAddressSelection = () => {
     selectedAddressId.value = null;
-    addressForm.addressLine1 = ''; addressForm.addressLine2 = '';
-    addressForm.city = ''; addressForm.county = '';
-    addressForm.postcode = ''; addressForm.country = 'United Kingdom';
+    addressForm.addressLine1 = '';
+    addressForm.addressLine2 = '';
+    addressForm.city = '';
+    addressForm.county = '';
+    addressForm.postcode = '';
+    addressForm.country = 'United Kingdom';
     isManualAddressVisible.value = false;
 };
 
@@ -143,11 +205,15 @@ const fetchPaymentIntent = async () => {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
+                'X-CSRF-TOKEN':
+                    document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content') ?? '',
             },
         });
         const data = await response.json();
-        if (!response.ok || data.error) throw new Error(data.error || 'Failed to fetch payment intent.');
+        if (!response.ok || data.error)
+            throw new Error(data.error || 'Failed to fetch payment intent.');
         clientSecret.value = data.clientSecret;
         paymentIntentId.value = data.paymentIntentId;
     } catch (error: any) {
@@ -157,22 +223,42 @@ const fetchPaymentIntent = async () => {
 
 const initializeStripe = async () => {
     await fetchPaymentIntent();
-    if (!clientSecret.value || paymentError.value) { isLoadingInitialData.value = false; return; }
+    if (!clientSecret.value || paymentError.value) {
+        isLoadingInitialData.value = false;
+        return;
+    }
     hasClientSecret.value = true;
     await nextTick();
     stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
-    elements.value = stripe.value.elements({ clientSecret: clientSecret.value });
+    elements.value = stripe.value.elements({
+        clientSecret: clientSecret.value,
+    });
     paymentElement.value = elements.value.create('payment', {
         layout: 'tabs',
-        appearance: { theme: 'stripe', variables: { colorPrimary: '#8c4a50', colorText: '#2d1a1a', colorBackground: '#fffafa' } },
+        appearance: {
+            theme: 'stripe',
+            variables: {
+                colorPrimary: '#8c4a50',
+                colorText: '#2d1a1a',
+                colorBackground: '#fffafa',
+            },
+        },
     });
-    const maxRetries = 10; let attempts = 0; let mounted = false;
+    const maxRetries = 10;
+    let attempts = 0;
+    let mounted = false;
     while (attempts < maxRetries && !mounted) {
         const container = paymentContainer.value;
         if (container) {
-            try { paymentElement.value.mount(container); mounted = true; }
-            catch (e) { await delay(50); }
-        } else { await delay(50); }
+            try {
+                paymentElement.value.mount(container);
+                mounted = true;
+            } catch {
+                await delay(50);
+            }
+        } else {
+            await delay(50);
+        }
         attempts++;
     }
     if (!mounted) paymentError.value = 'Payment system failed to load.';
@@ -180,33 +266,70 @@ const initializeStripe = async () => {
 };
 
 const handleCardPayment = async () => {
-    if (!addressForm.email || !addressForm.addressLine1 || !addressForm.postcode || !addressForm.fullName) {
-        paymentError.value = 'Please complete all required fields.'; return;
+    if (
+        !addressForm.email ||
+        !addressForm.addressLine1 ||
+        !addressForm.postcode ||
+        !addressForm.fullName
+    ) {
+        paymentError.value = 'Please complete all required fields.';
+        return;
     }
-    isProcessing.value = true; paymentError.value = null;
+    isProcessing.value = true;
+    paymentError.value = null;
     if (!stripe.value || !paymentElement.value) {
-        paymentError.value = 'Payment system not loaded.'; isProcessing.value = false; return;
+        paymentError.value = 'Payment system not loaded.';
+        isProcessing.value = false;
+        return;
     }
-    const { error: stripeError, paymentIntent } = await stripe.value.confirmPayment({
-        elements: elements.value,
-        confirmParams: {
-            return_url: window.location.origin + getRoute('checkout.index', {}, false),
-            payment_method_data: {
-                billing_details: {
-                    name: addressForm.fullName, email: addressForm.email,
-                    phone: addressForm.telephone || undefined,
-                    address: { line1: addressForm.addressLine1, line2: addressForm.addressLine2 || undefined, city: addressForm.city, state: addressForm.county || undefined, postal_code: addressForm.postcode, country: 'GB' }
-                }
-            }
-        },
-        redirect: 'if_required',
-    });
-    if (stripeError) { paymentError.value = stripeError.message || 'An error occurred.'; isProcessing.value = false; return; }
-    if (paymentIntent?.status === 'succeeded') {
-        router.post(getRoute('checkout.process_payment'), { ...addressForm.data(), paymentIntentId: paymentIntent.id, paymentType: 'card' }, {
-            onError: (errors) => { paymentError.value = Object.values(errors)[0] as string || 'Order failed.'; },
-            onFinish: () => { isProcessing.value = false; }
+    const { error: stripeError, paymentIntent } =
+        await stripe.value.confirmPayment({
+            elements: elements.value,
+            confirmParams: {
+                return_url:
+                    window.location.origin +
+                    getRoute('checkout.index', {}, false),
+                payment_method_data: {
+                    billing_details: {
+                        name: addressForm.fullName,
+                        email: addressForm.email,
+                        phone: addressForm.telephone || undefined,
+                        address: {
+                            line1: addressForm.addressLine1,
+                            line2: addressForm.addressLine2 || undefined,
+                            city: addressForm.city,
+                            state: addressForm.county || undefined,
+                            postal_code: addressForm.postcode,
+                            country: 'GB',
+                        },
+                    },
+                },
+            },
+            redirect: 'if_required',
         });
+    if (stripeError) {
+        paymentError.value = stripeError.message || 'An error occurred.';
+        isProcessing.value = false;
+        return;
+    }
+    if (paymentIntent?.status === 'succeeded') {
+        router.post(
+            getRoute('checkout.process_payment'),
+            {
+                ...addressForm.data(),
+                paymentIntentId: paymentIntent.id,
+                paymentType: 'card',
+            },
+            {
+                onError: (errors) => {
+                    paymentError.value =
+                        (Object.values(errors)[0] as string) || 'Order failed.';
+                },
+                onFinish: () => {
+                    isProcessing.value = false;
+                },
+            },
+        );
     } else {
         paymentError.value = 'Payment status: ' + paymentIntent?.status;
         isProcessing.value = false;
@@ -214,19 +337,27 @@ const handleCardPayment = async () => {
 };
 
 onMounted(async () => {
-    // Guests always see the manual address form — no saved addresses
+    // Guests always see the manual address form - no saved addresses
     if (props.isGuest) {
         isManualAddressVisible.value = true;
     } else {
-        const defaultAddress = props.addresses.find(a => a.is_default);
-        if (defaultAddress) { await nextTick(); selectAddress(defaultAddress); }
-        else if (props.addresses.length === 0) { isManualAddressVisible.value = true; }
+        const defaultAddress = props.addresses.find((a) => a.is_default);
+        if (defaultAddress) {
+            await nextTick();
+            selectAddress(defaultAddress);
+        } else if (props.addresses.length === 0) {
+            isManualAddressVisible.value = true;
+        }
     }
-    if (hasItems.value) { await loadStripeScript(); await initializeStripe(); }
-    else { isLoadingInitialData.value = false; }
+    if (hasItems.value) {
+        await loadStripeScript();
+        await initializeStripe();
+    } else {
+        isLoadingInitialData.value = false;
+    }
 });
 
-const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
+const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 </script>
 
 <template>
@@ -234,20 +365,29 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="co">
         <div class="co-wrap">
-
             <!-- Header -->
             <header class="co-header">
                 <h1 class="co-title">Checkout</h1>
                 <div class="co-header-sub">
                     <a :href="getRoute('cart.view')" class="co-back">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="m15 18-6-6 6-6" />
                         </svg>
                         Back to cart
@@ -255,7 +395,9 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                     <!-- Guest notice -->
                     <p v-if="isGuest" class="co-guest-note">
                         Checking out as a guest.
-                        <a :href="getRoute('login')" class="co-guest-link">Sign in</a>
+                        <a :href="getRoute('login')" class="co-guest-link"
+                            >Sign in</a
+                        >
                         to save your details for next time.
                     </p>
                 </div>
@@ -264,32 +406,56 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
             <!-- Empty cart -->
             <div v-if="!hasItems" class="co-empty">
                 <p>No items in your cart.</p>
-                <a :href="getRoute('products')" class="btn-rose">Browse Products</a>
+                <a :href="getRoute('products')" class="btn-rose"
+                    >Browse Products</a
+                >
             </div>
 
             <div v-else class="co-grid">
-
                 <!-- Left column -->
                 <div class="co-left">
-
-                    <!-- Saved addresses — logged-in users only -->
-                    <section v-if="!isGuest && addresses.length > 0" class="co-card">
+                    <!-- Saved addresses - logged-in users only -->
+                    <section
+                        v-if="!isGuest && addresses.length > 0"
+                        class="co-card"
+                    >
                         <h2 class="co-card-title">Saved Addresses</h2>
                         <div class="co-address-grid">
-                            <div v-for="address in addresses" :key="address.id" @click="selectAddress(address)"
+                            <div
+                                v-for="address in addresses"
+                                :key="address.id"
+                                @click="selectAddress(address)"
                                 class="co-address-card"
-                                :class="{ 'co-address-card--selected': selectedAddressId === address.id }">
+                                :class="{
+                                    'co-address-card--selected':
+                                        selectedAddressId === address.id,
+                                }"
+                            >
                                 <div class="co-address-card-head">
-                                    <span class="co-address-type">{{ address.type }}</span>
-                                    <span v-if="address.is_default" class="co-address-default">Default</span>
+                                    <span class="co-address-type">{{
+                                        address.type
+                                    }}</span>
+                                    <span
+                                        v-if="address.is_default"
+                                        class="co-address-default"
+                                        >Default</span
+                                    >
                                 </div>
                                 <div class="co-address-lines">
-                                    <span v-for="line in formatAddress(address)" :key="line">{{ line }}</span>
+                                    <span
+                                        v-for="line in formatAddress(address)"
+                                        :key="line"
+                                        >{{ line }}</span
+                                    >
                                 </div>
                             </div>
                         </div>
-                        <button v-if="selectedAddressId !== null" @click="clearAddressSelection" type="button"
-                            class="co-clear-btn">
+                        <button
+                            v-if="selectedAddressId !== null"
+                            @click="clearAddressSelection"
+                            type="button"
+                            class="co-clear-btn"
+                        >
                             Clear &amp; enter manually
                         </button>
                     </section>
@@ -301,124 +467,296 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                             Contact &amp; Shipping
                         </h2>
 
-                        <form @submit.prevent="handleCardPayment" class="co-form">
-
+                        <form
+                            @submit.prevent="handleCardPayment"
+                            class="co-form"
+                        >
                             <div class="co-field-row">
                                 <div class="field">
-                                    <label for="email" class="field-label">Email <span
-                                            class="field-required">*</span></label>
-                                    <input id="email" type="email" v-model="addressForm.email" required
-                                        class="field-input" :class="{ 'field-input--error': addressForm.errors.email }"
-                                        placeholder="you@example.com" autocomplete="email" />
-                                    <p v-if="addressForm.errors.email" class="field-error">{{ addressForm.errors.email
-                                    }}</p>
+                                    <label for="email" class="field-label"
+                                        >Email
+                                        <span class="field-required"
+                                            >*</span
+                                        ></label
+                                    >
+                                    <input
+                                        id="email"
+                                        type="email"
+                                        v-model="addressForm.email"
+                                        required
+                                        class="field-input"
+                                        :class="{
+                                            'field-input--error':
+                                                addressForm.errors.email,
+                                        }"
+                                        placeholder="you@example.com"
+                                        autocomplete="email"
+                                    />
+                                    <p
+                                        v-if="addressForm.errors.email"
+                                        class="field-error"
+                                    >
+                                        {{ addressForm.errors.email }}
+                                    </p>
                                 </div>
                                 <div class="field">
-                                    <label for="fullName" class="field-label">Full Name <span
-                                            class="field-required">*</span></label>
-                                    <input id="fullName" type="text" v-model="addressForm.fullName" required
+                                    <label for="fullName" class="field-label"
+                                        >Full Name
+                                        <span class="field-required"
+                                            >*</span
+                                        ></label
+                                    >
+                                    <input
+                                        id="fullName"
+                                        type="text"
+                                        v-model="addressForm.fullName"
+                                        required
                                         class="field-input"
-                                        :class="{ 'field-input--error': addressForm.errors.fullName }"
-                                        placeholder="Jane Smith" autocomplete="name" />
-                                    <p v-if="addressForm.errors.fullName" class="field-error">{{
-                                        addressForm.errors.fullName }}</p>
+                                        :class="{
+                                            'field-input--error':
+                                                addressForm.errors.fullName,
+                                        }"
+                                        placeholder="Jane Smith"
+                                        autocomplete="name"
+                                    />
+                                    <p
+                                        v-if="addressForm.errors.fullName"
+                                        class="field-error"
+                                    >
+                                        {{ addressForm.errors.fullName }}
+                                    </p>
                                 </div>
                             </div>
 
-                            <div class="field" style="max-width: 280px;">
-                                <label for="telephone" class="field-label">Phone <span
-                                        class="field-optional">(optional)</span></label>
-                                <input id="telephone" type="tel" v-model="addressForm.telephone" class="field-input"
-                                    placeholder="07700 900000" autocomplete="tel" />
+                            <div class="field" style="max-width: 280px">
+                                <label for="telephone" class="field-label"
+                                    >Phone
+                                    <span class="field-optional"
+                                        >(optional)</span
+                                    ></label
+                                >
+                                <input
+                                    id="telephone"
+                                    type="tel"
+                                    v-model="addressForm.telephone"
+                                    class="field-input"
+                                    placeholder="07700 900000"
+                                    autocomplete="tel"
+                                />
                             </div>
 
-                            <div v-if="!isShippingAddressVisible" class="co-add-address-btn-wrap">
-                                <button type="button" @click="isManualAddressVisible = true" class="co-add-address-btn">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <div
+                                v-if="!isShippingAddressVisible"
+                                class="co-add-address-btn-wrap"
+                            >
+                                <button
+                                    type="button"
+                                    @click="isManualAddressVisible = true"
+                                    class="co-add-address-btn"
+                                >
+                                    <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
                                         <path d="M12 5v14M5 12h14" />
                                     </svg>
                                     Add Shipping Address
                                 </button>
                             </div>
 
-                            <div v-if="isShippingAddressVisible" class="co-address-fields">
-                                <h3 class="co-address-fields-title">Shipping Address</h3>
+                            <div
+                                v-if="isShippingAddressVisible"
+                                class="co-address-fields"
+                            >
+                                <h3 class="co-address-fields-title">
+                                    Shipping Address
+                                </h3>
 
                                 <div class="field">
-                                    <label for="addressLine1" class="field-label">Address Line 1 <span
-                                            class="field-required">*</span></label>
-                                    <input id="addressLine1" type="text" v-model="addressForm.addressLine1" required
+                                    <label
+                                        for="addressLine1"
+                                        class="field-label"
+                                        >Address Line 1
+                                        <span class="field-required"
+                                            >*</span
+                                        ></label
+                                    >
+                                    <input
+                                        id="addressLine1"
+                                        type="text"
+                                        v-model="addressForm.addressLine1"
+                                        required
                                         class="field-input"
-                                        :class="{ 'field-input--error': addressForm.errors.addressLine1 }"
-                                        placeholder="123 Example Street" autocomplete="address-line1" />
-                                    <p v-if="addressForm.errors.addressLine1" class="field-error">{{
-                                        addressForm.errors.addressLine1 }}</p>
+                                        :class="{
+                                            'field-input--error':
+                                                addressForm.errors.addressLine1,
+                                        }"
+                                        placeholder="123 Example Street"
+                                        autocomplete="address-line1"
+                                    />
+                                    <p
+                                        v-if="addressForm.errors.addressLine1"
+                                        class="field-error"
+                                    >
+                                        {{ addressForm.errors.addressLine1 }}
+                                    </p>
                                 </div>
 
                                 <div class="field">
-                                    <label for="addressLine2" class="field-label">Address Line 2 <span
-                                            class="field-optional">(optional)</span></label>
-                                    <input id="addressLine2" type="text" v-model="addressForm.addressLine2"
-                                        class="field-input" placeholder="Apartment, suite, etc."
-                                        autocomplete="address-line2" />
+                                    <label
+                                        for="addressLine2"
+                                        class="field-label"
+                                        >Address Line 2
+                                        <span class="field-optional"
+                                            >(optional)</span
+                                        ></label
+                                    >
+                                    <input
+                                        id="addressLine2"
+                                        type="text"
+                                        v-model="addressForm.addressLine2"
+                                        class="field-input"
+                                        placeholder="Apartment, suite, etc."
+                                        autocomplete="address-line2"
+                                    />
                                 </div>
 
                                 <div class="co-field-row co-field-row--3">
                                     <div class="field">
-                                        <label for="city" class="field-label">City <span
-                                                class="field-required">*</span></label>
-                                        <input id="city" type="text" v-model="addressForm.city" required
+                                        <label for="city" class="field-label"
+                                            >City
+                                            <span class="field-required"
+                                                >*</span
+                                            ></label
+                                        >
+                                        <input
+                                            id="city"
+                                            type="text"
+                                            v-model="addressForm.city"
+                                            required
                                             class="field-input"
-                                            :class="{ 'field-input--error': addressForm.errors.city }"
-                                            placeholder="London" autocomplete="address-level2" />
-                                        <p v-if="addressForm.errors.city" class="field-error">{{ addressForm.errors.city
-                                        }}</p>
+                                            :class="{
+                                                'field-input--error':
+                                                    addressForm.errors.city,
+                                            }"
+                                            placeholder="London"
+                                            autocomplete="address-level2"
+                                        />
+                                        <p
+                                            v-if="addressForm.errors.city"
+                                            class="field-error"
+                                        >
+                                            {{ addressForm.errors.city }}
+                                        </p>
                                     </div>
                                     <div class="field">
-                                        <label for="postcode" class="field-label">Postcode <span
-                                                class="field-required">*</span></label>
-                                        <input id="postcode" type="text" v-model="addressForm.postcode" required
+                                        <label
+                                            for="postcode"
+                                            class="field-label"
+                                            >Postcode
+                                            <span class="field-required"
+                                                >*</span
+                                            ></label
+                                        >
+                                        <input
+                                            id="postcode"
+                                            type="text"
+                                            v-model="addressForm.postcode"
+                                            required
                                             class="field-input"
-                                            :class="{ 'field-input--error': addressForm.errors.postcode }"
-                                            placeholder="SW1A 0AA" autocomplete="postal-code" />
-                                        <p v-if="addressForm.errors.postcode" class="field-error">{{
-                                            addressForm.errors.postcode }}</p>
+                                            :class="{
+                                                'field-input--error':
+                                                    addressForm.errors.postcode,
+                                            }"
+                                            placeholder="SW1A 0AA"
+                                            autocomplete="postal-code"
+                                        />
+                                        <p
+                                            v-if="addressForm.errors.postcode"
+                                            class="field-error"
+                                        >
+                                            {{ addressForm.errors.postcode }}
+                                        </p>
                                     </div>
                                     <div class="field">
-                                        <label for="county" class="field-label">County <span
-                                                class="field-optional">(optional)</span></label>
-                                        <input id="county" type="text" v-model="addressForm.county" class="field-input"
-                                            placeholder="Greater London" autocomplete="address-level1" />
+                                        <label for="county" class="field-label"
+                                            >County
+                                            <span class="field-optional"
+                                                >(optional)</span
+                                            ></label
+                                        >
+                                        <input
+                                            id="county"
+                                            type="text"
+                                            v-model="addressForm.county"
+                                            class="field-input"
+                                            placeholder="Greater London"
+                                            autocomplete="address-level1"
+                                        />
                                     </div>
                                 </div>
 
-                                <div class="field" style="max-width: 200px;">
-                                    <label for="country" class="field-label">Country</label>
-                                    <input id="country" type="text" v-model="addressForm.country" readonly
-                                        class="field-input field-input--readonly" autocomplete="country-name" />
+                                <div class="field" style="max-width: 200px">
+                                    <label for="country" class="field-label"
+                                        >Country</label
+                                    >
+                                    <input
+                                        id="country"
+                                        type="text"
+                                        v-model="addressForm.country"
+                                        readonly
+                                        class="field-input field-input--readonly"
+                                        autocomplete="country-name"
+                                    />
                                 </div>
                             </div>
 
-                            <!-- Save info — logged-in users only -->
+                            <!-- Save info - logged-in users only -->
                             <label v-if="!isGuest" class="co-save-label">
-                                <input type="checkbox" v-model="addressForm.saveInfo" class="co-save-check" />
-                                <span>Save my details for faster checkout next time</span>
+                                <input
+                                    type="checkbox"
+                                    v-model="addressForm.saveInfo"
+                                    class="co-save-check"
+                                />
+                                <span
+                                    >Save my details for faster checkout next
+                                    time</span
+                                >
                             </label>
 
                             <!-- Guest prompt -->
                             <div v-if="isGuest" class="co-guest-prompt">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <svg
+                                    width="13"
+                                    height="13"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+                                    />
                                     <circle cx="12" cy="7" r="4" />
                                 </svg>
                                 <span>
-                                    Want to track your orders and save your details?
-                                    <a :href="getRoute('register')" class="co-guest-link">Create a free account</a>
+                                    Want to track your orders and save your
+                                    details?
+                                    <a
+                                        :href="getRoute('register')"
+                                        class="co-guest-link"
+                                        >Create a free account</a
+                                    >
                                 </span>
                             </div>
-
                         </form>
                     </section>
 
@@ -429,48 +767,124 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                             Payment
                         </h2>
 
-                        <div v-if="isLoadingInitialData" class="co-payment-loading">
-                            <svg class="co-spinner" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <circle cx="12" cy="12" r="10" stroke="#e5c9c7" stroke-width="3" />
-                                <path d="M12 2a10 10 0 0 1 10 10" stroke="#8c4a50" stroke-width="3"
-                                    stroke-linecap="round" />
+                        <div
+                            v-if="isLoadingInitialData"
+                            class="co-payment-loading"
+                        >
+                            <svg
+                                class="co-spinner"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="#e5c9c7"
+                                    stroke-width="3"
+                                />
+                                <path
+                                    d="M12 2a10 10 0 0 1 10 10"
+                                    stroke="#8c4a50"
+                                    stroke-width="3"
+                                    stroke-linecap="round"
+                                />
                             </svg>
                             <p>Connecting to payment gateway...</p>
                         </div>
 
-                        <div v-if="hasClientSecret" ref="paymentContainer" class="co-stripe-container"></div>
+                        <div
+                            v-if="hasClientSecret"
+                            ref="paymentContainer"
+                            class="co-stripe-container"
+                        ></div>
 
                         <div v-if="paymentError" class="co-payment-error">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                style="flex-shrink: 0"
+                            >
                                 <circle cx="12" cy="12" r="10" />
                                 <path d="M12 8v4M12 16h.01" />
                             </svg>
                             {{ paymentError }}
                         </div>
 
-                        <button @click.prevent="handleCardPayment"
-                            :disabled="isProcessing || isLoadingInitialData || !hasClientSecret || !!paymentError"
+                        <button
+                            @click.prevent="handleCardPayment"
+                            :disabled="
+                                isProcessing ||
+                                isLoadingInitialData ||
+                                !hasClientSecret ||
+                                !!paymentError
+                            "
                             class="btn-rose btn-rose--full co-pay-btn"
-                            :class="{ 'btn-rose--disabled': isProcessing || isLoadingInitialData || !hasClientSecret || !!paymentError }">
-                            <svg v-if="isProcessing" class="co-spinner co-spinner--sm" viewBox="0 0 24 24" fill="none">
-                                <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
-                                <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3"
-                                    stroke-linecap="round" />
+                            :class="{
+                                'btn-rose--disabled':
+                                    isProcessing ||
+                                    isLoadingInitialData ||
+                                    !hasClientSecret ||
+                                    !!paymentError,
+                            }"
+                        >
+                            <svg
+                                v-if="isProcessing"
+                                class="co-spinner co-spinner--sm"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                            >
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="rgba(255,255,255,0.3)"
+                                    stroke-width="3"
+                                />
+                                <path
+                                    d="M12 2a10 10 0 0 1 10 10"
+                                    stroke="#fff"
+                                    stroke-width="3"
+                                    stroke-linecap="round"
+                                />
                             </svg>
-                            {{ isProcessing ? 'Processing...' : `Pay ${fmt(computedTotal)}` }}
+                            {{
+                                isProcessing
+                                    ? 'Processing...'
+                                    : `Pay ${fmt(computedTotal)}`
+                            }}
                         </button>
 
                         <p class="co-secure-note">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                            <svg
+                                width="11"
+                                height="11"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                            >
+                                <rect
+                                    x="3"
+                                    y="11"
+                                    width="18"
+                                    height="11"
+                                    rx="2"
+                                />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
-                            All transactions are secured and encrypted via Stripe
+                            All transactions are secured and encrypted via
+                            Stripe
                         </p>
                     </section>
-
                 </div>
 
                 <!-- Right column: order summary -->
@@ -483,18 +897,36 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                                 <span>Subtotal</span>
                                 <span>{{ fmt(summary.subtotal) }}</span>
                             </div>
-                            <div v-if="vatRegistered" class="co-summary-row co-summary-row--vat-note">
+                            <div
+                                v-if="vatRegistered"
+                                class="co-summary-row co-summary-row--vat-note"
+                            >
                                 <span>VAT</span>
                                 <span>Included in price</span>
                             </div>
                             <div class="co-summary-row">
                                 <span>Shipping (48 Tracked)</span>
-                                <span :class="summary.shipping === 0 ? 'co-free-shipping' : ''">
-                                    {{ summary.shipping === 0 ? 'FREE' : fmt(summary.shipping) }}
+                                <span
+                                    :class="
+                                        summary.shipping === 0
+                                            ? 'co-free-shipping'
+                                            : ''
+                                    "
+                                >
+                                    {{
+                                        summary.shipping === 0
+                                            ? 'FREE'
+                                            : fmt(summary.shipping)
+                                    }}
                                 </span>
                             </div>
-                            <div v-if="voucherDiscount > 0" class="co-summary-row co-summary-row--discount">
-                                <span>Discount ({{ activeVoucher?.code }})</span>
+                            <div
+                                v-if="voucherDiscount > 0"
+                                class="co-summary-row co-summary-row--discount"
+                            >
+                                <span
+                                    >Discount ({{ activeVoucher?.code }})</span
+                                >
                                 <span>-{{ fmt(voucherDiscount) }}</span>
                             </div>
                         </div>
@@ -504,56 +936,104 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 
                             <div v-if="activeVoucher" class="co-voucher-active">
                                 <div>
-                                    <p class="co-voucher-code">{{ activeVoucher.code }}</p>
-                                    <p class="co-voucher-saved">Saving {{ fmt(activeVoucher.discount) }}</p>
+                                    <p class="co-voucher-code">
+                                        {{ activeVoucher.code }}
+                                    </p>
+                                    <p class="co-voucher-saved">
+                                        Saving {{ fmt(activeVoucher.discount) }}
+                                    </p>
                                 </div>
-                                <button @click="removeVoucher" class="co-voucher-remove">Remove</button>
+                                <button
+                                    @click="removeVoucher"
+                                    class="co-voucher-remove"
+                                >
+                                    Remove
+                                </button>
                             </div>
 
                             <div v-else class="co-voucher-input">
-                                <input type="text" v-model="voucherCode" placeholder="Enter code..."
-                                    class="co-voucher-field" @keyup.enter="applyVoucher" />
-                                <button @click="applyVoucher" :disabled="voucherLoading || !voucherCode.trim()"
-                                    class="btn-rose btn-rose--sm co-voucher-btn">
+                                <input
+                                    type="text"
+                                    v-model="voucherCode"
+                                    placeholder="Enter code..."
+                                    class="co-voucher-field"
+                                    @keyup.enter="applyVoucher"
+                                />
+                                <button
+                                    @click="applyVoucher"
+                                    :disabled="
+                                        voucherLoading || !voucherCode.trim()
+                                    "
+                                    class="btn-rose btn-rose--sm co-voucher-btn"
+                                >
                                     {{ voucherLoading ? '...' : 'Apply' }}
                                 </button>
                             </div>
 
-                            <p v-if="voucherSuccess" class="co-voucher-msg co-voucher-msg--success">{{ voucherSuccess }}
+                            <p
+                                v-if="voucherSuccess"
+                                class="co-voucher-msg co-voucher-msg--success"
+                            >
+                                {{ voucherSuccess }}
                             </p>
-                            <p v-if="voucherError" class="co-voucher-msg co-voucher-msg--error">{{ voucherError }}</p>
+                            <p
+                                v-if="voucherError"
+                                class="co-voucher-msg co-voucher-msg--error"
+                            >
+                                {{ voucherError }}
+                            </p>
                         </div>
 
                         <div class="co-total-row">
                             <span class="co-total-label">Total</span>
-                            <span class="co-total-val">{{ fmt(computedTotal) }}</span>
+                            <span class="co-total-val">{{
+                                fmt(computedTotal)
+                            }}</span>
                         </div>
 
                         <div class="co-items-section">
                             <h3 class="co-items-title">Items in your order</h3>
                             <div class="co-items-list">
-                                <div v-for="item in cartItems" :key="item.id" class="co-item-row">
+                                <div
+                                    v-for="item in cartItems"
+                                    :key="item.id"
+                                    class="co-item-row"
+                                >
                                     <span class="co-item-name">
                                         {{ item.product.name }}
-                                        <span class="co-item-qty">&times;{{ item.quantity }}</span>
+                                        <span class="co-item-qty"
+                                            >&times;{{ item.quantity }}</span
+                                        >
                                     </span>
-                                    <span class="co-item-price">{{ fmt(item.product.cost * item.quantity) }}</span>
+                                    <span class="co-item-price">{{
+                                        fmt(item.product.cost * item.quantity)
+                                    }}</span>
                                 </div>
 
-                                <div v-if="giftVoucher" class="co-item-row co-item-row--gv">
+                                <div
+                                    v-if="giftVoucher"
+                                    class="co-item-row co-item-row--gv"
+                                >
                                     <span class="co-item-name">
                                         Gift Voucher
                                         <span class="co-item-qty">
-                                            · {{ giftVoucher.delivery_type === 'email' ? 'E-Voucher' : 'Physical' }}
+                                            ·
+                                            {{
+                                                giftVoucher.delivery_type ===
+                                                'email'
+                                                    ? 'E-Voucher'
+                                                    : 'Physical'
+                                            }}
                                         </span>
                                     </span>
-                                    <span class="co-item-price">{{ fmt(giftVoucher.amount) }}</span>
+                                    <span class="co-item-price">{{
+                                        fmt(giftVoucher.amount)
+                                    }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </aside>
-
             </div>
         </div>
     </main>
@@ -746,7 +1226,10 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     border-radius: 14px;
     padding: 0.9rem 1rem;
     cursor: pointer;
-    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        background 0.2s,
+        box-shadow 0.2s;
     background: #fdf4f3;
     position: relative;
     overflow: hidden;
@@ -832,7 +1315,6 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 }
 
 @media (max-width: 540px) {
-
     .co-field-row,
     .co-field-row--3 {
         grid-template-columns: 1fr;
@@ -873,7 +1355,9 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     font-family: 'Nunito', sans-serif;
     font-size: 0.92rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
 }
 
 .field-input:focus {
@@ -912,7 +1396,9 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     font-size: 0.88rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+    transition:
+        background 0.2s,
+        border-color 0.2s;
 }
 
 .co-add-address-btn:hover {
@@ -1307,7 +1793,9 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
     text-decoration: none;
 }
 

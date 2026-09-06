@@ -1,23 +1,33 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
-import { useSeoHead } from '@/composables/useSeoHead';
-import { Link, router } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import axios from 'axios';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
-import { scentFamilyLabel, moodTagLabel, roomLabel } from '@/lib/scentTaxonomy';
+import { useSeoHead } from '@/composables/useSeoHead';
+import { moodTagLabel, roomLabel, scentFamilyLabel } from '@/lib/scentTaxonomy';
+import { Link, router } from '@inertiajs/vue3';
+import axios from 'axios';
+import { ref } from 'vue';
 
 interface ProductCardData {
-    id: number; name: string; mpn: string; cost: number; stock_qty: number;
-    images?: { image: string }[]; total_unique_views?: number; seo?: { slug: string };
+    id: number;
+    name: string;
+    mpn: string;
+    cost: number;
+    stock_qty: number;
+    images?: { image: string }[];
+    total_unique_views?: number;
+    seo?: { slug: string };
 }
 
 const props = defineProps<{
     products: ProductCardData[];
-    answers: { scent_families: string[]; mood_tags: string[]; room_tags: string[] };
+    answers: {
+        scent_families: string[];
+        mood_tags: string[];
+        room_tags: string[];
+    };
     wishlistedIds: number[];
 }>();
 
@@ -31,20 +41,44 @@ const wishlistedIds = ref<number[]>(props.wishlistedIds ?? []);
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 
 const handleAddToCart = (product: ProductCardData) => {
-    router.post('/cart/add', { product_id: product.id, quantity: 1 }, {
-        preserveScroll: true,
-        onSuccess: () => successToastRef.value?.show(`${product.name} added to cart!`, 'cart'),
-    });
+    router.post(
+        '/cart/add',
+        { product_id: product.id, quantity: 1 },
+        {
+            preserveScroll: true,
+            onSuccess: () =>
+                successToastRef.value?.show(
+                    `${product.name} added to cart!`,
+                    'cart',
+                ),
+        },
+    );
 };
 
 const handleFavourite = async (product: ProductCardData) => {
     const idx = wishlistedIds.value.indexOf(product.id);
-    idx === -1 ? wishlistedIds.value.push(product.id) : wishlistedIds.value.splice(idx, 1);
+    if (idx === -1) {
+        wishlistedIds.value.push(product.id);
+    } else {
+        wishlistedIds.value.splice(idx, 1);
+    }
     try {
-        const { data } = await axios.post(route('wishlist.toggle'), { product_id: product.id });
-        successToastRef.value?.show(data.message, data.wishlisted ? 'favourite' : 'trash');
+        const { data } = await axios.post(route('wishlist.toggle'), {
+            product_id: product.id,
+        });
+        successToastRef.value?.show(
+            data.message,
+            data.wishlisted ? 'favourite' : 'trash',
+        );
     } catch (err: any) {
-        idx === -1 ? wishlistedIds.value.splice(wishlistedIds.value.indexOf(product.id), 1) : wishlistedIds.value.splice(idx, 0, product.id);
+        if (idx === -1) {
+            wishlistedIds.value.splice(
+                wishlistedIds.value.indexOf(product.id),
+                1,
+            );
+        } else {
+            wishlistedIds.value.splice(idx, 0, product.id);
+        }
         if (err.response?.status === 401) window.location.href = route('login');
     }
 };
@@ -56,37 +90,57 @@ const handleFavourite = async (product: ProductCardData) => {
 
     <main class="sfr">
         <div class="sfr-wrap">
-
             <header class="sfr-header">
                 <p class="sfr-eyebrow">Chapter of You</p>
                 <h1 class="sfr-title">Your <em>Matches</em></h1>
                 <p class="sfr-summary">
                     Based on your love of
-                    <strong>{{ answers.scent_families.map(scentFamilyLabel).join(' & ') }}</strong>
+                    <strong>{{
+                        answers.scent_families.map(scentFamilyLabel).join(' & ')
+                    }}</strong>
                     scents for
-                    <strong>{{ answers.mood_tags.map(moodTagLabel).join(', ') }}</strong>
+                    <strong>{{
+                        answers.mood_tags.map(moodTagLabel).join(', ')
+                    }}</strong>
                     moments in the
-                    <strong>{{ answers.room_tags.map(roomLabel).join(' & ') }}</strong>.
+                    <strong>{{
+                        answers.room_tags.map(roomLabel).join(' & ')
+                    }}</strong
+                    >.
                 </p>
             </header>
 
             <div v-if="products.length === 0" class="sfr-empty">
                 <p class="sfr-petal">✿</p>
-                <p>We couldn't find a perfect match this time — try broadening your choices.</p>
-                <Link :href="route('scent-finder.index')" class="sfr-btn sfr-btn--primary">Retake the quiz</Link>
+                <p>
+                    We couldn't find a perfect match this time - try broadening
+                    your choices.
+                </p>
+                <Link
+                    :href="route('scent-finder.index')"
+                    class="sfr-btn sfr-btn--primary"
+                    >Retake the quiz</Link
+                >
             </div>
 
             <ul v-else class="sfr-grid">
                 <li v-for="product in products" :key="product.id">
-                    <ProductSpringCard :product="product" :wishlisted="wishlistedIds.includes(product.id)"
-                        @add-to-cart="handleAddToCart(product)" @favourite="handleFavourite(product)" />
+                    <ProductSpringCard
+                        :product="product"
+                        :wishlisted="wishlistedIds.includes(product.id)"
+                        @add-to-cart="handleAddToCart(product)"
+                        @favourite="handleFavourite(product)"
+                    />
                 </li>
             </ul>
 
             <div v-if="products.length" class="sfr-retake">
-                <Link :href="route('scent-finder.index')" class="sfr-btn sfr-btn--ghost">Retake the quiz</Link>
+                <Link
+                    :href="route('scent-finder.index')"
+                    class="sfr-btn sfr-btn--ghost"
+                    >Retake the quiz</Link
+                >
             </div>
-
         </div>
     </main>
 
@@ -186,7 +240,10 @@ const handleFavourite = async (product: ProductCardData) => {
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s,
+        background 0.2s;
     border: 1px solid transparent;
 }
 

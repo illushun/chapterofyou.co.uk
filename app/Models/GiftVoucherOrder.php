@@ -21,7 +21,7 @@ class GiftVoucherOrder extends Model
     ];
 
     protected $casts = [
-        'amount'       => 'decimal:2',
+        'amount' => 'decimal:2',
         'fulfilled_at' => 'datetime',
     ];
 

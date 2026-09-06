@@ -31,7 +31,7 @@ class ScentTagSuggester
             You are a fragrance expert helping tag products for Chapter of You, a UK home-fragrance
             brand selling reed diffusers, candles, and scented home accessories. Given a product's
             name and description, classify it against a fixed scent taxonomy so it can be matched to
-            customers taking a "scent finder" quiz. Only ever use the allowed values provided — never
+            customers taking a "scent finder" quiz. Only ever use the allowed values provided - never
             invent new ones.
             SYSTEM;
 

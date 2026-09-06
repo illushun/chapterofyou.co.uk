@@ -18,7 +18,7 @@ interface CouriersPaginated {
     last_page: number;
 }
 
-const props = defineProps<{
+defineProps<{
     couriers: CouriersPaginated;
 }>();
 

@@ -13,12 +13,8 @@ class VoucherController extends Controller
     public function __construct(
         private CartManager $cartManager,
         private VoucherService $voucherService
-    ) {
-    }
+    ) {}
 
-    /**
-     * POST /checkout/voucher/apply
-     */
     public function apply(Request $request)
     {
         $request->validate([
@@ -37,23 +33,23 @@ class VoucherController extends Controller
 
             $result = $this->voucherService->validate($request->code, $cart, $subtotal);
 
-            if (!$result['valid']) {
+            if (! $result['valid']) {
                 return response()->json(['error' => $result['message']], 422);
             }
 
             $this->voucherService->applyToSession($result['voucher'], $result['discount']);
 
             return response()->json([
-                'code'     => $result['voucher']->code,
+                'code' => $result['voucher']->code,
                 'discount' => $result['discount'],
-                'type'     => $result['voucher']->type,
-                'value'    => (float) $result['voucher']->value,
-                'message'  => 'Voucher applied! You save £' . number_format($result['discount'], 2) . '.',
+                'type' => $result['voucher']->type,
+                'value' => (float) $result['voucher']->value,
+                'message' => 'Voucher applied! You save £'.number_format($result['discount'], 2).'.',
             ]);
 
         } catch (\Exception $e) {
-            Log::error('[VoucherController] Apply error: ' . $e->getMessage(), [
-                'code'  => $request->code,
+            Log::error('[VoucherController] Apply error: '.$e->getMessage(), [
+                'code' => $request->code,
                 'trace' => $e->getTraceAsString(),
             ]);
 
@@ -63,12 +59,10 @@ class VoucherController extends Controller
         }
     }
 
-    /**
-     * POST /checkout/voucher/remove
-     */
     public function remove()
     {
         $this->voucherService->clearFromSession();
+
         return response()->json(['message' => 'Voucher removed.']);
     }
 }

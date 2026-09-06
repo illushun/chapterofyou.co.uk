@@ -18,7 +18,7 @@ interface ReviewsPaginated {
     last_page: number;
 }
 
-const props = defineProps<{
+defineProps<{
     reviews: ReviewsPaginated;
     counts: {
         all: number;

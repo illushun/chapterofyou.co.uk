@@ -50,9 +50,13 @@ const form = useForm({
 });
 
 const toggleProduct = (id: number, checked: boolean) => {
-    checked
-        ? !form.product_ids.includes(id) && form.product_ids.push(id)
-        : (form.product_ids = form.product_ids.filter((v) => v !== id));
+    if (checked) {
+        if (!form.product_ids.includes(id)) {
+            form.product_ids.push(id);
+        }
+    } else {
+        form.product_ids = form.product_ids.filter((v) => v !== id);
+    }
 };
 
 // Auto-generate slug from title (only when creating)

@@ -4,11 +4,11 @@ import { computed } from 'vue';
 // Define the component's props with TypeScript
 interface Props {
     // Allows the button to render as a button, a link (<a>), or another component (e.g., Link from Inertia)
-    as?: 'button' | 'a' | 'Link'; 
-    
+    as?: 'button' | 'a' | 'Link';
+
     // Controls the visual style of the button (default is the primary indigo color)
     variant?: 'primary' | 'secondary' | 'danger';
-    
+
     // Optional prop for disabling the button (useful during form submission)
     disabled?: boolean;
 }
@@ -37,18 +37,12 @@ const classes = computed(() => {
 </script>
 
 <template>
-    <component 
+    <component
         :is="props.as"
         :type="props.as === 'button' ? 'submit' : undefined"
         :disabled="props.disabled"
-        class="inline-flex items-center px-6 py-3 border border-transparent rounded-md font-semibold text-xs uppercase tracking-widest transition ease-in-out duration-150 shadow-md 
-               focus:outline-none focus:ring-2 focus:ring-offset-2
-               
-               "
-        :class="[
-            classes, 
-            { 'opacity-50 cursor-not-allowed': props.disabled }
-        ]"
+        class="inline-flex items-center rounded-md border border-transparent px-6 py-3 text-xs font-semibold tracking-widest uppercase shadow-md transition duration-150 ease-in-out focus:ring-2 focus:ring-offset-2 focus:outline-none"
+        :class="[classes, { 'cursor-not-allowed opacity-50': props.disabled }]"
     >
         <slot />
     </component>

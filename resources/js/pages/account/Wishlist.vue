@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { router } from '@inertiajs/vue3';
 
 interface WishlistItem {
     wishlist_id: number;
@@ -28,14 +28,22 @@ const fmt = (v: number | string) => {
 };
 
 const productLink = (item: WishlistItem) =>
-    item.product.seo?.slug ? `/product/${item.product.seo.slug}` : `/product/${item.product.id}`;
+    item.product.seo?.slug
+        ? `/product/${item.product.seo.slug}`
+        : `/product/${item.product.id}`;
 
 const removeItem = (wishlistId: number) => {
-    router.delete(route('wishlist.remove', { id: wishlistId }), { preserveScroll: true });
+    router.delete(route('wishlist.remove', { id: wishlistId }), {
+        preserveScroll: true,
+    });
 };
 
 const addToCart = (productId: number) => {
-    router.post('/cart/add', { product_id: productId, quantity: 1 }, { preserveScroll: true });
+    router.post(
+        '/cart/add',
+        { product_id: productId, quantity: 1 },
+        { preserveScroll: true },
+    );
 };
 
 const seo = useSeoHead({ noIndex: true });
@@ -46,31 +54,53 @@ const seo = useSeoHead({ noIndex: true });
 
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="wl">
         <div class="wl-wrap">
-
             <!-- Header -->
             <header class="wl-header">
                 <a href="/account" class="wl-back">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="m15 18-6-6 6-6" />
                     </svg>
                     Back to Account
                 </a>
                 <h1 class="wl-title">My Wishlist</h1>
-                <p class="wl-sub">{{ items.length }} saved item{{ items.length !== 1 ? 's' : '' }}</p>
+                <p class="wl-sub">
+                    {{ items.length }} saved item{{
+                        items.length !== 1 ? 's' : ''
+                    }}
+                </p>
             </header>
 
             <!-- Empty state -->
             <div v-if="items.length === 0" class="wl-empty">
-                <svg class="wl-empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                <svg
+                    class="wl-empty-icon"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.2"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                    />
                 </svg>
                 <h2>Your wishlist is empty</h2>
                 <p>Save items you love and come back to them anytime.</p>
@@ -79,13 +109,25 @@ const seo = useSeoHead({ noIndex: true });
 
             <!-- Wishlist grid -->
             <div v-else class="wl-grid">
-                <div v-for="item in items" :key="item.wishlist_id" class="wl-card">
-
+                <div
+                    v-for="item in items"
+                    :key="item.wishlist_id"
+                    class="wl-card"
+                >
                     <!-- Image -->
                     <a :href="productLink(item)" class="wl-img-wrap">
-                        <img :src="item.product.images?.[0]?.image ?? '/images/placeholder.jpg'"
-                            :alt="item.product.name" class="wl-img" />
-                        <div v-if="item.product.stock_qty <= 0" class="wl-oos-overlay">
+                        <img
+                            :src="
+                                item.product.images?.[0]?.image ??
+                                '/images/placeholder.jpg'
+                            "
+                            :alt="item.product.name"
+                            class="wl-img"
+                        />
+                        <div
+                            v-if="item.product.stock_qty <= 0"
+                            class="wl-oos-overlay"
+                        >
                             <span>Out of Stock</span>
                         </div>
                     </a>
@@ -93,42 +135,79 @@ const seo = useSeoHead({ noIndex: true });
                     <!-- Body -->
                     <div class="wl-body">
                         <p class="wl-mpn">{{ item.product.mpn }}</p>
-                        <a :href="productLink(item)" class="wl-name">{{ item.product.name }}</a>
+                        <a :href="productLink(item)" class="wl-name">{{
+                            item.product.name
+                        }}</a>
 
                         <div class="wl-meta">
-                            <span class="wl-price">{{ fmt(item.product.cost) }}</span>
-                            <span class="wl-stock"
-                                :class="item.product.stock_qty > 0 ? 'wl-stock--in' : 'wl-stock--out'">
-                                {{ item.product.stock_qty > 0 ? 'In Stock' : 'Out of Stock' }}
+                            <span class="wl-price">{{
+                                fmt(item.product.cost)
+                            }}</span>
+                            <span
+                                class="wl-stock"
+                                :class="
+                                    item.product.stock_qty > 0
+                                        ? 'wl-stock--in'
+                                        : 'wl-stock--out'
+                                "
+                            >
+                                {{
+                                    item.product.stock_qty > 0
+                                        ? 'In Stock'
+                                        : 'Out of Stock'
+                                }}
                             </span>
                         </div>
 
                         <p class="wl-saved">Saved {{ item.added_at }}</p>
 
                         <div class="wl-actions">
-                            <button @click="addToCart(item.product.id)" :disabled="item.product.stock_qty <= 0"
-                                class="btn-rose btn-rose--sm wl-add">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                            <button
+                                @click="addToCart(item.product.id)"
+                                :disabled="item.product.stock_qty <= 0"
+                                class="btn-rose btn-rose--sm wl-add"
+                            >
+                                <svg
+                                    width="13"
+                                    height="13"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
+                                    />
                                     <line x1="3" y1="6" x2="21" y2="6" />
                                     <path d="M16 10a4 4 0 0 1-8 0" />
                                 </svg>
                                 Add to Cart
                             </button>
-                            <button @click="removeItem(item.wishlist_id)" class="wl-remove" title="Remove from wishlist"
-                                aria-label="Remove from wishlist">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <button
+                                @click="removeItem(item.wishlist_id)"
+                                class="wl-remove"
+                                title="Remove from wishlist"
+                                aria-label="Remove from wishlist"
+                            >
+                                <svg
+                                    width="13"
+                                    height="13"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path d="M18 6 6 18M6 6l12 12" />
                                 </svg>
                             </button>
                         </div>
                     </div>
-
                 </div>
             </div>
-
         </div>
     </main>
 
@@ -248,7 +327,9 @@ const seo = useSeoHead({ noIndex: true });
     display: flex;
     flex-direction: column;
     position: relative;
-    transition: box-shadow 0.25s, transform 0.25s;
+    transition:
+        box-shadow 0.25s,
+        transform 0.25s;
 }
 
 .wl-card::before {
@@ -428,7 +509,10 @@ const seo = useSeoHead({ noIndex: true });
     color: #c9a4a4;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    transition:
+        background 0.2s,
+        color 0.2s,
+        border-color 0.2s;
 }
 
 .wl-remove:hover {
@@ -452,7 +536,9 @@ const seo = useSeoHead({ noIndex: true });
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
     cursor: pointer;
 }
 

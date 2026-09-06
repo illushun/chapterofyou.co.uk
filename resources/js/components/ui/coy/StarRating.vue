@@ -26,7 +26,7 @@ import { ref, computed, watch } from 'vue';
 
 const props = defineProps<{
     rating: number; // The current rating value (e.g., 3.7 or 4)
-    editable: boolean; // If true, allows the user to click/hover to select a rating
+    editable?: boolean; // If true, allows the user to click/hover to select a rating
     size?: number; // Size in pixels (e.g., 24)
     spacing?: string; // CSS gap value (e.g., '2px' or '0.25rem')
 }>();

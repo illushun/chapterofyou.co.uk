@@ -1,14 +1,12 @@
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/vue3';
+import { MotionPlugin } from '@vueuse/motion';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
-import { initializeTheme } from './composables/useAppearance';
-import { MotionPlugin } from '@vueuse/motion';
 import { ZiggyVue } from 'ziggy-js';
-
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+import { initializeTheme } from './composables/useAppearance';
 
 createInertiaApp({
     resolve: (name) =>
@@ -20,7 +18,7 @@ createInertiaApp({
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(MotionPlugin)
-            .use(ZiggyVue, props.initialPage.props.ziggy)
+            .use(ZiggyVue)
             .mount(el);
     },
     progress: {

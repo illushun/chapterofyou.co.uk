@@ -36,7 +36,7 @@ class AdminJournalController extends Controller
             'products' => $this->productOptions(),
             'suggested' => [
                 'How long do reed diffusers last?',
-                'Reed diffuser vs candle — which is right for you?',
+                'Reed diffuser vs candle - which is right for you?',
                 'Best scents for each room in your home',
                 'The benefits of aromatherapy at home',
                 'How to make your reed diffuser last longer',

@@ -1,29 +1,36 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { onMounted, ref } from 'vue';
 
 const seo = useSeoHead({
     title: 'About Me',
-    description: 'Meet the founder of Chapter of You — a qualified complementary therapist with a passion for wellbeing, aromatherapy, reflexology and handcrafted luxury products.',
+    description:
+        'Meet the founder of Chapter of You - a qualified complementary therapist with a passion for wellbeing, aromatherapy, reflexology and handcrafted luxury products.',
     canonical: '/about',
 });
 
 // Scroll-in reveals
 const revealEls = ref<Element[]>([]);
-const addReveal = (el: any) => { if (el?.$el) revealEls.value.push(el.$el); else if (el) revealEls.value.push(el); };
+const addReveal = (el: any) => {
+    if (el?.$el) revealEls.value.push(el.$el);
+    else if (el) revealEls.value.push(el);
+};
 
 onMounted(() => {
     const io = new IntersectionObserver(
-        entries => entries.forEach(e => {
-            if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
-        }),
-        { threshold: 0.1 }
+        (entries) =>
+            entries.forEach((e) => {
+                if (e.isIntersecting) {
+                    e.target.classList.add('is-visible');
+                    io.unobserve(e.target);
+                }
+            }),
+        { threshold: 0.1 },
     );
-    revealEls.value.forEach(el => io.observe(el));
+    revealEls.value.forEach((el) => io.observe(el));
 });
 
 const qualifications = [
@@ -37,21 +44,25 @@ const qualifications = [
     <NavBar />
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="ab">
-
         <!-- ── Masthead ── -->
         <header class="ab-masthead">
             <div class="ab-masthead-rule" aria-hidden="true"></div>
             <div class="ab-masthead-content">
                 <p class="ab-kicker">A little about</p>
-                <h1 class="ab-heading">The person<br /><em>behind the brand</em></h1>
+                <h1 class="ab-heading">
+                    The person<br /><em>behind the brand</em>
+                </h1>
                 <p class="ab-subheading">
                     Chapter of You is not a faceless business.<br />
-                    It is one person, one passion, and a genuine belief in the power of self-care.
+                    It is one person, one passion, and a genuine belief in the
+                    power of self-care.
                 </p>
             </div>
             <div class="ab-masthead-ornament" aria-hidden="true">
@@ -63,64 +74,85 @@ const qualifications = [
             </div>
         </header>
 
-        <!-- ── Intro — two-column editorial ── -->
+        <!-- ── Intro - two-column editorial ── -->
         <section class="ab-intro ab-section">
             <div class="ab-intro-number" aria-hidden="true">01</div>
             <div class="ab-intro-body" :ref="addReveal">
-                <h2 class="ab-section-title">Hello, I'm <em>glad you're here</em></h2>
+                <h2 class="ab-section-title">
+                    Hello, I'm <em>glad you're here</em>
+                </h2>
                 <p>
-                    Welcome to Chapter of You, a small, independent business I built from
-                    something deeply personal: the belief that taking care of yourself is not
-                    an indulgence. It is a necessity.
+                    Welcome to Chapter of You, a small, independent business I
+                    built from something deeply personal: the belief that taking
+                    care of yourself is not an indulgence. It is a necessity.
                 </p>
                 <p>
-                    I started this brand because I wanted to create products that genuinely
-                    support the quiet moments, the ones where scent softly fills your space, you pause, breathe, and
-                    give yourself permission to simply <em>be</em>.
+                    I started this brand because I wanted to create products
+                    that genuinely support the quiet moments, the ones where
+                    scent softly fills your space, you pause, breathe, and give
+                    yourself permission to simply <em>be</em>.
                 </p>
                 <p>
-                    Everything I make is handcrafted by me individually with ingredients
-                    I have personally chosen for their quality. There is no factory, no
-                    shortcuts, and no compromise. Just care, poured into every single bottle.
+                    Everything I make is handcrafted by me individually with
+                    ingredients I have personally chosen for their quality.
+                    There is no factory, no shortcuts, and no compromise. Just
+                    care, poured into every single bottle.
                 </p>
             </div>
         </section>
 
-        <!-- ── Therapist section — the standout ── -->
+        <!-- ── Therapist section - the standout ── -->
         <section class="ab-therapist">
             <div class="ab-therapist-inner">
                 <div class="ab-therapist-left" :ref="addReveal">
-                    <p class="ab-therapist-eyebrow">Qualifications &amp; expertise</p>
+                    <p class="ab-therapist-eyebrow">
+                        Qualifications &amp; expertise
+                    </p>
                     <h2 class="ab-therapist-title">
                         More than a<br /><em>product maker</em>
                     </h2>
                     <p class="ab-therapist-body">
-                        I am a qualified complementary therapist with a deep passion for
-                        wellbeing and self-care. My training spans aromatherapy, reflexology
-                        and Swedish massage, disciplines that inform every product I create,
-                        from the oils I choose to the way I think about scent and its connection to memory, mood and the
-                        atmosphere it creates.
+                        I am a qualified complementary therapist with a deep
+                        passion for wellbeing and self-care. My training spans
+                        aromatherapy, reflexology and Swedish massage,
+                        disciplines that inform every product I create, from the
+                        oils I choose to the way I think about scent and its
+                        connection to memory, mood and the atmosphere it
+                        creates.
                     </p>
                     <p class="ab-therapist-body">
-                        Through Chapter of You, I am currently focusing on creating luxury
-                        aromatherapy and wellness products, while working towards expanding
-                        further into the beauty and wellness industry. The products you buy
-                        today are the foundation of something much bigger.
+                        Through Chapter of You, I am currently focusing on
+                        creating luxury aromatherapy and wellness products,
+                        while working towards expanding further into the beauty
+                        and wellness industry. The products you buy today are
+                        the foundation of something much bigger.
                     </p>
                     <!-- Qualification badges -->
                     <div class="ab-quals">
-                        <div v-for="q in qualifications" :key="q.label" class="ab-qual-badge">
-                            <span class="ab-qual-icon" aria-hidden="true">{{ q.icon }}</span>
+                        <div
+                            v-for="q in qualifications"
+                            :key="q.label"
+                            class="ab-qual-badge"
+                        >
+                            <span class="ab-qual-icon" aria-hidden="true">{{
+                                q.icon
+                            }}</span>
                             <span class="ab-qual-label">{{ q.label }}</span>
                         </div>
                     </div>
                 </div>
-                <div class="ab-therapist-right" :ref="addReveal" aria-hidden="true">
+                <div
+                    class="ab-therapist-right"
+                    :ref="addReveal"
+                    aria-hidden="true"
+                >
                     <div class="ab-credential-card">
                         <div class="ab-cred-top">
                             <span class="ab-cred-mark">✦</span>
                             <p class="ab-cred-title">Qualified</p>
-                            <p class="ab-cred-subtitle">Complementary Therapist</p>
+                            <p class="ab-cred-subtitle">
+                                Complementary Therapist
+                            </p>
                         </div>
                         <ul class="ab-cred-list">
                             <li>Aromatherapy</li>
@@ -136,31 +168,42 @@ const qualifications = [
         <section class="ab-section ab-behind">
             <div class="ab-behind-number" aria-hidden="true">02</div>
             <div class="ab-behind-content" :ref="addReveal">
-                <h2 class="ab-section-title">Made by hand,<br /><em>made with heart</em></h2>
+                <h2 class="ab-section-title">
+                    Made by hand,<br /><em>made with heart</em>
+                </h2>
                 <div class="ab-behind-grid">
                     <div class="ab-behind-item">
-                        <span class="ab-behind-glyph" aria-hidden="true">◇</span>
+                        <span class="ab-behind-glyph" aria-hidden="true"
+                            >◇</span
+                        >
                         <h3>Made to order, always</h3>
                         <p>
-                            Every diffuser is blended and bottled individually so I can
-                            give each one proper attention. Your order is never just a number
-                            on a production line.
+                            Every diffuser is blended and bottled individually
+                            so I can give each one proper attention. Your order
+                            is never just a number on a production line.
                         </p>
                     </div>
                     <div class="ab-behind-item">
-                        <span class="ab-behind-glyph" aria-hidden="true">◇</span>
+                        <span class="ab-behind-glyph" aria-hidden="true"
+                            >◇</span
+                        >
                         <h3>Scent as therapy</h3>
                         <p>
-                            Scent has a unique way of shaping a space, connecting to memory and mood while bringing a
-                            sense of calm, comfort and quiet intention to your surroundings.
+                            Scent has a unique way of shaping a space,
+                            connecting to memory and mood while bringing a sense
+                            of calm, comfort and quiet intention to your
+                            surroundings.
                         </p>
                     </div>
                     <div class="ab-behind-item">
-                        <span class="ab-behind-glyph" aria-hidden="true">◇</span>
+                        <span class="ab-behind-glyph" aria-hidden="true"
+                            >◇</span
+                        >
                         <h3>Premium ingredients only</h3>
                         <p>
-                            I carefully research every ingredient I use. Only ingredients I trust and feel confident in
-                            are selected for Chapter of You products.
+                            I carefully research every ingredient I use. Only
+                            ingredients I trust and feel confident in are
+                            selected for Chapter of You products.
                         </p>
                     </div>
                 </div>
@@ -172,11 +215,12 @@ const qualifications = [
             <div class="ab-future-inner">
                 <div class="ab-future-badge">Looking ahead ✦</div>
                 <blockquote class="ab-future-quote">
-                    "The products you see today are just the beginning. My vision for
-                    Chapter of You will extend into a full beauty and wellness
-                    experience, with self-care always remaining the main priority."
+                    "The products you see today are just the beginning. My
+                    vision for Chapter of You will extend into a full beauty and
+                    wellness experience, with self-care always remaining the
+                    main priority."
                 </blockquote>
-                <p class="ab-future-sig">— Kacey, Chapter of You</p>
+                <p class="ab-future-sig">- Kacey, Chapter of You</p>
             </div>
         </section>
 
@@ -184,19 +228,25 @@ const qualifications = [
         <section class="ab-close">
             <div class="ab-close-inner" :ref="addReveal">
                 <div class="ab-close-ornament" aria-hidden="true">✿</div>
-                <h2 class="ab-close-title">Thank you for<br /><em>being here</em></h2>
+                <h2 class="ab-close-title">
+                    Thank you for<br /><em>being here</em>
+                </h2>
                 <p class="ab-close-body">
                     Whether you found Chapter of You through a recommendation, a
-                    search, or a happy accident, I am genuinely glad you're here.
-                    Every order means the world to me, and I hope whatever you choose
-                    brings a little calm and beauty into your everyday.
+                    search, or a happy accident, I am genuinely glad you're
+                    here. Every order means the world to me, and I hope whatever
+                    you choose brings a little calm and beauty into your
+                    everyday.
                 </p>
                 <p class="ab-close-body">
-                    If you'd ever like to pop over and say hi, my socials are linked below.
-                    If you have any questions about a product or your order please don't hesitate to get
-                    in touch.
+                    If you'd ever like to pop over and say hi, my socials are
+                    linked below. If you have any questions about a product or
+                    your order please don't hesitate to get in touch.
                 </p>
-                <a href="mailto:contact@chapterofyou.co.uk" class="ab-close-link">
+                <a
+                    href="mailto:contact@chapterofyou.co.uk"
+                    class="ab-close-link"
+                >
                     contact@chapterofyou.co.uk
                 </a>
 
@@ -204,22 +254,62 @@ const qualifications = [
                 <div class="ab-socials">
                     <p class="ab-socials-label">Follow along</p>
                     <div class="ab-socials-row">
-                        <a href="https://www.instagram.com/thechapterofyou?igsh=cTM3dDhqdTNuN3Zu&utm_source=qr"
-                            target="_blank" rel="noopener noreferrer" class="ab-social-btn"
-                            aria-label="Chapter of You on Instagram">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                        <a
+                            href="https://www.instagram.com/thechapterofyou?igsh=cTM3dDhqdTNuN3Zu&utm_source=qr"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="ab-social-btn"
+                            aria-label="Chapter of You on Instagram"
+                        >
+                            <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <rect
+                                    x="2"
+                                    y="2"
+                                    width="20"
+                                    height="20"
+                                    rx="5"
+                                    ry="5"
+                                />
                                 <circle cx="12" cy="12" r="4" />
-                                <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
+                                <circle
+                                    cx="17.5"
+                                    cy="6.5"
+                                    r="0.5"
+                                    fill="currentColor"
+                                    stroke="none"
+                                />
                             </svg>
                             <span>Instagram</span>
                         </a>
-                        <a href="https://www.facebook.com/share/1Ar4e9QxF1/?mibextid=wwXIfr" target="_blank"
-                            rel="noopener noreferrer" class="ab-social-btn" aria-label="Chapter of You on Facebook">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                        <a
+                            href="https://www.facebook.com/share/1Ar4e9QxF1/?mibextid=wwXIfr"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="ab-social-btn"
+                            aria-label="Chapter of You on Facebook"
+                        >
+                            <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"
+                                />
                             </svg>
                             <span>Facebook</span>
                         </a>
@@ -232,7 +322,6 @@ const qualifications = [
                 </div>
             </div>
         </section>
-
     </main>
 
     <Footer />
@@ -257,7 +346,9 @@ const qualifications = [
 .ab-close-inner {
     opacity: 0;
     transform: translateY(32px);
-    transition: opacity 0.8s cubic-bezier(.22, .68, 0, 1.1), transform 0.8s cubic-bezier(.22, .68, 0, 1.1);
+    transition:
+        opacity 0.8s cubic-bezier(0.22, 0.68, 0, 1.1),
+        transform 0.8s cubic-bezier(0.22, 0.68, 0, 1.1);
 }
 
 .is-visible {
@@ -533,7 +624,9 @@ const qualifications = [
     border: 1px solid #4a2828;
     border-radius: 999px;
     background: rgba(255, 250, 250, 0.04);
-    transition: border-color 0.2s, background 0.2s;
+    transition:
+        border-color 0.2s,
+        background 0.2s;
 }
 
 .ab-qual-badge:hover {
@@ -824,7 +917,9 @@ const qualifications = [
     text-decoration: none;
     border-bottom: 1.5px solid #e5c9c7;
     padding-bottom: 0.15rem;
-    transition: border-color 0.2s, color 0.2s;
+    transition:
+        border-color 0.2s,
+        color 0.2s;
 }
 
 .ab-close-link:hover {
@@ -890,7 +985,11 @@ const qualifications = [
     font-size: 0.85rem;
     font-weight: 600;
     text-decoration: none;
-    transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.2s;
+    transition:
+        border-color 0.2s,
+        background 0.2s,
+        color 0.2s,
+        transform 0.2s;
 }
 
 .ab-social-btn:hover {

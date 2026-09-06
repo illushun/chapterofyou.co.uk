@@ -2,29 +2,18 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Cart;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class CleanupExpiredCarts extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
+    /** @var string */
     protected $signature = 'cart:cleanup';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
+    /** @var string */
     protected $description = 'Deletes guest shopping carts that have expired.';
 
-    /**
-     * Execute the console command.
-     */
     public function handle()
     {
         // Define the expiration point (e.g., 7 days ago)
@@ -34,8 +23,8 @@ class CleanupExpiredCarts extends Command
         // Must be a guest cart (user_id is null).
         // The expires_at timestamp is in the past.
         $deletedCount = Cart::whereNull('user_id')
-                            ->where('expires_at', '<', $expirationTime)
-                            ->delete();
+            ->where('expires_at', '<', $expirationTime)
+            ->delete();
 
         $this->info("Successfully cleaned up {$deletedCount} expired guest carts.");
 

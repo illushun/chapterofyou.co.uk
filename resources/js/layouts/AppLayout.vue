@@ -11,4 +11,5 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
+    <slot />
 </template>

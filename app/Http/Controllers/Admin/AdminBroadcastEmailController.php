@@ -4,29 +4,23 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Mail\BroadcastMail;
+use App\Mail\WaitlistLaunchMail;
 use App\Models\BroadcastEmail;
 use App\Models\User;
+use App\Models\WaitlistEntry;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
-use App\Mail\WaitlistLaunchMail;
-use App\Models\WaitlistEntry;
 
 class AdminBroadcastEmailController extends Controller
 {
-    /**
-     * Audience options and their labels — single source of truth.
-     */
     public const AUDIENCES = [
-        'all'             => 'All opted-in customers',
+        'all' => 'All opted-in customers',
         'ordered_last_90' => 'Opted-in, ordered in last 90 days',
-        'never_ordered'   => 'Opted-in, never ordered',
+        'never_ordered' => 'Opted-in, never ordered',
     ];
 
-    /**
-     * Display broadcast history.
-     */
     public function index()
     {
         $broadcasts = BroadcastEmail::with('sender:id,name')
@@ -37,15 +31,12 @@ class AdminBroadcastEmailController extends Controller
         $waitlistCount = WaitlistEntry::count();
 
         return Inertia::render('admin/broadcast/Index', [
-            'broadcasts'    => $broadcasts,
-            'totalOptedIn'  => $totalOptedIn,
+            'broadcasts' => $broadcasts,
+            'totalOptedIn' => $totalOptedIn,
             'waitlistCount' => $waitlistCount,
         ]);
     }
 
-    /**
-     * Show the compose form, including a live recipient count per audience.
-     */
     public function create()
     {
         $audienceCounts = [];
@@ -54,20 +45,17 @@ class AdminBroadcastEmailController extends Controller
         }
 
         return Inertia::render('admin/broadcast/Create', [
-            'audiences'      => self::AUDIENCES,
+            'audiences' => self::AUDIENCES,
             'audienceCounts' => $audienceCounts,
         ]);
     }
 
-    /**
-     * Send the broadcast and log it.
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'subject'  => ['required', 'string', 'max:255'],
-            'body'     => ['required', 'string', 'min:10'],
-            'audience' => ['required', 'in:' . implode(',', array_keys(self::AUDIENCES))],
+            'subject' => ['required', 'string', 'max:255'],
+            'body' => ['required', 'string', 'min:10'],
+            'audience' => ['required', 'in:'.implode(',', array_keys(self::AUDIENCES))],
         ]);
 
         $recipients = $this->resolveRecipients($validated['audience'])->get();
@@ -80,8 +68,8 @@ class AdminBroadcastEmailController extends Controller
         foreach ($recipients as $user) {
             Mail::to($user->email)->queue(
                 new BroadcastMail(
-                    subject:   $validated['subject'],
-                    body:      $validated['body'],
+                    subject: $validated['subject'],
+                    body: $validated['body'],
                     recipient: $user,
                 )
             );
@@ -89,12 +77,12 @@ class AdminBroadcastEmailController extends Controller
 
         // Log the broadcast
         BroadcastEmail::create([
-            'sent_by'         => Auth::id(),
-            'subject'         => $validated['subject'],
-            'body'            => $validated['body'],
-            'audience'        => $validated['audience'],
+            'sent_by' => Auth::id(),
+            'subject' => $validated['subject'],
+            'body' => $validated['body'],
+            'audience' => $validated['audience'],
             'recipient_count' => $recipients->count(),
-            'sent_at'         => now(),
+            'sent_at' => now(),
         ]);
 
         return redirect()
@@ -102,25 +90,18 @@ class AdminBroadcastEmailController extends Controller
             ->with('success', "Broadcast queued for {$recipients->count()} recipient(s).");
     }
 
-    /**
-     * Show a previously sent broadcast (read-only).
-     */
     public function show(BroadcastEmail $broadcast)
     {
         $broadcast->load('sender:id,name');
 
         return Inertia::render('admin/broadcast/Show', [
-            'broadcast'     => $broadcast,
+            'broadcast' => $broadcast,
             'audienceLabel' => self::AUDIENCES[$broadcast->audience] ?? $broadcast->audience,
         ]);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Build the base query for a given audience key (without ->get() so we can
-     * call ->count() and ->get() separately).
-     */
     private function resolveRecipients(string $audience)
     {
         // Always restrict to opted-in, non-admin users
@@ -131,18 +112,15 @@ class AdminBroadcastEmailController extends Controller
         return match ($audience) {
             'ordered_last_90' => $query->whereHas('orders', function ($q) {
                 $q->where('status', 'successful')
-                  ->where('created_at', '>=', now()->subDays(90));
+                    ->where('created_at', '>=', now()->subDays(90));
             }),
             'never_ordered' => $query->whereDoesntHave('orders', function ($q) {
                 $q->where('status', 'successful');
             }),
-            default => $query, // 'all' — every non-admin user
+            default => $query, // 'all' - every non-admin user
         };
     }
 
-    /**
-    * Send the waitlist launch email to all waitlist entries.
-    */
     public function sendWaitlistLaunch(Request $request)
     {
         $recipients = WaitlistEntry::all();

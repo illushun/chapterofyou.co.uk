@@ -14,7 +14,7 @@ class SDSDocument extends Model
     ];
 
     protected $casts = [
-        'parsed'     => 'boolean',
+        'parsed' => 'boolean',
         'issue_date' => 'date',
     ];
 

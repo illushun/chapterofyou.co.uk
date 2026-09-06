@@ -4,18 +4,6 @@ namespace App\Services\CLP;
 
 use App\Models\Product;
 
-/**
- * CLP Mixture Classification Calculator
- *
- * Implements CLP Regulation (EC) No 1272/2008 mixture classification rules.
- *
- * Steps:
- *  1. Load all ingredients (oils + base) with their % in the final product
- *  2. For each ingredient, load its stored hazard codes from oil_hazards
- *  3. Apply CLP Annex I mixture classification thresholds (additive method where applicable)
- *  4. Derive H statements from triggered hazard classes
- *  5. Derive P statements (consumer-appropriate minimal set) from triggered H codes
- */
 class CLPCalculator
 {
     // -------------------------------------------------------------------------
@@ -49,7 +37,7 @@ class CLPCalculator
 
         $reasoning = $this->buildReasoning($ingredients, $triggeredClasses, $hStatements, $pStatements, $signalWord);
 
-        // Verify total % accounts for base — warn if it doesn't add up to ~100
+        // Verify total % accounts for base - warn if it doesn't add up to ~100
         $uniqueIngredients = [];
         foreach ($ingredients as $i) {
             $uniqueIngredients[$i['name']] = $i['percentage'];
@@ -57,16 +45,16 @@ class CLPCalculator
         $totalPercent = array_sum($uniqueIngredients);
 
         return [
-            'signal_word'              => $signalWord,
-            'required_pictograms'      => $pictograms,
-            'hazard_statements'        => $hStatements,
+            'signal_word' => $signalWord,
+            'required_pictograms' => $pictograms,
+            'hazard_statements' => $hStatements,
             'precautionary_statements' => $pStatements,
-            'triggered_classes'        => $triggeredClasses,
-            'ingredients_used'         => $ingredients,
-            'reasoning'                => $reasoning,
-            'total_percent'            => round($totalPercent, 2),
-            'percent_warning'          => ($totalPercent < 99 || $totalPercent > 101)
-                ? "WARNING: Ingredients total {$totalPercent}% — should be ~100%. Check that the base is included in product_material and percentages are correct."
+            'triggered_classes' => $triggeredClasses,
+            'ingredients_used' => $ingredients,
+            'reasoning' => $reasoning,
+            'total_percent' => round($totalPercent, 2),
+            'percent_warning' => ($totalPercent < 99 || $totalPercent > 101)
+                ? "WARNING: Ingredients total {$totalPercent}% - should be ~100%. Check that the base is included in product_material and percentages are correct."
                 : null,
         ];
     }
@@ -88,17 +76,17 @@ class CLPCalculator
         $totalOilPercent = 0.0;
 
         foreach ($product->materials as $material) {
-            $oil        = $material->oil;
+            $oil = $material->oil;
             $percentage = (float) $material->percentage;
-            $isBase     = (bool) ($material->is_base ?? false);
-            $name       = $oil?->name ?? 'Unknown';
+            $isBase = (bool) ($material->is_base ?? false);
+            $name = $oil?->name ?? 'Unknown';
 
             if ($oil === null) {
                 continue;
             }
 
             // Track total oil % so we can derive base % below
-            if (!$isBase) {
+            if (! $isBase) {
                 $totalOilPercent += $percentage;
             }
 
@@ -106,22 +94,23 @@ class CLPCalculator
 
             if ($hazards->isEmpty()) {
                 $list[] = [
-                    'name'       => $name,
+                    'name' => $name,
                     'percentage' => $percentage,
-                    'code'       => null,
-                    'signal'     => null,
-                    'is_base'    => $isBase,
+                    'code' => null,
+                    'signal' => null,
+                    'is_base' => $isBase,
                 ];
+
                 continue;
             }
 
             foreach ($hazards as $hazard) {
                 $list[] = [
-                    'name'       => $name,
+                    'name' => $name,
                     'percentage' => $percentage,
-                    'code'       => $hazard->hazard_code,
-                    'signal'     => $hazard->signal_word ?? null,
-                    'is_base'    => $isBase,
+                    'code' => $hazard->hazard_code,
+                    'signal' => $hazard->signal_word ?? null,
+                    'is_base' => $isBase,
                 ];
             }
         }
@@ -132,14 +121,14 @@ class CLPCalculator
         // and does not contribute any hazard codes to the mixture.
         $hasStoredBase = $product->materials->contains(fn ($m) => (bool) ($m->is_base ?? false));
 
-        if (!$hasStoredBase && $totalOilPercent < 100.0) {
+        if (! $hasStoredBase && $totalOilPercent < 100.0) {
             $basePercent = round(100.0 - $totalOilPercent, 4);
             $list[] = [
-                'name'       => 'Reed Diffuser Base (auto)',
+                'name' => 'Reed Diffuser Base (auto)',
                 'percentage' => $basePercent,
-                'code'       => null,
-                'signal'     => null,
-                'is_base'    => true,
+                'code' => null,
+                'signal' => null,
+                'is_base' => true,
             ];
         }
 
@@ -149,7 +138,7 @@ class CLPCalculator
     // -------------------------------------------------------------------------
     // Helpers: sum the total % of all ingredients carrying a given hazard code
     //
-    // This is the CLP additive method — we don't just check if one ingredient
+    // This is the CLP additive method - we don't just check if one ingredient
     // hits a threshold, we sum all contributions with that code.
     // -------------------------------------------------------------------------
     protected function sumByCode(array $ingredients, string $code): float
@@ -168,6 +157,7 @@ class CLPCalculator
                 return true;
             }
         }
+
         return false;
     }
 
@@ -182,85 +172,85 @@ class CLPCalculator
         $triggered = [];
 
         // -----------------------------------------------------------------
-        // Skin Sensitisation — H317
+        // Skin Sensitisation - H317
         // CLP Annex I 3.4.3.3: cut-off 0.1% for Cat 1/1A/1B
         // Additive: sum of all H317 ingredients >= 0.1% triggers classification
         // -----------------------------------------------------------------
         $h317sum = $this->sumByCode($ingredients, 'H317');
         if ($h317sum >= 0.1) {
             $triggered['skin_sensitisation'] = [
-                'h_code'    => 'H317',
-                'category'  => '1',
-                'signal'    => 'Warning',
+                'h_code' => 'H317',
+                'category' => '1',
+                'signal' => 'Warning',
                 'pictogram' => 'exclamation',
-                'sum'       => $h317sum,
+                'sum' => $h317sum,
             ];
         }
 
         // -----------------------------------------------------------------
-        // Skin Irritation — H315
+        // Skin Irritation - H315
         // CLP Annex I 3.2.3.3: generic cut-off 10%
         // Additive method applies
         // -----------------------------------------------------------------
         $h315sum = $this->sumByCode($ingredients, 'H315');
         if ($h315sum >= 10.0) {
             $triggered['skin_irritation'] = [
-                'h_code'    => 'H315',
-                'category'  => '2',
-                'signal'    => 'Warning',
+                'h_code' => 'H315',
+                'category' => '2',
+                'signal' => 'Warning',
                 'pictogram' => 'exclamation',
-                'sum'       => $h315sum,
+                'sum' => $h315sum,
             ];
         }
 
         // -----------------------------------------------------------------
-        // Eye Irritation — H319
+        // Eye Irritation - H319
         // CLP Annex I 3.3.3.3: generic cut-off 10%
         // Additive method applies
         // -----------------------------------------------------------------
         $h319sum = $this->sumByCode($ingredients, 'H319');
         if ($h319sum >= 10.0) {
             $triggered['eye_irritation'] = [
-                'h_code'    => 'H319',
-                'category'  => '2',
-                'signal'    => 'Warning',
+                'h_code' => 'H319',
+                'category' => '2',
+                'signal' => 'Warning',
                 'pictogram' => 'exclamation',
-                'sum'       => $h319sum,
+                'sum' => $h319sum,
             ];
         }
 
         // -----------------------------------------------------------------
-        // Serious Eye Damage — H318
+        // Serious Eye Damage - H318
         // CLP Annex I 3.3.3.3: cut-off 10%
         // -----------------------------------------------------------------
         $h318sum = $this->sumByCode($ingredients, 'H318');
         if ($h318sum >= 10.0) {
             $triggered['serious_eye_damage'] = [
-                'h_code'    => 'H318',
-                'category'  => '1',
-                'signal'    => 'Danger',
+                'h_code' => 'H318',
+                'category' => '1',
+                'signal' => 'Danger',
                 'pictogram' => 'corrosion',
-                'sum'       => $h318sum,
+                'sum' => $h318sum,
             ];
         }
 
         // -----------------------------------------------------------------
-        // Aspiration Hazard — H304
+        // Aspiration Hazard - H304
         // CLP Annex I 3.10.3.3: cut-off 10% for individual ingredient
-        // Note: does NOT use additive method — a SINGLE ingredient >= 10%
+        // Note: does NOT use additive method - a SINGLE ingredient >= 10%
         // triggers it (because it's about viscosity/physical property)
         // -----------------------------------------------------------------
         if ($this->anyAbove($ingredients, 'H304', 10.0)) {
             $triggered['aspiration_hazard'] = [
-                'h_code'    => 'H304',
-                'category'  => '1',
-                'signal'    => 'Danger',
+                'h_code' => 'H304',
+                'category' => '1',
+                'signal' => 'Danger',
                 'pictogram' => 'health-hazard',
             ];
         }
 
         // -----------------------------------------------------------------
-        // Flammable Liquid — H226 / H225 / H224
+        // Flammable Liquid - H226 / H225 / H224
         // CLP Annex I 2.6.4.3: cut-off 10% (additive by flash point category)
         // Priority: most severe wins
         // -----------------------------------------------------------------
@@ -270,36 +260,36 @@ class CLPCalculator
 
         if ($h224sum >= 10.0) {
             $triggered['flammable_liquid'] = [
-                'h_code'    => 'H224',
-                'category'  => '1',
-                'signal'    => 'Danger',
+                'h_code' => 'H224',
+                'category' => '1',
+                'signal' => 'Danger',
                 'pictogram' => 'flame',
-                'sum'       => $h224sum,
+                'sum' => $h224sum,
             ];
         } elseif ($h225sum >= 10.0) {
             $triggered['flammable_liquid'] = [
-                'h_code'    => 'H225',
-                'category'  => '2',
-                'signal'    => 'Danger',
+                'h_code' => 'H225',
+                'category' => '2',
+                'signal' => 'Danger',
                 'pictogram' => 'flame',
-                'sum'       => $h225sum,
+                'sum' => $h225sum,
             ];
         } elseif ($h226sum >= 10.0) {
             $triggered['flammable_liquid'] = [
-                'h_code'    => 'H226',
-                'category'  => '3',
-                'signal'    => 'Warning',
+                'h_code' => 'H226',
+                'category' => '3',
+                'signal' => 'Warning',
                 'pictogram' => 'flame',
-                'sum'       => $h226sum,
+                'sum' => $h226sum,
             ];
         }
 
         // -----------------------------------------------------------------
-        // Aquatic Acute — H400
+        // Aquatic Acute - H400
         // CLP Annex I 4.1.3.5.5 additive formula:
         //   Σ (Ci × Mi) / 25 >= 1
         // Where Mi = M-factor (default 1 if unknown)
-        // For simplicity we use M=1 for all — conservative but safe
+        // For simplicity we use M=1 for all - conservative but safe
         // -----------------------------------------------------------------
         $h400weighted = 0.0;
         foreach ($ingredients as $i) {
@@ -310,17 +300,17 @@ class CLPCalculator
         }
         if ($h400weighted >= 1.0) {
             $triggered['aquatic_acute'] = [
-                'h_code'    => 'H400',
-                'category'  => '1',
-                'signal'    => 'Warning',
+                'h_code' => 'H400',
+                'category' => '1',
+                'signal' => 'Warning',
                 'pictogram' => 'environment',
-                'sum'       => $h400weighted * 25, // back to % for reference
+                'sum' => $h400weighted * 25, // back to % for reference
             ];
         }
 
         // -----------------------------------------------------------------
-        // Aquatic Chronic — H410 / H411 / H412
-        // CLP Annex I 4.1.3.5.5 — tiered additive method
+        // Aquatic Chronic - H410 / H411 / H412
+        // CLP Annex I 4.1.3.5.5 - tiered additive method
         //
         // Chronic 1 (H410): Σ(Ci × Mi) / 0.1 >= 1  → i.e. sum >= 0.1% (M=1)
         // Chronic 2 (H411): Σ Ci >= 1%
@@ -330,8 +320,8 @@ class CLPCalculator
         // their chronic toxicity factor. Simplified here.
         // -----------------------------------------------------------------
         $h410weighted = 0.0;
-        $h411sum      = 0.0;
-        $h412sum      = 0.0;
+        $h411sum = 0.0;
+        $h412sum = 0.0;
 
         foreach ($ingredients as $i) {
             if ($i['code'] === 'H410') {
@@ -352,29 +342,29 @@ class CLPCalculator
 
         if ($h410weighted >= 1.0) {
             $triggered['aquatic_chronic'] = [
-                'h_code'    => 'H410',
-                'category'  => '1',
-                'signal'    => 'Warning',
+                'h_code' => 'H410',
+                'category' => '1',
+                'signal' => 'Warning',
                 'pictogram' => 'environment',
             ];
         } elseif ($h411sum >= 1.0 || ($h400sum + $h411sum) >= 1.0) {
             $triggered['aquatic_chronic'] = [
-                'h_code'    => 'H411',
-                'category'  => '2',
-                'signal'    => null,
+                'h_code' => 'H411',
+                'category' => '2',
+                'signal' => null,
                 'pictogram' => 'environment',
             ];
         } elseif ($h412sum >= 10.0) {
             $triggered['aquatic_chronic'] = [
-                'h_code'    => 'H412',
-                'category'  => '3',
-                'signal'    => null,
+                'h_code' => 'H412',
+                'category' => '3',
+                'signal' => null,
                 'pictogram' => null,
             ];
         }
 
         // -----------------------------------------------------------------
-        // Reproductive Toxicity — H360 / H361
+        // Reproductive Toxicity - H360 / H361
         // CLP Annex I 3.7.3.3:
         //   Cat 1 (H360): cut-off 0.3%
         //   Cat 2 (H361): cut-off 3%
@@ -385,55 +375,55 @@ class CLPCalculator
 
         if ($h360sum >= 0.3) {
             $triggered['reproductive_toxicity'] = [
-                'h_code'    => 'H360',
-                'category'  => '1',
-                'signal'    => 'Danger',
+                'h_code' => 'H360',
+                'category' => '1',
+                'signal' => 'Danger',
                 'pictogram' => 'health-hazard',
-                'sum'       => $h360sum,
+                'sum' => $h360sum,
             ];
         } elseif ($h361sum >= 3.0) {
             $triggered['reproductive_toxicity'] = [
-                'h_code'    => 'H361',
-                'category'  => '2',
-                'signal'    => 'Warning',
+                'h_code' => 'H361',
+                'category' => '2',
+                'signal' => 'Warning',
                 'pictogram' => 'health-hazard',
-                'sum'       => $h361sum,
+                'sum' => $h361sum,
             ];
         }
 
         // -----------------------------------------------------------------
-        // Acute Oral Toxicity — H302 (Cat 4)
+        // Acute Oral Toxicity - H302 (Cat 4)
         // CLP Annex I 3.1.3.6: ATE mixture formula applies
         // Simplified: cut-off 25% for Cat 4
         // -----------------------------------------------------------------
         $h302sum = $this->sumByCode($ingredients, 'H302');
         if ($h302sum >= 25.0) {
             $triggered['acute_toxicity_oral'] = [
-                'h_code'    => 'H302',
-                'category'  => '4',
-                'signal'    => 'Warning',
+                'h_code' => 'H302',
+                'category' => '4',
+                'signal' => 'Warning',
                 'pictogram' => 'exclamation',
-                'sum'       => $h302sum,
+                'sum' => $h302sum,
             ];
         }
 
         // -----------------------------------------------------------------
-        // STOT Single Exposure — H336 (Cat 3, narcotic)
+        // STOT Single Exposure - H336 (Cat 3, narcotic)
         // CLP Annex I 3.8.3.3: cut-off 20%
         // -----------------------------------------------------------------
         $h336sum = $this->sumByCode($ingredients, 'H336');
         if ($h336sum >= 20.0) {
             $triggered['stot_single'] = [
-                'h_code'    => 'H336',
-                'category'  => '3',
-                'signal'    => 'Warning',
+                'h_code' => 'H336',
+                'category' => '3',
+                'signal' => 'Warning',
                 'pictogram' => 'exclamation',
-                'sum'       => $h336sum,
+                'sum' => $h336sum,
             ];
         }
 
         // CLP Annex I 3.4.3.3 note: if skin sensitisation (H317) is triggered,
-        // skin irritation (H315) is subsumed — drop H315 to avoid redundancy.
+        // skin irritation (H315) is subsumed - drop H315 to avoid redundancy.
         if (isset($triggered['skin_sensitisation']) && isset($triggered['skin_irritation'])) {
             unset($triggered['skin_irritation']);
         }
@@ -454,12 +444,13 @@ class CLPCalculator
         }
 
         ksort($statements);
+
         return $statements;
     }
 
     protected function hStatementText(string $code): string
     {
-        return match($code) {
+        return match ($code) {
             'H224' => 'Extremely flammable liquid and vapour.',
             'H225' => 'Highly flammable liquid and vapour.',
             'H226' => 'Flammable liquid and vapour.',
@@ -481,15 +472,15 @@ class CLPCalculator
     }
 
     // -------------------------------------------------------------------------
-    // Step 7: Derive P statements — consumer product minimal set
+    // Step 7: Derive P statements - consumer product minimal set
     //
     // Based on CLP Annex IV. For consumer products (Article 22(d)):
     // workplace handling statements are omitted; only actionable
     // consumer-facing statements are included.
     //
     // Always:
-    //   P102 — keep out of reach of children
-    //   P501 — disposal (when any hazard triggered)
+    //   P102 - keep out of reach of children
+    //   P501 - disposal (when any hazard triggered)
     //
     // By hazard:
     //   H317 → P333+P313
@@ -507,17 +498,17 @@ class CLPCalculator
             return [];
         }
 
-        // Consumer product minimal set — omit all workplace/professional statements.
+        // Consumer product minimal set - omit all workplace/professional statements.
         // Removed: P271 (ventilation), P301+P310 (swallowed/poison centre),
         //          P305+P351+P338 (eye rinse), P308+P313 (if exposed),
         //          P331 (don't induce vomiting), P391 (collect spillage).
         $allStatements = [
-            'P102'      => 'Keep out of reach of children.',
-            'P210'      => 'Keep away from heat, sparks and open flames. No smoking.',
-            'P273'      => 'Avoid release to the environment.',
+            'P102' => 'Keep out of reach of children.',
+            'P210' => 'Keep away from heat, sparks and open flames. No smoking.',
+            'P273' => 'Avoid release to the environment.',
             'P302+P352' => 'IF ON SKIN: Wash with plenty of water.',
             'P333+P313' => 'If skin irritation or rash occurs: Get medical advice.',
-            'P501'      => 'Dispose of contents and container in accordance with local regulations.',
+            'P501' => 'Dispose of contents and container in accordance with local regulations.',
         ];
 
         $byHCode = [
@@ -544,18 +535,19 @@ class CLPCalculator
 
         foreach ($hCodes as $hCode) {
             foreach ($byHCode[$hCode] ?? [] as $pCode) {
-                if (isset($allStatements[$pCode]) && !isset($selected[$pCode])) {
+                if (isset($allStatements[$pCode]) && ! isset($selected[$pCode])) {
                     $selected[$pCode] = $allStatements[$pCode];
                 }
             }
         }
 
         ksort($selected);
+
         return $selected;
     }
 
     // -------------------------------------------------------------------------
-    // Signal word — Danger takes priority over Warning
+    // Signal word - Danger takes priority over Warning
     // -------------------------------------------------------------------------
     protected function resolveSignalWord(array $triggeredClasses): ?string
     {
@@ -567,11 +559,12 @@ class CLPCalculator
         if (in_array('Warning', $words)) {
             return 'Warning';
         }
+
         return null;
     }
 
     // -------------------------------------------------------------------------
-    // Pictograms — deduplicated list
+    // Pictograms - deduplicated list
     // -------------------------------------------------------------------------
     protected function resolvePictograms(array $triggeredClasses): array
     {
@@ -595,17 +588,17 @@ class CLPCalculator
         array $pStatements,
         ?string $signalWord
     ): array {
-        // 1. Ingredient summary — what went in and what hazards each brought
+        // 1. Ingredient summary - what went in and what hazards each brought
         $ingredientSummary = [];
         $seen = [];
         foreach ($ingredients as $i) {
             $key = $i['name'];
-            if (!isset($seen[$key])) {
+            if (! isset($seen[$key])) {
                 $seen[$key] = [
-                    'name'       => $i['name'],
+                    'name' => $i['name'],
                     'percentage' => $i['percentage'],
-                    'is_base'    => $i['is_base'],
-                    'hazards'    => [],
+                    'is_base' => $i['is_base'],
+                    'hazards' => [],
                 ];
             }
             if ($i['code']) {
@@ -617,45 +610,45 @@ class CLPCalculator
             $ingredientSummary[] = $item;
         }
 
-        // 2. Per-hazard class reasoning — what triggered it and why
+        // 2. Per-hazard class reasoning - what triggered it and why
         $classReasons = [];
         foreach ($triggeredClasses as $classKey => $data) {
             $code = $data['h_code'];
-            $sum  = $data['sum'] ?? null;
+            $sum = $data['sum'] ?? null;
 
             // Find which ingredients contributed
             $contributors = array_values(array_filter($ingredients, fn ($i) => $i['code'] === $code));
-            $contribText  = array_map(
+            $contribText = array_map(
                 fn ($i) => "{$i['name']} ({$i['percentage']}%)",
                 $contributors
             );
 
-            $threshold = match($code) {
-                'H317'              => '≥ 0.1% (additive)',
+            $threshold = match ($code) {
+                'H317' => '≥ 0.1% (additive)',
                 'H315', 'H319',
-                'H318', 'H302'      => '≥ 10% (additive)',
-                'H304'              => '≥ 10% (single ingredient)',
+                'H318', 'H302' => '≥ 10% (additive)',
+                'H304' => '≥ 10% (single ingredient)',
                 'H224', 'H225',
-                'H226'              => '≥ 10% (additive)',
-                'H400'              => 'Σ(Ci × Mi)/25 ≥ 1',
-                'H410'              => 'Σ(Ci × Mi)/0.1 ≥ 1',
-                'H411'              => 'Σ Ci ≥ 1%',
-                'H412'              => 'Σ Ci ≥ 10%',
-                'H360'              => '≥ 0.3% (additive)',
-                'H361'              => '≥ 3% (additive)',
-                'H336'              => '≥ 20% (additive)',
-                default             => 'threshold met',
+                'H226' => '≥ 10% (additive)',
+                'H400' => 'Σ(Ci × Mi)/25 ≥ 1',
+                'H410' => 'Σ(Ci × Mi)/0.1 ≥ 1',
+                'H411' => 'Σ Ci ≥ 1%',
+                'H412' => 'Σ Ci ≥ 10%',
+                'H360' => '≥ 0.3% (additive)',
+                'H361' => '≥ 3% (additive)',
+                'H336' => '≥ 20% (additive)',
+                default => 'threshold met',
             };
 
             $classReasons[] = [
-                'class'        => $classKey,
-                'h_code'       => $code,
-                'h_text'       => $hStatements[$code] ?? $code,
-                'category'     => $data['category'] ?? null,
-                'signal'       => $data['signal'] ?? null,
-                'pictogram'    => $data['pictogram'] ?? null,
-                'threshold'    => $threshold,
-                'sum'          => $sum !== null ? round($sum, 4) : null,
+                'class' => $classKey,
+                'h_code' => $code,
+                'h_text' => $hStatements[$code] ?? $code,
+                'category' => $data['category'] ?? null,
+                'signal' => $data['signal'] ?? null,
+                'pictogram' => $data['pictogram'] ?? null,
+                'threshold' => $threshold,
+                'sum' => $sum !== null ? round($sum, 4) : null,
                 'contributors' => $contribText,
             ];
         }
@@ -663,15 +656,15 @@ class CLPCalculator
         // 3. Signal word reasoning
         $signalReasons = [];
         foreach ($triggeredClasses as $classKey => $data) {
-            if (!empty($data['signal'])) {
+            if (! empty($data['signal'])) {
                 $signalReasons[] = "{$data['h_code']} ({$data['signal']})";
             }
         }
         $signalExplanation = empty($signalReasons)
-            ? 'No hazard classes triggered — no signal word required.'
-            : 'Signal word "' . $signalWord . '" from: ' . implode(', ', $signalReasons) . '. Danger takes priority over Warning.';
+            ? 'No hazard classes triggered - no signal word required.'
+            : 'Signal word "'.$signalWord.'" from: '.implode(', ', $signalReasons).'. Danger takes priority over Warning.';
 
-        // 4. P statement reasoning — which H code triggered each P code
+        // 4. P statement reasoning - which H code triggered each P code
         $pReasons = [];
         $byHCode = [
             'H224' => ['P210', 'P501'], 'H225' => ['P210', 'P501'], 'H226' => ['P210', 'P501'],
@@ -681,7 +674,7 @@ class CLPCalculator
             'H400' => ['P273', 'P501'], 'H410' => ['P273', 'P501'],
             'H411' => ['P273', 'P501'], 'H412' => ['P273', 'P501'],
         ];
-        $pSources = ['P102' => ['always — mandatory on all consumer products']];
+        $pSources = ['P102' => ['always - mandatory on all consumer products']];
         foreach (array_keys($hStatements) as $hCode) {
             foreach ($byHCode[$hCode] ?? [] as $pCode) {
                 $pSources[$pCode][] = $hCode;
@@ -689,20 +682,19 @@ class CLPCalculator
         }
         foreach ($pStatements as $pCode => $pText) {
             $pReasons[] = [
-                'code'       => $pCode,
-                'text'       => $pText,
+                'code' => $pCode,
+                'text' => $pText,
                 'triggered_by' => implode(', ', $pSources[$pCode] ?? ['unknown']),
             ];
         }
 
         return [
-            'ingredients'        => $ingredientSummary,
-            'triggered_classes'  => $classReasons,
-            'signal_word'        => $signalExplanation,
+            'ingredients' => $ingredientSummary,
+            'triggered_classes' => $classReasons,
+            'signal_word' => $signalExplanation,
             'p_statement_sources' => $pReasons,
         ];
     }
-
 
     // -------------------------------------------------------------------------
     // Calculate allergens present in the final mixture above threshold
@@ -729,7 +721,7 @@ class CLPCalculator
             'materials.oil.components',
         ]);
 
-        // EU 26 fragrance allergens — official INCI/IUPAC names as they appear
+        // EU 26 fragrance allergens - official INCI/IUPAC names as they appear
         // on Nikura SDS Section 3. Matching is case-insensitive and partial
         // (e.g. "d-Limonene" matches "limonene").
         $euAllergens = [
@@ -770,10 +762,10 @@ class CLPCalculator
         $totals = [];
 
         foreach ($product->materials as $material) {
-            $oil      = $material->oil;
+            $oil = $material->oil;
             $blendPct = (float) $material->percentage; // e.g. 10.0 for 10%
 
-            if (!$oil || $oil->components->isEmpty()) {
+            if (! $oil || $oil->components->isEmpty()) {
                 continue;
             }
 

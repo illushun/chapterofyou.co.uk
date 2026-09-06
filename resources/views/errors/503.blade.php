@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Back Soon — Chapter of You</title>
+    <title>Back Soon - Chapter of You</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -391,7 +391,7 @@
 
     </div>
 
-    <p class="brand-foot">Chapter of You &mdash; your chapter, your self-care</p>
+    <p class="brand-foot">Chapter of You - your chapter, your self-care</p>
 
 </body>
 </html>

@@ -17,17 +17,20 @@ class BroadcastMail extends Mailable implements ShouldQueue
     use SerializesModels;
 
     public string $emailSubject;
+
     public string $emailBody;
+
     public string $recipientName;
+
     public string $unsubscribeUrl;
 
     public function __construct(string $subject, string $body, User $recipient)
     {
-        $this->emailSubject   = $subject;
-        $this->emailBody      = $body;
-        $this->recipientName  = $recipient->name;
+        $this->emailSubject = $subject;
+        $this->emailBody = $body;
+        $this->recipientName = $recipient->name;
 
-        // Signed URL — valid for 30 days, requires no login
+        // Signed URL - valid for 30 days, requires no login
         $this->unsubscribeUrl = URL::signedRoute(
             'unsubscribe.show',
             ['user' => $recipient->id],
@@ -51,9 +54,9 @@ class BroadcastMail extends Mailable implements ShouldQueue
         return new Content(
             view: 'mail.broadcast',
             with: [
-                'subject'        => $this->emailSubject,
-                'body'           => $this->emailBody,
-                'recipientName'  => $this->recipientName,
+                'subject' => $this->emailSubject,
+                'body' => $this->emailBody,
+                'recipientName' => $this->recipientName,
                 'unsubscribeUrl' => $this->unsubscribeUrl,
             ],
         );

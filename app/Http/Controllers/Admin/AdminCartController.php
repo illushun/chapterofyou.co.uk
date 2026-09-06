@@ -3,16 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use App\Models\Cart;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class AdminCartController extends Controller
 {
-    /**
-     * Display a listing of active carts.
-     */
     public function index(Request $request)
     {
         // Define active as either being associated with a user or not yet expired
@@ -26,7 +23,7 @@ class AdminCartController extends Controller
             ->orWhere(function ($query) {
                 // Guest carts are active if their expiry date is in the future
                 $query->whereNotNull('session_id')
-                      ->where('expires_at', '>', Carbon::now());
+                    ->where('expires_at', '>', Carbon::now());
             })
             ->orderByDesc('updated_at')
             ->paginate(15);
@@ -36,9 +33,6 @@ class AdminCartController extends Controller
         ]);
     }
 
-    /**
-     * Display the contents of the specified cart.
-     */
     public function show(Cart $cart)
     {
         $cart->load(['user:id,name,email', 'items.product:id,mpn,name,cost']);

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>CLP Label — {{ $label->product_name }}</title>
+<title>CLP Label - {{ $label->product_name }}</title>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -68,7 +68,7 @@
         line-height: 1.6;
     }
 
-    /* Preview wrapper — 3x scale */
+    /* Preview wrapper - 3x scale */
     .preview {
         width: 862px;
         height: 568px;
@@ -175,7 +175,7 @@
         margin-bottom: 5mm;
     }
 
-    /* ── 5. Supplier footer — pinned to bottom ── */
+    /* ── 5. Supplier footer - pinned to bottom ── */
     .footer {
         position: absolute;
         bottom: 1.5mm;
@@ -217,7 +217,7 @@
 <body>
 
 <div class="toolbar">
-    <h1>CLP Label — {{ $label->product_name }}</h1>
+    <h1>CLP Label - {{ $label->product_name }}</h1>
     <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
     <button class="save-btn" id="saveBtn" onclick="saveAsImage()">Save as Image</button>
 </div>
@@ -242,7 +242,7 @@
         </div>
     @endif
 
-    {{-- 3. Pictograms + Signal Word — centred --}}
+    {{-- 3. Pictograms + Signal Word - centred --}}
     <div class="hazard-row">
         @if($label->signal_word)
             <span class="signal {{ strtolower($label->signal_word) === 'danger' ? 'danger' : 'warning' }}">
@@ -296,7 +296,7 @@
 
         const label = document.querySelector('.label');
 
-        // 76mm × 50mm at 96dpi — explicit pixel dimensions so the
+        // 76mm × 50mm at 96dpi - explicit pixel dimensions so the
         // position:absolute footer is included in the captured area
         const MM_TO_PX = 96 / 25.4;
         const labelW = Math.round(76 * MM_TO_PX);  // ≈ 287px

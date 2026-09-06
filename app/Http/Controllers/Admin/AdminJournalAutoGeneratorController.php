@@ -48,7 +48,7 @@ class AdminJournalAutoGeneratorController extends Controller
 
         try {
             // Resolved inside the try block (not via method injection) so that a
-            // missing ANTHROPIC_API_KEY — thrown from the constructor — is caught
+            // missing ANTHROPIC_API_KEY - thrown from the constructor - is caught
             // and turned into a flash message, rather than a 500 error.
             $post = app(JournalPostGenerator::class)->generate($settings->topic_notes);
 

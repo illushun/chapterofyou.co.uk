@@ -5,18 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\GiftVoucherOrder;
 use App\Services\GiftVoucherService;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class AdminGiftVoucherController extends Controller
 {
-    public function __construct(private GiftVoucherService $service)
-    {
-    }
+    public function __construct(private GiftVoucherService $service) {}
 
-    /**
-     * List all gift voucher orders.
-     */
     public function index()
     {
         $giftVouchers = GiftVoucherOrder::with(['order', 'voucher'])
@@ -28,9 +22,6 @@ class AdminGiftVoucherController extends Controller
         ]);
     }
 
-    /**
-     * Mark a physical voucher as dispatched.
-     */
     public function markDispatched(GiftVoucherOrder $giftVoucherOrder)
     {
         if ($giftVoucherOrder->isFulfilled()) {
@@ -42,16 +33,13 @@ class AdminGiftVoucherController extends Controller
         return back()->with('success', "Gift voucher #{$giftVoucherOrder->id} marked as dispatched.");
     }
 
-    /**
-     * Resend an e-voucher email (e.g. if recipient didn't receive it).
-     */
     public function resendEmail(GiftVoucherOrder $giftVoucherOrder)
     {
-        if (!$giftVoucherOrder->isEmail()) {
-            return back()->with('error', 'This is a physical voucher — use Mark Dispatched instead.');
+        if (! $giftVoucherOrder->isEmail()) {
+            return back()->with('error', 'This is a physical voucher - use Mark Dispatched instead.');
         }
 
-        if (!$giftVoucherOrder->recipient_email) {
+        if (! $giftVoucherOrder->recipient_email) {
             return back()->with('error', 'No recipient email address on record.');
         }
 

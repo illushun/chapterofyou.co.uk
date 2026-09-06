@@ -14,7 +14,7 @@ interface Connection {
     shop_id: string | null;
 }
 
-const props = defineProps<{
+defineProps<{
     connection: Connection | null;
     result: ImportResult | null;
 }>();

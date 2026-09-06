@@ -2,23 +2,21 @@
 
 namespace App\Http\Controllers\Product;
 
-use App\Models\Wishlist;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
-use App\Models\Product;
-use App\Models\Product\View as ProductView;
 use App\Models\Category;
+use App\Models\Product;
 use App\Models\Product\Review;
+use App\Models\Wishlist;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class ProductController extends Controller
 {
     private const ALLOWED_IPS = [
         '82.18.187.157', // kace
-        '176.27.250.172' // stu
+        '176.27.250.172', // stu
     ];
 
     private function validIp(Request $request): bool
@@ -28,22 +26,10 @@ class ProductController extends Controller
 
     public function index(Request $request): \Inertia\Response
     {
-        /*if (!Auth::check()) {
-            return Inertia::render('Welcome', [
-                'siteName' => 'Chapter of You',
-            ]);
-        }
-
-        $user = Auth::user();
-        if (!$user->is_admin) {
-            return Inertia::render('Welcome', [
-                'siteName' => 'Chapter of You',
-            ]);
-        }*/
 
         $perPage = 12;
         $filters = $request->only([
-            'search', 'categories', 'min_price', 'max_price', 'sort', 'in_stock'
+            'search', 'categories', 'min_price', 'max_price', 'sort', 'in_stock',
         ]);
 
         $products = Product::with('categories')
@@ -65,9 +51,9 @@ class ProductController extends Controller
             ->get();
 
         return Inertia::render('product/View', [
-            'products'      => $products,
-            'categories'    => $categories,
-            'filters'       => $filters,
+            'products' => $products,
+            'categories' => $categories,
+            'filters' => $filters,
             'wishlistedIds' => Auth::check()
                 ? Wishlist::where('user_id', Auth::id())
                     ->pluck('product_id')
@@ -76,45 +62,28 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Display the specified product resource.
-     *
-     * @param  string  $idOrSlug
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Inertia\Response
-     */
+    /** @return \Inertia\Response */
     public function show(string $idOrSlug, Request $request)
     {
-        /*if (!Auth::check()) {
-            return Inertia::render('Welcome', [
-                'siteName' => 'Chapter of You',
-            ]);
-        }
 
-        $user = Auth::user();
-        if (!$user->is_admin) {
-            return Inertia::render('Welcome', [
-                'siteName' => 'Chapter of You',
-            ]);
-        }*/
         logger()->channel('product_view')->info("Fetching product at URL {$idOrSlug}");
 
         $product = Product::with([
-                'images:product_id,image',
-                'categories:category.id,category.name,category.slug',
-                'reviews.user:id,name',
-                'uniqueViews',
-                'faqs',
-                'children' => function ($query) {
-                    $query->select('id', 'parent_product_id', 'mpn', 'name', 'cost', 'stock_qty')
-                        ->where('status', 'enabled')
-                        ->where('stock_qty', '>', 0);
-                },
-                'refills' => function ($query) {
-                    $query->select('product.id', 'product.name', 'product.cost', 'product.stock_qty')
-                        ->where('status', 'enabled');
-                }
-            ])
+            'images:product_id,image',
+            'categories:category.id,category.name,category.slug',
+            'reviews.user:id,name',
+            'uniqueViews',
+            'faqs',
+            'children' => function ($query) {
+                $query->select('id', 'parent_product_id', 'mpn', 'name', 'cost', 'stock_qty')
+                    ->where('status', 'enabled')
+                    ->where('stock_qty', '>', 0);
+            },
+            'refills' => function ($query) {
+                $query->select('product.id', 'product.name', 'product.cost', 'product.stock_qty')
+                    ->where('status', 'enabled');
+            },
+        ])
             ->where('status', 'enabled')
             ->where(function ($query) use ($idOrSlug) {
                 if (is_numeric($idOrSlug)) {
@@ -139,8 +108,8 @@ class ProductController extends Controller
         $parentProduct = null;
         if ($product->parent_product_id) {
             $parentProduct = Product::where('id', $product->parent_product_id)
-               ->select('id', 'name', 'mpn', 'description')
-               ->first();
+                ->select('id', 'name', 'mpn', 'description')
+                ->first();
         }
 
         $categoryIds = $product->categories->pluck('id');
@@ -166,22 +135,22 @@ class ProductController extends Controller
             ->take(3)
             ->get()
             ->map(fn ($p) => [
-                'id'           => $p->id,
-                'title'        => $p->title,
-                'slug'         => $p->slug,
-                'excerpt'      => $p->excerpt,
-                'cover_image'  => $p->cover_image ? asset('storage/'.$p->cover_image) : null,
+                'id' => $p->id,
+                'title' => $p->title,
+                'slug' => $p->slug,
+                'excerpt' => $p->excerpt,
+                'cover_image' => $p->cover_image ? asset('storage/'.$p->cover_image) : null,
                 'published_at' => $p->published_at->format('d M Y'),
                 'reading_time' => $p->reading_time,
             ]);
 
         return Inertia::render('product/Show', [
-            'product'     => $product->loadMissing('seo'),
-            'parent'      => $parentProduct,
-            'related'     => $relatedProducts,
+            'product' => $product->loadMissing('seo'),
+            'parent' => $parentProduct,
+            'related' => $relatedProducts,
             'journalPosts' => $journalPosts,
-            'canReview'   => $canReview,
-            'wishlisted'  => Auth::check()
+            'canReview' => $canReview,
+            'wishlisted' => Auth::check()
                 ? Wishlist::where('user_id', Auth::id())->where('product_id', $product->id)->exists()
                 : false,
             'wishlistedIds' => Auth::check()
@@ -193,14 +162,7 @@ class ProductController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created review resource in storage.
-     * Requires authentication and proof of purchase.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Product  $product
-     * @return \Illuminate\Http\RedirectResponse
-     */
+    /** @return \Illuminate\Http\RedirectResponse */
     public function storeReview(Request $request, Product $product)
     {
         $request->validate([
@@ -210,7 +172,7 @@ class ProductController extends Controller
             'images.*' => ['image', 'max:2048', 'mimes:jpeg,png,jpg'], // Max 2MB per image
         ]);
 
-        if (!Auth::check() || !Auth::user()->hasPurchased($product->id)) {
+        if (! Auth::check() || ! Auth::user()->hasPurchased($product->id)) {
             return redirect()->back()->withErrors(['review' => 'You must be logged in and have purchased this product to leave a review.']);
         }
 
@@ -218,7 +180,7 @@ class ProductController extends Controller
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $image) {
                 $path = $image->store('reviews', 'public');
-                $uploadedImages[] = "https://chapterofyou.co.uk/storage/" . $path;
+                $uploadedImages[] = 'https://chapterofyou.co.uk/storage/'.$path;
             }
         }
 
@@ -233,15 +195,10 @@ class ProductController extends Controller
         return redirect()->back()->with('success', 'Your review has been submitted and is awaiting approval!');
     }
 
-    /**
-     * Remove the specified review from storage.
-     *
-     * @param  \App\Models\Product\Review  $review
-     * @return \Illuminate\Http\RedirectResponse
-     */
+    /** @return \Illuminate\Http\RedirectResponse */
     public function destroyReview(Review $review)
     {
-        if (!Auth::check() || $review->user_id !== Auth::id()) {
+        if (! Auth::check() || $review->user_id !== Auth::id()) {
             return redirect()->back()->withErrors(['review_delete' => 'You are not authorised to delete this review.']);
         }
 

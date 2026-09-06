@@ -204,7 +204,7 @@
         @if($sheet->order)
         <tr>
             <td class="label">Linked Order</td>
-            <td colspan="3">#{{ $sheet->order->id }} — {{ $sheet->order->first_name }} {{ $sheet->order->last_name }}</td>
+            <td colspan="3">#{{ $sheet->order->id }} - {{ $sheet->order->first_name }} {{ $sheet->order->last_name }}</td>
         </tr>
         @endif
         @if($sheet->product)
@@ -269,11 +269,11 @@
         </tr>
         <tr>
             <td class="label">Max % Allowed</td>
-            <td>{{ $sheet->max_percent_allowed ?: '—' }}</td>
+            <td>{{ $sheet->max_percent_allowed ?: '-' }}</td>
         </tr>
         <tr>
             <td class="label">SDS Hazards Noted</td>
-            <td colspan="3">{{ $sheet->sds_hazards_noted ?: '—' }}</td>
+            <td colspan="3">{{ $sheet->sds_hazards_noted ?: '-' }}</td>
         </tr>
         <tr>
             <td class="label">CLP Label Prepared?</td>
@@ -329,7 +329,7 @@
         @if($sheet->createdBy) &nbsp;|&nbsp; Created by: {{ $sheet->createdBy->name }} @endif
     </div>
     <div class="footer-cell right">
-        Chapter of You &nbsp;|&nbsp; CONFIDENTIAL — Internal Use Only
+        Chapter of You &nbsp;|&nbsp; CONFIDENTIAL - Internal Use Only
     </div>
 </div>
 

@@ -24,7 +24,7 @@ class WaitlistLaunchMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'You\'re in — Chapter of You is live ✦',
+            subject: 'You\'re in - Chapter of You is live ✦',
         );
     }
 

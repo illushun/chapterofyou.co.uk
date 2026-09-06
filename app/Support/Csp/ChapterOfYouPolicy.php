@@ -7,24 +7,14 @@ use Spatie\Csp\Keyword;
 use Spatie\Csp\Policy;
 use Spatie\Csp\Preset;
 
-/**
- * ChapterOfYouPolicy
- *
- * A CSP preset for spatie/laravel-csp v3.
- * Implements Preset (not extends Basic) — this is the v3 API.
- *
- * Works alongside Spatie\Csp\Presets\Basic in config/csp.php.
- * Basic handles the 'self' defaults; this class adds the extra
- * domains required by Stripe, Google Analytics and fonts.
- */
 class ChapterOfYouPolicy implements Preset
 {
     public function configure(Policy $policy): void
     {
         // ── Scripts ───────────────────────────────────────────────────────
-        // js.stripe.com    — Stripe.js library loaded in checkout
-        // m.stripe.network — Stripe's fraud/telemetry scripts (Payment Element)
-        // googletagmanager + google-analytics — GA4 gtag script and beacons
+        // js.stripe.com    - Stripe.js library loaded in checkout
+        // m.stripe.network - Stripe's fraud/telemetry scripts (Payment Element)
+        // googletagmanager + google-analytics - GA4 gtag script and beacons
         $policy->add(Directive::SCRIPT, [
             'https://js.stripe.com',
             'https://m.stripe.network',
@@ -56,7 +46,7 @@ class ChapterOfYouPolicy implements Preset
 
         // ── Workers ───────────────────────────────────────────────────────
         // Stripe's Payment Element spawns a Web Worker from a blob: URL to
-        // isolate sensitive card data. This is the critical directive —
+        // isolate sensitive card data. This is the critical directive -
         // without blob: the worker is blocked and the form never initialises.
         $policy->add(Directive::WORKER, [
             Keyword::SELF,

@@ -70,9 +70,7 @@ function fmt(val: string) {
                     >
                 </h1>
                 <p class="adm-sub">
-                    {{ usages.total }} use{{
-                        usages.total !== 1 ? 's' : ''
-                    }}
+                    {{ usages.total }} use{{ usages.total !== 1 ? 's' : '' }}
                     recorded
                     <span v-if="voucher.max_uses !== null">
                         &middot; {{ voucher.uses_count }}/{{

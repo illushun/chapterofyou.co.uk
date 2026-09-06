@@ -1,51 +1,87 @@
 <script setup lang="ts">
-import { Head, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { usePage } from '@inertiajs/vue3';
+import { computed } from 'vue';
 
-interface Product { id: number; mpn: string; name: string; cost: number; }
+interface Product {
+    id: number;
+    mpn: string;
+    name: string;
+    cost: number;
+}
 interface OrderItem {
-    id: number; product_id: number; product: Product;
-    quantity: number; product_cost: number; product_total: number;
+    id: number;
+    product_id: number;
+    product: Product;
+    quantity: number;
+    product_cost: number;
+    product_total: number;
 }
 interface Order {
-    id: number; payment_type: string;
-    first_name: string; last_name: string; email: string; telephone: string | null;
-    cost_total: number; shipping_total: number; voucher_discount?: number;
-    tax_total: number; grand_total: number;
-    billing_line_1: string; billing_line_2: string | null;
-    billing_city: string; billing_county: string | null; billing_postcode: string;
-    shipping_line_1: string; shipping_line_2: string | null;
-    shipping_city: string; shipping_county: string | null; shipping_postcode: string;
-    status: string; created_at: string; items: OrderItem[];
+    id: number;
+    payment_type: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    telephone: string | null;
+    cost_total: number;
+    shipping_total: number;
+    voucher_discount?: number;
+    tax_total: number;
+    grand_total: number;
+    billing_line_1: string;
+    billing_line_2: string | null;
+    billing_city: string;
+    billing_county: string | null;
+    billing_postcode: string;
+    shipping_line_1: string;
+    shipping_line_2: string | null;
+    shipping_city: string;
+    shipping_county: string | null;
+    shipping_postcode: string;
+    status: string;
+    created_at: string;
+    items: OrderItem[];
 }
 
-const props = defineProps<{ order: Order }>();
+defineProps<{ order: Order }>();
 
 const seo = useSeoHead({ noIndex: true });
 
 const fmt = (v: number | string) =>
-    new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' }).format(Number(v) || 0);
+    new Intl.NumberFormat('en-GB', {
+        style: 'currency',
+        currency: 'GBP',
+    }).format(Number(v) || 0);
 
 const fmtDate = (d: string) =>
     new Date(d).toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'long', year: 'numeric',
-        hour: '2-digit', minute: '2-digit',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
     });
 
 const statusStyle = (s: string): string => {
     switch (s.toLowerCase()) {
         case 'successful':
-        case 'delivered': return 'status--green';
-        case 'shipped': return 'status--blue';
-        case 'processing': return 'status--amber';
-        case 'pending': return 'status--yellow';
+        case 'delivered':
+            return 'status--green';
+        case 'shipped':
+            return 'status--blue';
+        case 'processing':
+            return 'status--amber';
+        case 'pending':
+            return 'status--yellow';
         case 'cancelled':
-        case 'failed': return 'status--red';
-        default: return 'status--grey';
+        case 'failed':
+            return 'status--red';
+        default:
+            return 'status--grey';
     }
 };
 
@@ -64,7 +100,7 @@ const statusMessage: Record<string, string> = {
     failed: 'This order encountered a problem.',
 };
 
-const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
+const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 </script>
 
 <template>
@@ -72,17 +108,26 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="ov">
         <div class="ov-wrap">
-
             <!-- Back -->
             <a href="/account/orders" class="ov-back">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
                     <path d="m15 18-6-6 6-6" />
                 </svg>
                 Back to Orders
@@ -92,7 +137,9 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
             <header class="ov-header">
                 <div>
                     <h1 class="ov-title">#COY-{{ order.id }}</h1>
-                    <p class="ov-date">Placed {{ fmtDate(order.created_at) }}</p>
+                    <p class="ov-date">
+                        Placed {{ fmtDate(order.created_at) }}
+                    </p>
                 </div>
                 <span :class="['status-badge', statusStyle(order.status)]">
                     {{ statusLabel(order.status) }}
@@ -100,9 +147,21 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
             </header>
 
             <!-- Status banner -->
-            <div v-if="statusMessage[order.status.toLowerCase()]" class="status-banner">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">
+            <div
+                v-if="statusMessage[order.status.toLowerCase()]"
+                class="status-banner"
+            >
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="flex-shrink: 0"
+                >
                     <circle cx="12" cy="12" r="10" />
                     <path d="M12 16v-4M12 8h.01" />
                 </svg>
@@ -111,23 +170,33 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
 
             <!-- Cards -->
             <div class="ov-cards">
-
                 <!-- Items + totals -->
                 <section class="ov-card">
                     <h2 class="ov-card-title">
                         Items
-                        <span class="ov-card-count">{{ order.items.length }}</span>
+                        <span class="ov-card-count">{{
+                            order.items.length
+                        }}</span>
                     </h2>
 
                     <div class="item-list">
-                        <div v-for="item in order.items" :key="item.id" class="item-row">
+                        <div
+                            v-for="item in order.items"
+                            :key="item.id"
+                            class="item-row"
+                        >
                             <div class="item-info">
                                 <p class="item-name">{{ item.product.name }}</p>
                                 <p class="item-mpn">{{ item.product.mpn }}</p>
                             </div>
                             <div class="item-pricing">
-                                <p class="item-total">{{ fmt(item.product_total) }}</p>
-                                <p class="item-unit">{{ item.quantity }} &times; {{ fmt(item.product_cost) }}</p>
+                                <p class="item-total">
+                                    {{ fmt(item.product_total) }}
+                                </p>
+                                <p class="item-unit">
+                                    {{ item.quantity }} &times;
+                                    {{ fmt(item.product_cost) }}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -140,14 +209,28 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                         </div>
                         <div class="totals-row">
                             <span>Shipping</span>
-                            <span>{{ Number(order.shipping_total) === 0 ? 'Free' : fmt(order.shipping_total) }}</span>
+                            <span>{{
+                                Number(order.shipping_total) === 0
+                                    ? 'Free'
+                                    : fmt(order.shipping_total)
+                            }}</span>
                         </div>
                         <div v-if="vatRegistered" class="totals-row">
                             <span>VAT</span>
                             <span
-                                style="font-style:italic; color:#9a7070; font-weight:400; font-size:0.82rem;">Included</span>
+                                style="
+                                    font-style: italic;
+                                    color: #9a7070;
+                                    font-weight: 400;
+                                    font-size: 0.82rem;
+                                "
+                                >Included</span
+                            >
                         </div>
-                        <div v-if="Number(order.voucher_discount) > 0" class="totals-row totals-row--discount">
+                        <div
+                            v-if="Number(order.voucher_discount) > 0"
+                            class="totals-row totals-row--discount"
+                        >
                             <span>Discount</span>
                             <span>-{{ fmt(order.voucher_discount!) }}</span>
                         </div>
@@ -165,11 +248,20 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                         <div>
                             <p class="address-label">Shipping Address</p>
                             <address class="address-block">
-                                <span>{{ order.first_name }} {{ order.last_name }}</span>
+                                <span
+                                    >{{ order.first_name }}
+                                    {{ order.last_name }}</span
+                                >
                                 <span>{{ order.shipping_line_1 }}</span>
-                                <span v-if="order.shipping_line_2">{{ order.shipping_line_2 }}</span>
-                                <span>{{ order.shipping_city }}<template v-if="order.shipping_county">, {{
-                                    order.shipping_county }}</template></span>
+                                <span v-if="order.shipping_line_2">{{
+                                    order.shipping_line_2
+                                }}</span>
+                                <span
+                                    >{{ order.shipping_city
+                                    }}<template v-if="order.shipping_county"
+                                        >, {{ order.shipping_county }}</template
+                                    ></span
+                                >
                                 <span>{{ order.shipping_postcode }}</span>
                             </address>
                         </div>
@@ -177,20 +269,46 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                             <p class="address-label">Billing Address</p>
                             <address class="address-block">
                                 <span>{{ order.billing_line_1 }}</span>
-                                <span v-if="order.billing_line_2">{{ order.billing_line_2 }}</span>
-                                <span>{{ order.billing_city }}<template v-if="order.billing_county">, {{
-                                    order.billing_county }}</template></span>
+                                <span v-if="order.billing_line_2">{{
+                                    order.billing_line_2
+                                }}</span>
+                                <span
+                                    >{{ order.billing_city
+                                    }}<template v-if="order.billing_county"
+                                        >, {{ order.billing_county }}</template
+                                    ></span
+                                >
                                 <span>{{ order.billing_postcode }}</span>
                             </address>
                         </div>
                     </div>
                 </section>
 
-                <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid #e5c9c7;">
-                    <a :href="`/orders/${order.id}/invoice/download`" target="_blank" class="ov-invoice-btn">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <div
+                    style="
+                        margin-top: 1.25rem;
+                        padding-top: 1rem;
+                        border-top: 1px solid #e5c9c7;
+                    "
+                >
+                    <a
+                        :href="`/orders/${order.id}/invoice/download`"
+                        target="_blank"
+                        class="ov-invoice-btn"
+                    >
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path
+                                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                            />
                             <polyline points="7 10 12 15 17 10" />
                             <line x1="12" y1="15" x2="12" y2="3" />
                         </svg>
@@ -202,18 +320,30 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
                 <section class="ov-card">
                     <h2 class="ov-card-title">Need help?</h2>
                     <p class="help-text">
-                        If you have any questions about your order, please don't hesitate to get in touch.
+                        If you have any questions about your order, please don't
+                        hesitate to get in touch.
                     </p>
-                    <a href="mailto:contact@chapterofyou.co.uk" class="help-link">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <a
+                        href="mailto:contact@chapterofyou.co.uk"
+                        class="help-link"
+                    >
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path
-                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
                         </svg>
                         contact@chapterofyou.co.uk
                     </a>
                 </section>
-
             </div>
         </div>
     </main>
@@ -578,7 +708,10 @@ const vatRegistered = computed(() => !!(usePage().props.vatRegistered));
     font-size: 0.82rem;
     font-weight: 600;
     text-decoration: none;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    transition:
+        border-color 0.15s,
+        color 0.15s,
+        background 0.15s;
 }
 
 .ov-invoice-btn:hover {

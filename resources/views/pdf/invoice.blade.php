@@ -412,7 +412,7 @@
         <div class="vat-notice">
             <strong>VAT Receipt:</strong> All prices include VAT at the standard UK rate of 20%.
             VAT included in this invoice: <strong>£{{ number_format($order->tax_total, 2) }}</strong>.
-            Chapter of You — VAT Registration No: <strong>{{ $vatNumber }}</strong>
+            Chapter of You - VAT Registration No: <strong>{{ $vatNumber }}</strong>
         </div>
     @endif
 

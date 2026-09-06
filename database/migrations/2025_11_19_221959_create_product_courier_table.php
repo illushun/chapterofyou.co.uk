@@ -4,10 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class () extends Migration {
-    /**
-     * Run the migrations.
-     */
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('product_courier', function (Blueprint $table) {
@@ -16,7 +14,7 @@ return new class () extends Migration {
             $table->unsignedBigInteger('product_id');
             $table->unsignedBigInteger('courier_id');
 
-            $table->enum("per_item", ["yes", "no"])->default("no");
+            $table->enum('per_item', ['yes', 'no'])->default('no');
 
             $table->foreign('product_id')->references('id')->on('product')->onDelete('cascade');
             $table->foreign('courier_id')->references('id')->on('courier')->onDelete('cascade');
@@ -25,9 +23,6 @@ return new class () extends Migration {
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('product_courier');

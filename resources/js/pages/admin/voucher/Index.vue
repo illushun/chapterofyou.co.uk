@@ -36,7 +36,7 @@ interface Paginated<T> {
     total: number;
 }
 
-const props = defineProps<{
+defineProps<{
     vouchers: Paginated<Voucher>;
 }>();
 

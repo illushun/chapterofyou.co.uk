@@ -21,9 +21,9 @@ class VoucherUsage extends Model
     ];
 
     protected $casts = [
-        'discount_applied'   => 'decimal:2',
+        'discount_applied' => 'decimal:2',
         'order_total_before' => 'decimal:2',
-        'order_total_after'  => 'decimal:2',
+        'order_total_after' => 'decimal:2',
     ];
 
     public function voucher(): BelongsTo

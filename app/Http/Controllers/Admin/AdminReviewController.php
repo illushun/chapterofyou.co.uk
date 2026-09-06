@@ -10,9 +10,6 @@ use Inertia\Inertia;
 
 class AdminReviewController extends Controller
 {
-    /**
-     * Display a listing of reviews with optional status filter.
-     */
     public function index(Request $request)
     {
         $status = $request->get('status'); // 'pending' | 'approved' | 'rejected' | null (all)
@@ -29,22 +26,19 @@ class AdminReviewController extends Controller
 
         // Counts per status for the tab badges
         $counts = [
-            'all'      => Review::count(),
-            'pending'  => Review::where('status', 'pending')->count(),
+            'all' => Review::count(),
+            'pending' => Review::where('status', 'pending')->count(),
             'approved' => Review::where('status', 'approved')->count(),
             'rejected' => Review::where('status', 'rejected')->count(),
         ];
 
         return Inertia::render('admin/review/Index', [
-            'reviews'       => $reviews,
-            'counts'        => $counts,
-            'activeStatus'  => $status ?? 'all',
+            'reviews' => $reviews,
+            'counts' => $counts,
+            'activeStatus' => $status ?? 'all',
         ]);
     }
 
-    /**
-     * Display the specified review.
-     */
     public function show(Review $review)
     {
         $review->load(['user:id,name,email', 'product:id,mpn,name']);
@@ -54,9 +48,6 @@ class AdminReviewController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified review's status.
-     */
     public function update(Request $request, Review $review)
     {
         $request->validate([
@@ -69,10 +60,6 @@ class AdminReviewController extends Controller
         return redirect()->back()->with('success', "Review #{$review->id} status updated to {$review->status}.");
     }
 
-    /**
-     * Save or update the admin's reply to a review.
-     * The reply is shown publicly on the product page beneath the review.
-     */
     public function reply(Request $request, Review $review)
     {
         $request->validate([

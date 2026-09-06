@@ -23,14 +23,17 @@ class CostItem extends Model
 
     public function getUnitCostAttribute(): float
     {
-        if ($this->purchase_qty <= 0) return 0.0;
+        if ($this->purchase_qty <= 0) {
+            return 0.0;
+        }
+
         return round((float) $this->purchase_price / $this->purchase_qty, 4);
     }
 
     public function products()
     {
         return $this->belongsToMany(Product::class, 'finance_product_cost', 'cost_item_id', 'product_id')
-                    ->withPivot('qty_per_unit')
-                    ->withTimestamps();
+            ->withPivot('qty_per_unit')
+            ->withTimestamps();
     }
 }

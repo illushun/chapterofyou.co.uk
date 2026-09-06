@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 
 const seo = useSeoHead({
     title: 'Returns & Refunds',
-    description: 'Returns and refunds policy for Chapter of You. Information on damaged or faulty items, how to contact me, and how refunds are processed.',
+    description:
+        'Returns and refunds policy for Chapter of You. Information on damaged or faulty items, how to contact me, and how refunds are processed.',
     canonical: '/returns',
 });
 
@@ -17,13 +18,14 @@ const lastUpdated = '6 April 2026';
     <NavBar />
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="rr">
         <div class="rr-wrap">
-
             <!-- ── Header ── -->
             <header class="rr-header">
                 <p class="rr-eyebrow">Chapter of You</p>
@@ -34,8 +36,9 @@ const lastUpdated = '6 April 2026';
                     <span class="rr-rule-line"></span>
                 </div>
                 <p class="rr-intro">
-                    I want you to love your order. If something isn't right, please don't
-                    hesitate to get in touch, I'll always do my best to help.
+                    I want you to love your order. If something isn't right,
+                    please don't hesitate to get in touch, I'll always do my
+                    best to help.
                 </p>
                 <p class="rr-updated">Last updated: {{ lastUpdated }}</p>
             </header>
@@ -44,8 +47,16 @@ const lastUpdated = '6 April 2026';
             <div class="rr-overview">
                 <div class="rr-overview-card rr-overview-card--no">
                     <div class="rr-overview-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <circle cx="12" cy="12" r="10" />
                             <path d="M15 9l-6 6M9 9l6 6" />
                         </svg>
@@ -55,8 +66,16 @@ const lastUpdated = '6 April 2026';
                 </div>
                 <div class="rr-overview-card rr-overview-card--yes">
                     <div class="rr-overview-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <circle cx="12" cy="12" r="10" />
                             <path d="M8 12l3 3 5-5" />
                         </svg>
@@ -66,8 +85,16 @@ const lastUpdated = '6 April 2026';
                 </div>
                 <div class="rr-overview-card rr-overview-card--time">
                     <div class="rr-overview-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <circle cx="12" cy="12" r="10" />
                             <polyline points="12 6 12 12 16 14" />
                         </svg>
@@ -79,7 +106,6 @@ const lastUpdated = '6 April 2026';
 
             <!-- ── Body ── -->
             <div class="rr-body">
-
                 <!-- No change of mind -->
                 <section class="rr-section">
                     <div class="rr-section-num" aria-hidden="true">01</div>
@@ -87,14 +113,19 @@ const lastUpdated = '6 April 2026';
                         <h2 class="rr-section-title">Change of Mind Returns</h2>
                         <div class="rr-section-body">
                             <p>
-                                Due to the handmade and personal nature of my products, I am unable
-                                to accept returns for change of mind. Please review your order carefully
-                                before completing your purchase.
+                                Due to the handmade and personal nature of my
+                                products, I am unable to accept returns for
+                                change of mind. Please review your order
+                                carefully before completing your purchase.
                             </p>
                             <p>
-                                If you have any questions about a product before you buy, please feel
-                                free to <a :href="route('contact')" class="rr-inline-link">get in touch</a>,
-                                I'm always happy to help.
+                                If you have any questions about a product before
+                                you buy, please feel free to
+                                <a
+                                    :href="route('contact')"
+                                    class="rr-inline-link"
+                                    >get in touch</a
+                                >, I'm always happy to help.
                             </p>
                         </div>
                     </div>
@@ -106,32 +137,56 @@ const lastUpdated = '6 April 2026';
                 <section class="rr-section">
                     <div class="rr-section-num" aria-hidden="true">02</div>
                     <div class="rr-section-content">
-                        <h2 class="rr-section-title">Damaged or Faulty Items</h2>
+                        <h2 class="rr-section-title">
+                            Damaged or Faulty Items
+                        </h2>
                         <div class="rr-section-body">
                             <p>
-                                If your order arrives damaged or faulty, please contact me within
-                                <strong>48 hours of delivery</strong> so I can resolve this for you
-                                as quickly as possible.
+                                If your order arrives damaged or faulty, please
+                                contact me within
+                                <strong>48 hours of delivery</strong> so I can
+                                resolve this for you as quickly as possible.
                             </p>
 
                             <!-- How to report -->
                             <div class="rr-how-to">
                                 <p class="rr-how-to-title">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
                                         <path
-                                            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                                        />
                                         <polyline points="22,6 12,13 2,6" />
                                     </svg>
-                                    Email <a href="mailto:contact@chapterofyou.co.uk"
-                                        class="rr-email-link">contact@chapterofyou.co.uk</a> with:
+                                    Email
+                                    <a
+                                        href="mailto:contact@chapterofyou.co.uk"
+                                        class="rr-email-link"
+                                        >contact@chapterofyou.co.uk</a
+                                    >
+                                    with:
                                 </p>
                                 <ul class="rr-checklist">
                                     <li>
                                         <span class="rr-check-icon">
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                                                stroke-linejoin="round">
+                                            <svg
+                                                width="10"
+                                                height="10"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="3"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            >
                                                 <path d="M20 6 9 17l-5-5" />
                                             </svg>
                                         </span>
@@ -139,9 +194,16 @@ const lastUpdated = '6 April 2026';
                                     </li>
                                     <li>
                                         <span class="rr-check-icon">
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                                                stroke-linejoin="round">
+                                            <svg
+                                                width="10"
+                                                height="10"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="3"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            >
                                                 <path d="M20 6 9 17l-5-5" />
                                             </svg>
                                         </span>
@@ -149,19 +211,28 @@ const lastUpdated = '6 April 2026';
                                     </li>
                                     <li>
                                         <span class="rr-check-icon">
-                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="3" stroke-linecap="round"
-                                                stroke-linejoin="round">
+                                            <svg
+                                                width="10"
+                                                height="10"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="3"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            >
                                                 <path d="M20 6 9 17l-5-5" />
                                             </svg>
                                         </span>
-                                        Clear photos of the product and packaging
+                                        Clear photos of the product and
+                                        packaging
                                     </li>
                                 </ul>
                             </div>
 
                             <p>
-                                Once reviewed, I'll resolve this for you as fairly and quickly as possible.
+                                Once reviewed, I'll resolve this for you as
+                                fairly and quickly as possible.
                             </p>
                         </div>
                     </div>
@@ -176,22 +247,33 @@ const lastUpdated = '6 April 2026';
                         <h2 class="rr-section-title">Refunds</h2>
                         <div class="rr-section-body">
                             <p>
-                                Where a refund is approved, it will be processed back to your
-                                <strong>original payment method</strong>. Please allow a few
-                                working days for the refund to appear depending on your bank or
-                                card provider.
+                                Where a refund is approved, it will be processed
+                                back to your
+                                <strong>original payment method</strong>. Please
+                                allow a few working days for the refund to
+                                appear depending on your bank or card provider.
                             </p>
                             <div class="rr-callout">
                                 <div class="rr-callout-icon">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
                                         <circle cx="12" cy="12" r="10" />
                                         <path d="M12 8v4M12 16h.01" />
                                     </svg>
                                 </div>
                                 <p>
-                                    Please note that original payment processing fees charged by
-                                    Stripe are non-refundable and cannot be returned as part of any refund.
+                                    Please note that original payment processing
+                                    fees charged by Stripe are non-refundable
+                                    and cannot be returned as part of any
+                                    refund.
                                 </p>
                             </div>
                         </div>
@@ -207,49 +289,74 @@ const lastUpdated = '6 April 2026';
                         <h2 class="rr-section-title">Additional Information</h2>
                         <div class="rr-section-body">
                             <p>
-                                To be considered for a return or refund, items must not have been
-                                used and should be kept in their <strong>original packaging</strong>
+                                To be considered for a return or refund, items
+                                must not have been used and should be kept in
+                                their <strong>original packaging</strong>
                                 where possible.
                             </p>
                             <p>
-                                I am not responsible for damage caused by misuse, improper handling,
-                                or failure to follow the care and usage instructions provided with
-                                your order. Reed diffusers contain fragrance oils, please handle
-                                with care and keep upright during storage and transit.
+                                I am not responsible for damage caused by
+                                misuse, improper handling, or failure to follow
+                                the care and usage instructions provided with
+                                your order. Reed diffusers contain fragrance
+                                oils, please handle with care and keep upright
+                                during storage and transit.
                             </p>
                         </div>
                     </div>
                 </section>
-
             </div>
 
             <!-- ── Contact banner ── -->
             <div class="rr-contact">
                 <div class="rr-contact-inner">
                     <p class="rr-contact-petal" aria-hidden="true">✿</p>
-                    <h2 class="rr-contact-title">Got an issue with your order?</h2>
+                    <h2 class="rr-contact-title">
+                        Got an issue with your order?
+                    </h2>
                     <p class="rr-contact-body">
-                        I want every Chapter of You order to be something you love. If anything
-                        isn't right, please reach out, I'll always do my best to make it right.
+                        I want every Chapter of You order to be something you
+                        love. If anything isn't right, please reach out, I'll
+                        always do my best to make it right.
                     </p>
-                    <a href="mailto:contact@chapterofyou.co.uk" class="rr-contact-btn">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                    <a
+                        href="mailto:contact@chapterofyou.co.uk"
+                        class="rr-contact-btn"
+                    >
+                        <svg
+                            width="15"
+                            height="15"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <path
+                                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                            />
                             <polyline points="22,6 12,13 2,6" />
                         </svg>
                         contact@chapterofyou.co.uk
                     </a>
                     <a :href="route('contact')" class="rr-contact-link">
                         Or use our contact form
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
                 </div>
             </div>
-
         </div>
     </main>
 
@@ -689,7 +796,9 @@ const lastUpdated = '6 April 2026';
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
     margin-top: 0.25rem;
 }
 

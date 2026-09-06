@@ -6,19 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-use App\Models\User;
-
 class Address extends Model
 {
     use HasFactory;
 
     protected $table = 'address';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    /** @var array<int, string> */
     protected $fillable = [
         'user_id',
         'type',
@@ -31,17 +25,11 @@ class Address extends Model
         'country',
     ];
 
-    /**
-     * Get the user that owns the address.
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * get a single string representation of the address.
-     */
     public function getFullAddressAttribute(): string
     {
         $parts = [
@@ -52,6 +40,7 @@ class Address extends Model
             $this->postcode,
             $this->country,
         ];
+
         return implode(', ', array_filter($parts));
     }
 }

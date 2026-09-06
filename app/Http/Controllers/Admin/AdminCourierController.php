@@ -5,15 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Courier;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 
 class AdminCourierController extends Controller
 {
-    /**
-     * Display a listing of couriers.
-     */
     public function index()
     {
         $couriers = Courier::query()
@@ -26,9 +23,6 @@ class AdminCourierController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource. (Create)
-     */
     public function create()
     {
         return Inertia::render('admin/courier/CreateEdit', [
@@ -36,9 +30,6 @@ class AdminCourierController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage. (Store)
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -56,9 +47,6 @@ class AdminCourierController extends Controller
         });
     }
 
-    /**
-     * Show the form for editing the specified resource. (Edit)
-     */
     public function edit(Courier $courier)
     {
         return Inertia::render('admin/courier/CreateEdit', [
@@ -67,9 +55,6 @@ class AdminCourierController extends Controller
         ]);
     }
 
-    /**
-     * Update the specified resource in storage. (Update)
-     */
     public function update(Request $request, Courier $courier)
     {
         $validated = $request->validate([
@@ -79,7 +64,7 @@ class AdminCourierController extends Controller
             'cost' => ['required', 'numeric', 'min:0.01'],
         ]);
 
-        return DB::transaction(function () use ($request, $validated, $courier) {
+        return DB::transaction(function () use ($validated, $courier) {
             $courier->update($validated);
 
             return redirect()->route('admin.couriers.index')
@@ -87,9 +72,6 @@ class AdminCourierController extends Controller
         });
     }
 
-    /**
-     * Remove the specified resource from storage. (Destroy)
-     */
     public function destroy(Courier $courier)
     {
         $courier->delete();

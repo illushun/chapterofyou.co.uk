@@ -2,34 +2,22 @@
 
 namespace App\Http\Controllers\Auth;
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
-use App\Http\Controllers\Controller;
-use Exception;
-
-use App\Models\User;
 
 class SocialiteController extends Controller
 {
-    /**
-     * Redirect the user to the provider's authentication page.
-     *
-     * @param string $provider
-     * @return \Illuminate\Http\RedirectResponse
-     */
+    /** @return \Illuminate\Http\RedirectResponse */
     public function redirectToProvider(string $provider)
     {
         return Socialite::driver($provider)->stateless()->redirect();
     }
 
-    /**
-     * Obtain the user information from the provider and log the user in.
-     *
-     * @param string $provider
-     * @return \Illuminate\Http\RedirectResponse
-     */
+    /** @return \Illuminate\Http\RedirectResponse */
     public function handleProviderCallback(string $provider)
     {
         try {
@@ -38,16 +26,16 @@ class SocialiteController extends Controller
 
         } catch (Exception $e) {
             // Redirect back to login with an error message
-            return redirect('/login')->withErrors(['socialite' => 'Could not authenticate with ' . ucfirst($provider) . '. Please try again.']);
+            return redirect('/login')->withErrors(['socialite' => 'Could not authenticate with '.ucfirst($provider).'. Please try again.']);
         }
 
         // Check if a user with this provider ID already exists
         $user = User::where('provider_id', $socialiteUser->getId())
-                    ->where('provider', $provider)
-                    ->first();
+            ->where('provider', $provider)
+            ->first();
 
         // If the user does not exist check if an account with that email exists
-        if (!$user) {
+        if (! $user) {
             // Check for existing user by email
             $user = User::where('email', $socialiteUser->getEmail())->first();
 
@@ -61,7 +49,7 @@ class SocialiteController extends Controller
                 $user = User::create([
                     'name' => $socialiteUser->getName(),
                     // Use a fallback name if the provider doesn't give one
-                    'email' => $socialiteUser->getEmail() ?? $socialiteUser->getId() . '@' . $provider . '.local',
+                    'email' => $socialiteUser->getEmail() ?? $socialiteUser->getId().'@'.$provider.'.local',
                     'provider' => $provider,
                     'provider_id' => $socialiteUser->getId(),
                     // Socialite users don't need a real password so Hash a random string

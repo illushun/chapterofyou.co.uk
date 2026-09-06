@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 
 const seo = useSeoHead({
     title: 'Terms & Conditions',
-    description: 'Terms and conditions for Chapter of You. Read my policies on orders, pricing, delivery, returns, and product information.',
+    description:
+        'Terms and conditions for Chapter of You. Read my policies on orders, pricing, delivery, returns, and product information.',
     canonical: '/terms',
 });
 
@@ -17,13 +18,14 @@ const lastUpdated = '6 April 2026';
     <NavBar />
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="tc">
         <div class="tc-wrap">
-
             <!-- ── Header ── -->
             <header class="tc-header">
                 <p class="tc-eyebrow">Chapter of You</p>
@@ -34,15 +36,15 @@ const lastUpdated = '6 April 2026';
                     <span class="tc-rule-line"></span>
                 </div>
                 <p class="tc-intro">
-                    By using this website and placing an order, you agree to the following terms.
-                    Please take a moment to read them carefully.
+                    By using this website and placing an order, you agree to the
+                    following terms. Please take a moment to read them
+                    carefully.
                 </p>
                 <p class="tc-updated">Last updated: {{ lastUpdated }}</p>
             </header>
 
             <!-- ── Sections ── -->
             <div class="tc-body">
-
                 <!-- Quick navigation -->
                 <nav class="tc-nav" aria-label="Jump to section">
                     <p class="tc-nav-label">Jump to</p>
@@ -63,17 +65,22 @@ const lastUpdated = '6 April 2026';
                         <h2 class="tc-section-title">Orders</h2>
                         <div class="tc-section-body">
                             <p>
-                                All orders are subject to availability. By placing an order on this website,
-                                you are making an offer to purchase the selected products at the listed price.
+                                All orders are subject to availability. By
+                                placing an order on this website, you are making
+                                an offer to purchase the selected products at
+                                the listed price.
                             </p>
                             <p>
-                                Once your order is placed, you will receive a confirmation email. This email
-                                confirms receipt of your order, it does not guarantee acceptance until your
-                                payment has been processed successfully.
+                                Once your order is placed, you will receive a
+                                confirmation email. This email confirms receipt
+                                of your order, it does not guarantee acceptance
+                                until your payment has been processed
+                                successfully.
                             </p>
                             <p>
-                                I reserve the right to cancel or decline any order, in which case you will
-                                receive a full refund.
+                                I reserve the right to cancel or decline any
+                                order, in which case you will receive a full
+                                refund.
                             </p>
                         </div>
                     </div>
@@ -88,12 +95,16 @@ const lastUpdated = '6 April 2026';
                         <h2 class="tc-section-title">Pricing</h2>
                         <div class="tc-section-body">
                             <p>
-                                All prices are listed in <strong>GBP (£)</strong> and are inclusive of
-                                applicable VAT where stated. Prices are subject to change without prior notice.
+                                All prices are listed in
+                                <strong>GBP (£)</strong> and are inclusive of
+                                applicable VAT where stated. Prices are subject
+                                to change without prior notice.
                             </p>
                             <p>
-                                The price charged will be the price displayed at the time your order is placed.
-                                Subsequent price changes will not affect orders already confirmed.
+                                The price charged will be the price displayed at
+                                the time your order is placed. Subsequent price
+                                changes will not affect orders already
+                                confirmed.
                             </p>
                         </div>
                     </div>
@@ -105,24 +116,38 @@ const lastUpdated = '6 April 2026';
                 <section id="delivery" class="tc-section">
                     <div class="tc-section-num" aria-hidden="true">03</div>
                     <div class="tc-section-content">
-                        <h2 class="tc-section-title">Dispatch &amp; Delivery</h2>
+                        <h2 class="tc-section-title">
+                            Dispatch &amp; Delivery
+                        </h2>
                         <div class="tc-section-body">
                             <p>
-                                Orders are typically processed and dispatched within <strong>2–3 working days</strong>.
-                                During busier periods, this may take slightly longer.
+                                Orders are typically processed and dispatched
+                                within <strong>2–3 working days</strong>. During
+                                busier periods, this may take slightly longer.
                             </p>
                             <p>
-                                Delivery times may vary depending on your location and the courier service used.
-                                Once dispatched, you will receive tracking information via email.
+                                Delivery times may vary depending on your
+                                location and the courier service used. Once
+                                dispatched, you will receive tracking
+                                information via email.
                             </p>
                             <p>
-                                I cannot be held responsible for delays caused by third-party couriers,
-                                customs, or events outside of my control.
+                                I cannot be held responsible for delays caused
+                                by third-party couriers, customs, or events
+                                outside of my control.
                             </p>
                             <a :href="route('delivery')" class="tc-inline-link">
                                 View full delivery information
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <svg
+                                    width="11"
+                                    height="11"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path d="M5 12h14M12 5l7 7-7 7" />
                                 </svg>
                             </a>
@@ -139,29 +164,45 @@ const lastUpdated = '6 April 2026';
                         <h2 class="tc-section-title">Returns &amp; Refunds</h2>
                         <div class="tc-section-body">
                             <p>
-                                Due to the handmade and personal nature of my products, returns are only
-                                accepted if items arrive <strong>damaged or faulty</strong>.
+                                Due to the handmade and personal nature of my
+                                products, returns are only accepted if items
+                                arrive <strong>damaged or faulty</strong>.
                             </p>
 
                             <div class="tc-callout">
                                 <div class="tc-callout-icon">
-                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg
+                                        width="15"
+                                        height="15"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
                                         <circle cx="12" cy="12" r="10" />
                                         <path d="M12 8v4M12 16h.01" />
                                     </svg>
                                 </div>
                                 <p>
-                                    If there is an issue with your order, please contact
-                                    <a href="mailto:contact@chapterofyou.co.uk"
-                                        class="tc-email-link">contact@chapterofyou.co.uk</a>
-                                    within <strong>48 hours of delivery</strong>, including photographs where possible.
+                                    If there is an issue with your order, please
+                                    contact
+                                    <a
+                                        href="mailto:contact@chapterofyou.co.uk"
+                                        class="tc-email-link"
+                                        >contact@chapterofyou.co.uk</a
+                                    >
+                                    within
+                                    <strong>48 hours of delivery</strong>,
+                                    including photographs where possible.
                                 </p>
                             </div>
 
                             <p>
-                                Refunds or replacements will be considered on a case-by-case basis.
-                                I will always aim to find a fair resolution.
+                                Refunds or replacements will be considered on a
+                                case-by-case basis. I will always aim to find a
+                                fair resolution.
                             </p>
                         </div>
                     </div>
@@ -176,14 +217,19 @@ const lastUpdated = '6 April 2026';
                         <h2 class="tc-section-title">Product Information</h2>
                         <div class="tc-section-body">
                             <p>
-                                Each product is carefully and lovingly prepared by hand. As a result,
-                                <strong>slight variations</strong> in appearance, colour, or scent intensity
-                                may occur between batches, this is a natural characteristic of handmade goods.
+                                Each product is carefully and lovingly prepared
+                                by hand. As a result,
+                                <strong>slight variations</strong> in
+                                appearance, colour, or scent intensity may occur
+                                between batches, this is a natural
+                                characteristic of handmade goods.
                             </p>
                             <p>
-                                Product descriptions, images, and fragrance notes are provided as accurately
-                                as possible. If you have any questions about a specific product before purchasing,
-                                please don't hesitate to get in touch.
+                                Product descriptions, images, and fragrance
+                                notes are provided as accurately as possible. If
+                                you have any questions about a specific product
+                                before purchasing, please don't hesitate to get
+                                in touch.
                             </p>
                         </div>
                     </div>
@@ -198,34 +244,36 @@ const lastUpdated = '6 April 2026';
                         <h2 class="tc-section-title">Liability</h2>
                         <div class="tc-section-body">
                             <p>
-                                I am not responsible for any damage, injury, or loss caused by misuse
-                                of products. Please follow all care, usage, and safety instructions
+                                I am not responsible for any damage, injury, or
+                                loss caused by misuse of products. Please follow
+                                all care, usage, and safety instructions
                                 provided with your order.
                             </p>
                             <p>
-                                Reed diffusers contain fragrance oils, keep out of reach of children
-                                and pets, and away from polished or painted surfaces.
+                                Reed diffusers contain fragrance oils, keep out
+                                of reach of children and pets, and away from
+                                polished or painted surfaces.
                             </p>
                             <p>
-                                My liability is limited to the value of the products purchased.
+                                My liability is limited to the value of the
+                                products purchased.
                             </p>
                         </div>
                     </div>
                 </section>
-
             </div>
 
             <!-- ── Footer contact strip ── -->
             <div class="tc-footer-strip">
                 <p class="tc-footer-petal" aria-hidden="true">✿</p>
-                <p class="tc-footer-text">
-                    Questions about these terms?
-                </p>
-                <a href="mailto:contact@chapterofyou.co.uk" class="tc-footer-link">
+                <p class="tc-footer-text">Questions about these terms?</p>
+                <a
+                    href="mailto:contact@chapterofyou.co.uk"
+                    class="tc-footer-link"
+                >
                     contact@chapterofyou.co.uk
                 </a>
             </div>
-
         </div>
     </main>
 
@@ -343,7 +391,9 @@ const lastUpdated = '6 April 2026';
     border-radius: 999px;
     border: 1px solid #e5c9c7;
     background: #fdf4f3;
-    transition: background 0.15s, border-color 0.15s;
+    transition:
+        background 0.15s,
+        border-color 0.15s;
 }
 
 .tc-nav-link:hover {

@@ -7,16 +7,17 @@ use Illuminate\Support\Facades\Http;
 
 class PingSitemapCommand extends Command
 {
-    protected $signature   = 'sitemap:ping';
+    protected $signature = 'sitemap:ping';
+
     protected $description = 'Notify Google and Bing that the sitemap has been updated';
 
     public function handle(): int
     {
-        $sitemapUrl = urlencode(config('app.url') . '/sitemap.xml');
+        $sitemapUrl = urlencode(config('app.url').'/sitemap.xml');
 
         $engines = [
             'Google' => "https://www.google.com/ping?sitemap={$sitemapUrl}",
-            'Bing'   => "https://www.bing.com/indexnow?url={$sitemapUrl}&key=1",
+            'Bing' => "https://www.bing.com/indexnow?url={$sitemapUrl}&key=1",
         ];
 
         foreach ($engines as $name => $pingUrl) {

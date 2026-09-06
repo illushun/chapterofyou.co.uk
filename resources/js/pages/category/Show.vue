@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
-import SeoHead from '@/components/SeoHead.vue';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
-import { useSeoHead } from '@/composables/useSeoHead';
+import NavBar from '@/components/NavBar.vue';
+import SeoHead from '@/components/SeoHead.vue';
 import { useItemListSchema } from '@/composables/useProductSchema';
+import { useSeoHead } from '@/composables/useSeoHead';
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -33,42 +33,69 @@ const props = defineProps<{
     };
 }>();
 
-const seo = computed(() => useSeoHead({
-    title: props.category.meta_title,
-    description: props.category.meta_description,
-    canonical: props.products.current_page && props.products.current_page > 1
-        ? `/category/${props.category.slug}?page=${props.products.current_page}`
-        : `/category/${props.category.slug}`,
-    ogImage: props.category.image_url || undefined,
-}));
+const seo = computed(() =>
+    useSeoHead({
+        title: props.category.meta_title,
+        description: props.category.meta_description,
+        canonical:
+            props.products.current_page && props.products.current_page > 1
+                ? `/category/${props.category.slug}?page=${props.products.current_page}`
+                : `/category/${props.category.slug}`,
+        ogImage: props.category.image_url || undefined,
+    }),
+);
 
 const schemas = computed(() => [
     {
         '@context': 'https://schema.org',
         '@type': 'CollectionPage',
-        'name': props.category.name,
-        'description': props.category.meta_description,
-        'url': `https://www.chapterofyou.co.uk/category/${props.category.slug}`,
-        ...(props.category.image_url ? { 'image': props.category.image_url } : {}),
+        name: props.category.name,
+        description: props.category.meta_description,
+        url: `https://www.chapterofyou.co.uk/category/${props.category.slug}`,
+        ...(props.category.image_url
+            ? { image: props.category.image_url }
+            : {}),
     },
     {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
-        'itemListElement': [
-            { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': 'https://www.chapterofyou.co.uk' },
-            { '@type': 'ListItem', 'position': 2, 'name': 'Products', 'item': 'https://www.chapterofyou.co.uk/products' },
-            { '@type': 'ListItem', 'position': 3, 'name': props.category.name, 'item': `https://www.chapterofyou.co.uk/category/${props.category.slug}` },
+        itemListElement: [
+            {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Home',
+                item: 'https://www.chapterofyou.co.uk',
+            },
+            {
+                '@type': 'ListItem',
+                position: 2,
+                name: 'Products',
+                item: 'https://www.chapterofyou.co.uk/products',
+            },
+            {
+                '@type': 'ListItem',
+                position: 3,
+                name: props.category.name,
+                item: `https://www.chapterofyou.co.uk/category/${props.category.slug}`,
+            },
         ],
     },
-    ...(props.products.data.length ? [useItemListSchema(props.products.data.map(p => ({
-        name: p.name,
-        url: `/product/${p.slug}`,
-        image: p.image,
-    })))] : []),
+    ...(props.products.data.length
+        ? [
+              useItemListSchema(
+                  props.products.data.map((p) => ({
+                      name: p.name,
+                      url: `/product/${p.slug}`,
+                      image: p.image,
+                  })),
+              ),
+          ]
+        : []),
 ]);
 
 const fmt = (v: number) => `£${Number(v).toFixed(2)}`;
-const imgSrc = (img: string | null) => !img ? null : img.startsWith('http') ? img : `${img}`;
+const imgSrc = (img: string | null) =>
+    !img ? null : img.startsWith('http') ? img : `${img}`;
 </script>
 
 <template>
@@ -76,14 +103,22 @@ const imgSrc = (img: string | null) => !img ? null : img.startsWith('http') ? im
     <SeoHead v-bind="seo" />
     <JsonLdSchema :schema="schemas" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="cl">
-
         <!-- Hero banner -->
-        <header class="cl-hero" :style="category.image_url ? `background-image:url('${category.image_url}')` : ''">
+        <header
+            class="cl-hero"
+            :style="
+                category.image_url
+                    ? `background-image:url('${category.image_url}')`
+                    : ''
+            "
+        >
             <div class="cl-hero-overlay" aria-hidden="true"></div>
             <div class="cl-hero-content">
                 <nav class="cl-breadcrumb" aria-label="Breadcrumb">
@@ -94,33 +129,66 @@ const imgSrc = (img: string | null) => !img ? null : img.startsWith('http') ? im
                     <span>{{ category.name }}</span>
                 </nav>
                 <h1 class="cl-hero-title">{{ category.name }}</h1>
-                <p v-if="category.description" class="cl-hero-desc">{{ category.description }}</p>
+                <p v-if="category.description" class="cl-hero-desc">
+                    {{ category.description }}
+                </p>
                 <p class="cl-hero-count">
                     {{ products.meta?.total ?? products.data.length }}
-                    {{ (products.meta?.total ?? products.data.length) === 1 ? 'product' : 'products' }}
+                    {{
+                        (products.meta?.total ?? products.data.length) === 1
+                            ? 'product'
+                            : 'products'
+                    }}
                 </p>
             </div>
         </header>
 
         <div class="cl-wrap">
-
             <!-- Product grid -->
             <div v-if="products.data.length" class="cl-grid">
-                <article v-for="product in products.data" :key="product.id" class="cl-card">
-                    <Link :href="`/product/${product.slug}`" class="cl-card-img-wrap">
-                    <img v-if="imgSrc(product.image)" :src="imgSrc(product.image)!" :alt="product.name"
-                        class="cl-card-img" loading="lazy" />
-                    <div v-else class="cl-card-img-ph" aria-hidden="true">✿</div>
-                    <div v-if="product.stock_qty === 0" class="cl-oos">Out of stock</div>
+                <article
+                    v-for="product in products.data"
+                    :key="product.id"
+                    class="cl-card"
+                >
+                    <Link
+                        :href="`/product/${product.slug}`"
+                        class="cl-card-img-wrap"
+                    >
+                        <img
+                            v-if="imgSrc(product.image)"
+                            :src="imgSrc(product.image)!"
+                            :alt="product.name"
+                            class="cl-card-img"
+                            loading="lazy"
+                        />
+                        <div v-else class="cl-card-img-ph" aria-hidden="true">
+                            ✿
+                        </div>
+                        <div v-if="product.stock_qty === 0" class="cl-oos">
+                            Out of stock
+                        </div>
                     </Link>
                     <div class="cl-card-body">
                         <h2 class="cl-card-name">
-                            <Link :href="`/product/${product.slug}`">{{ product.name }}</Link>
+                            <Link :href="`/product/${product.slug}`">{{
+                                product.name
+                            }}</Link>
                         </h2>
                         <p class="cl-card-price">{{ fmt(product.cost) }}</p>
-                        <Link :href="`/product/${product.slug}`" class="cl-card-btn"
-                            :class="{ 'cl-card-btn--disabled': product.stock_qty === 0 }">
-                        {{ product.stock_qty > 0 ? 'View Product' : 'Out of Stock' }}
+                        <Link
+                            :href="`/product/${product.slug}`"
+                            class="cl-card-btn"
+                            :class="{
+                                'cl-card-btn--disabled':
+                                    product.stock_qty === 0,
+                            }"
+                        >
+                            {{
+                                product.stock_qty > 0
+                                    ? 'View Product'
+                                    : 'Out of Stock'
+                            }}
                         </Link>
                     </div>
                 </article>
@@ -129,28 +197,46 @@ const imgSrc = (img: string | null) => !img ? null : img.startsWith('http') ? im
             <div v-else class="cl-empty">
                 <p class="cl-empty-petal" aria-hidden="true">✿</p>
                 <p class="cl-empty-text">No products in this category yet.</p>
-                <Link href="/products" class="cl-back-link">Browse all products →</Link>
+                <Link href="/products" class="cl-back-link"
+                    >Browse all products →</Link
+                >
             </div>
 
             <!-- Pagination -->
             <div v-if="products.links?.length > 3" class="cl-pagination">
                 <template v-for="link in products.links" :key="link.label">
-                    <Link v-if="link.url" :href="link.url" class="cl-page-btn"
-                        :class="{ 'cl-page-btn--active': link.active }" v-html="link.label" />
-                    <span v-else class="cl-page-btn cl-page-btn--disabled" v-html="link.label" />
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        class="cl-page-btn"
+                        :class="{ 'cl-page-btn--active': link.active }"
+                        ><span v-html="link.label"
+                    /></Link>
+                    <span
+                        v-else
+                        class="cl-page-btn cl-page-btn--disabled"
+                        v-html="link.label"
+                    />
                 </template>
             </div>
 
             <div class="cl-footer-nav">
                 <Link href="/products" class="cl-back-link">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m12 19-7-7 7-7M19 12H5" />
-                </svg>
-                All Products
+                    <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path d="m12 19-7-7 7-7M19 12H5" />
+                    </svg>
+                    All Products
                 </Link>
             </div>
-
         </div>
     </main>
 
@@ -186,7 +272,11 @@ const imgSrc = (img: string | null) => !img ? null : img.startsWith('http') ? im
 .cl-hero-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, rgba(45, 26, 26, 0.3) 0%, rgba(45, 26, 26, 0.78) 100%);
+    background: linear-gradient(
+        to bottom,
+        rgba(45, 26, 26, 0.3) 0%,
+        rgba(45, 26, 26, 0.78) 100%
+    );
 }
 
 .cl-hero-content {
@@ -284,7 +374,9 @@ const imgSrc = (img: string | null) => !img ? null : img.startsWith('http') ? im
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: box-shadow 0.2s, transform 0.2s;
+    transition:
+        box-shadow 0.2s,
+        transform 0.2s;
 }
 
 .cl-card:hover {
@@ -382,7 +474,9 @@ const imgSrc = (img: string | null) => !img ? null : img.startsWith('http') ? im
     font-weight: 600;
     text-decoration: none;
     margin-top: auto;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition:
+        transform 0.15s,
+        box-shadow 0.15s;
 }
 
 .cl-card-btn:hover:not(.cl-card-btn--disabled) {

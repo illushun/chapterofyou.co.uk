@@ -1,38 +1,10 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
-import axios from 'axios';
-
-// ── Newsletter / waitlist signup ──────────────────────────────────────────
-const email = ref('');
-const submitting = ref(false);
-const submitted = ref(false);
-const submitError = ref('');
-
-async function submitNewsletter() {
-    if (!email.value.trim() || submitting.value) return;
-    submitting.value = true;
-    submitError.value = '';
-    try {
-        await axios.post(route('waitlist.store'), { email: email.value.trim() });
-        submitted.value = true;
-        email.value = '';
-    } catch (err: any) {
-        const msg = err?.response?.data?.message
-            ?? err?.response?.data?.errors?.email?.[0]
-            ?? 'Something went wrong. Please try again.';
-        submitError.value = msg;
-    } finally {
-        submitting.value = false;
-    }
-}
-
 const currentYear = new Date().getFullYear();
 </script>
 
 <template>
     <footer class="ft">
-
         <!-- ── Top wave / petal divider ── -->
         <div class="ft-crown" aria-hidden="true">
             <span class="ft-crown-petal">✿</span>
@@ -43,34 +15,44 @@ const currentYear = new Date().getFullYear();
         </div>
 
         <div class="ft-inner">
-
             <!-- ── Brand column ── -->
             <div class="ft-brand">
                 <p class="ft-brand-name">Chapter of You</p>
                 <p class="ft-brand-tagline">Your chapter, your self-care.</p>
                 <p class="ft-brand-desc">
-                    Luxurious hand-crafted reed diffusers, made with love and care for
-                    your home and well-being.
+                    Luxurious hand-crafted reed diffusers, made with love and
+                    care for your home and well-being.
                 </p>
             </div>
 
             <!-- ── Links columns ── -->
             <nav class="ft-nav" aria-label="Footer navigation">
-
                 <div class="ft-nav-col">
                     <p class="ft-nav-heading">Shop</p>
                     <ul class="ft-nav-list">
                         <li>
-                            <Link :href="route('products')" class="ft-nav-link">All Products</Link>
+                            <Link :href="route('products')" class="ft-nav-link"
+                                >All Products</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('cart.view')" class="ft-nav-link">My Basket</Link>
+                            <Link :href="route('cart.view')" class="ft-nav-link"
+                                >My Basket</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('wishlist.index')" class="ft-nav-link">Wishlist</Link>
+                            <Link
+                                :href="route('wishlist.index')"
+                                class="ft-nav-link"
+                                >Wishlist</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('gift-vouchers.index')" class="ft-nav-link">Gift Vouchers</Link>
+                            <Link
+                                :href="route('gift-vouchers.index')"
+                                class="ft-nav-link"
+                                >Gift Vouchers</Link
+                            >
                         </li>
                     </ul>
                 </div>
@@ -79,16 +61,28 @@ const currentYear = new Date().getFullYear();
                     <p class="ft-nav-heading">Account</p>
                     <ul class="ft-nav-list">
                         <li>
-                            <Link :href="route('account.index')" class="ft-nav-link">My Account</Link>
+                            <Link
+                                :href="route('account.index')"
+                                class="ft-nav-link"
+                                >My Account</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('account.orders.index')" class="ft-nav-link">My Orders</Link>
+                            <Link
+                                :href="route('account.orders.index')"
+                                class="ft-nav-link"
+                                >My Orders</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('login')" class="ft-nav-link">Sign In</Link>
+                            <Link :href="route('login')" class="ft-nav-link"
+                                >Sign In</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('register')" class="ft-nav-link">Register</Link>
+                            <Link :href="route('register')" class="ft-nav-link"
+                                >Register</Link
+                            >
                         </li>
                     </ul>
                 </div>
@@ -97,26 +91,39 @@ const currentYear = new Date().getFullYear();
                     <p class="ft-nav-heading">Information</p>
                     <ul class="ft-nav-list">
                         <li>
-                            <Link :href="route('delivery')" class="ft-nav-link">Delivery Information</Link>
+                            <Link :href="route('delivery')" class="ft-nav-link"
+                                >Delivery Information</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('returns')" class="ft-nav-link">Returns &amp; Refunds</Link>
+                            <Link :href="route('returns')" class="ft-nav-link"
+                                >Returns &amp; Refunds</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('terms')" class="ft-nav-link">Terms &amp; Conditions</Link>
+                            <Link :href="route('terms')" class="ft-nav-link"
+                                >Terms &amp; Conditions</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('privacy')" class="ft-nav-link">Privacy Policy</Link>
+                            <Link :href="route('privacy')" class="ft-nav-link"
+                                >Privacy Policy</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('contact')" class="ft-nav-link">Contact Me</Link>
+                            <Link :href="route('contact')" class="ft-nav-link"
+                                >Contact Me</Link
+                            >
                         </li>
                         <li>
-                            <Link :href="route('journal.index')" class="ft-nav-link">My Journal</Link>
+                            <Link
+                                :href="route('journal.index')"
+                                class="ft-nav-link"
+                                >My Journal</Link
+                            >
                         </li>
                     </ul>
                 </div>
-
             </nav>
         </div>
 
@@ -124,18 +131,24 @@ const currentYear = new Date().getFullYear();
         <div class="ft-bottom">
             <div class="ft-bottom-inner">
                 <p class="ft-copyright">
-                    &copy; {{ currentYear }} Chapter of You. All rights reserved.
+                    &copy; {{ currentYear }} Chapter of You. All rights
+                    reserved.
                 </p>
                 <div class="ft-bottom-links">
-                    <Link :href="route('privacy')" class="ft-bottom-link">Privacy</Link>
+                    <Link :href="route('privacy')" class="ft-bottom-link"
+                        >Privacy</Link
+                    >
                     <span class="ft-bottom-sep" aria-hidden="true">·</span>
-                    <Link :href="route('terms')" class="ft-bottom-link">Terms</Link>
+                    <Link :href="route('terms')" class="ft-bottom-link"
+                        >Terms</Link
+                    >
                     <span class="ft-bottom-sep" aria-hidden="true">·</span>
-                    <Link :href="route('returns')" class="ft-bottom-link">Returns</Link>
+                    <Link :href="route('returns')" class="ft-bottom-link"
+                        >Returns</Link
+                    >
                 </div>
             </div>
         </div>
-
     </footer>
 </template>
 
@@ -327,7 +340,8 @@ const currentYear = new Date().getFullYear();
     /* Let grid handle the columns */
 }
 
-.ft-nav-col {}
+.ft-nav-col {
+}
 
 .ft-nav-heading {
     font-size: 0.7rem;

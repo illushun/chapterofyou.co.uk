@@ -24,22 +24,22 @@ class CategoryController extends Controller
 
         return Inertia::render('category/Show', [
             'category' => [
-                'id'               => $category->id,
-                'name'             => $category->name,
-                'slug'             => $category->slug,
-                'description'      => $category->description,
-                'image_url'        => $category->image_url,
-                'meta_title'       => $category->meta_title ?: "{$category->name} | Chapter of You",
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->slug,
+                'description' => $category->description,
+                'image_url' => $category->image_url,
+                'meta_title' => $category->meta_title ?: "{$category->name} | Chapter of You",
                 'meta_description' => $category->meta_description
                                         ?: "Shop my {$category->name} collection. Handcrafted luxury reed diffusers by Chapter of You.",
             ],
             'products' => $products->through(fn ($p) => [
-                'id'        => $p->id,
-                'name'      => $p->name,
-                'cost'      => $p->cost,
+                'id' => $p->id,
+                'name' => $p->name,
+                'cost' => $p->cost,
                 'stock_qty' => $p->stock_qty,
-                'slug'      => $p->seo?->slug ?? $p->id,
-                'image'     => $p->images->where('status', 'enabled')->first()?->image
+                'slug' => $p->seo?->slug ?? $p->id,
+                'image' => $p->images->where('status', 'enabled')->first()?->image
                                 ?? $p->images->first()?->image,
             ]),
         ]);

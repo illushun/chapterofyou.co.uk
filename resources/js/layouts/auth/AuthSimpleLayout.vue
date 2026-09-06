@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { home } from '@/routes';
-import { Link } from '@inertiajs/vue3';
-
 defineProps<{
     title?: string;
     description?: string;

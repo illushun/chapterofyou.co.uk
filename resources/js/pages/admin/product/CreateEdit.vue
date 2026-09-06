@@ -3,8 +3,8 @@ import { useAdmin } from '@/composables/useAdmin';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { MOOD_TAGS, ROOMS, SCENT_FAMILIES } from '@/lib/scentTaxonomy';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { useDebounceFn as debounce } from '@vueuse/core';
 import axios from 'axios';
-import { debounce } from 'lodash';
 import { computed, ref, watch } from 'vue';
 
 interface Category {
@@ -169,9 +169,11 @@ const handleFileUpload = (e: Event) => {
 const removeNewImage = (i: number) => form.new_images.splice(i, 1);
 const toggleImageStatus = (id: number) => {
     const idx = form.images_to_toggle.indexOf(id);
-    idx === -1
-        ? form.images_to_toggle.push(id)
-        : form.images_to_toggle.splice(idx, 1);
+    if (idx === -1) {
+        form.images_to_toggle.push(id);
+    } else {
+        form.images_to_toggle.splice(idx, 1);
+    }
 };
 const deleteExistingImage = (id: number) => {
     if (!form.images_to_delete.includes(id)) form.images_to_delete.push(id);
@@ -181,21 +183,28 @@ const deleteExistingImage = (id: number) => {
 
 // ── Category / courier ─────────────────────────────────────────────────────
 const handleCategoryChange = (id: number, checked: boolean) => {
-    checked
-        ? !form.category_ids.includes(id) && form.category_ids.push(id)
-        : (form.category_ids = form.category_ids.filter((c) => c !== id));
+    if (checked) {
+        if (!form.category_ids.includes(id)) {
+            form.category_ids.push(id);
+        }
+    } else {
+        form.category_ids = form.category_ids.filter((c) => c !== id);
+    }
 };
 const handleCourierChange = (id: number, checked: boolean) => {
     form.courier_id = checked ? id : null;
     form.courier_per_item = 'no';
 };
 const handleRefillChange = (id: number, checked: boolean) => {
-    checked
-        ? !form.refill_product_ids.includes(id) &&
-          form.refill_product_ids.push(id)
-        : (form.refill_product_ids = form.refill_product_ids.filter(
-              (r) => r !== id,
-          ));
+    if (checked) {
+        if (!form.refill_product_ids.includes(id)) {
+            form.refill_product_ids.push(id);
+        }
+    } else {
+        form.refill_product_ids = form.refill_product_ids.filter(
+            (r) => r !== id,
+        );
+    }
 };
 
 // ── FAQ helpers ────────────────────────────────────────────────────────────
@@ -217,22 +226,31 @@ const materialsTotal = computed(() =>
 
 // ── Scent profile ──────────────────────────────────────────────────────────
 const toggleScentFamily = (value: string, checked: boolean) => {
-    checked
-        ? !form.scent_families.includes(value) &&
-          form.scent_families.push(value)
-        : (form.scent_families = form.scent_families.filter(
-              (v) => v !== value,
-          ));
+    if (checked) {
+        if (!form.scent_families.includes(value)) {
+            form.scent_families.push(value);
+        }
+    } else {
+        form.scent_families = form.scent_families.filter((v) => v !== value);
+    }
 };
 const toggleMoodTag = (value: string, checked: boolean) => {
-    checked
-        ? !form.mood_tags.includes(value) && form.mood_tags.push(value)
-        : (form.mood_tags = form.mood_tags.filter((v) => v !== value));
+    if (checked) {
+        if (!form.mood_tags.includes(value)) {
+            form.mood_tags.push(value);
+        }
+    } else {
+        form.mood_tags = form.mood_tags.filter((v) => v !== value);
+    }
 };
 const toggleRoomTag = (value: string, checked: boolean) => {
-    checked
-        ? !form.room_tags.includes(value) && form.room_tags.push(value)
-        : (form.room_tags = form.room_tags.filter((v) => v !== value));
+    if (checked) {
+        if (!form.room_tags.includes(value)) {
+            form.room_tags.push(value);
+        }
+    } else {
+        form.room_tags = form.room_tags.filter((v) => v !== value);
+    }
 };
 
 const aiSuggesting = ref(false);
@@ -1397,11 +1415,6 @@ const submit = () => {
 </template>
 
 <style scoped>
-/*
- * Page-specific styles, prefix pe- (product edit)
- * All shared styles come from admin-design-system.css
- */
-
 /* ── Image queue ── */
 .pe-queue {
     display: flex;

@@ -37,7 +37,7 @@ class AdminVoucherController extends Controller
             ->get();
 
         return Inertia::render('admin/voucher/CreateEdit', [
-            'products'  => $products,
+            'products' => $products,
             'isEditing' => false,
         ]);
     }
@@ -50,7 +50,7 @@ class AdminVoucherController extends Controller
 
         $voucher = Voucher::create($validated);
 
-        if (!$validated['applies_to_all_products'] && !empty($validated['product_ids'])) {
+        if (! $validated['applies_to_all_products'] && ! empty($validated['product_ids'])) {
             $voucher->products()->sync($validated['product_ids']);
         }
 
@@ -70,10 +70,10 @@ class AdminVoucherController extends Controller
             ->get();
 
         return Inertia::render('admin/voucher/CreateEdit', [
-            'voucher'              => $voucher,
-            'selectedProductIds'   => $voucher->products->pluck('id'),
-            'products'             => $products,
-            'isEditing'            => true,
+            'voucher' => $voucher,
+            'selectedProductIds' => $voucher->products->pluck('id'),
+            'products' => $products,
+            'isEditing' => true,
         ]);
     }
 
@@ -117,7 +117,7 @@ class AdminVoucherController extends Controller
 
         return Inertia::render('admin/voucher/Usage', [
             'voucher' => $voucher,
-            'usages'  => $usages,
+            'usages' => $usages,
         ]);
     }
 
@@ -125,7 +125,8 @@ class AdminVoucherController extends Controller
 
     public function generateCode()
     {
-        $code = strtoupper(Str::random(4) . '-' . Str::random(4) . '-' . Str::random(4));
+        $code = strtoupper(Str::random(4).'-'.Str::random(4).'-'.Str::random(4));
+
         return response()->json(['code' => $code]);
     }
 
@@ -134,23 +135,23 @@ class AdminVoucherController extends Controller
     private function validateVoucher(Request $request, ?int $ignoreId = null): array
     {
         $validated = $request->validate([
-            'code'                    => ['required', 'string', 'max:50', 'regex:/^[A-Z0-9_\-]+$/i',
-                                          Rule::unique('vouchers', 'code')->ignore($ignoreId)],
-            'description'             => ['nullable', 'string', 'max:255'],
-            'type'                    => ['required', Rule::in(['percentage', 'fixed'])],
-            'value'                   => ['required', 'numeric', 'min:0.01',
-                                          $request->type === 'percentage' ? 'max:100' : 'max:9999.99'],
-            'minimum_order_value'     => ['nullable', 'numeric', 'min:0'],
+            'code' => ['required', 'string', 'max:50', 'regex:/^[A-Z0-9_\-]+$/i',
+                Rule::unique('vouchers', 'code')->ignore($ignoreId)],
+            'description' => ['nullable', 'string', 'max:255'],
+            'type' => ['required', Rule::in(['percentage', 'fixed'])],
+            'value' => ['required', 'numeric', 'min:0.01',
+                $request->type === 'percentage' ? 'max:100' : 'max:9999.99'],
+            'minimum_order_value' => ['nullable', 'numeric', 'min:0'],
             'applies_to_all_products' => ['boolean'],
-            'product_ids'             => ['nullable', 'array'],
-            'product_ids.*'           => ['exists:product,id'],
-            'stackable'               => ['boolean'],
-            'new_customers_only'      => ['boolean'],
-            'single_use_per_user'     => ['boolean'],
-            'max_uses'                => ['nullable', 'integer', 'min:1'],
-            'valid_from'              => ['nullable', 'date'],
-            'valid_until'             => ['nullable', 'date', 'after_or_equal:valid_from'],
-            'is_active'               => ['boolean'],
+            'product_ids' => ['nullable', 'array'],
+            'product_ids.*' => ['exists:product,id'],
+            'stackable' => ['boolean'],
+            'new_customers_only' => ['boolean'],
+            'single_use_per_user' => ['boolean'],
+            'max_uses' => ['nullable', 'integer', 'min:1'],
+            'valid_from' => ['nullable', 'date'],
+            'valid_until' => ['nullable', 'date', 'after_or_equal:valid_from'],
+            'is_active' => ['boolean'],
         ]);
 
         // Uppercase the code

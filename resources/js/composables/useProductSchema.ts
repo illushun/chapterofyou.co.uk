@@ -1,36 +1,11 @@
-/**
- * useProductSchema — Chapter of You
- * ─────────────────────────────────────────────────────────────────────────
- * Builds a Schema.org Product JSON-LD object for a given product.
- *
- * This enables Google rich results showing:
- *   - Star rating and review count under the search listing
- *   - Price and currency
- *   - Availability (in stock / out of stock)
- *   - Product image in image search
- *
- * Usage:
- *
- *   import { useProductSchema } from '@/composables/useProductSchema';
- *   import ProductSchema from '@/components/ProductSchema.vue';
- *
- *   const schema = useProductSchema({
- *       product,           // the full product object from Inertia props
- *       slug,              // SEO slug, e.g. 'lavender-reed-diffuser'
- *   });
- *
- *   // In template:
- *   <ProductSchema :schema="schema" />
- *
- * ─────────────────────────────────────────────────────────────────────────
- */
-
 const BASE_URL = 'https://www.chapterofyou.co.uk';
 const BRAND_NAME = 'Chapter of You';
 const CURRENCY = 'GBP';
 
 // ── Types matching what ProductController::show() passes down ─────────────
-export interface SchemaImage { image: string; }
+export interface SchemaImage {
+    image: string;
+}
 export interface SchemaReview {
     id: number;
     rating: number;
@@ -50,86 +25,96 @@ export interface SchemaProduct {
     approved_reviews_count: number;
     images: SchemaImage[];
     reviews: SchemaReview[];
-    seo?: { meta_title?: string; meta_description?: string; slug?: string; };
+    seo?: { meta_title?: string; meta_description?: string; slug?: string };
 }
 
 export interface ProductSchemaOptions {
     product: SchemaProduct;
-    /** The SEO slug — used to build the canonical product URL */
+    /** The SEO slug - used to build the canonical product URL */
     slug?: string;
 }
 
-export function useProductSchema({ product, slug }: ProductSchemaOptions): object {
+export function useProductSchema({
+    product,
+    slug,
+}: ProductSchemaOptions): object {
     const productUrl = `${BASE_URL}/product/${slug || product.seo?.slug || product.id}`;
 
     // ── Images ────────────────────────────────────────────────────────────
     // Google recommends at least one image. Include all enabled product images.
     const images = product.images
-        .map(img => img.image.startsWith('http') ? img.image : BASE_URL + img.image)
+        .map((img) =>
+            img.image.startsWith('http') ? img.image : BASE_URL + img.image,
+        )
         .filter(Boolean)
         .slice(0, 5); // Google uses up to 5
 
     // ── Availability ──────────────────────────────────────────────────────
-    const availability = product.stock_qty > 0
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/OutOfStock';
+    const availability =
+        product.stock_qty > 0
+            ? 'https://schema.org/InStock'
+            : 'https://schema.org/OutOfStock';
 
     // ── Offers ───────────────────────────────────────────────────────────
     // Price shown includes VAT (Google expects the price customers pay).
-    const priceWithVat = +(product.cost * 1.20).toFixed(2);
+    const priceWithVat = +(product.cost * 1.2).toFixed(2);
 
     const offer = {
         '@type': 'Offer',
-        'url': productUrl,
-        'priceCurrency': CURRENCY,
-        'price': priceWithVat,
-        'priceValidUntil': new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-            .toISOString().split('T')[0], // 1 year from today
-        'availability': availability,
-        'itemCondition': 'https://schema.org/NewCondition',
-        'seller': {
+        url: productUrl,
+        priceCurrency: CURRENCY,
+        price: priceWithVat,
+        priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split('T')[0], // 1 year from today
+        availability: availability,
+        itemCondition: 'https://schema.org/NewCondition',
+        seller: {
             '@type': 'Organization',
-            'name': BRAND_NAME,
-            'url': BASE_URL,
+            name: BRAND_NAME,
+            url: BASE_URL,
         },
     };
 
     // ── Aggregate rating ─────────────────────────────────────────────────
-    // Only include if we have approved reviews — Google ignores empty ratings
+    // Only include if we have approved reviews - Google ignores empty ratings
     // and may penalise fake ones.
-    const aggregateRating = product.approved_reviews_count > 0
-        ? {
-            '@type': 'AggregateRating',
-            'ratingValue': product.average_rating.toFixed(1),
-            'reviewCount': product.approved_reviews_count,
-            'bestRating': '5',
-            'worstRating': '1',
-        }
-        : undefined;
+    const aggregateRating =
+        product.approved_reviews_count > 0
+            ? {
+                  '@type': 'AggregateRating',
+                  ratingValue: product.average_rating.toFixed(1),
+                  reviewCount: product.approved_reviews_count,
+                  bestRating: '5',
+                  worstRating: '1',
+              }
+            : undefined;
 
     // ── Individual reviews ────────────────────────────────────────────────
     // Include up to 5 approved reviews. Google can surface these in rich
-    // results but requires they be genuine — we only pass approved ones
+    // results but requires they be genuine - we only pass approved ones
     // (the controller already filters by status = 'approved').
-    const reviews = product.reviews.slice(0, 5).map(review => ({
+    const reviews = product.reviews.slice(0, 5).map((review) => ({
         '@type': 'Review',
-        'reviewRating': {
+        reviewRating: {
             '@type': 'Rating',
-            'ratingValue': String(review.rating),
-            'bestRating': '5',
-            'worstRating': '1',
+            ratingValue: String(review.rating),
+            bestRating: '5',
+            worstRating: '1',
         },
-        'author': {
+        author: {
             '@type': 'Person',
-            'name': review.user.name,
+            name: review.user.name,
         },
-        'reviewBody': review.message,
-        'datePublished': review.created_at.split('T')[0],
+        reviewBody: review.message,
+        datePublished: review.created_at.split('T')[0],
     }));
 
     // ── Description ───────────────────────────────────────────────────────
     // Strip HTML tags from the description for the schema plain-text field.
-    const plainDescription = (product.seo?.meta_description || product.description)
+    const plainDescription = (
+        product.seo?.meta_description || product.description
+    )
         .replace(/<[^>]*>/g, '')
         .trim()
         .slice(0, 500);
@@ -138,16 +123,16 @@ export function useProductSchema({ product, slug }: ProductSchemaOptions): objec
     const schema: Record<string, any> = {
         '@context': 'https://schema.org',
         '@type': 'Product',
-        'name': product.name,
-        'description': plainDescription,
-        'sku': product.mpn,
-        'mpn': product.mpn,
-        'brand': {
+        name: product.name,
+        description: plainDescription,
+        sku: product.mpn,
+        mpn: product.mpn,
+        brand: {
             '@type': 'Brand',
-            'name': BRAND_NAME,
+            name: BRAND_NAME,
         },
-        'url': productUrl,
-        'offers': offer,
+        url: productUrl,
+        offers: offer,
     };
 
     // Add images if available
@@ -168,7 +153,6 @@ export function useProductSchema({ product, slug }: ProductSchemaOptions): objec
     return schema;
 }
 
-
 // ══════════════════════════════════════════════════════════════════════════
 // ORGANISATION SCHEMA
 // Use this on the homepage and any page that benefits from site-wide context.
@@ -177,25 +161,24 @@ export function useOrganizationSchema(): object {
     return {
         '@context': 'https://schema.org',
         '@type': 'Organization',
-        'name': BRAND_NAME,
-        'url': BASE_URL,
-        'logo': {
+        name: BRAND_NAME,
+        url: BASE_URL,
+        logo: {
             '@type': 'ImageObject',
-            'url': `${BASE_URL}/storage/images/large_image.png`,
+            url: `${BASE_URL}/storage/images/large_image.png`,
         },
-        'sameAs': [
+        sameAs: [
             // Add social profile URLs here when available, e.g.:
             // 'https://www.instagram.com/chapterofyou',
         ],
-        'contactPoint': {
+        contactPoint: {
             '@type': 'ContactPoint',
-            'contactType': 'customer service',
-            'email': 'contact@chapterofyou.co.uk',
-            'availableLanguage': 'English',
+            contactType: 'customer service',
+            email: 'contact@chapterofyou.co.uk',
+            availableLanguage: 'English',
         },
     };
 }
-
 
 // ══════════════════════════════════════════════════════════════════════════
 // WEBSITE SCHEMA
@@ -205,19 +188,18 @@ export function useWebsiteSchema(): object {
     return {
         '@context': 'https://schema.org',
         '@type': 'WebSite',
-        'name': BRAND_NAME,
-        'url': BASE_URL,
-        'potentialAction': {
+        name: BRAND_NAME,
+        url: BASE_URL,
+        potentialAction: {
             '@type': 'SearchAction',
-            'target': {
+            target: {
                 '@type': 'EntryPoint',
-                'urlTemplate': `${BASE_URL}/products?search={search_term_string}`,
+                urlTemplate: `${BASE_URL}/products?search={search_term_string}`,
             },
             'query-input': 'required name=search_term_string',
         },
     };
 }
-
 
 // ══════════════════════════════════════════════════════════════════════════
 // BREADCRUMB SCHEMA
@@ -234,20 +216,19 @@ export function useBreadcrumbSchema(items: BreadcrumbItem[]): object {
     return {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',
-        'itemListElement': items.map((item, index) => ({
+        itemListElement: items.map((item, index) => ({
             '@type': 'ListItem',
-            'position': index + 1,
-            'name': item.name,
-            'item': item.url.startsWith('http') ? item.url : BASE_URL + item.url,
+            position: index + 1,
+            name: item.name,
+            item: item.url.startsWith('http') ? item.url : BASE_URL + item.url,
         })),
     };
 }
 
-
 // ══════════════════════════════════════════════════════════════════════════
 // ITEM LIST SCHEMA
 // Use this for any page showing a curated set of products (homepage
-// bestsellers, category listings) — helps Google understand the products
+// bestsellers, category listings) - helps Google understand the products
 // shown and can enable enhanced/carousel-style search result treatment.
 // ══════════════════════════════════════════════════════════════════════════
 export interface ItemListEntry {
@@ -260,15 +241,21 @@ export function useItemListSchema(items: ItemListEntry[]): object {
     return {
         '@context': 'https://schema.org',
         '@type': 'ItemList',
-        'itemListElement': items.map((item, index) => ({
+        itemListElement: items.map((item, index) => ({
             '@type': 'ListItem',
-            'position': index + 1,
-            'item': {
+            position: index + 1,
+            item: {
                 '@type': 'Product',
-                'name': item.name,
-                'url': item.url.startsWith('http') ? item.url : BASE_URL + item.url,
+                name: item.name,
+                url: item.url.startsWith('http')
+                    ? item.url
+                    : BASE_URL + item.url,
                 ...(item.image
-                    ? { 'image': item.image.startsWith('http') ? item.image : BASE_URL + item.image }
+                    ? {
+                          image: item.image.startsWith('http')
+                              ? item.image
+                              : BASE_URL + item.image,
+                      }
                     : {}),
             },
         })),

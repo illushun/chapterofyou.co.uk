@@ -28,17 +28,17 @@ class Voucher extends Model
     ];
 
     protected $casts = [
-        'value'                   => 'decimal:2',
-        'minimum_order_value'     => 'decimal:2',
+        'value' => 'decimal:2',
+        'minimum_order_value' => 'decimal:2',
         'applies_to_all_products' => 'boolean',
-        'stackable'               => 'boolean',
-        'new_customers_only'      => 'boolean',
-        'single_use_per_user'     => 'boolean',
-        'is_active'               => 'boolean',
-        'valid_from'              => 'datetime',
-        'valid_until'             => 'datetime',
-        'uses_count'              => 'integer',
-        'max_uses'                => 'integer',
+        'stackable' => 'boolean',
+        'new_customers_only' => 'boolean',
+        'single_use_per_user' => 'boolean',
+        'is_active' => 'boolean',
+        'valid_from' => 'datetime',
+        'valid_until' => 'datetime',
+        'uses_count' => 'integer',
+        'max_uses' => 'integer',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────────
@@ -62,7 +62,7 @@ class Voucher extends Model
 
     public function hasStarted(): bool
     {
-        return !$this->valid_from || $this->valid_from->isPast();
+        return ! $this->valid_from || $this->valid_from->isPast();
     }
 
     public function isExhausted(): bool
@@ -75,6 +75,7 @@ class Voucher extends Model
         if ($this->max_uses === null) {
             return null;
         }
+
         return max(0, $this->max_uses - $this->uses_count);
     }
 }

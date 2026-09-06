@@ -77,7 +77,7 @@ class JournalPostGenerator
     private function requestPostFromClaude($existingPosts, $products, ?string $topicNotes): array
     {
         $existingTitles = $existingPosts->isEmpty()
-            ? 'None yet — this is the first post.'
+            ? 'None yet - this is the first post.'
             : $existingPosts->map(fn ($p) => "- {$p->title}".($p->tags ? " (tags: {$p->tags})" : ''))->implode("\n");
 
         $steering = $topicNotes
@@ -94,14 +94,14 @@ class JournalPostGenerator
             You are the in-house content writer for Chapter of You, a UK home-fragrance brand
             selling reed diffusers, candles, and scented home accessories. Write in a warm,
             genuine, expert tone using UK English spelling. You are writing a new journal
-            (blog) post for the site's journal section.
+            (blog) post for the site's journal section. Never use em dashes.
 
             Your goal: a genuinely useful, engaging, SEO-optimised article that will attract
             organic search traffic and be worth sharing on social media. Avoid generic filler
             and avoid duplicating the topic or angle of any existing post listed below.
 
             Where it's genuinely relevant to the topic, naturally mention 1-3 real products
-            from the catalogue below by name within the article body (not a bolted-on list —
+            from the catalogue below by name within the article body (not a bolted-on list -
             weave them into the prose, e.g. recommending a specific scent for a mood or room
             you're discussing). Never invent a product that isn't in the list, and never force
             a mention if nothing in the catalogue actually fits the topic.
@@ -165,7 +165,7 @@ class JournalPostGenerator
                     throw new RuntimeException('Claude returned an unparsable response for the journal post.');
                 }
 
-                return $data;
+                return array_map(fn ($value) => is_string($value) ? \App\Support\CopyStyle::normalize($value) : $value, $data);
             }
         }
 

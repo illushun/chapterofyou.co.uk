@@ -2,9 +2,8 @@
 
 namespace App\Services\CLP;
 
-use App\Models\Oil;
-use App\Models\OilHazard;
 use App\Models\OilComponent;
+use App\Models\OilHazard;
 use App\Models\SDSDocument;
 use Illuminate\Support\Facades\Storage;
 use Smalot\PdfParser\Parser;
@@ -15,14 +14,14 @@ class SdsParser
     {
         $filePath = Storage::disk('local')->path($document->file_path);
 
-        // Section 2 — use smalot/pdfparser (text extraction, regex-based)
-        $parser = new Parser();
-        $pdf    = $parser->parseFile($filePath);
-        $text   = str_replace(["\r\n", "\r"], "\n", $pdf->getText());
+        // Section 2 - use smalot/pdfparser (text extraction, regex-based)
+        $parser = new Parser;
+        $pdf = $parser->parseFile($filePath);
+        $text = str_replace(["\r\n", "\r"], "\n", $pdf->getText());
 
         $this->parseSection2($document->oil_id, $text);
 
-        // Section 3 — use pdfplumber via Python subprocess for reliable table extraction
+        // Section 3 - use pdfplumber via Python subprocess for reliable table extraction
         $this->parseSection3WithPdfplumber($document->oil_id, $filePath);
 
         $document->update(['parsed' => true]);
@@ -31,13 +30,14 @@ class SdsParser
     }
 
     // -------------------------------------------------------------------------
-    // Section 2 → oil_hazards  (unchanged — smalot works fine for this)
+    // Section 2 → oil_hazards  (unchanged - smalot works fine for this)
     // -------------------------------------------------------------------------
     protected function extractSection2(string $text): string
     {
         if (preg_match('/Section\s+2[\.\s].*?(?=Section\s+3[\.\s])/si', $text, $match)) {
             return $match[0];
         }
+
         return '';
     }
 
@@ -48,6 +48,7 @@ class SdsParser
         $section2 = $this->extractSection2($text);
         if (empty($section2)) {
             logger()->warning("SDS Parser: Could not isolate Section 2 for oil_id={$oilId}");
+
             return;
         }
 
@@ -59,7 +60,7 @@ class SdsParser
         $hazardLines = $this->extractHazardStatementsBlock($section2);
 
         foreach ($hazardLines as $line) {
-            if (!preg_match('/\b(H\d{3}(?:\+H\d{3})*)\b/', $line, $m)) {
+            if (! preg_match('/\b(H\d{3}(?:\+H\d{3})*)\b/', $line, $m)) {
                 continue;
             }
 
@@ -67,24 +68,25 @@ class SdsParser
             $meta = $this->hazardCodeMeta($code);
 
             OilHazard::create([
-                'oil_id'       => $oilId,
-                'hazard_class' => $meta['class']        ?? null,
-                'category'     => $meta['category']     ?? null,
-                'hazard_code'  => $code,
-                'signal_word'  => $signalWord ?? ($meta['signal_word'] ?? null),
-                'pictogram'    => $meta['pictogram']    ?? null,
+                'oil_id' => $oilId,
+                'hazard_class' => $meta['class'] ?? null,
+                'category' => $meta['category'] ?? null,
+                'hazard_code' => $code,
+                'signal_word' => $signalWord ?? ($meta['signal_word'] ?? null),
+                'pictogram' => $meta['pictogram'] ?? null,
             ]);
         }
     }
 
     protected function extractHazardStatementsBlock(string $section2): array
     {
-        if (!preg_match(
+        if (! preg_match(
             '/Signal\s+word\s*:.*?(?=(?:Precautionary\s+statements?|Pictograms?|2\.3|Other\s+hazards?|\Z))/si',
             $section2,
             $labelBlock
         )) {
             preg_match_all('/^\s*(H\d{3}[^\n]*)/m', $section2, $m);
+
             return array_values(array_unique($m[1] ?? []));
         }
 
@@ -94,12 +96,12 @@ class SdsParser
             fn ($line) => preg_match('/\bH\d{3}\b/', $line)
         );
 
-        $seen   = [];
+        $seen = [];
         $unique = [];
         foreach ($lines as $line) {
             if (preg_match('/\b(H\d{3})\b/', $line, $m)) {
-                if (!in_array($m[1], $seen)) {
-                    $seen[]   = $m[1];
+                if (! in_array($m[1], $seen)) {
+                    $seen[] = $m[1];
                     $unique[] = trim($line);
                 }
             }
@@ -122,7 +124,7 @@ class SdsParser
     {
         OilComponent::where('oil_id', $oilId)->delete();
 
-        // Inline Python script — extracts all tables, finds the Section 3
+        // Inline Python script - extracts all tables, finds the Section 3
         // ingredient table by looking for a "Name" column header, and
         // outputs clean JSON rows.
         $pythonScript = <<<'PYTHON'
@@ -137,7 +139,7 @@ with pdfplumber.open(pdf_path) as pdf:
             if not table or not table[0]:
                 continue
             headers = [str(h or '').lower().strip() for h in table[0]]
-            # Find the Section 3 ingredient table — must have Name and CAS columns
+            # Find the Section 3 ingredient table - must have Name and CAS columns
             if 'name' not in headers or 'cas' not in headers:
                 continue
             name_idx = headers.index('name')
@@ -162,7 +164,7 @@ with pdfplumber.open(pdf_path) as pdf:
                 if not cas or not re.search(r'\d{2,7}-\d{2}-\d', cas):
                     continue
 
-                # Parse concentration range — e.g. "50-100%", "10-<20%", "5-<10%", "1-<5%"
+                # Parse concentration range - e.g. "50-100%", "10-<20%", "5-<10%", "1-<5%"
                 conc_min, conc_max = None, None
                 pct_clean = pct.replace(' ', '').replace('%','')
                 m = re.match(r'(\d+\.?\d*)\s*-\s*[<>]?\s*(\d+\.?\d*)', pct_clean)
@@ -186,17 +188,18 @@ print(json.dumps(rows))
 PYTHON;
 
         // Write the script to a temp file
-        $scriptPath = sys_get_temp_dir() . '/sds_section3_parser.py';
+        $scriptPath = sys_get_temp_dir().'/sds_section3_parser.py';
         file_put_contents($scriptPath, $pythonScript);
 
         // Run it
-        $escapedPdf    = escapeshellarg($pdfPath);
+        $escapedPdf = escapeshellarg($pdfPath);
         $escapedScript = escapeshellarg($scriptPath);
-        $output        = shell_exec("python3 {$escapedScript} {$escapedPdf} 2>/dev/null");
+        $output = shell_exec("python3 {$escapedScript} {$escapedPdf} 2>/dev/null");
 
         if (empty($output)) {
             logger()->warning("SDS Parser (pdfplumber): No output for oil_id={$oilId}. Falling back to regex.");
             $this->parseSection3Fallback($oilId, $pdfPath);
+
             return;
         }
 
@@ -205,35 +208,36 @@ PYTHON;
         if (json_last_error() !== JSON_ERROR_NONE || empty($rows)) {
             logger()->warning("SDS Parser (pdfplumber): Invalid JSON for oil_id={$oilId}. Falling back.");
             $this->parseSection3Fallback($oilId, $pdfPath);
+
             return;
         }
 
         foreach ($rows as $row) {
             OilComponent::create([
-                'oil_id'             => $oilId,
-                'name'               => $row['name'],
-                'cas'                => $row['cas'],
-                'concentration_min'  => $row['concentration_min'],
-                'concentration_max'  => $row['concentration_max'],
+                'oil_id' => $oilId,
+                'name' => $row['name'],
+                'cas' => $row['cas'],
+                'concentration_min' => $row['concentration_min'],
+                'concentration_max' => $row['concentration_max'],
                 'clp_classification' => $row['clp_classification'],
             ]);
         }
 
-        logger()->info("SDS Parser: Section 3 parsed " . count($rows) . " components for oil_id={$oilId}");
+        logger()->info('SDS Parser: Section 3 parsed '.count($rows)." components for oil_id={$oilId}");
     }
 
     // -------------------------------------------------------------------------
-    // Fallback Section 3 parser — used if pdfplumber/Python is unavailable
-    // Uses regex on raw PDF text — less accurate but tolerant
+    // Fallback Section 3 parser - used if pdfplumber/Python is unavailable
+    // Uses regex on raw PDF text - less accurate but tolerant
     // -------------------------------------------------------------------------
     protected function parseSection3Fallback(int $oilId, string $pdfPath): void
     {
-        $parser   = new Parser();
-        $pdf      = $parser->parseFile($pdfPath);
-        $text     = str_replace(["\r\n", "\r"], "\n", $pdf->getText());
+        $parser = new Parser;
+        $pdf = $parser->parseFile($pdfPath);
+        $text = str_replace(["\r\n", "\r"], "\n", $pdf->getText());
 
         // Extract section 3 block
-        if (!preg_match('/Section\s+3[\.\s].*?(?=Section\s+4[\.\s])/si', $text, $match)) {
+        if (! preg_match('/Section\s+3[\.\s].*?(?=Section\s+4[\.\s])/si', $text, $match)) {
             return;
         }
         $section3 = $match[0];
@@ -241,11 +245,11 @@ PYTHON;
         preg_match_all('/(\d{2,7}-\d{2}-\d)/', $section3, $casMatches, PREG_OFFSET_CAPTURE);
 
         foreach ($casMatches[1] as $casMatch) {
-            $cas    = $casMatch[0];
+            $cas = $casMatch[0];
             $offset = $casMatch[1];
             $context = substr($section3, max(0, $offset - 100), 400);
 
-            if (!preg_match('/(\d+\.?\d*)\s*-\s*[<>]?\s*(\d+\.?\d*)\s*%/', $context, $concMatch)) {
+            if (! preg_match('/(\d+\.?\d*)\s*-\s*[<>]?\s*(\d+\.?\d*)\s*%/', $context, $concMatch)) {
                 continue;
             }
 
@@ -253,25 +257,25 @@ PYTHON;
             preg_match('/([A-Za-z][A-Za-z0-9\s\-\(\)]+?)\s*$/', trim($before), $nameMatch);
             $name = isset($nameMatch[1]) ? trim($nameMatch[1]) : 'Unknown';
 
-            // Clean up name — strip ATE column bleed
+            // Clean up name - strip ATE column bleed
             $name = $this->cleanIngredientName($name);
 
             preg_match_all('/H\d{3}/', $context, $hCodes);
-            $clp = !empty($hCodes[0]) ? implode(', ', array_unique($hCodes[0])) : null;
+            $clp = ! empty($hCodes[0]) ? implode(', ', array_unique($hCodes[0])) : null;
 
             OilComponent::create([
-                'oil_id'             => $oilId,
-                'name'               => $name,
-                'cas'                => $cas,
-                'concentration_min'  => (float) $concMatch[1],
-                'concentration_max'  => (float) $concMatch[2],
+                'oil_id' => $oilId,
+                'name' => $name,
+                'cas' => $cas,
+                'concentration_min' => (float) $concMatch[1],
+                'concentration_max' => (float) $concMatch[2],
                 'clp_classification' => $clp,
             ]);
         }
     }
 
     // -------------------------------------------------------------------------
-    // Clean ingredient name — strip ATE column bleed artefacts
+    // Clean ingredient name - strip ATE column bleed artefacts
     //
     // When the regex fallback is used, the "Specific Conc. Limits, M-factors
     // and ATEs" column from the previous row can bleed into the ingredient name.
@@ -342,10 +346,10 @@ PYTHON;
             'H280' => ['class' => 'Gases Under Pressure',      'category' => null, 'signal_word' => 'Warning', 'pictogram' => 'gas-cylinder'],
             'H281' => ['class' => 'Gases Under Pressure',      'category' => null, 'signal_word' => 'Warning', 'pictogram' => 'gas-cylinder'],
             'H200' => ['class' => 'Unstable Explosive',        'category' => null, 'signal_word' => 'Danger',  'pictogram' => 'explosion'],
-            'H201' => ['class' => 'Explosive',                 'category' => '1.1','signal_word' => 'Danger',  'pictogram' => 'explosion'],
-            'H202' => ['class' => 'Explosive',                 'category' => '1.2','signal_word' => 'Danger',  'pictogram' => 'explosion'],
-            'H203' => ['class' => 'Explosive',                 'category' => '1.3','signal_word' => 'Danger',  'pictogram' => 'explosion'],
-            'H204' => ['class' => 'Explosive',                 'category' => '1.4','signal_word' => 'Warning', 'pictogram' => 'explosion'],
+            'H201' => ['class' => 'Explosive',                 'category' => '1.1', 'signal_word' => 'Danger',  'pictogram' => 'explosion'],
+            'H202' => ['class' => 'Explosive',                 'category' => '1.2', 'signal_word' => 'Danger',  'pictogram' => 'explosion'],
+            'H203' => ['class' => 'Explosive',                 'category' => '1.3', 'signal_word' => 'Danger',  'pictogram' => 'explosion'],
+            'H204' => ['class' => 'Explosive',                 'category' => '1.4', 'signal_word' => 'Warning', 'pictogram' => 'explosion'],
             'H270' => ['class' => 'Oxidising Gas',             'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'oxidizer'],
             'H271' => ['class' => 'Oxidising Liquid',          'category' => '1',  'signal_word' => 'Danger',  'pictogram' => 'oxidizer'],
             'H272' => ['class' => 'Oxidising Liquid',          'category' => '3',  'signal_word' => 'Warning', 'pictogram' => 'oxidizer'],

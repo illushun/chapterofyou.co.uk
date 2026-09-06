@@ -12,17 +12,11 @@ use Inertia\Inertia;
 
 class ScentFinderController extends Controller
 {
-    /**
-     * Quiz landing page — /scent-finder
-     */
     public function index()
     {
         return Inertia::render('scent-finder/Quiz');
     }
 
-    /**
-     * Handle quiz submission and show matched products — /scent-finder/results
-     */
     public function results(Request $request, ScentFinderService $scentFinder)
     {
         $validated = $request->validate([

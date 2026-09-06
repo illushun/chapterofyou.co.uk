@@ -1,11 +1,3 @@
-/**
- * useAdmin: shared logic for all admin pages.
- *
- * Usage:
- *   import { useAdmin } from '@/composables/useAdmin';
- *   const { paginate, confirmDelete, duplicateRecord, fmtCurrency, fmtSize, stockLabel } = useAdmin();
- */
-
 import { router } from '@inertiajs/vue3';
 
 export function useAdmin() {
@@ -15,24 +7,12 @@ export function useAdmin() {
             router.get(url, {}, { preserveState: true, preserveScroll: true });
     }
 
-    /**
-     * Show a native confirm dialog then fire a DELETE request.
-     * @param label   Human-readable name shown in the dialog
-     * @param routeName  Named route, e.g. 'admin.products.destroy'
-     * @param id      Record ID
-     */
     function confirmDelete(label: string, routeName: string, id: number) {
         if (confirm(`Delete "${label}"?\n\nThis cannot be undone.`)) {
             router.delete(route(routeName, id), { preserveScroll: true });
         }
     }
 
-    /**
-     * Fire a POST request to duplicate a record. No confirmation dialog since
-     * duplicating is non-destructive (the copy can simply be deleted again).
-     * @param routeName  Named route, e.g. 'admin.products.duplicate'
-     * @param id      Record ID
-     */
     function duplicateRecord(routeName: string, id: number) {
         router.post(route(routeName, id), {}, { preserveScroll: true });
     }
@@ -49,10 +29,6 @@ export function useAdmin() {
         return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${['B', 'KB', 'MB', 'GB'][i]}`;
     }
 
-    /**
-     * Return a stock label and CSS modifier class for a given stock quantity.
-     * Uses the adm-stock--* classes from admin-design-system.css.
-     */
     function stockLabel(qty: number): { text: string; cls: string } {
         if (qty === 0) return { text: 'Out of stock', cls: 'adm-stock--nil' };
         if (qty < 10) return { text: `Low (${qty})`, cls: 'adm-stock--low' };

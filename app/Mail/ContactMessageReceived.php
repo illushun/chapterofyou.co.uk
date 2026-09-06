@@ -15,14 +15,12 @@ class ContactMessageReceived extends Mailable implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
-    public function __construct(public ContactMessage $contactMessage)
-    {
-    }
+    public function __construct(public ContactMessage $contactMessage) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'New Contact Message: ' . ($this->contactMessage->subject ?: '(no subject)'),
+            subject: 'New Contact Message: '.($this->contactMessage->subject ?: '(no subject)'),
         );
     }
 

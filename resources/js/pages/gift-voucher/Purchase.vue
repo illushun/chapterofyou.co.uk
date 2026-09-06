@@ -1,19 +1,20 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
-import { ref, computed } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+
 import axios from 'axios';
 
-const props = defineProps<{
+defineProps<{
     amounts: number[];
 }>();
 
 const seo = useSeoHead({
     title: 'Gift Vouchers',
-    description: 'Give the gift of self-care. Purchase a Chapter of You gift voucher, available as an e-voucher or physical voucher.',
+    description:
+        'Give the gift of self-care. Purchase a Chapter of You gift voucher, available as an e-voucher or physical voucher.',
     canonical: '/gift-vouchers',
 });
 
@@ -29,7 +30,6 @@ const senderEmail = ref('');
 
 const errors = ref<Record<string, string>>({});
 const submitting = ref(false);
-const submitted = ref(false);
 
 const finalAmount = computed(() => {
     if (selectedAmount.value) return selectedAmount.value;
@@ -51,17 +51,20 @@ function onCustomAmount() {
 function validate(): boolean {
     errors.value = {};
     if (!finalAmount.value || finalAmount.value < 5)
-        errors.value.amount = 'Please select or enter a valid amount (minimum £5).';
+        errors.value.amount =
+            'Please select or enter a valid amount (minimum £5).';
     if (finalAmount.value && finalAmount.value > 500)
         errors.value.amount = 'Maximum gift voucher value is £500.';
     if (!recipientName.value.trim())
         errors.value.recipientName = 'Recipient name is required.';
     if (deliveryType.value === 'email' && !recipientEmail.value.trim())
-        errors.value.recipientEmail = 'Recipient email is required for e-vouchers.';
+        errors.value.recipientEmail =
+            'Recipient email is required for e-vouchers.';
     if (!senderName.value.trim())
         errors.value.senderName = 'Your name is required.';
     if (!senderEmail.value.trim())
-        errors.value.senderEmail = 'Your email is required for the order confirmation.';
+        errors.value.senderEmail =
+            'Your email is required for the order confirmation.';
     return Object.keys(errors.value).length === 0;
 }
 
@@ -90,7 +93,8 @@ async function submit() {
                 errors.value[k] = Array.isArray(v) ? v[0] : v;
             });
         } else {
-            errors.value.general = data?.message ?? 'Something went wrong. Please try again.';
+            errors.value.general =
+                data?.message ?? 'Something went wrong. Please try again.';
         }
     } finally {
         submitting.value = false;
@@ -102,13 +106,14 @@ async function submit() {
     <NavBar />
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="gv">
         <div class="gv-wrap">
-
             <!-- Header -->
             <header class="gv-header">
                 <p class="gv-eyebrow">Chapter of You</p>
@@ -118,15 +123,14 @@ async function submit() {
                 </div>
                 <p class="gv-intro">
                     Give the gift of self-care. My gift vouchers can be used on
-                    any product in the collection and are valid for one year from purchase.
+                    any product in the collection and are valid for one year
+                    from purchase.
                 </p>
             </header>
 
             <div class="gv-grid">
-
                 <!-- ── Left: form ── -->
                 <div class="gv-form-col">
-
                     <!-- Step 1: Amount -->
                     <div class="gv-card">
                         <h2 class="gv-card-title">
@@ -134,20 +138,41 @@ async function submit() {
                             Choose an amount
                         </h2>
                         <div class="gv-amounts">
-                            <button v-for="a in amounts" :key="a" type="button" class="gv-amount-btn"
-                                :class="{ 'gv-amount-btn--active': selectedAmount === a }" @click="selectAmount(a)">
+                            <button
+                                v-for="a in amounts"
+                                :key="a"
+                                type="button"
+                                class="gv-amount-btn"
+                                :class="{
+                                    'gv-amount-btn--active':
+                                        selectedAmount === a,
+                                }"
+                                @click="selectAmount(a)"
+                            >
                                 {{ fmt(a) }}
                             </button>
                         </div>
                         <div class="gv-custom-wrap">
-                            <label class="gv-label">Or enter a custom amount</label>
+                            <label class="gv-label"
+                                >Or enter a custom amount</label
+                            >
                             <div class="gv-prefix-wrap">
                                 <span class="gv-prefix">£</span>
-                                <input v-model="customAmount" type="number" min="5" max="500" step="1"
-                                    class="gv-input gv-input--prefixed" placeholder="0.00" @input="onCustomAmount" />
+                                <input
+                                    v-model="customAmount"
+                                    type="number"
+                                    min="5"
+                                    max="500"
+                                    step="1"
+                                    class="gv-input gv-input--prefixed"
+                                    placeholder="0.00"
+                                    @input="onCustomAmount"
+                                />
                             </div>
                         </div>
-                        <p v-if="errors.amount" class="gv-err">{{ errors.amount }}</p>
+                        <p v-if="errors.amount" class="gv-err">
+                            {{ errors.amount }}
+                        </p>
                     </div>
 
                     <!-- Step 2: Delivery type -->
@@ -157,38 +182,84 @@ async function submit() {
                             Delivery type
                         </h2>
                         <div class="gv-delivery-options">
-                            <button type="button" class="gv-delivery-opt"
-                                :class="{ 'gv-delivery-opt--active': deliveryType === 'email' }"
-                                @click="deliveryType = 'email'">
+                            <button
+                                type="button"
+                                class="gv-delivery-opt"
+                                :class="{
+                                    'gv-delivery-opt--active':
+                                        deliveryType === 'email',
+                                }"
+                                @click="deliveryType = 'email'"
+                            >
                                 <div class="gv-delivery-icon">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
                                         <path
-                                            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                            d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                                        />
                                         <polyline points="22,6 12,13 2,6" />
                                     </svg>
                                 </div>
                                 <div>
                                     <p class="gv-delivery-name">E-Voucher</p>
-                                    <p class="gv-delivery-desc">Sent instantly by email to the recipient</p>
+                                    <p class="gv-delivery-desc">
+                                        Sent instantly by email to the recipient
+                                    </p>
                                 </div>
-                                <span v-if="deliveryType === 'email'" class="gv-delivery-check">✓</span>
+                                <span
+                                    v-if="deliveryType === 'email'"
+                                    class="gv-delivery-check"
+                                    >✓</span
+                                >
                             </button>
-                            <button type="button" class="gv-delivery-opt"
-                                :class="{ 'gv-delivery-opt--active': deliveryType === 'physical' }"
-                                @click="deliveryType = 'physical'">
+                            <button
+                                type="button"
+                                class="gv-delivery-opt"
+                                :class="{
+                                    'gv-delivery-opt--active':
+                                        deliveryType === 'physical',
+                                }"
+                                @click="deliveryType = 'physical'"
+                            >
                                 <div class="gv-delivery-icon">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                    <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
+                                        />
                                         <circle cx="12" cy="10" r="3" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <p class="gv-delivery-name">Physical Voucher</p>
-                                    <p class="gv-delivery-desc">Printed and posted to the recipient's address</p>
+                                    <p class="gv-delivery-name">
+                                        Physical Voucher
+                                    </p>
+                                    <p class="gv-delivery-desc">
+                                        Printed and posted to the recipient's
+                                        address
+                                    </p>
                                 </div>
-                                <span v-if="deliveryType === 'physical'" class="gv-delivery-check">✓</span>
+                                <span
+                                    v-if="deliveryType === 'physical'"
+                                    class="gv-delivery-check"
+                                    >✓</span
+                                >
                             </button>
                         </div>
                     </div>
@@ -200,34 +271,83 @@ async function submit() {
                             Recipient details
                         </h2>
                         <div class="gv-field">
-                            <label class="gv-label">Recipient's name <span class="gv-req">*</span></label>
-                            <input v-model="recipientName" type="text" class="gv-input"
-                                :class="{ 'gv-input--err': errors.recipientName }" placeholder="Jane Smith" />
-                            <p v-if="errors.recipientName" class="gv-err">{{ errors.recipientName }}</p>
+                            <label class="gv-label"
+                                >Recipient's name
+                                <span class="gv-req">*</span></label
+                            >
+                            <input
+                                v-model="recipientName"
+                                type="text"
+                                class="gv-input"
+                                :class="{
+                                    'gv-input--err': errors.recipientName,
+                                }"
+                                placeholder="Jane Smith"
+                            />
+                            <p v-if="errors.recipientName" class="gv-err">
+                                {{ errors.recipientName }}
+                            </p>
                         </div>
                         <div v-if="deliveryType === 'email'" class="gv-field">
-                            <label class="gv-label">Recipient's email address <span class="gv-req">*</span></label>
-                            <input v-model="recipientEmail" type="email" class="gv-input"
-                                :class="{ 'gv-input--err': errors.recipientEmail }" placeholder="jane@example.com" />
-                            <p v-if="errors.recipientEmail" class="gv-err">{{ errors.recipientEmail }}</p>
+                            <label class="gv-label"
+                                >Recipient's email address
+                                <span class="gv-req">*</span></label
+                            >
+                            <input
+                                v-model="recipientEmail"
+                                type="email"
+                                class="gv-input"
+                                :class="{
+                                    'gv-input--err': errors.recipientEmail,
+                                }"
+                                placeholder="jane@example.com"
+                            />
+                            <p v-if="errors.recipientEmail" class="gv-err">
+                                {{ errors.recipientEmail }}
+                            </p>
                         </div>
                         <div class="gv-field">
-                            <label class="gv-label">Personal message <span class="gv-opt">(optional)</span></label>
-                            <textarea v-model="personalMessage" rows="3" class="gv-input gv-textarea"
+                            <label class="gv-label"
+                                >Personal message
+                                <span class="gv-opt">(optional)</span></label
+                            >
+                            <textarea
+                                v-model="personalMessage"
+                                rows="3"
+                                class="gv-input gv-textarea"
                                 placeholder="Write a short message to include with the voucher…"
-                                maxlength="500"></textarea>
-                            <p class="gv-char-count">{{ personalMessage.length }}/500</p>
+                                maxlength="500"
+                            ></textarea>
+                            <p class="gv-char-count">
+                                {{ personalMessage.length }}/500
+                            </p>
                             <div class="gv-message-hint">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path d="M12 20h9" />
-                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                    <path
+                                        d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"
+                                    />
                                 </svg>
                                 <span>
-                                    If left blank, I'll include the message below for you:<br />
-                                    <em>"A little moment of self-care, chosen just for you 🤍"</em><br />
-                                    <span class="gv-message-hint-note">Messages are handwritten for a personal
-                                        touch</span>
+                                    If left blank, I'll include the message
+                                    below for you:<br />
+                                    <em
+                                        >"A little moment of self-care, chosen
+                                        just for you 🤍"</em
+                                    ><br />
+                                    <span class="gv-message-hint-note"
+                                        >Messages are handwritten for a personal
+                                        touch</span
+                                    >
                                 </span>
                             </div>
                         </div>
@@ -241,30 +361,80 @@ async function submit() {
                         </h2>
                         <div class="gv-field-row">
                             <div class="gv-field">
-                                <label class="gv-label">Your name <span class="gv-req">*</span></label>
-                                <input v-model="senderName" type="text" class="gv-input"
-                                    :class="{ 'gv-input--err': errors.senderName }" placeholder="Your name" />
-                                <p v-if="errors.senderName" class="gv-err">{{ errors.senderName }}</p>
+                                <label class="gv-label"
+                                    >Your name
+                                    <span class="gv-req">*</span></label
+                                >
+                                <input
+                                    v-model="senderName"
+                                    type="text"
+                                    class="gv-input"
+                                    :class="{
+                                        'gv-input--err': errors.senderName,
+                                    }"
+                                    placeholder="Your name"
+                                />
+                                <p v-if="errors.senderName" class="gv-err">
+                                    {{ errors.senderName }}
+                                </p>
                             </div>
                             <div class="gv-field">
-                                <label class="gv-label">Your email <span class="gv-req">*</span></label>
-                                <input v-model="senderEmail" type="email" class="gv-input"
-                                    :class="{ 'gv-input--err': errors.senderEmail }"
-                                    placeholder="For your order confirmation" />
-                                <p v-if="errors.senderEmail" class="gv-err">{{ errors.senderEmail }}</p>
+                                <label class="gv-label"
+                                    >Your email
+                                    <span class="gv-req">*</span></label
+                                >
+                                <input
+                                    v-model="senderEmail"
+                                    type="email"
+                                    class="gv-input"
+                                    :class="{
+                                        'gv-input--err': errors.senderEmail,
+                                    }"
+                                    placeholder="For your order confirmation"
+                                />
+                                <p v-if="errors.senderEmail" class="gv-err">
+                                    {{ errors.senderEmail }}
+                                </p>
                             </div>
                         </div>
                     </div>
 
-                    <p v-if="errors.general" class="gv-err gv-err--general">{{ errors.general }}</p>
+                    <p v-if="errors.general" class="gv-err gv-err--general">
+                        {{ errors.general }}
+                    </p>
 
-                    <button @click="submit" :disabled="submitting || !finalAmount" class="gv-submit-btn">
-                        <svg v-if="submitting" class="gv-spinner" viewBox="0 0 24 24" fill="none">
-                            <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.3)" stroke-width="3" />
-                            <path d="M12 2a10 10 0 0 1 10 10" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+                    <button
+                        @click="submit"
+                        :disabled="submitting || !finalAmount"
+                        class="gv-submit-btn"
+                    >
+                        <svg
+                            v-if="submitting"
+                            class="gv-spinner"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="rgba(255,255,255,0.3)"
+                                stroke-width="3"
+                            />
+                            <path
+                                d="M12 2a10 10 0 0 1 10 10"
+                                stroke="#fff"
+                                stroke-width="3"
+                                stroke-linecap="round"
+                            />
                         </svg>
-                        {{ submitting ? 'Processing…' : finalAmount ? `Purchase ${fmt(finalAmount)} Gift Voucher` :
-                            'Select an amount to continue' }}
+                        {{
+                            submitting
+                                ? 'Processing…'
+                                : finalAmount
+                                  ? `Purchase ${fmt(finalAmount)} Gift Voucher`
+                                  : 'Select an amount to continue'
+                        }}
                     </button>
                 </div>
 
@@ -274,59 +444,97 @@ async function submit() {
                         <p class="gv-preview-label">Preview</p>
                         <div class="gv-voucher-preview">
                             <p class="gv-preview-brand">Chapter of You</p>
-                            <div class="gv-preview-petal" aria-hidden="true">✿</div>
+                            <div class="gv-preview-petal" aria-hidden="true">
+                                ✿
+                            </div>
                             <p class="gv-preview-amount">
-                                {{ finalAmount ? fmt(finalAmount) : '£—' }}
+                                {{ finalAmount ? fmt(finalAmount) : '£-' }}
                             </p>
                             <p class="gv-preview-gift-label">Gift Voucher</p>
                             <div class="gv-preview-code-box">
-                                <span class="gv-preview-code-hint">Your unique code will appear here</span>
+                                <span class="gv-preview-code-hint"
+                                    >Your unique code will appear here</span
+                                >
                             </div>
                             <p class="gv-preview-terms">
                                 Single use · All products · Valid for 1 year
                             </p>
                         </div>
 
-                        <div v-if="recipientName || personalMessage" class="gv-preview-message">
+                        <div
+                            v-if="recipientName || personalMessage"
+                            class="gv-preview-message"
+                        >
                             <p class="gv-preview-to">
-                                For: <strong>{{ recipientName || '—' }}</strong>
+                                For: <strong>{{ recipientName || '-' }}</strong>
                             </p>
-                            <p v-if="personalMessage" class="gv-preview-msg-text">
+                            <p
+                                v-if="personalMessage"
+                                class="gv-preview-msg-text"
+                            >
                                 "{{ personalMessage }}"
                             </p>
                         </div>
 
                         <div class="gv-preview-info">
                             <div class="gv-preview-info-row">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg
+                                    width="13"
+                                    height="13"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path
-                                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                        d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
+                                    />
                                     <polyline points="22,6 12,13 2,6" />
                                 </svg>
-                                <span>{{ deliveryType === 'email' ? 'Sent instantly by email' : 'Posted to recipient'
-                                    }}</span>
+                                <span>{{
+                                    deliveryType === 'email'
+                                        ? 'Sent instantly by email'
+                                        : 'Posted to recipient'
+                                }}</span>
                             </div>
                             <div class="gv-preview-info-row">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg
+                                    width="13"
+                                    height="13"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <circle cx="12" cy="12" r="10" />
                                     <polyline points="12 6 12 12 16 14" />
                                 </svg>
                                 <span>Valid for 1 year from purchase</span>
                             </div>
                             <div class="gv-preview-info-row">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg
+                                    width="13"
+                                    height="13"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path
-                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                    />
                                 </svg>
                                 <span>Redeemable on all products</span>
                             </div>
                         </div>
                     </div>
                 </aside>
-
             </div>
         </div>
     </main>
@@ -663,7 +871,9 @@ async function submit() {
     font-family: 'Nunito', sans-serif;
     font-size: 0.92rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
     width: 100%;
 }
 
@@ -716,7 +926,9 @@ async function submit() {
     font-weight: 700;
     cursor: pointer;
     box-shadow: 0 4px 16px rgba(168, 80, 88, 0.25);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 }
 
 .gv-submit-btn:hover:not(:disabled) {

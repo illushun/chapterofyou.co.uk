@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
+import { MOOD_TAGS, ROOMS, SCENT_FAMILIES } from '@/lib/scentTaxonomy';
 import { router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
-import { SCENT_FAMILIES, MOOD_TAGS, ROOMS } from '@/lib/scentTaxonomy';
 
 const seo = useSeoHead({
     title: 'Scent Finder',
-    description: 'Answer a few quick questions and we\'ll match you with the Chapter of You fragrance you\'ll love most.',
+    description:
+        "Answer a few quick questions and we'll match you with the Chapter of You fragrance you'll love most.",
     canonical: '/scent-finder',
 });
 
@@ -23,8 +24,16 @@ const currentStep = ref(0);
 const submitting = ref(false);
 
 const steps = [
-    { key: 'families', title: 'Which scents call to you?', subtitle: 'Pick up to 2' },
-    { key: 'moods', title: 'What mood are you after?', subtitle: 'Pick up to 3' },
+    {
+        key: 'families',
+        title: 'Which scents call to you?',
+        subtitle: 'Pick up to 2',
+    },
+    {
+        key: 'moods',
+        title: 'What mood are you after?',
+        subtitle: 'Pick up to 3',
+    },
     { key: 'rooms', title: 'Where will you use it?', subtitle: 'Pick up to 2' },
 ] as const;
 
@@ -81,9 +90,15 @@ const back = () => {
 
 const submit = () => {
     submitting.value = true;
-    router.get(route('scent-finder.results'), { ...answers }, {
-        onFinish: () => { submitting.value = false; },
-    });
+    router.get(
+        route('scent-finder.results'),
+        { ...answers },
+        {
+            onFinish: () => {
+                submitting.value = false;
+            },
+        },
+    );
 };
 </script>
 
@@ -93,7 +108,6 @@ const submit = () => {
 
     <main class="sf">
         <div class="sf-wrap">
-
             <header class="sf-header">
                 <p class="sf-eyebrow">Chapter of You</p>
                 <h1 class="sf-title">Scent <em>Finder</em></h1>
@@ -104,9 +118,16 @@ const submit = () => {
 
             <div class="sf-progress">
                 <div class="sf-progress-bar">
-                    <div class="sf-progress-fill" :style="{ width: `${((currentStep + 1) / totalSteps) * 100}%` }" />
+                    <div
+                        class="sf-progress-fill"
+                        :style="{
+                            width: `${((currentStep + 1) / totalSteps) * 100}%`,
+                        }"
+                    />
                 </div>
-                <p class="sf-progress-label">Step {{ currentStep + 1 }} of {{ totalSteps }}</p>
+                <p class="sf-progress-label">
+                    Step {{ currentStep + 1 }} of {{ totalSteps }}
+                </p>
             </div>
 
             <div class="sf-card">
@@ -115,45 +136,95 @@ const submit = () => {
 
                 <!-- Step 1: Scent families -->
                 <div v-if="currentStep === 0" class="sf-chip-grid">
-                    <button v-for="family in SCENT_FAMILIES" :key="family.value" type="button" class="sf-chip"
-                        :class="{ 'sf-chip--active': answers.scent_families.includes(family.value) }"
-                        :disabled="!answers.scent_families.includes(family.value) && answers.scent_families.length >= 2"
-                        @click="toggleFamily(family.value)">
+                    <button
+                        v-for="family in SCENT_FAMILIES"
+                        :key="family.value"
+                        type="button"
+                        class="sf-chip"
+                        :class="{
+                            'sf-chip--active': answers.scent_families.includes(
+                                family.value,
+                            ),
+                        }"
+                        :disabled="
+                            !answers.scent_families.includes(family.value) &&
+                            answers.scent_families.length >= 2
+                        "
+                        @click="toggleFamily(family.value)"
+                    >
                         {{ family.label }}
                     </button>
                 </div>
 
                 <!-- Step 2: Mood tags -->
                 <div v-else-if="currentStep === 1" class="sf-chip-grid">
-                    <button v-for="mood in MOOD_TAGS" :key="mood.value" type="button" class="sf-chip"
-                        :class="{ 'sf-chip--active': answers.mood_tags.includes(mood.value) }"
-                        :disabled="!answers.mood_tags.includes(mood.value) && answers.mood_tags.length >= 3"
-                        @click="toggleMood(mood.value)">
+                    <button
+                        v-for="mood in MOOD_TAGS"
+                        :key="mood.value"
+                        type="button"
+                        class="sf-chip"
+                        :class="{
+                            'sf-chip--active': answers.mood_tags.includes(
+                                mood.value,
+                            ),
+                        }"
+                        :disabled="
+                            !answers.mood_tags.includes(mood.value) &&
+                            answers.mood_tags.length >= 3
+                        "
+                        @click="toggleMood(mood.value)"
+                    >
                         {{ mood.label }}
                     </button>
                 </div>
 
                 <!-- Step 3: Rooms -->
                 <div v-else class="sf-chip-grid">
-                    <button v-for="room in ROOMS" :key="room.value" type="button" class="sf-chip"
-                        :class="{ 'sf-chip--active': answers.room_tags.includes(room.value) }"
-                        :disabled="!answers.room_tags.includes(room.value) && answers.room_tags.length >= 2"
-                        @click="toggleRoom(room.value)">
+                    <button
+                        v-for="room in ROOMS"
+                        :key="room.value"
+                        type="button"
+                        class="sf-chip"
+                        :class="{
+                            'sf-chip--active': answers.room_tags.includes(
+                                room.value,
+                            ),
+                        }"
+                        :disabled="
+                            !answers.room_tags.includes(room.value) &&
+                            answers.room_tags.length >= 2
+                        "
+                        @click="toggleRoom(room.value)"
+                    >
                         {{ room.label }}
                     </button>
                 </div>
 
                 <div class="sf-actions">
-                    <button v-if="currentStep > 0" type="button" class="sf-btn sf-btn--ghost" @click="back">
+                    <button
+                        v-if="currentStep > 0"
+                        type="button"
+                        class="sf-btn sf-btn--ghost"
+                        @click="back"
+                    >
                         Back
                     </button>
-                    <button type="button" class="sf-btn sf-btn--primary" :disabled="!canProceed || submitting"
-                        @click="next">
-                        {{ submitting ? 'Finding matches…' : isLastStep ? 'See my matches' : 'Next' }}
+                    <button
+                        type="button"
+                        class="sf-btn sf-btn--primary"
+                        :disabled="!canProceed || submitting"
+                        @click="next"
+                    >
+                        {{
+                            submitting
+                                ? 'Finding matches…'
+                                : isLastStep
+                                  ? 'See my matches'
+                                  : 'Next'
+                        }}
                     </button>
                 </div>
             </div>
-
         </div>
     </main>
 
@@ -286,7 +357,11 @@ const submit = () => {
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.15s;
+    transition:
+        border-color 0.15s,
+        background 0.15s,
+        color 0.15s,
+        transform 0.15s;
 }
 
 .sf-chip:hover:not(:disabled) {
@@ -322,7 +397,10 @@ const submit = () => {
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s,
+        background 0.2s;
     border: 1px solid transparent;
 }
 

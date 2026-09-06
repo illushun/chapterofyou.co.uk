@@ -3,8 +3,6 @@ import AdminLayout from '@/layouts/AdminLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
-declare const route: any;
-
 interface ProductNode {
     id: number;
     name: string;
@@ -349,7 +347,7 @@ function removeRelationship(productId: number) {
                                 :collapsed-map="collapsed"
                                 @toggle="toggleCollapse"
                                 @edit="
-                                    (id) =>
+                                    (id: number) =>
                                         router.get(
                                             route('admin.products.edit', id),
                                         )
@@ -366,7 +364,7 @@ function removeRelationship(productId: number) {
 
 <script lang="ts">
 import { ChevronDown, ChevronRight, X } from 'lucide-vue-next';
-import { defineComponent, h, PropType } from 'vue';
+import { defineComponent, h, PropType, type VNode } from 'vue';
 
 interface TreeNodeDef {
     id: number;
@@ -390,7 +388,7 @@ const TreeNodeRow = defineComponent({
     },
     emits: ['toggle', 'edit', 'remove'],
     setup(props, { emit }) {
-        return () => {
+        return (): VNode => {
             const node = props.node;
             const isRoot = !node.parent_id;
             const hasChildren = node.children.length > 0;

@@ -20,7 +20,7 @@ class MarketplaceProductSetting extends Model
     ];
 
     protected $casts = [
-        'enabled'        => 'boolean',
+        'enabled' => 'boolean',
         'override_price' => 'decimal:2',
     ];
 

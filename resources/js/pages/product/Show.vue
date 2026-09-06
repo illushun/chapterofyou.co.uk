@@ -1,49 +1,82 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
-import { Head, usePage, router, useForm } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import axios from 'axios';
-import SeoHead from '@/components/SeoHead.vue';
-import { useSeoHead } from '@/composables/useSeoHead';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
-import { useProductSchema, useBreadcrumbSchema } from '@/composables/useProductSchema';
+import NavBar from '@/components/NavBar.vue';
 import RecentJournalPosts from '@/components/RecentJournalPosts.vue';
+import SeoHead from '@/components/SeoHead.vue';
+import {
+    useBreadcrumbSchema,
+    useProductSchema,
+} from '@/composables/useProductSchema';
+import { useSeoHead } from '@/composables/useSeoHead';
+import { router, useForm, usePage } from '@inertiajs/vue3';
+import axios from 'axios';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
-import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
-import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import ModalImageViewer from '@/components/ui/coy/ModalImageViewer.vue';
+import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import StarRating from '@/components/ui/coy/StarRating.vue';
+import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 
-interface ProductImage { image: string; }
+interface ProductImage {
+    image: string;
+}
 interface ProductReview {
-    id: number; product_id: number; user_id: number;
-    message: string; rating: number; review_images: string[];
-    created_at: string; user: { id: number; name: string };
+    id: number;
+    product_id: number;
+    user_id: number;
+    message: string;
+    rating: number;
+    review_images: string[];
+    created_at: string;
+    user: { id: number; name: string };
     admin_reply: string | null;
 }
 interface ProductVariation {
-    id: number; mpn: string; name: string;
-    cost: number; stock_qty: number; parent_product_id: number;
+    id: number;
+    mpn: string;
+    name: string;
+    cost: number;
+    stock_qty: number;
+    parent_product_id: number;
 }
-interface FaqItem { question: string; answer: string; }
-interface ProductRefill { id: number; name: string; cost: number; stock_qty: number; }
+interface FaqItem {
+    question: string;
+    answer: string;
+}
+interface ProductRefill {
+    id: number;
+    name: string;
+    cost: number;
+    stock_qty: number;
+}
 interface ProductDetailData {
-    id: number; name: string; mpn: string; description: string;
-    cost: number; stock_qty: number; total_unique_views: number;
-    average_rating: number; approved_reviews_count: number;
-    images: ProductImage[]; reviews: ProductReview[];
+    id: number;
+    name: string;
+    mpn: string;
+    description: string;
+    cost: number;
+    stock_qty: number;
+    total_unique_views: number;
+    average_rating: number;
+    approved_reviews_count: number;
+    images: ProductImage[];
+    reviews: ProductReview[];
     categories: { id: number; name: string; slug: string | null }[];
     children: ProductVariation[];
     refills?: ProductRefill[];
     details: string;
     how_to_use?: string | null;
     faqs?: FaqItem[] | null;
-    seo?: { meta_title: string; meta_description: string };
+    seo?: { slug: string; meta_title: string; meta_description: string };
 }
 interface JournalPostSummary {
-    title: string; slug: string; excerpt: string | null;
-    cover_image: string | null; published_at: string; reading_time: number;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+    cover_image: string | null;
+    published_at: string;
+    reading_time: number;
 }
 interface ProductProps {
     product: ProductDetailData;
@@ -60,7 +93,9 @@ const page = usePage();
 // Prefer journal posts that specifically reference this product; fall back
 // to the site-wide recent posts when none have been linked yet.
 const recentPosts = computed(() =>
-    props.journalPosts?.length ? props.journalPosts : ((page.props.recentJournalPosts as any[]) ?? [])
+    props.journalPosts?.length
+        ? props.journalPosts
+        : ((page.props.recentJournalPosts as any[]) ?? []),
 );
 const auth = computed(() => page.props.auth as any);
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
@@ -69,7 +104,7 @@ const isWishlisted = ref(props.wishlisted ?? false);
 const wishlistedIds = ref<number[]>(props.wishlistedIds ?? []);
 
 // Product names are just scent names (e.g. "Peppermint Pines") with no
-// "diffuser" keyword, which hurts relevance for diffuser searches — append
+// "diffuser" keyword, which hurts relevance for diffuser searches - append
 // it here so every title/H1 carries the keyword without renaming products.
 const withDiffuserKeyword = (text: string) =>
     /\bdiffusers?\b/i.test(text) ? text : `${text} Reed Diffuser`;
@@ -78,22 +113,23 @@ const displayTitle = computed(() => withDiffuserKeyword(props.product.name));
 
 const seo = useSeoHead({
     title: props.product.seo?.meta_title || displayTitle.value,
-    description: props.product.seo?.meta_description
-        || props.product.description?.replace(/<[^>]*>/g, '').slice(0, 155),
+    description:
+        props.product.seo?.meta_description ||
+        props.product.description?.replace(/<[^>]*>/g, '').slice(0, 155),
     canonical: `/product/${props.product.seo?.slug || props.product.id}`,
     ogImage: props.product.images?.[0]?.image,
     ogType: 'product',
 });
 
-const productSlug = computed(() =>
-    props.product.seo?.slug || String(props.product.id)
+const productSlug = computed(
+    () => props.product.seo?.slug || String(props.product.id),
 );
 
 const productSchema = computed(() =>
     useProductSchema({
         product: props.product,
         slug: productSlug.value,
-    })
+    }),
 );
 
 const breadcrumbSchema = computed(() => {
@@ -105,7 +141,12 @@ const breadcrumbSchema = computed(() => {
     // Add category if the product has one
     if (props.product.categories?.length) {
         const cat = props.product.categories[0];
-        crumbs.push({ name: cat.name, url: cat.slug ? `/category/${cat.slug}` : `/products?categories=${cat.id}` });
+        crumbs.push({
+            name: cat.name,
+            url: cat.slug
+                ? `/category/${cat.slug}`
+                : `/products?categories=${cat.id}`,
+        });
     }
 
     crumbs.push({
@@ -117,16 +158,28 @@ const breadcrumbSchema = computed(() => {
 });
 
 const quantity = ref(1);
-const increaseQuantity = () => { if (currentVariation.value.stock_qty > quantity.value) quantity.value++; };
-const decreaseQuantity = () => { if (quantity.value > 1) quantity.value--; };
+const increaseQuantity = () => {
+    if (currentVariation.value.stock_qty > quantity.value) quantity.value++;
+};
+const decreaseQuantity = () => {
+    if (quantity.value > 1) quantity.value--;
+};
 
 const selectedImageIndex = ref(0);
-const mainImageUrl = computed(() => props.product.images[selectedImageIndex.value]?.image || '/images/placeholder.jpg');
-const openImageModal = () => { if ((props.product.images || []).length > 0) isModalOpen.value = true; };
+const mainImageUrl = computed(
+    () =>
+        props.product.images[selectedImageIndex.value]?.image ||
+        '/images/placeholder.jpg',
+);
+const openImageModal = () => {
+    if ((props.product.images || []).length > 0) isModalOpen.value = true;
+};
 
 // ── FAQ accordion ─────────────────────────────────────────────────────────
 const openFaqIndex = ref<number | null>(null);
-const toggleFaq = (i: number) => { openFaqIndex.value = openFaqIndex.value === i ? null : i; };
+const toggleFaq = (i: number) => {
+    openFaqIndex.value = openFaqIndex.value === i ? null : i;
+};
 
 // ── Review form ───────────────────────────────────────────────────────────
 const reviewForm = useForm({ rating: 0, message: '', images: [] as File[] });
@@ -135,7 +188,10 @@ const submitReview = () => {
     reviewForm.post(route('products.review.store', props.product.id), {
         forceFormData: true,
         onSuccess: () => {
-            successToastRef.value?.show('Review submitted! Awaiting approval.', 'star');
+            successToastRef.value?.show(
+                'Review submitted! Awaiting approval.',
+                'star',
+            );
             reviewForm.reset('rating', 'message', 'images');
         },
     });
@@ -143,7 +199,8 @@ const submitReview = () => {
 const deleteReview = (reviewId: number) => {
     router.delete(route('products.review.destroy', reviewId), {
         preserveScroll: true,
-        onSuccess: () => successToastRef.value?.show('Review deleted.', 'trash'),
+        onSuccess: () =>
+            successToastRef.value?.show('Review deleted.', 'trash'),
     });
 };
 const handleImageUpload = (event: Event) => {
@@ -154,66 +211,112 @@ const handleImageUpload = (event: Event) => {
 // ── Variations ────────────────────────────────────────────────────────────
 const getInitialVariationId = (): number | null => {
     if (props.product.children?.length > 0)
-        return props.product.children.find(v => v.stock_qty > 0)?.id ?? null;
+        return props.product.children.find((v) => v.stock_qty > 0)?.id ?? null;
     return null;
 };
 const selectedVariationId = ref<number | null>(getInitialVariationId());
 const currentVariation = computed(() => {
     if (selectedVariationId.value) {
-        const v = props.product.children.find(v => v.id === selectedVariationId.value);
+        const v = props.product.children.find(
+            (v) => v.id === selectedVariationId.value,
+        );
         if (v) return v;
     }
-    return { id: props.product.id, cost: props.product.cost, stock_qty: props.product.stock_qty || 0, mpn: props.product.mpn };
+    return {
+        id: props.product.id,
+        cost: props.product.cost,
+        stock_qty: props.product.stock_qty || 0,
+        mpn: props.product.mpn,
+    };
 });
 
 const isOutOfStock = computed(() => currentVariation.value.stock_qty <= 0);
 const isPopular = computed(() => props.product.total_unique_views > 100);
-const fmt = (v: number | string) => { const n = Number(v); return isNaN(n) ? 'N/A' : `£${n.toFixed(2)}`; };
+const fmt = (v: number | string) => {
+    const n = Number(v);
+    return isNaN(n) ? 'N/A' : `£${n.toFixed(2)}`;
+};
 const formattedCost = computed(() => fmt(currentVariation.value.cost));
 
 // ── Refill add-on (e.g. "Citrus Sunrise Refill") ────────────────────────────
 const addRefill = ref(false);
 const primaryRefill = computed(() => props.product.refills?.[0] ?? null);
 const otherRefills = computed(() => props.product.refills?.slice(1) ?? []);
-const refillOutOfStock = computed(() => (primaryRefill.value?.stock_qty ?? 0) <= 0);
+const refillOutOfStock = computed(
+    () => (primaryRefill.value?.stock_qty ?? 0) <= 0,
+);
 
 const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
     const itemToAdd = quickAddProduct ?? currentVariation.value;
     const qty = quickAddProduct ? 1 : quantity.value;
     const name = quickAddProduct ? quickAddProduct.name : props.product.name;
     if (!itemToAdd?.id || qty < 1 || itemToAdd.stock_qty < qty) return;
-    const includeRefill = !quickAddProduct && addRefill.value && primaryRefill.value && !refillOutOfStock.value;
-    router.post('/cart/add', {
-        product_id: itemToAdd.id,
-        quantity: qty,
-        refill_id: includeRefill ? primaryRefill.value!.id : undefined,
-    }, {
-        preserveScroll: true,
-        onSuccess: () => {
-            const refillSuffix = includeRefill ? ` + ${primaryRefill.value!.name}` : '';
-            successToastRef.value?.show(`${qty} × ${name}${refillSuffix} added to cart!`, 'cart');
-            if (!quickAddProduct) quantity.value = 1;
+    const includeRefill =
+        !quickAddProduct &&
+        addRefill.value &&
+        primaryRefill.value &&
+        !refillOutOfStock.value;
+    router.post(
+        '/cart/add',
+        {
+            product_id: itemToAdd.id,
+            quantity: qty,
+            refill_id: includeRefill ? primaryRefill.value!.id : undefined,
         },
-    });
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                const refillSuffix = includeRefill
+                    ? ` + ${primaryRefill.value!.name}`
+                    : '';
+                successToastRef.value?.show(
+                    `${qty} × ${name}${refillSuffix} added to cart!`,
+                    'cart',
+                );
+                if (!quickAddProduct) quantity.value = 1;
+            },
+        },
+    );
 };
 
 const handleFavourite = async (productArg?: any) => {
-    const targetId = (productArg && typeof productArg === 'object' ? productArg.id : null) ?? props.product.id;
+    const targetId =
+        (productArg && typeof productArg === 'object' ? productArg.id : null) ??
+        props.product.id;
     const isRelated = targetId !== props.product.id;
-    isRelated
-        ? (wishlistedIds.value.includes(targetId)
-            ? wishlistedIds.value.splice(wishlistedIds.value.indexOf(targetId), 1)
-            : wishlistedIds.value.push(targetId))
-        : (isWishlisted.value = !isWishlisted.value);
+    if (isRelated) {
+        if (wishlistedIds.value.includes(targetId)) {
+            wishlistedIds.value.splice(
+                wishlistedIds.value.indexOf(targetId),
+                1,
+            );
+        } else {
+            wishlistedIds.value.push(targetId);
+        }
+    } else {
+        isWishlisted.value = !isWishlisted.value;
+    }
     try {
-        const { data } = await axios.post(route('wishlist.toggle'), { product_id: targetId });
-        successToastRef.value?.show(data.message, data.wishlisted ? 'favourite' : 'trash');
+        const { data } = await axios.post(route('wishlist.toggle'), {
+            product_id: targetId,
+        });
+        successToastRef.value?.show(
+            data.message,
+            data.wishlisted ? 'favourite' : 'trash',
+        );
     } catch (err: any) {
-        isRelated
-            ? (wishlistedIds.value.includes(targetId)
-                ? wishlistedIds.value.splice(wishlistedIds.value.indexOf(targetId), 1)
-                : wishlistedIds.value.push(targetId))
-            : (isWishlisted.value = !isWishlisted.value);
+        if (isRelated) {
+            if (wishlistedIds.value.includes(targetId)) {
+                wishlistedIds.value.splice(
+                    wishlistedIds.value.indexOf(targetId),
+                    1,
+                );
+            } else {
+                wishlistedIds.value.push(targetId);
+            }
+        } else {
+            isWishlisted.value = !isWishlisted.value;
+        }
         if (err.response?.status === 401) window.location.href = route('login');
     }
 };
@@ -223,20 +326,23 @@ const hasFaqs = computed(() => (props.product.faqs?.length ?? 0) > 0);
 const ldSchemas = computed(() => [productSchema.value, breadcrumbSchema.value]);
 
 // Low stock threshold
-const isLowStock = computed(() =>
-    !isOutOfStock.value && currentVariation.value.stock_qty <= 5
+const isLowStock = computed(
+    () => !isOutOfStock.value && currentVariation.value.stock_qty <= 5,
 );
 
-// Sticky mobile CTA — shows once the main add-to-cart button scrolls out of view
+// Sticky mobile CTA - shows once the main add-to-cart button scrolls out of view
 const showStickyCta = ref(false);
 let cartBtnObserver: IntersectionObserver | null = null;
 
 onMounted(() => {
     const cartBtn = document.querySelector<HTMLElement>('.pd-cart-btn');
     if (cartBtn && 'IntersectionObserver' in window) {
-        cartBtnObserver = new IntersectionObserver(([entry]) => {
-            showStickyCta.value = !entry.isIntersecting;
-        }, { threshold: 0 });
+        cartBtnObserver = new IntersectionObserver(
+            ([entry]) => {
+                showStickyCta.value = !entry.isIntersecting;
+            },
+            { threshold: 0 },
+        );
         cartBtnObserver.observe(cartBtn);
     }
 });
@@ -252,25 +358,43 @@ onUnmounted(() => {
     <SeoHead v-bind="seo" />
     <JsonLdSchema :schema="ldSchemas" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="pd">
         <div class="pd-wrap">
-
             <!-- ── Product main grid ── -->
             <div class="pd-grid">
-
                 <!-- Images -->
                 <div class="pd-images">
-                    <button @click="openImageModal" class="pd-main-img-btn" aria-label="View full image">
+                    <button
+                        @click="openImageModal"
+                        class="pd-main-img-btn"
+                        aria-label="View full image"
+                    >
                         <div class="pd-main-img-wrap">
-                            <span v-if="isPopular" class="pd-popular-badge">Popular</span>
-                            <img :src="mainImageUrl" :alt="product.name" class="pd-main-img" />
+                            <span v-if="isPopular" class="pd-popular-badge"
+                                >Popular</span
+                            >
+                            <img
+                                :src="mainImageUrl"
+                                :alt="product.name"
+                                class="pd-main-img"
+                            />
                             <div class="pd-img-zoom-hint" aria-hidden="true">
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg
+                                    width="22"
+                                    height="22"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <circle cx="11" cy="11" r="8" />
                                     <path d="m21 21-4.3-4.3M11 8v6M8 11h6" />
                                 </svg>
@@ -278,10 +402,21 @@ onUnmounted(() => {
                         </div>
                     </button>
                     <div v-if="product.images.length > 1" class="pd-thumbs">
-                        <button v-for="(img, i) in product.images" :key="i" @click="selectedImageIndex = i"
-                            class="pd-thumb" :class="{ 'pd-thumb--active': selectedImageIndex === i }">
-                            <img :src="img.image" :alt="`${product.name} — view ${i + 1}`" class="pd-thumb-img"
-                                loading="lazy" />
+                        <button
+                            v-for="(img, i) in product.images"
+                            :key="i"
+                            @click="selectedImageIndex = i"
+                            class="pd-thumb"
+                            :class="{
+                                'pd-thumb--active': selectedImageIndex === i,
+                            }"
+                        >
+                            <img
+                                :src="img.image"
+                                :alt="`${product.name} - view ${i + 1}`"
+                                class="pd-thumb-img"
+                                loading="lazy"
+                            />
                         </button>
                     </div>
                 </div>
@@ -290,144 +425,389 @@ onUnmounted(() => {
                 <div class="pd-info">
                     <nav class="pd-breadcrumb" aria-label="Breadcrumb">
                         <a href="/products" class="pd-crumb">Products</a>
-                        <template v-for="cat in product.categories" :key="cat.id">
-                            <span class="pd-crumb-sep" aria-hidden="true">/</span>
-                            <a :href="cat.slug ? `/category/${cat.slug}` : `/products?categories=${cat.id}`"
-                                class="pd-crumb">{{ cat.name }}</a>
+                        <template
+                            v-for="cat in product.categories"
+                            :key="cat.id"
+                        >
+                            <span class="pd-crumb-sep" aria-hidden="true"
+                                >/</span
+                            >
+                            <a
+                                :href="
+                                    cat.slug
+                                        ? `/category/${cat.slug}`
+                                        : `/products?categories=${cat.id}`
+                                "
+                                class="pd-crumb"
+                                >{{ cat.name }}</a
+                            >
                         </template>
                     </nav>
 
                     <h1 class="pd-title">{{ displayTitle }}</h1>
                     <p class="pd-mpn">{{ currentVariation.mpn }}</p>
 
-                    <div v-if="product.approved_reviews_count > 0" class="pd-rating-row">
-                        <StarRating :rating="product.average_rating" :size="18" />
-                        <span class="pd-rating-label">{{ product.average_rating.toFixed(1) }} ({{
-                            product.approved_reviews_count }} review{{
-                                product.approved_reviews_count !== 1 ? 's' : '' }})</span>
+                    <div
+                        v-if="product.approved_reviews_count > 0"
+                        class="pd-rating-row"
+                    >
+                        <StarRating
+                            :rating="product.average_rating"
+                            :size="18"
+                        />
+                        <span class="pd-rating-label"
+                            >{{ product.average_rating.toFixed(1) }} ({{
+                                product.approved_reviews_count
+                            }}
+                            review{{
+                                product.approved_reviews_count !== 1 ? 's' : ''
+                            }})</span
+                        >
                     </div>
 
                     <div class="pd-stock-row">
-                        <span v-if="isOutOfStock" class="pd-stock-badge pd-stock--out">Out of Stock</span>
-                        <span v-else-if="isLowStock" class="pd-stock-badge pd-stock--low">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        <span
+                            v-if="isOutOfStock"
+                            class="pd-stock-badge pd-stock--out"
+                            >Out of Stock</span
+                        >
+                        <span
+                            v-else-if="isLowStock"
+                            class="pd-stock-badge pd-stock--low"
+                        >
+                            <svg
+                                width="11"
+                                height="11"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                                />
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
                             Only {{ currentVariation.stock_qty }} left
                         </span>
-                        <span v-else class="pd-stock-badge pd-stock--in">In Stock</span>
+                        <span v-else class="pd-stock-badge pd-stock--in"
+                            >In Stock</span
+                        >
                     </div>
 
                     <p class="pd-price">{{ formattedCost }}</p>
 
-                    <div v-if="product.children?.length > 0" class="pd-variations">
+                    <div
+                        v-if="product.children?.length > 0"
+                        class="pd-variations"
+                    >
                         <h2 class="pd-variations-label">Choose Option</h2>
                         <div class="pd-variation-btns">
-                            <button v-for="v in product.children" :key="v.id" @click="selectedVariationId = v.id"
-                                :disabled="v.stock_qty <= 0" class="pd-variation-btn"
-                                :class="{ 'pd-variation-btn--active': v.id === selectedVariationId, 'pd-variation-btn--disabled': v.stock_qty <= 0 }">
+                            <button
+                                v-for="v in product.children"
+                                :key="v.id"
+                                @click="selectedVariationId = v.id"
+                                :disabled="v.stock_qty <= 0"
+                                class="pd-variation-btn"
+                                :class="{
+                                    'pd-variation-btn--active':
+                                        v.id === selectedVariationId,
+                                    'pd-variation-btn--disabled':
+                                        v.stock_qty <= 0,
+                                }"
+                            >
                                 {{ v.name }}
                             </button>
                         </div>
                     </div>
 
                     <div v-if="primaryRefill" class="pd-refill">
-                        <label class="pd-refill-label" :class="{ 'pd-refill-label--disabled': refillOutOfStock }">
-                            <input type="checkbox" v-model="addRefill" :disabled="refillOutOfStock" class="pd-refill-checkbox" />
+                        <label
+                            class="pd-refill-label"
+                            :class="{
+                                'pd-refill-label--disabled': refillOutOfStock,
+                            }"
+                        >
+                            <input
+                                type="checkbox"
+                                v-model="addRefill"
+                                :disabled="refillOutOfStock"
+                                class="pd-refill-checkbox"
+                            />
                             <span class="pd-refill-text">
                                 Add {{ primaryRefill.name }} refill
-                                <span class="pd-refill-price">(+{{ fmt(primaryRefill.cost) }})</span>
+                                <span class="pd-refill-price"
+                                    >(+{{ fmt(primaryRefill.cost) }})</span
+                                >
                             </span>
                         </label>
-                        <p v-if="refillOutOfStock" class="pd-refill-oos">Currently out of stock</p>
+                        <p v-if="refillOutOfStock" class="pd-refill-oos">
+                            Currently out of stock
+                        </p>
                         <p v-if="otherRefills.length" class="pd-refill-other">
                             Other refill scents available:
-                            <template v-for="(r, i) in otherRefills" :key="r.id">
-                                <a :href="`/product/${r.id}`" class="pd-refill-other-link">{{ r.name }}</a><span
-                                    v-if="i < otherRefills.length - 1">, </span>
+                            <template
+                                v-for="(r, i) in otherRefills"
+                                :key="r.id"
+                            >
+                                <a
+                                    :href="`/product/${r.id}`"
+                                    class="pd-refill-other-link"
+                                    >{{ r.name }}</a
+                                ><span v-if="i < otherRefills.length - 1"
+                                    >,
+                                </span>
                             </template>
                         </p>
                     </div>
 
                     <div class="pd-actions">
                         <div class="pd-qty">
-                            <button @click="decreaseQuantity" :disabled="quantity <= 1" class="pd-qty-btn"
-                                aria-label="Decrease quantity">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="3" stroke-linecap="round">
+                            <button
+                                @click="decreaseQuantity"
+                                :disabled="quantity <= 1"
+                                class="pd-qty-btn"
+                                aria-label="Decrease quantity"
+                            >
+                                <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="3"
+                                    stroke-linecap="round"
+                                >
                                     <path d="M5 12h14" />
                                 </svg>
                             </button>
-                            <input type="number" v-model.number="quantity" min="1" :max="currentVariation.stock_qty"
-                                @change="quantity = Math.max(1, Math.min(currentVariation.stock_qty, Number(quantity) || 1))"
-                                class="pd-qty-input" aria-label="Quantity" />
-                            <button @click="increaseQuantity" :disabled="quantity >= currentVariation.stock_qty"
-                                class="pd-qty-btn" aria-label="Increase quantity">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="3" stroke-linecap="round">
+                            <input
+                                type="number"
+                                v-model.number="quantity"
+                                min="1"
+                                :max="currentVariation.stock_qty"
+                                @change="
+                                    quantity = Math.max(
+                                        1,
+                                        Math.min(
+                                            currentVariation.stock_qty,
+                                            Number(quantity) || 1,
+                                        ),
+                                    )
+                                "
+                                class="pd-qty-input"
+                                aria-label="Quantity"
+                            />
+                            <button
+                                @click="increaseQuantity"
+                                :disabled="
+                                    quantity >= currentVariation.stock_qty
+                                "
+                                class="pd-qty-btn"
+                                aria-label="Increase quantity"
+                            >
+                                <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="3"
+                                    stroke-linecap="round"
+                                >
                                     <path d="M5 12h14" />
                                     <path d="M12 5v14" />
                                 </svg>
                             </button>
                         </div>
-                        <button @click="handleAddToCart()"
-                            :disabled="isOutOfStock || quantity > currentVariation.stock_qty || quantity < 1"
-                            class="pd-cart-btn" :class="{ 'pd-cart-btn--disabled': isOutOfStock }">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                        <button
+                            @click="handleAddToCart()"
+                            :disabled="
+                                isOutOfStock ||
+                                quantity > currentVariation.stock_qty ||
+                                quantity < 1
+                            "
+                            class="pd-cart-btn"
+                            :class="{ 'pd-cart-btn--disabled': isOutOfStock }"
+                        >
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path
+                                    d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
+                                />
                                 <line x1="3" y1="6" x2="21" y2="6" />
                                 <path d="M16 10a4 4 0 0 1-8 0" />
                             </svg>
                             {{ isOutOfStock ? 'Out of Stock' : 'Add to Cart' }}
                         </button>
-                        <button @click="handleFavourite()" class="pd-wish-btn"
+                        <button
+                            @click="handleFavourite()"
+                            class="pd-wish-btn"
                             :class="{ 'pd-wish-btn--active': isWishlisted }"
-                            :aria-label="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'">
-                            <svg v-if="isWishlisted" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            :aria-label="
+                                isWishlisted
+                                    ? 'Remove from wishlist'
+                                    : 'Add to wishlist'
+                            "
+                        >
+                            <svg
+                                v-if="isWishlisted"
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                            >
                                 <path
-                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                />
                             </svg>
-                            <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg
+                                v-else
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
                                 <path
-                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                />
                             </svg>
                         </button>
                     </div>
 
                     <!-- Dispatch time -->
                     <p class="pd-dispatch-note">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                        >
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
                         Made to order. Typically dispatches in 3-5 working days
                     </p>
 
                     <!-- Trust badges -->
                     <div class="pd-trust">
                         <div class="pd-trust-item">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path
+                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                                />
+                            </svg>
                             Handmade in the UK
                         </div>
                         <div class="pd-trust-item">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <rect x="1" y="3" width="15" height="13" />
+                                <polygon
+                                    points="16 8 20 8 23 11 23 16 16 16 16 8"
+                                />
+                                <circle cx="5.5" cy="18.5" r="2.5" />
+                                <circle cx="18.5" cy="18.5" r="2.5" />
+                            </svg>
                             Free delivery over £50
                         </div>
                         <div class="pd-trust-item">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <polyline points="1 4 1 10 7 10" />
+                                <path d="M3.51 15a9 9 0 1 0 .49-4.95" />
+                            </svg>
                             30-day returns
                         </div>
                         <div class="pd-trust-item">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <rect
+                                    x="3"
+                                    y="11"
+                                    width="18"
+                                    height="11"
+                                    rx="2"
+                                    ry="2"
+                                />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
                             Secure checkout
                         </div>
                     </div>
 
                     <div class="pd-description">
                         <h2 class="pd-section-title">Description</h2>
-                        <div class="pd-description-body" v-html="product.description"></div>
+                        <div
+                            class="pd-description-body"
+                            v-html="product.description"
+                        ></div>
                     </div>
 
                     <div v-if="product.details" class="pd-description">
                         <h2 class="pd-section-title">The Details</h2>
-                        <div class="pd-description-body" v-html="product.details"></div>
+                        <div
+                            class="pd-description-body"
+                            v-html="product.details"
+                        ></div>
                     </div>
                 </div>
             </div>
@@ -435,8 +815,16 @@ onUnmounted(() => {
             <!-- ── How to Use ─────────────────────────────────────────────── -->
             <section v-if="hasHowToUse" class="pd-content-section">
                 <h2 class="pd-section-title">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <circle cx="12" cy="12" r="10" />
                         <path d="M12 8v4M12 16h.01" />
                     </svg>
@@ -448,8 +836,16 @@ onUnmounted(() => {
             <!-- ── FAQs ───────────────────────────────────────────────────── -->
             <section v-if="hasFaqs" class="pd-content-section">
                 <h2 class="pd-section-title">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <circle cx="12" cy="12" r="10" />
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
                         <path d="M12 17h.01" />
@@ -457,18 +853,40 @@ onUnmounted(() => {
                     Frequently Asked Questions
                 </h2>
                 <div class="pd-faq-list">
-                    <div v-for="(faq, i) in product.faqs" :key="i" class="pd-faq-item">
-                        <button class="pd-faq-trigger" @click="toggleFaq(i)" :aria-expanded="openFaqIndex === i"
-                            :aria-controls="`faq-body-${i}`">
+                    <div
+                        v-for="(faq, i) in product.faqs"
+                        :key="i"
+                        class="pd-faq-item"
+                    >
+                        <button
+                            class="pd-faq-trigger"
+                            @click="toggleFaq(i)"
+                            :aria-expanded="openFaqIndex === i"
+                            :aria-controls="`faq-body-${i}`"
+                        >
                             <span class="pd-faq-q">{{ faq.question }}</span>
-                            <svg class="pd-faq-chevron" :class="{ 'pd-faq-chevron--open': openFaqIndex === i }"
-                                width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <svg
+                                class="pd-faq-chevron"
+                                :class="{
+                                    'pd-faq-chevron--open': openFaqIndex === i,
+                                }"
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
                                 <path d="m6 9 6 6 6-6" />
                             </svg>
                         </button>
-                        <div :id="`faq-body-${i}`" class="pd-faq-body"
-                            :class="{ 'pd-faq-body--open': openFaqIndex === i }">
+                        <div
+                            :id="`faq-body-${i}`"
+                            class="pd-faq-body"
+                            :class="{ 'pd-faq-body--open': openFaqIndex === i }"
+                        >
                             <p class="pd-faq-a">{{ faq.answer }}</p>
                         </div>
                     </div>
@@ -479,130 +897,300 @@ onUnmounted(() => {
             <section class="pd-reviews-section">
                 <h2 class="pd-section-title">
                     Customer Reviews
-                    <span class="pd-reviews-count">{{ product.approved_reviews_count }}</span>
+                    <span class="pd-reviews-count">{{
+                        product.approved_reviews_count
+                    }}</span>
                 </h2>
 
-                <div v-if="product.approved_reviews_count > 0" class="pd-avg-rating">
+                <div
+                    v-if="product.approved_reviews_count > 0"
+                    class="pd-avg-rating"
+                >
                     <StarRating :rating="product.average_rating" :size="22" />
-                    <span class="pd-avg-val">{{ product.average_rating.toFixed(1) }} average</span>
+                    <span class="pd-avg-val"
+                        >{{ product.average_rating.toFixed(1) }} average</span
+                    >
                 </div>
 
                 <div v-if="canReview" class="pd-review-form-card">
                     <div class="pd-rf-rating-section">
-                        <p class="pd-rf-rating-prompt">How would you rate this product?</p>
+                        <p class="pd-rf-rating-prompt">
+                            How would you rate this product?
+                        </p>
                         <div class="pd-rf-stars">
-                            <button v-for="star in 5" :key="star" type="button" class="pd-rf-star"
-                                :class="{ 'pd-rf-star--filled': star <= reviewForm.rating }"
+                            <button
+                                v-for="star in 5"
+                                :key="star"
+                                type="button"
+                                class="pd-rf-star"
+                                :class="{
+                                    'pd-rf-star--filled':
+                                        star <= reviewForm.rating,
+                                }"
                                 @click="reviewForm.rating = star"
-                                :aria-label="`Rate ${star} star${star !== 1 ? 's' : ''}`">
-                                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                                :aria-label="`Rate ${star} star${star !== 1 ? 's' : ''}`"
+                            >
+                                <svg
+                                    width="28"
+                                    height="28"
+                                    viewBox="0 0 24 24"
+                                    fill="currentColor"
+                                >
                                     <path
-                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                                        d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                                    />
                                 </svg>
                             </button>
                         </div>
-                        <p class="pd-rf-rating-label" v-if="reviewForm.rating > 0">{{ ['', 'Poor', 'Fair', 'Good',
-                            'Very Good',
-                            'Excellent'][reviewForm.rating] }}</p>
-                        <p v-if="reviewForm.errors.rating" class="field-error">{{ reviewForm.errors.rating }}</p>
+                        <p
+                            class="pd-rf-rating-label"
+                            v-if="reviewForm.rating > 0"
+                        >
+                            {{
+                                [
+                                    '',
+                                    'Poor',
+                                    'Fair',
+                                    'Good',
+                                    'Very Good',
+                                    'Excellent',
+                                ][reviewForm.rating]
+                            }}
+                        </p>
+                        <p v-if="reviewForm.errors.rating" class="field-error">
+                            {{ reviewForm.errors.rating }}
+                        </p>
                     </div>
                     <form @submit.prevent="submitReview" class="pd-review-form">
                         <div class="field">
-                            <label for="review_message" class="field-label">Your Review</label>
-                            <textarea id="review_message" v-model="reviewForm.message" rows="4"
+                            <label for="review_message" class="field-label"
+                                >Your Review</label
+                            >
+                            <textarea
+                                id="review_message"
+                                v-model="reviewForm.message"
+                                rows="4"
                                 placeholder="Share your experience with this product..."
                                 class="field-input field-textarea"
-                                :class="{ 'field-input--error': reviewForm.errors.message }"></textarea>
-                            <p v-if="reviewForm.errors.message" class="field-error">{{ reviewForm.errors.message }}</p>
+                                :class="{
+                                    'field-input--error':
+                                        reviewForm.errors.message,
+                                }"
+                            ></textarea>
+                            <p
+                                v-if="reviewForm.errors.message"
+                                class="field-error"
+                            >
+                                {{ reviewForm.errors.message }}
+                            </p>
                         </div>
                         <div class="field">
-                            <label for="review_images" class="field-label">Add Photos <span
-                                    class="field-optional">(optional, up to
-                                    3)</span></label>
+                            <label for="review_images" class="field-label"
+                                >Add Photos
+                                <span class="field-optional"
+                                    >(optional, up to 3)</span
+                                ></label
+                            >
                             <label for="review_images" class="pd-file-label">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
+                                    />
                                     <polyline points="17 8 12 3 7 8" />
                                     <line x1="12" y1="3" x2="12" y2="15" />
                                 </svg>
-                                {{ reviewForm.images.length > 0 ? `${reviewForm.images.length}
-                                photo${reviewForm.images.length !== 1
-                                        ? 's' : ''} selected` : 'Choose photos' }}
-                            </label>
-                            <input type="file" id="review_images" multiple accept="image/*" @change="handleImageUpload"
-                                class="pd-file-hidden" />
-                            <p v-if="reviewForm.errors['images'] || reviewForm.errors['images.0']" class="field-error">
                                 {{
-                                    reviewForm.errors['images'] || reviewForm.errors['images.0'] }}</p>
+                                    reviewForm.images.length > 0
+                                        ? `${reviewForm.images.length}
+                                photo${
+                                    reviewForm.images.length !== 1 ? 's' : ''
+                                } selected`
+                                        : 'Choose photos'
+                                }}
+                            </label>
+                            <input
+                                type="file"
+                                id="review_images"
+                                multiple
+                                accept="image/*"
+                                @change="handleImageUpload"
+                                class="pd-file-hidden"
+                            />
+                            <p
+                                v-if="
+                                    reviewForm.errors['images'] ||
+                                    reviewForm.errors['images.0']
+                                "
+                                class="field-error"
+                            >
+                                {{
+                                    reviewForm.errors['images'] ||
+                                    reviewForm.errors['images.0']
+                                }}
+                            </p>
                         </div>
                         <div class="pd-rf-footer">
-                            <button type="submit" :disabled="reviewForm.processing || reviewForm.rating === 0"
-                                class="btn-rose" :class="{ 'btn-rose--disabled': reviewForm.rating === 0 }">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <button
+                                type="submit"
+                                :disabled="
+                                    reviewForm.processing ||
+                                    reviewForm.rating === 0
+                                "
+                                class="btn-rose"
+                                :class="{
+                                    'btn-rose--disabled':
+                                        reviewForm.rating === 0,
+                                }"
+                            >
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path d="M22 2 11 13" />
                                     <path d="M22 2 15 22 11 13 2 9l20-7z" />
                                 </svg>
-                                {{ reviewForm.processing ? 'Submitting...' : 'Submit Review' }}
+                                {{
+                                    reviewForm.processing
+                                        ? 'Submitting...'
+                                        : 'Submit Review'
+                                }}
                             </button>
-                            <p v-if="reviewForm.rating === 0" class="pd-rf-no-rating-hint">Please select a star rating
-                                above</p>
+                            <p
+                                v-if="reviewForm.rating === 0"
+                                class="pd-rf-no-rating-hint"
+                            >
+                                Please select a star rating above
+                            </p>
                         </div>
                     </form>
                 </div>
 
-                <div v-else-if="auth.user" class="pd-notice">You must have purchased this product to leave a review.
+                <div v-else-if="auth.user" class="pd-notice">
+                    You must have purchased this product to leave a review.
                 </div>
                 <div v-else class="pd-notice">
-                    <a :href="route('login')" class="pd-notice-link">Log in</a> to see if you're eligible to leave a
-                    review.
+                    <a :href="route('login')" class="pd-notice-link">Log in</a>
+                    to see if you're eligible to leave a review.
                 </div>
 
                 <div v-if="product.reviews.length > 0" class="pd-review-list">
-                    <div v-for="review in product.reviews" :key="review.id" class="pd-review-card">
+                    <div
+                        v-for="review in product.reviews"
+                        :key="review.id"
+                        class="pd-review-card"
+                    >
                         <div class="pd-review-header">
                             <div>
-                                <StarRating :rating="review.rating" :size="16" />
-                                <p class="pd-reviewer-name">{{ review.user.name }}</p>
-                                <p class="pd-review-date">{{ new Date(review.created_at).toLocaleDateString('en-GB', {
-                                    day:
-                                        'numeric', month: 'long', year: 'numeric'
-                                }) }}</p>
+                                <StarRating
+                                    :rating="review.rating"
+                                    :size="16"
+                                />
+                                <p class="pd-reviewer-name">
+                                    {{ review.user.name }}
+                                </p>
+                                <p class="pd-review-date">
+                                    {{
+                                        new Date(
+                                            review.created_at,
+                                        ).toLocaleDateString('en-GB', {
+                                            day: 'numeric',
+                                            month: 'long',
+                                            year: 'numeric',
+                                        })
+                                    }}
+                                </p>
                             </div>
-                            <button v-if="auth.user && auth.user.id === review.user_id" @click="deleteReview(review.id)"
-                                class="pd-review-delete" aria-label="Delete review">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <button
+                                v-if="
+                                    auth.user && auth.user.id === review.user_id
+                                "
+                                @click="deleteReview(review.id)"
+                                class="pd-review-delete"
+                                aria-label="Delete review"
+                            >
+                                <svg
+                                    width="13"
+                                    height="13"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
                                     <path d="M3 6h18" />
-                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                    <path
+                                        d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
+                                    />
+                                    <path
+                                        d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
+                                    />
                                 </svg>
                             </button>
                         </div>
                         <p class="pd-review-body">{{ review.message }}</p>
-                        <div v-if="review.review_images?.length" class="pd-review-imgs">
-                            <img v-for="(img, idx) in review.review_images" :key="idx" :src="img"
-                                :alt="`${product.name} — photo ${idx + 1} from ${review.user.name}'s review`"
-                                class="pd-review-img" loading="lazy" @click="openImageModal" />
+                        <div
+                            v-if="review.review_images?.length"
+                            class="pd-review-imgs"
+                        >
+                            <img
+                                v-for="(img, idx) in review.review_images"
+                                :key="idx"
+                                :src="img"
+                                :alt="`${product.name} - photo ${idx + 1} from ${review.user.name}'s review`"
+                                class="pd-review-img"
+                                loading="lazy"
+                                @click="openImageModal"
+                            />
                         </div>
                         <div v-if="review.admin_reply" class="pd-admin-reply">
                             <div class="pd-admin-reply-head">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                                <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                >
+                                    <path
+                                        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+                                    />
                                 </svg>
                                 Chapter of You replied
                             </div>
-                            <p class="pd-admin-reply-body">{{ review.admin_reply }}</p>
+                            <p class="pd-admin-reply-body">
+                                {{ review.admin_reply }}
+                            </p>
                         </div>
                     </div>
                 </div>
-                <p v-else class="pd-no-reviews">No reviews yet. Be the first!</p>
+                <p v-else class="pd-no-reviews">
+                    No reviews yet. Be the first!
+                </p>
             </section>
 
-            <RecentJournalPosts :posts="recentPosts" heading="From the Journal" />
-
+            <RecentJournalPosts
+                :posts="recentPosts"
+                heading="From the Journal"
+            />
         </div>
 
         <!-- ── Related ── -->
@@ -611,8 +1199,12 @@ onUnmounted(() => {
                 <h2 class="pd-related-title">You might also love</h2>
                 <ul class="pd-related-grid">
                     <li v-for="rp in related" :key="rp.id">
-                        <ProductSpringCard :product="rp" :wishlisted="wishlistedIds.includes(rp.id)"
-                            @add-to-cart="handleAddToCart(rp)" @favourite="handleFavourite(rp)" />
+                        <ProductSpringCard
+                            :product="rp"
+                            :wishlisted="wishlistedIds.includes(rp.id)"
+                            @add-to-cart="handleAddToCart(rp)"
+                            @favourite="handleFavourite(rp)"
+                        />
                     </li>
                 </ul>
             </div>
@@ -621,7 +1213,11 @@ onUnmounted(() => {
 
     <!-- Sticky mobile add-to-cart -->
     <Transition name="pd-sticky-slide">
-        <div v-if="showStickyCta && !isOutOfStock" class="pd-sticky-cta" aria-hidden="true">
+        <div
+            v-if="showStickyCta && !isOutOfStock"
+            class="pd-sticky-cta"
+            aria-hidden="true"
+        >
             <div class="pd-sticky-inner">
                 <div class="pd-sticky-info">
                     <span class="pd-sticky-name">{{ product.name }}</span>
@@ -635,8 +1231,12 @@ onUnmounted(() => {
     </Transition>
 
     <SuccessToast ref="successToastRef" />
-    <ModalImageViewer :images="product.images || []" :initial-index="selectedImageIndex" :open="isModalOpen"
-        @update:open="isModalOpen = $event" />
+    <ModalImageViewer
+        :images="product.images || []"
+        :initial-index="selectedImageIndex"
+        :open="isModalOpen"
+        @update:open="isModalOpen = $event"
+    />
 
     <Footer />
 </template>
@@ -760,7 +1360,9 @@ onUnmounted(() => {
     aspect-ratio: 1/1;
     cursor: pointer;
     padding: 0;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
 }
 
 .pd-thumb--active {
@@ -904,7 +1506,10 @@ onUnmounted(() => {
     font-size: 0.95rem;
     font-weight: 500;
     cursor: pointer;
-    transition: border-color 0.2s, background 0.2s, color 0.2s;
+    transition:
+        border-color 0.2s,
+        background 0.2s,
+        color 0.2s;
 }
 
 .pd-variation-btn:hover {
@@ -1069,7 +1674,9 @@ onUnmounted(() => {
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 }
 
 .pd-cart-btn:hover:not(:disabled):not(.pd-cart-btn--disabled) {
@@ -1098,7 +1705,10 @@ onUnmounted(() => {
     justify-content: center;
     cursor: pointer;
     flex-shrink: 0;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    transition:
+        background 0.2s,
+        color 0.2s,
+        border-color 0.2s;
 }
 
 .pd-wish-btn:hover,
@@ -1131,9 +1741,7 @@ onUnmounted(() => {
     line-height: 1.75;
 }
 
-/* ════════════════════════════════════════════════════════
-   NEW: How to Use & FAQ
-   ════════════════════════════════════════════════════════ */
+/* NEW: How to Use & FAQ */
 
 /* Shared wrapper for both new sections */
 .pd-content-section {
@@ -1142,7 +1750,7 @@ onUnmounted(() => {
     margin-bottom: 2.5rem;
 }
 
-/* How to Use — rendered HTML block */
+/* How to Use - rendered HTML block */
 .pd-how-to-use {
     background: #fffafa;
     border: 1px solid #e5c9c7;
@@ -1250,7 +1858,9 @@ onUnmounted(() => {
 .pd-faq-body {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease, padding 0.3s ease;
+    transition:
+        max-height 0.3s ease,
+        padding 0.3s ease;
     padding: 0 1.25rem;
 }
 
@@ -1267,9 +1877,7 @@ onUnmounted(() => {
     border-top: 1px solid #f0dcd8;
 }
 
-/* ════════════════════════════════════════════════════════
-   Reviews (unchanged from original)
-   ════════════════════════════════════════════════════════ */
+/* Reviews (unchanged from original) */
 .pd-reviews-section {
     border-top: 1px solid #e5c9c7;
     padding-top: 2.5rem;
@@ -1331,7 +1939,9 @@ onUnmounted(() => {
     font-family: 'Nunito', sans-serif;
     font-size: 1rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
 }
 
 .field-input:focus {
@@ -1568,7 +2178,9 @@ onUnmounted(() => {
     padding: 0.1rem;
     cursor: pointer;
     color: #e5c9c7;
-    transition: color 0.15s, transform 0.15s;
+    transition:
+        color 0.15s,
+        transform 0.15s;
     line-height: 1;
 }
 
@@ -1608,7 +2220,9 @@ onUnmounted(() => {
     font-size: 0.925rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s, border-color 0.2s;
+    transition:
+        background 0.2s,
+        border-color 0.2s;
     width: fit-content;
 }
 
@@ -1665,7 +2279,9 @@ onUnmounted(() => {
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
 }
 
 .btn-rose:hover:not(:disabled):not(.btn-rose--disabled) {
@@ -1779,7 +2395,9 @@ onUnmounted(() => {
     font-weight: 700;
     letter-spacing: 0.03em;
     cursor: pointer;
-    transition: background 0.2s, transform 0.15s;
+    transition:
+        background 0.2s,
+        transform 0.15s;
 }
 
 .pd-sticky-btn:active {
@@ -1788,7 +2406,9 @@ onUnmounted(() => {
 
 .pd-sticky-slide-enter-active,
 .pd-sticky-slide-leave-active {
-    transition: transform 0.25s ease, opacity 0.25s ease;
+    transition:
+        transform 0.25s ease,
+        opacity 0.25s ease;
 }
 
 .pd-sticky-slide-enter-from,

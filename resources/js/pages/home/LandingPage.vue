@@ -1,14 +1,18 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
-import { Head } from '@inertiajs/vue3';
-import SeoHead from '@/components/SeoHead.vue';
-import { useSeoHead } from '@/composables/useSeoHead';
+import NavBar from '@/components/NavBar.vue';
+
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
-import { useOrganizationSchema, useWebsiteSchema, useItemListSchema } from '@/composables/useProductSchema';
+import SeoHead from '@/components/SeoHead.vue';
 import StarRating from '@/components/ui/coy/StarRating.vue';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import {
+    useItemListSchema,
+    useOrganizationSchema,
+    useWebsiteSchema,
+} from '@/composables/useProductSchema';
+import { useSeoHead } from '@/composables/useSeoHead';
 import axios from 'axios';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 
 interface FeaturedProduct {
     id: number;
@@ -49,7 +53,8 @@ let spotlightTimer: ReturnType<typeof setInterval> | null = null;
 onMounted(() => {
     if ((props.featuredProducts?.length ?? 0) > 1) {
         spotlightTimer = setInterval(() => {
-            spotlightIndex.value = (spotlightIndex.value + 1) % props.featuredProducts!.length;
+            spotlightIndex.value =
+                (spotlightIndex.value + 1) % props.featuredProducts!.length;
         }, 2800);
     }
 });
@@ -69,20 +74,24 @@ async function submitCtaEmail() {
     ctaSubmitting.value = true;
     ctaError.value = '';
     try {
-        await axios.post(route('waitlist.store'), { email: ctaEmail.value.trim() });
+        await axios.post(route('waitlist.store'), {
+            email: ctaEmail.value.trim(),
+        });
         ctaSubmitted.value = true;
         ctaEmail.value = '';
     } catch (err: any) {
-        ctaError.value = err?.response?.data?.errors?.email?.[0]
-            ?? err?.response?.data?.message
-            ?? 'Something went wrong. Please try again.';
+        ctaError.value =
+            err?.response?.data?.errors?.email?.[0] ??
+            err?.response?.data?.message ??
+            'Something went wrong. Please try again.';
     } finally {
         ctaSubmitting.value = false;
     }
 }
 
 const seo = useSeoHead({
-    description: 'Luxury handmade reed diffusers crafted to order in the UK. Shop premium home fragrance gifts from Chapter of You — hand-poured with care, made just for you.',
+    description:
+        'Luxury handmade reed diffusers crafted to order in the UK. Shop premium home fragrance gifts from Chapter of You - hand-poured with care, made just for you.',
     canonical: '/',
 });
 
@@ -90,11 +99,15 @@ const siteSchemas = computed(() => {
     const schemas: object[] = [useOrganizationSchema(), useWebsiteSchema()];
 
     if (props.featuredProducts?.length) {
-        schemas.push(useItemListSchema(props.featuredProducts.map(p => ({
-            name: p.name,
-            url: p.slug ? `/product/${p.slug}` : `/product/${p.id}`,
-            image: p.image,
-        }))));
+        schemas.push(
+            useItemListSchema(
+                props.featuredProducts.map((p) => ({
+                    name: p.name,
+                    url: p.slug ? `/product/${p.slug}` : `/product/${p.id}`,
+                    image: p.image,
+                })),
+            ),
+        );
     }
 
     return schemas;
@@ -107,77 +120,204 @@ const siteSchemas = computed(() => {
     <SeoHead v-bind="seo" />
     <JsonLdSchema :schema="siteSchemas" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="lp">
-
         <!-- ── Seasonal banner ── -->
-        <div v-if="season" class="lp-season-banner" :class="`lp-season-banner--${season.id}`">
-            <span class="lp-season-banner-motif" aria-hidden="true">{{ season.motif }}</span>
+        <div
+            v-if="season"
+            class="lp-season-banner"
+            :class="`lp-season-banner--${season.id}`"
+        >
+            <span class="lp-season-banner-motif" aria-hidden="true">{{
+                season.motif
+            }}</span>
             <span class="lp-season-banner-text">{{ season.banner }}</span>
             <a href="/products" class="lp-season-banner-cta">
                 Shop now
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
             </a>
         </div>
 
         <!-- ── Hero ── -->
-        <section class="lp-hero" :class="season?.id ? `lp-hero--${season.id}` : ''">
+        <section
+            class="lp-hero"
+            :class="season?.id ? `lp-hero--${season.id}` : ''"
+        >
             <!-- Decorative blobs -->
             <div class="lp-blob lp-blob--1" aria-hidden="true"></div>
             <div class="lp-blob lp-blob--2" aria-hidden="true"></div>
 
             <!-- Scattered petal marks -->
-            <svg class="lp-petals" viewBox="0 0 900 600" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <ellipse cx="80" cy="100" rx="22" ry="8" fill="#c9a4a4" opacity=".13" transform="rotate(-30 80 100)" />
-                <ellipse cx="820" cy="140" rx="16" ry="6" fill="#c9a4a4" opacity=".10" transform="rotate(40 820 140)" />
-                <ellipse cx="160" cy="440" rx="20" ry="7" fill="#c9a4a4" opacity=".09" transform="rotate(15 160 440)" />
-                <ellipse cx="740" cy="400" rx="18" ry="6" fill="#c9a4a4" opacity=".11"
-                    transform="rotate(-20 740 400)" />
-                <ellipse cx="450" cy="560" rx="14" ry="5" fill="#c9a4a4" opacity=".08" transform="rotate(5 450 560)" />
-                <ellipse cx="50" cy="320" rx="12" ry="4" fill="#c9a4a4" opacity=".09" transform="rotate(25 50 320)" />
-                <ellipse cx="860" cy="480" rx="20" ry="7" fill="#c9a4a4" opacity=".07"
-                    transform="rotate(-45 860 480)" />
-                <text x="200" y="180" font-size="18" fill="#c9a4a4" opacity=".15"
-                    transform="rotate(-20 200 180)">{{ season?.motif ?? '✿' }}</text>
-                <text x="650" y="100" font-size="14" fill="#c9a4a4" opacity=".12"
-                    transform="rotate(15 650 100)">{{ season?.motif ?? '✿' }}</text>
-                <text x="750" y="550" font-size="22" fill="#c9a4a4" opacity=".10"
-                    transform="rotate(-10 750 550)">{{ season?.motif ?? '✿' }}</text>
-                <text x="100" y="550" font-size="16" fill="#c9a4a4" opacity=".11"
-                    transform="rotate(20 100 550)">{{ season?.motif ?? '✿' }}</text>
+            <svg
+                class="lp-petals"
+                viewBox="0 0 900 600"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+            >
+                <ellipse
+                    cx="80"
+                    cy="100"
+                    rx="22"
+                    ry="8"
+                    fill="#c9a4a4"
+                    opacity=".13"
+                    transform="rotate(-30 80 100)"
+                />
+                <ellipse
+                    cx="820"
+                    cy="140"
+                    rx="16"
+                    ry="6"
+                    fill="#c9a4a4"
+                    opacity=".10"
+                    transform="rotate(40 820 140)"
+                />
+                <ellipse
+                    cx="160"
+                    cy="440"
+                    rx="20"
+                    ry="7"
+                    fill="#c9a4a4"
+                    opacity=".09"
+                    transform="rotate(15 160 440)"
+                />
+                <ellipse
+                    cx="740"
+                    cy="400"
+                    rx="18"
+                    ry="6"
+                    fill="#c9a4a4"
+                    opacity=".11"
+                    transform="rotate(-20 740 400)"
+                />
+                <ellipse
+                    cx="450"
+                    cy="560"
+                    rx="14"
+                    ry="5"
+                    fill="#c9a4a4"
+                    opacity=".08"
+                    transform="rotate(5 450 560)"
+                />
+                <ellipse
+                    cx="50"
+                    cy="320"
+                    rx="12"
+                    ry="4"
+                    fill="#c9a4a4"
+                    opacity=".09"
+                    transform="rotate(25 50 320)"
+                />
+                <ellipse
+                    cx="860"
+                    cy="480"
+                    rx="20"
+                    ry="7"
+                    fill="#c9a4a4"
+                    opacity=".07"
+                    transform="rotate(-45 860 480)"
+                />
+                <text
+                    x="200"
+                    y="180"
+                    font-size="18"
+                    fill="#c9a4a4"
+                    opacity=".15"
+                    transform="rotate(-20 200 180)"
+                >
+                    {{ season?.motif ?? '✿' }}
+                </text>
+                <text
+                    x="650"
+                    y="100"
+                    font-size="14"
+                    fill="#c9a4a4"
+                    opacity=".12"
+                    transform="rotate(15 650 100)"
+                >
+                    {{ season?.motif ?? '✿' }}
+                </text>
+                <text
+                    x="750"
+                    y="550"
+                    font-size="22"
+                    fill="#c9a4a4"
+                    opacity=".10"
+                    transform="rotate(-10 750 550)"
+                >
+                    {{ season?.motif ?? '✿' }}
+                </text>
+                <text
+                    x="100"
+                    y="550"
+                    font-size="16"
+                    fill="#c9a4a4"
+                    opacity=".11"
+                    transform="rotate(20 100 550)"
+                >
+                    {{ season?.motif ?? '✿' }}
+                </text>
             </svg>
 
             <!-- Centred brand text -->
             <div class="lp-hero-content">
-                <p class="lp-hero-eyebrow">{{ season?.eyebrow ?? 'Handcrafted with love' }}</p>
-                <h1 class="lp-hero-title">
-                    <em>Chapter</em><br>of You
-                </h1>
+                <p class="lp-hero-eyebrow">
+                    {{ season?.eyebrow ?? 'Handcrafted with love' }}
+                </p>
+                <h1 class="lp-hero-title"><em>Chapter</em><br />of You</h1>
                 <p class="lp-hero-sub">
-                    {{ season?.sub ?? 'Your space, your scent, your self-care. Premium reed diffusers poured by hand, made to order, just for you.' }}
+                    {{
+                        season?.sub ??
+                        'Your space, your scent, your self-care. Premium reed diffusers poured by hand, made to order, just for you.'
+                    }}
                 </p>
                 <div class="lp-hero-divider" aria-hidden="true">
-                    <span></span><span class="lp-hero-divider-dot">✦</span><span></span>
+                    <span></span><span class="lp-hero-divider-dot">✦</span
+                    ><span></span>
                 </div>
                 <div class="lp-hero-actions">
                     <a href="/products" class="btn-rose btn-rose--lg">
                         Shop the Collection
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
-                    <a href="/about" class="btn-ghost">
-                        My Story
-                    </a>
+                    <a href="/about" class="btn-ghost"> My Story </a>
                 </div>
             </div>
 
             <!-- Interactive product strip -->
-            <div v-if="featuredProducts?.length" class="lp-hero-strip" aria-label="Featured products">
+            <div
+                v-if="featuredProducts?.length"
+                class="lp-hero-strip"
+                aria-label="Featured products"
+            >
                 <a
                     v-for="(p, i) in featuredProducts"
                     :key="p.id"
@@ -187,11 +327,17 @@ const siteSchemas = computed(() => {
                     @mouseenter="spotlightIndex = i"
                 >
                     <div class="lp-hero-pcard-img">
-                        <img :src="p.image ?? '/images/placeholder.jpg'" :alt="p.name" loading="lazy" />
+                        <img
+                            :src="p.image ?? '/images/placeholder.jpg'"
+                            :alt="p.name"
+                            loading="lazy"
+                        />
                     </div>
                     <div class="lp-hero-pcard-body">
                         <p class="lp-hero-pcard-name">{{ p.name }}</p>
-                        <p class="lp-hero-pcard-price">£{{ Number(p.cost).toFixed(2) }}</p>
+                        <p class="lp-hero-pcard-price">
+                            £{{ Number(p.cost).toFixed(2) }}
+                        </p>
                     </div>
                 </a>
             </div>
@@ -201,25 +347,53 @@ const siteSchemas = computed(() => {
         <section class="lp-trust" aria-label="Why Chapter of You">
             <div class="lp-trust-inner">
                 <div class="lp-trust-item">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
                         <path
-                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                        />
                     </svg>
                     <span>Made with love</span>
                 </div>
                 <div class="lp-trust-sep" aria-hidden="true">✦</div>
                 <div class="lp-trust-item">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </svg>
                     <span>Premium ingredients only</span>
                 </div>
                 <div class="lp-trust-sep" aria-hidden="true">✦</div>
                 <div class="lp-trust-item">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
                         <rect x="1" y="3" width="15" height="13" rx="2" />
                         <path d="M16 8h4l3 5v3h-7V8z" />
                         <circle cx="5.5" cy="18.5" r="2.5" />
@@ -229,35 +403,58 @@ const siteSchemas = computed(() => {
                 </div>
                 <div class="lp-trust-sep" aria-hidden="true">✦</div>
                 <div class="lp-trust-item">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
                         <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                        />
                     </svg>
                     <span>Made to order</span>
                 </div>
             </div>
         </section>
 
-
         <!-- ── Story strip ── -->
         <section class="lp-story">
             <div class="lp-story-inner">
                 <div class="lp-story-text">
-                    <p class="lp-section-eyebrow lp-section-eyebrow--light">The story</p>
-                    <h2 class="lp-story-title">A small business<br><em>with a big heart</em></h2>
+                    <p class="lp-section-eyebrow lp-section-eyebrow--light">
+                        The story
+                    </p>
+                    <h2 class="lp-story-title">
+                        A small business<br /><em>with a big heart</em>
+                    </h2>
                     <p class="lp-story-body">
-                        Welcome to Chapter of You, a one-woman business built on a single belief: that proper self-care
-                        starts with the small, quiet moments you carve out for yourself.
+                        Welcome to Chapter of You, a one-woman business built on
+                        a single belief: that proper self-care starts with the
+                        small, quiet moments you carve out for yourself.
                     </p>
                     <p class="lp-story-body">
-                        Every diffuser is poured, blended and finished by hand, because your space deserves something
-                        made with genuine care, not a factory line.
+                        Every diffuser is poured, blended and finished by hand,
+                        because your space deserves something made with genuine
+                        care, not a factory line.
                     </p>
                     <a href="/about" class="lp-story-link">
                         Read more about me
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
@@ -284,26 +481,37 @@ const siteSchemas = computed(() => {
             <div class="lp-section-inner">
                 <div class="lp-section-header">
                     <p class="lp-section-eyebrow">My craft</p>
-                    <h2 class="lp-section-title">Reed diffusers <em>designed for your sanctuary</em></h2>
+                    <h2 class="lp-section-title">
+                        Reed diffusers <em>designed for your sanctuary</em>
+                    </h2>
                 </div>
                 <div class="lp-features">
                     <div class="lp-feature-card">
                         <div class="lp-feature-icon" aria-hidden="true">✦</div>
                         <h3 class="lp-feature-title">Meticulously blended</h3>
-                        <p class="lp-feature-body">Every scent is carefully crafted from premium fragrance oils,
-                            balanced by hand to fill your home with a gentle, lasting aroma.</p>
+                        <p class="lp-feature-body">
+                            Every scent is carefully crafted from premium
+                            fragrance oils, balanced by hand to fill your home
+                            with a gentle, lasting aroma.
+                        </p>
                     </div>
                     <div class="lp-feature-card">
                         <div class="lp-feature-icon" aria-hidden="true">✦</div>
                         <h3 class="lp-feature-title">Poured with intention</h3>
-                        <p class="lp-feature-body">Each diffuser is hand-finished individually, never rushed, never
-                            mass-produced. Your order is made to order, just for you.</p>
+                        <p class="lp-feature-body">
+                            Each diffuser is hand-finished individually, never
+                            rushed, never mass-produced. Your order is made to
+                            order, just for you.
+                        </p>
                     </div>
                     <div class="lp-feature-card">
                         <div class="lp-feature-icon" aria-hidden="true">✦</div>
                         <h3 class="lp-feature-title">Quality ingredients</h3>
-                        <p class="lp-feature-body">Only the highest quality reed diffuser base and fragrance oils make
-                            it into my products. Nothing unnecessary, nothing cheap.</p>
+                        <p class="lp-feature-body">
+                            Only the highest quality reed diffuser base and
+                            fragrance oils make it into my products. Nothing
+                            unnecessary, nothing cheap.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -314,15 +522,21 @@ const siteSchemas = computed(() => {
             <div class="lp-testimonials-inner">
                 <div class="lp-section-header">
                     <p class="lp-section-eyebrow">Customer love</p>
-                    <h2 class="lp-section-title">What people are <em>saying</em></h2>
+                    <h2 class="lp-section-title">
+                        What people are <em>saying</em>
+                    </h2>
                 </div>
                 <div class="lp-testimonials-grid">
-                    <div v-for="t in testimonials" :key="t.id" class="lp-testimonial-card">
+                    <div
+                        v-for="t in testimonials"
+                        :key="t.id"
+                        class="lp-testimonial-card"
+                    >
                         <div class="lp-testimonial-stars">
                             <StarRating :rating="t.rating" :size="16" />
                         </div>
                         <p class="lp-testimonial-body">"{{ t.message }}"</p>
-                        <p class="lp-testimonial-author">— {{ t.user.name }}</p>
+                        <p class="lp-testimonial-author">- {{ t.user.name }}</p>
                     </div>
                 </div>
             </div>
@@ -333,47 +547,83 @@ const siteSchemas = computed(() => {
             <div class="lp-hot-inner">
                 <div class="lp-hot-header">
                     <div>
-                        <p class="lp-section-eyebrow">{{ season?.sectionLabel ?? 'Most loved' }}</p>
-                        <h2 class="lp-section-title">My <em>bestsellers</em></h2>
+                        <p class="lp-section-eyebrow">
+                            {{ season?.sectionLabel ?? 'Most loved' }}
+                        </p>
+                        <h2 class="lp-section-title">
+                            My <em>bestsellers</em>
+                        </h2>
                     </div>
                     <a href="/products" class="lp-hot-see-all">
                         View all
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
                 </div>
 
                 <div class="lp-hot-grid">
-                    <a v-for="product in featuredProducts" :key="product.id"
-                        :href="product.slug ? `/product/${product.slug}` : `/product/${product.id}`"
-                        class="lp-hot-card">
-
+                    <a
+                        v-for="product in featuredProducts"
+                        :key="product.id"
+                        :href="
+                            product.slug
+                                ? `/product/${product.slug}`
+                                : `/product/${product.id}`
+                        "
+                        class="lp-hot-card"
+                    >
                         <!-- Badge -->
-                        <span v-if="product.views > 100" class="lp-hot-badge">Popular</span>
+                        <span v-if="product.views > 100" class="lp-hot-badge"
+                            >Popular</span
+                        >
 
                         <!-- Image -->
                         <div class="lp-hot-img-wrap">
-                            <img :src="product.image ?? '/images/placeholder.jpg'" :alt="product.name"
-                                class="lp-hot-img" />
+                            <img
+                                :src="
+                                    product.image ?? '/images/placeholder.jpg'
+                                "
+                                :alt="product.name"
+                                class="lp-hot-img"
+                            />
                         </div>
 
                         <!-- Body -->
                         <div class="lp-hot-body">
                             <p class="lp-hot-name">{{ product.name }}</p>
                             <div class="lp-hot-footer">
-                                <span class="lp-hot-price">£{{ Number(product.cost).toFixed(2) }}</span>
+                                <span class="lp-hot-price"
+                                    >£{{
+                                        Number(product.cost).toFixed(2)
+                                    }}</span
+                                >
                                 <span class="lp-hot-cta">
                                     View
-                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg
+                                        width="11"
+                                        height="11"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2.5"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
                                         <path d="M5 12h14M12 5l7 7-7 7" />
                                     </svg>
                                 </span>
                             </div>
                         </div>
-
                     </a>
                 </div>
             </div>
@@ -383,12 +633,16 @@ const siteSchemas = computed(() => {
         <section class="lp-sf-banner">
             <div class="lp-sf-inner">
                 <p class="lp-sf-petal" aria-hidden="true">✿</p>
-                <h2 class="lp-sf-title">Not sure which scent is <em>you</em>?</h2>
+                <h2 class="lp-sf-title">
+                    Not sure which scent is <em>you</em>?
+                </h2>
                 <p class="lp-sf-body">
-                    Take our two-minute Scent Finder quiz and we'll match you with the fragrance
-                    you'll love most.
+                    Take our two-minute Scent Finder quiz and we'll match you
+                    with the fragrance you'll love most.
                 </p>
-                <a href="/scent-finder" class="btn-rose btn-rose--lg">Find my scent</a>
+                <a href="/scent-finder" class="btn-rose btn-rose--lg"
+                    >Find my scent</a
+                >
             </div>
         </section>
 
@@ -396,12 +650,14 @@ const siteSchemas = computed(() => {
         <section class="lp-cta-section">
             <div class="lp-cta-card">
                 <div class="lp-cta-petals" aria-hidden="true">
-                    <span>✿</span><span>✦</span><span>✿</span><span>✦</span><span>✿</span>
+                    <span>✿</span><span>✦</span><span>✿</span><span>✦</span
+                    ><span>✿</span>
                 </div>
                 <h2 class="lp-cta-title">Get 10% off your first order</h2>
                 <p class="lp-cta-body">
-                    Join my little community and receive an exclusive discount on your first order,
-                    plus early access to new scents and behind-the-scenes updates.
+                    Join my little community and receive an exclusive discount
+                    on your first order, plus early access to new scents and
+                    behind-the-scenes updates.
                 </p>
 
                 <template v-if="!ctaSubmitted">
@@ -414,17 +670,34 @@ const siteSchemas = computed(() => {
                             required
                             autocomplete="email"
                         />
-                        <button type="submit" class="btn-rose btn-rose--lg" :disabled="ctaSubmitting">
-                            {{ ctaSubmitting ? 'Joining…' : 'Claim my 10% off' }}
+                        <button
+                            type="submit"
+                            class="btn-rose btn-rose--lg"
+                            :disabled="ctaSubmitting"
+                        >
+                            {{
+                                ctaSubmitting ? 'Joining…' : 'Claim my 10% off'
+                            }}
                         </button>
                     </form>
                     <p v-if="ctaError" class="lp-cta-error">{{ ctaError }}</p>
-                    <p class="lp-cta-disclaimer">No spam, ever. Unsubscribe any time.</p>
+                    <p class="lp-cta-disclaimer">
+                        No spam, ever. Unsubscribe any time.
+                    </p>
                 </template>
 
                 <div v-else class="lp-cta-success">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <svg
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        aria-hidden="true"
+                    >
                         <path d="M20 6 9 17l-5-5" />
                     </svg>
                     You're in! Check your inbox for your discount code.
@@ -432,14 +705,21 @@ const siteSchemas = computed(() => {
 
                 <a href="/products" class="lp-cta-shop-link">
                     Browse the collection
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="12"
+                        height="12"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
                 </a>
             </div>
         </section>
-
     </main>
 
     <Footer />
@@ -492,10 +772,18 @@ const siteSchemas = computed(() => {
     background: linear-gradient(135deg, #c47078, #a85058);
 }
 
-.lp-season-banner--summer  { background: linear-gradient(135deg, #d4961e, #b87418); }
-.lp-season-banner--autumn  { background: linear-gradient(135deg, #b06030, #8c4418); }
-.lp-season-banner--winter  { background: linear-gradient(135deg, #5a4880, #3e3060); }
-.lp-season-banner--spring  { background: linear-gradient(135deg, #9858b8, #7840a0); }
+.lp-season-banner--summer {
+    background: linear-gradient(135deg, #d4961e, #b87418);
+}
+.lp-season-banner--autumn {
+    background: linear-gradient(135deg, #b06030, #8c4418);
+}
+.lp-season-banner--winter {
+    background: linear-gradient(135deg, #5a4880, #3e3060);
+}
+.lp-season-banner--spring {
+    background: linear-gradient(135deg, #9858b8, #7840a0);
+}
 
 .lp-season-banner-motif {
     font-size: 1rem;
@@ -514,7 +802,7 @@ const siteSchemas = computed(() => {
     text-decoration: none;
     font-weight: 700;
     opacity: 0.9;
-    border-bottom: 1px solid rgba(255,255,255,0.5);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
     padding-bottom: 1px;
     white-space: nowrap;
     transition: opacity 0.2s;
@@ -541,10 +829,22 @@ const siteSchemas = computed(() => {
     --blob2: #f0dcd8;
 }
 
-.lp-hero--summer { --blob1: #f5d4a8; --blob2: #f0e0b8; }
-.lp-hero--autumn { --blob1: #e8c090; --blob2: #e0b870; }
-.lp-hero--winter { --blob1: #ccc0dc; --blob2: #dcd4e8; }
-.lp-hero--spring { --blob1: #d8c0ec; --blob2: #e8d4f4; }
+.lp-hero--summer {
+    --blob1: #f5d4a8;
+    --blob2: #f0e0b8;
+}
+.lp-hero--autumn {
+    --blob1: #e8c090;
+    --blob2: #e0b870;
+}
+.lp-hero--winter {
+    --blob1: #ccc0dc;
+    --blob2: #dcd4e8;
+}
+.lp-hero--spring {
+    --blob1: #d8c0ec;
+    --blob2: #e8d4f4;
+}
 
 /* Blobs */
 .lp-blob {
@@ -618,17 +918,30 @@ const siteSchemas = computed(() => {
     background: #fffafa;
     text-decoration: none;
     transform: translateY(var(--base-y));
-    transition: transform 0.4s cubic-bezier(.34,1.56,.64,1), box-shadow 0.35s ease, border-color 0.25s ease;
+    transition:
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.35s ease,
+        border-color 0.25s ease;
     box-shadow: 0 2px 12px rgba(229, 201, 199, 0.3);
 }
 
-.lp-hero-pcard:nth-child(1) { --base-y: 0px; }
-.lp-hero-pcard:nth-child(2) { --base-y: 18px; }
-.lp-hero-pcard:nth-child(3) { --base-y: -8px; }
-.lp-hero-pcard:nth-child(4) { --base-y: 10px; }
+.lp-hero-pcard:nth-child(1) {
+    --base-y: 0px;
+}
+.lp-hero-pcard:nth-child(2) {
+    --base-y: 18px;
+}
+.lp-hero-pcard:nth-child(3) {
+    --base-y: -8px;
+}
+.lp-hero-pcard:nth-child(4) {
+    --base-y: 10px;
+}
 
 @media (max-width: 860px) {
-    .lp-hero-pcard:nth-child(n) { --base-y: 0px; }
+    .lp-hero-pcard:nth-child(n) {
+        --base-y: 0px;
+    }
 }
 
 .lp-hero-pcard:hover,
@@ -838,7 +1151,6 @@ const siteSchemas = computed(() => {
     color: #8c4a50;
 }
 
-
 /* ── Story strip ── */
 .lp-story {
     background: #8c4a50;
@@ -961,7 +1273,9 @@ const siteSchemas = computed(() => {
     padding: 2rem 1.5rem;
     position: relative;
     overflow: hidden;
-    transition: box-shadow 0.25s, transform 0.25s;
+    transition:
+        box-shadow 0.25s,
+        transform 0.25s;
 }
 
 .lp-feature-card:hover {
@@ -1039,7 +1353,9 @@ const siteSchemas = computed(() => {
     text-decoration: none;
     border-bottom: 1px solid #e5c9c7;
     padding-bottom: 0.1rem;
-    transition: border-color 0.2s, color 0.2s;
+    transition:
+        border-color 0.2s,
+        color 0.2s;
     white-space: nowrap;
 }
 
@@ -1076,7 +1392,9 @@ const siteSchemas = computed(() => {
     flex-direction: column;
     text-decoration: none;
     position: relative;
-    transition: box-shadow 0.25s, transform 0.25s;
+    transition:
+        box-shadow 0.25s,
+        transform 0.25s;
 }
 
 .lp-hot-card:hover {
@@ -1307,7 +1625,9 @@ const siteSchemas = computed(() => {
     font-weight: 600;
     text-decoration: none;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
     cursor: pointer;
 }
 
@@ -1335,7 +1655,10 @@ const siteSchemas = computed(() => {
     font-weight: 600;
     text-decoration: none;
     backdrop-filter: blur(4px);
-    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    transition:
+        background 0.2s,
+        border-color 0.2s,
+        color 0.2s;
 }
 
 .btn-ghost:hover {
@@ -1397,7 +1720,7 @@ const siteSchemas = computed(() => {
 .lp-testimonial-stars {
     position: relative;
     z-index: 1;
-    color: #c9747a; /* filled star colour — StarRating uses currentColor */
+    color: #c9747a; /* filled star colour - StarRating uses currentColor */
 }
 
 .lp-testimonial-body {
@@ -1439,7 +1762,9 @@ const siteSchemas = computed(() => {
     font-family: 'Nunito', sans-serif;
     font-size: 1rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
 }
 
 .lp-cta-input:focus {
@@ -1490,7 +1815,9 @@ const siteSchemas = computed(() => {
     text-decoration: none;
     border-bottom: 1px solid #e5c9c7;
     padding-bottom: 0.1rem;
-    transition: border-color 0.2s, color 0.2s;
+    transition:
+        border-color 0.2s,
+        color 0.2s;
     margin-top: 1rem;
     display: flex;
     justify-content: center;

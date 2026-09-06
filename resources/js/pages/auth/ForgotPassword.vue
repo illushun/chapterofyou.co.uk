@@ -1,15 +1,15 @@
-    <script setup lang="ts">
-    import NavBar from '@/components/NavBar.vue';
-    import { Head, Link, useForm } from '@inertiajs/vue3';
-    import { LoaderCircle } from 'lucide-vue-next';
+<script setup lang="ts">
+import NavBar from '@/components/NavBar.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import { LoaderCircle } from 'lucide-vue-next';
 
-    defineProps<{ status?: string }>();
+defineProps<{ status?: string }>();
 
-    const form = useForm({ email: '' });
+const form = useForm({ email: '' });
 
-    const submit = () => {
-        form.post(route('password.email'));
-    };
+const submit = () => {
+    form.post(route('password.email'));
+};
 </script>
 
 <template>
@@ -17,18 +17,27 @@
 
     <Head title="Forgot Password" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="fp">
         <div class="fp-card">
-
             <!-- Header -->
             <div class="fp-header">
                 <div class="fp-icon" aria-hidden="true">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
                         <rect x="3" y="11" width="18" height="11" rx="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
@@ -42,35 +51,54 @@
 
             <!-- Success status -->
             <div v-if="status" class="fp-status">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
+                <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                >
                     <path d="M20 6 9 17l-5-5" />
                 </svg>
                 {{ status }}
             </div>
 
             <form @submit.prevent="submit" class="fp-form">
-
                 <div class="field">
                     <label for="email" class="field-label">Email Address</label>
-                    <input id="email" v-model="form.email" type="email" required autofocus autocomplete="email"
-                        placeholder="you@example.com" class="field-input"
-                        :class="{ 'field-input--error': form.errors.email }" />
-                    <p v-if="form.errors.email" class="field-error">{{ form.errors.email }}</p>
+                    <input
+                        id="email"
+                        v-model="form.email"
+                        type="email"
+                        required
+                        autofocus
+                        autocomplete="email"
+                        placeholder="you@example.com"
+                        class="field-input"
+                        :class="{ 'field-input--error': form.errors.email }"
+                    />
+                    <p v-if="form.errors.email" class="field-error">
+                        {{ form.errors.email }}
+                    </p>
                 </div>
 
-                <button type="submit" :disabled="form.processing" class="btn-rose btn-rose--full">
+                <button
+                    type="submit"
+                    :disabled="form.processing"
+                    class="btn-rose btn-rose--full"
+                >
                     <LoaderCircle v-if="form.processing" class="fp-spinner" />
                     {{ form.processing ? 'Sending…' : 'Send Reset Link' }}
                 </button>
-
             </form>
 
             <div class="fp-footer">
                 <span>Remember your password?</span>
                 <Link :href="route('login')" class="fp-link">Sign in</Link>
             </div>
-
         </div>
     </main>
 </template>
@@ -214,7 +242,9 @@
     font-family: 'Nunito', sans-serif;
     font-size: 0.92rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
     width: 100%;
 }
 
@@ -248,7 +278,9 @@
     letter-spacing: 0.02em;
     cursor: pointer;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
     margin-top: 0.25rem;
 }
 

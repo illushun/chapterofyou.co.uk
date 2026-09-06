@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Something Went Wrong — Chapter of You</title>
+    <title>Something Went Wrong - Chapter of You</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -36,7 +36,7 @@
             position: relative;
         }
 
-        /* ── Slow drifting petals — fewer, slower, more melancholy ── */
+        /* ── Slow drifting petals - fewer, slower, more melancholy ── */
         .petal-field {
             position: fixed;
             inset: 0;
@@ -52,7 +52,7 @@
             animation: drift linear infinite;
         }
 
-        /* Falling downward this time — things went down */
+        /* Falling downward this time - things went down */
         .petal:nth-child(1)  { left: 12%; font-size: 1rem;   animation-duration: 18s; animation-delay: 0s;   }
         .petal:nth-child(2)  { left: 28%; font-size: 0.75rem; animation-duration: 22s; animation-delay: 3s;   }
         .petal:nth-child(3)  { left: 48%; font-size: 1.2rem;  animation-duration: 16s; animation-delay: 6s;   }
@@ -315,7 +315,7 @@
 
     </div>
 
-    <p class="brand-foot">Chapter of You &mdash; your chapter, your self-care</p>
+    <p class="brand-foot">Chapter of You - your chapter, your self-care</p>
 
 </body>
 </html>

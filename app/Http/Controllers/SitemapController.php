@@ -2,26 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Response;
-use App\Models\Product;
 use App\Models\Category;
-use Carbon\Carbon;
 use App\Models\JournalPost;
+use App\Models\Product;
+use Carbon\Carbon;
+use Illuminate\Http\Response;
 
 class SitemapController extends Controller
 {
-    private $WEBSITE_URL = "https://www.chapterofyou.co.uk";
-    /**
-     * Generate and return the XML sitemap.
-     *
-     * Includes:
-     *   - Static pages (homepage, products listing, contact, about)
-     *   - All enabled, in-stock or recently updated products (via SEO slug)
-     *   - All enabled categories
-     *
-     * Google recommends keeping sitemaps under 50,000 URLs / 50MB.
-     * If the catalogue grows very large, split into a sitemap index.
-     */
+    private $WEBSITE_URL = 'https://www.chapterofyou.co.uk';
+
     public function index(): Response
     {
         $urls = collect();
@@ -29,52 +19,52 @@ class SitemapController extends Controller
             // ── Static pages ──────────────────────────────────────────────────
             $staticPages = [
                 [
-                    'loc'        => "{$this->WEBSITE_URL}/",
-                    'priority'   => '1.0',
+                    'loc' => "{$this->WEBSITE_URL}/",
+                    'priority' => '1.0',
                     'changefreq' => 'weekly',
-                    'lastmod'    => Carbon::now()->toAtomString(),
+                    'lastmod' => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => "{$this->WEBSITE_URL}/products",
-                    'priority'   => '0.9',
+                    'loc' => "{$this->WEBSITE_URL}/products",
+                    'priority' => '0.9',
                     'changefreq' => 'daily',
-                    'lastmod'    => Carbon::now()->toAtomString(),
+                    'lastmod' => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => "{$this->WEBSITE_URL}/contact",
-                    'priority'   => '0.5',
+                    'loc' => "{$this->WEBSITE_URL}/contact",
+                    'priority' => '0.5',
                     'changefreq' => 'monthly',
-                    'lastmod'    => Carbon::now()->toAtomString(),
+                    'lastmod' => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => "{$this->WEBSITE_URL}/about",
-                    'priority'   => '0.5',
+                    'loc' => "{$this->WEBSITE_URL}/about",
+                    'priority' => '0.5',
                     'changefreq' => 'monthly',
-                    'lastmod'    => Carbon::now()->toAtomString(),
+                    'lastmod' => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => "{$this->WEBSITE_URL}/delivery",
-                    'priority'   => '0.6',
+                    'loc' => "{$this->WEBSITE_URL}/delivery",
+                    'priority' => '0.6',
                     'changefreq' => 'monthly',
-                    'lastmod'    => Carbon::now()->toAtomString(),
+                    'lastmod' => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => "{$this->WEBSITE_URL}/terms",
-                    'priority'   => '0.4',
+                    'loc' => "{$this->WEBSITE_URL}/terms",
+                    'priority' => '0.4',
                     'changefreq' => 'yearly',
-                    'lastmod'    => Carbon::now()->toAtomString(),
+                    'lastmod' => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => "{$this->WEBSITE_URL}/privacy",
-                    'priority'   => '0.4',
+                    'loc' => "{$this->WEBSITE_URL}/privacy",
+                    'priority' => '0.4',
                     'changefreq' => 'yearly',
-                    'lastmod'    => Carbon::now()->toAtomString(),
+                    'lastmod' => Carbon::now()->toAtomString(),
                 ],
                 [
-                    'loc'        => "{$this->WEBSITE_URL}/returns",
-                    'priority'   => '0.5',
+                    'loc' => "{$this->WEBSITE_URL}/returns",
+                    'priority' => '0.5',
                     'changefreq' => 'yearly',
-                    'lastmod'    => Carbon::now()->toAtomString(),
+                    'lastmod' => Carbon::now()->toAtomString(),
                 ],
             ];
 
@@ -84,7 +74,7 @@ class SitemapController extends Controller
 
             // ── Products ──────────────────────────────────────────────────────
             // Only include top-level enabled products that have an SEO slug.
-            // Variations (parent_product_id != null) are excluded — they share
+            // Variations (parent_product_id != null) are excluded - they share
             // the parent's URL and including them would create duplicate content.
             $products = Product::query()
                 ->select('id', 'updated_at')
@@ -98,10 +88,10 @@ class SitemapController extends Controller
             foreach ($products as $product) {
                 $slug = $product->seo->slug;
                 $urls->push([
-                    'loc'        => "{$this->WEBSITE_URL}/product/{$slug}",
-                    'priority'   => '0.8',
+                    'loc' => "{$this->WEBSITE_URL}/product/{$slug}",
+                    'priority' => '0.8',
                     'changefreq' => 'weekly',
-                    'lastmod'    => $product->updated_at->toAtomString(),
+                    'lastmod' => $product->updated_at->toAtomString(),
                 ]);
             }
 
@@ -113,19 +103,19 @@ class SitemapController extends Controller
 
             foreach ($categories as $cat) {
                 $urls->push([
-                    'loc'        => "{$this->WEBSITE_URL}/category/{$cat->slug}",
-                    'priority'   => '0.7',
+                    'loc' => "{$this->WEBSITE_URL}/category/{$cat->slug}",
+                    'priority' => '0.7',
                     'changefreq' => 'weekly',
-                    'lastmod'    => $cat->updated_at->toAtomString(),
+                    'lastmod' => $cat->updated_at->toAtomString(),
                 ]);
             }
 
             // Journal listing page
             $urls->push([
-                'loc'        => "{$this->WEBSITE_URL}/journal",
-                'priority'   => '0.7',
+                'loc' => "{$this->WEBSITE_URL}/journal",
+                'priority' => '0.7',
                 'changefreq' => 'weekly',
-                'lastmod'    => Carbon::now()->toAtomString(),
+                'lastmod' => Carbon::now()->toAtomString(),
             ]);
 
             // Individual journal posts
@@ -136,10 +126,10 @@ class SitemapController extends Controller
 
             foreach ($journalPosts as $post) {
                 $urls->push([
-                    'loc'        => "{$this->WEBSITE_URL}/journal/{$post->slug}",
-                    'priority'   => '0.6',
+                    'loc' => "{$this->WEBSITE_URL}/journal/{$post->slug}",
+                    'priority' => '0.6',
                     'changefreq' => 'monthly',
-                    'lastmod'    => $post->updated_at->toAtomString(),
+                    'lastmod' => $post->updated_at->toAtomString(),
                 ]);
             }
 
@@ -147,14 +137,11 @@ class SitemapController extends Controller
         });
 
         return response($xml, 200, [
-            'Content-Type'  => 'application/xml',
+            'Content-Type' => 'application/xml',
             'Cache-Control' => 'public, max-age=3600', // Cache for 1 hour
         ]);
     }
 
-    /**
-     * Build the sitemap XML string.
-     */
     private function buildXml(array $urls): string
     {
         $lines = [];
@@ -163,16 +150,16 @@ class SitemapController extends Controller
 
         foreach ($urls as $url) {
             $lines[] = '  <url>';
-            $lines[] = '    <loc>' . e($url['loc']) . '</loc>';
+            $lines[] = '    <loc>'.e($url['loc']).'</loc>';
 
-            if (!empty($url['lastmod'])) {
-                $lines[] = '    <lastmod>' . e($url['lastmod']) . '</lastmod>';
+            if (! empty($url['lastmod'])) {
+                $lines[] = '    <lastmod>'.e($url['lastmod']).'</lastmod>';
             }
-            if (!empty($url['changefreq'])) {
-                $lines[] = '    <changefreq>' . e($url['changefreq']) . '</changefreq>';
+            if (! empty($url['changefreq'])) {
+                $lines[] = '    <changefreq>'.e($url['changefreq']).'</changefreq>';
             }
-            if (!empty($url['priority'])) {
-                $lines[] = '    <priority>' . e($url['priority']) . '</priority>';
+            if (! empty($url['priority'])) {
+                $lines[] = '    <priority>'.e($url['priority']).'</priority>';
             }
 
             $lines[] = '  </url>';

@@ -58,7 +58,7 @@
     <div class="wrapper">
         <div class="header">
             <p class="brand">Chapter of You</p>
-            <p class="header-sub">Admin Notification — New Contact Message</p>
+            <p class="header-sub">Admin Notification - New Contact Message</p>
         </div>
 
         <div class="card">

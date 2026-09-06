@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class () extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('journal_post', function (Blueprint $table) {
@@ -26,7 +27,7 @@ return new class () extends Migration {
             $table->string('meta_title', 255)->nullable();
             $table->string('meta_description', 500)->nullable();
 
-            // Categorisation — simple comma-separated tags for now
+            // Categorisation - simple comma-separated tags for now
             $table->string('tags')->nullable();
 
             // Publishing

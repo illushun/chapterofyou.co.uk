@@ -8,13 +8,13 @@ use Illuminate\Support\Collection;
 class ScentFinderService
 {
     private const SCENT_FAMILY_POINTS = 10;
+
     private const MOOD_TAG_POINTS = 5;
+
     private const ROOM_POINTS = 8;
+
     private const RESULT_LIMIT = 4;
 
-    /**
-     * @param  array{scent_families?: array<string>, mood_tags?: array<string>, room_tags?: array<string>}  $answers
-     */
     public function match(array $answers): Collection
     {
         $wantedFamilies = $answers['scent_families'] ?? [];

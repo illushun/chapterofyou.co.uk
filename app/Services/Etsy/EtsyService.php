@@ -18,20 +18,25 @@ use Illuminate\Support\Str;
 
 class EtsyService
 {
-    private const BASE_URL  = 'https://api.etsy.com/v3/application';
-    private const AUTH_URL  = 'https://www.etsy.com/oauth/connect';
+    private const BASE_URL = 'https://api.etsy.com/v3/application';
+
+    private const AUTH_URL = 'https://www.etsy.com/oauth/connect';
+
     private const TOKEN_URL = 'https://api.etsy.com/v3/public/oauth/token';
-    private const SCOPES    = 'listings_r listings_w listings_d transactions_r shops_r';
+
+    private const SCOPES = 'listings_r listings_w listings_d transactions_r shops_r';
 
     private string $clientId;
+
     private string $clientSecret;
+
     private string $redirectUri;
 
     public function __construct()
     {
-        $this->clientId     = config('services.etsy.client_id', '');
+        $this->clientId = config('services.etsy.client_id', '');
         $this->clientSecret = config('services.etsy.client_secret', '');
-        $this->redirectUri  = config('services.etsy.redirect', '');
+        $this->redirectUri = config('services.etsy.redirect', '');
     }
 
     // ──────────────────────────────────────────────────
@@ -40,22 +45,22 @@ class EtsyService
 
     public function getAuthorizationUrl(): string
     {
-        $verifier  = $this->generateCodeVerifier();
+        $verifier = $this->generateCodeVerifier();
         $challenge = $this->generateCodeChallenge($verifier);
-        $state     = Str::random(32);
+        $state = Str::random(32);
 
         session([
             'etsy_code_verifier' => $verifier,
-            'etsy_state'         => $state,
+            'etsy_state' => $state,
         ]);
 
-        return self::AUTH_URL . '?' . http_build_query([
-            'response_type'         => 'code',
-            'redirect_uri'          => $this->redirectUri,
-            'scope'                 => self::SCOPES,
-            'client_id'             => $this->clientId,
-            'state'                 => $state,
-            'code_challenge'        => $challenge,
+        return self::AUTH_URL.'?'.http_build_query([
+            'response_type' => 'code',
+            'redirect_uri' => $this->redirectUri,
+            'scope' => self::SCOPES,
+            'client_id' => $this->clientId,
+            'state' => $state,
+            'code_challenge' => $challenge,
             'code_challenge_method' => 'S256',
         ]);
     }
@@ -63,16 +68,16 @@ class EtsyService
     public function handleCallback(string $code, string $state): MarketplaceConnection
     {
         if ($state !== session('etsy_state')) {
-            throw new Exception('OAuth state mismatch — possible CSRF attempt.');
+            throw new Exception('OAuth state mismatch - possible CSRF attempt.');
         }
 
         $verifier = session('etsy_code_verifier');
 
         $response = Http::asForm()->post(self::TOKEN_URL, [
-            'grant_type'    => 'authorization_code',
-            'client_id'     => $this->clientId,
-            'redirect_uri'  => $this->redirectUri,
-            'code'          => $code,
+            'grant_type' => 'authorization_code',
+            'client_id' => $this->clientId,
+            'redirect_uri' => $this->redirectUri,
+            'code' => $code,
             'code_verifier' => $verifier,
         ]);
 
@@ -99,8 +104,8 @@ class EtsyService
         }
 
         $response = Http::asForm()->post(self::TOKEN_URL, [
-            'grant_type'    => 'refresh_token',
-            'client_id'     => $this->clientId,
+            'grant_type' => 'refresh_token',
+            'client_id' => $this->clientId,
             'refresh_token' => $connection->refresh_token,
         ]);
 
@@ -108,9 +113,9 @@ class EtsyService
 
         $tokens = $response->json();
         $connection->update([
-            'access_token'  => $tokens['access_token'],
+            'access_token' => $tokens['access_token'],
             'refresh_token' => $tokens['refresh_token'] ?? $connection->refresh_token,
-            'expires_at'    => now()->addSeconds($tokens['expires_in'] ?? 3600),
+            'expires_at' => now()->addSeconds($tokens['expires_in'] ?? 3600),
         ]);
 
         return $connection->fresh();
@@ -126,28 +131,28 @@ class EtsyService
         $client = $this->client($connection);
 
         $meResponse = $client->get('/users/me');
-        Log::info('Etsy /users/me status=' . $meResponse->status() . ' body=' . $meResponse->body());
+        Log::info('Etsy /users/me status='.$meResponse->status().' body='.$meResponse->body());
         $this->assertOk($meResponse, 'Could not fetch Etsy user');
 
         $userId = $meResponse->json('user_id');
 
         $shopsResponse = $client->get("/users/{$userId}/shops");
-        Log::info('Etsy /users/' . $userId . '/shops status=' . $shopsResponse->status() . ' body=' . $shopsResponse->body());
+        Log::info('Etsy /users/'.$userId.'/shops status='.$shopsResponse->status().' body='.$shopsResponse->body());
 
         if ($shopsResponse->successful() && $shopsResponse->json('shop_id')) {
             $shopId = (string) $shopsResponse->json('shop_id');
 
             $connection->update([
                 'etsy_user_id' => $userId,
-                'shop_id'      => $shopId,
-                'shop_name'    => $shopsResponse->json('shop_name'),
+                'shop_id' => $shopId,
+                'shop_name' => $shopsResponse->json('shop_name'),
             ]);
 
             $connection = $connection->fresh();
             $this->fetchAndStoreDefaultShippingProfile($connection, $client);
             $this->fetchAndStoreDefaultReadinessState($connection, $client);
         } else {
-            throw new Exception('Etsy API returned no shop for this account. Response: ' . $shopsResponse->body());
+            throw new Exception('Etsy API returned no shop for this account. Response: '.$shopsResponse->body());
         }
     }
 
@@ -158,35 +163,35 @@ class EtsyService
     public function exportProduct(Product $product): MarketplaceListing
     {
         $connection = $this->requireConnection();
-        $setting    = MarketplaceProductSetting::where('product_id', $product->id)
-                        ->where('marketplace', 'etsy')
-                        ->first();
+        $setting = MarketplaceProductSetting::where('product_id', $product->id)
+            ->where('marketplace', 'etsy')
+            ->first();
 
-        $title       = Str::limit($setting?->effectiveTitle($product) ?? $product->name, 140, '');
+        $title = Str::limit($setting?->effectiveTitle($product) ?? $product->name, 140, '');
         $description = $setting ? $setting->effectiveDescription($product) : strip_tags($product->description ?? $product->name);
-        $price       = number_format($setting ? $setting->effectivePrice($product) : (float) $product->cost, 2, '.', '');
-        $quantity    = max(1, (int) $product->stock_qty);
-        $taxonomyId  = config('services.etsy.default_taxonomy_id', 1622);
-        $tags        = $setting?->tagsArray() ?? [];
+        $price = number_format($setting ? $setting->effectivePrice($product) : (float) $product->cost, 2, '.', '');
+        $quantity = max(1, (int) $product->stock_qty);
+        $taxonomyId = config('services.etsy.default_taxonomy_id', 1622);
+        $tags = $setting?->tagsArray() ?? [];
 
-        $shippingProfileId  = $connection->default_shipping_profile_id;
-        $readinessStateId   = $connection->default_readiness_state_id;
+        $shippingProfileId = $connection->default_shipping_profile_id;
+        $readinessStateId = $connection->default_readiness_state_id;
 
         if (! $shippingProfileId || ! $readinessStateId) {
             throw new Exception('Shop configuration incomplete (missing shipping profile or readiness state). Use "Refresh Shop Info" on the Marketplaces page.');
         }
 
         $payload = [
-            'title'               => $title,
-            'description'         => $description,
-            'price'               => $price,
-            'quantity'            => $quantity,
-            'who_made'            => 'i_did',
-            'when_made'           => 'made_to_order',
-            'taxonomy_id'         => $taxonomyId,
+            'title' => $title,
+            'description' => $description,
+            'price' => $price,
+            'quantity' => $quantity,
+            'who_made' => 'i_did',
+            'when_made' => 'made_to_order',
+            'taxonomy_id' => $taxonomyId,
             'shipping_profile_id' => (int) $shippingProfileId,
-            'readiness_state_id'  => (int) $readinessStateId,
-            'state'               => 'draft',
+            'readiness_state_id' => (int) $readinessStateId,
+            'state' => 'draft',
         ];
 
         if (! empty($tags)) {
@@ -203,9 +208,9 @@ class EtsyService
         return MarketplaceListing::updateOrCreate(
             ['product_id' => $product->id, 'marketplace' => 'etsy'],
             [
-                'listing_id'     => $listingId,
-                'status'         => 'draft',
-                'sync_error'     => null,
+                'listing_id' => $listingId,
+                'status' => 'draft',
+                'sync_error' => null,
                 'last_synced_at' => now(),
             ]
         );
@@ -214,20 +219,20 @@ class EtsyService
     public function syncProduct(Product $product): MarketplaceListing
     {
         $connection = $this->requireConnection();
-        $listing    = MarketplaceListing::where('product_id', $product->id)
-                        ->where('marketplace', 'etsy')
-                        ->firstOrFail();
+        $listing = MarketplaceListing::where('product_id', $product->id)
+            ->where('marketplace', 'etsy')
+            ->firstOrFail();
 
         $setting = MarketplaceProductSetting::where('product_id', $product->id)
-                    ->where('marketplace', 'etsy')
-                    ->first();
+            ->where('marketplace', 'etsy')
+            ->first();
 
-        $tags    = $setting?->tagsArray() ?? [];
+        $tags = $setting?->tagsArray() ?? [];
         $payload = [
-            'title'       => Str::limit($setting?->effectiveTitle($product) ?? $product->name, 140, ''),
+            'title' => Str::limit($setting?->effectiveTitle($product) ?? $product->name, 140, ''),
             'description' => $setting ? $setting->effectiveDescription($product) : strip_tags($product->description ?? $product->name),
-            'price'       => number_format($setting ? $setting->effectivePrice($product) : (float) $product->cost, 2, '.', ''),
-            'quantity'    => max(0, (int) $product->stock_qty),
+            'price' => number_format($setting ? $setting->effectivePrice($product) : (float) $product->cost, 2, '.', ''),
+            'quantity' => max(0, (int) $product->stock_qty),
         ];
 
         if (! empty($tags)) {
@@ -240,8 +245,8 @@ class EtsyService
         $this->assertOk($response, 'Failed to sync Etsy listing');
 
         $listing->update([
-            'status'         => 'synced',
-            'sync_error'     => null,
+            'status' => 'synced',
+            'sync_error' => null,
             'last_synced_at' => now(),
         ]);
 
@@ -251,12 +256,12 @@ class EtsyService
     private function uploadProductImages(MarketplaceConnection $connection, Product $product, string $listingId): void
     {
         $images = $product->images()->where('status', 'enabled')->get();
-        $rank   = 1;
+        $rank = 1;
 
         foreach ($images as $image) {
             try {
                 $imagePath = ltrim(str_replace('/storage', '', $image->image), '/');
-                $fullPath  = Storage::disk('public')->path($imagePath);
+                $fullPath = Storage::disk('public')->path($imagePath);
 
                 if (! file_exists($fullPath)) {
                     continue;
@@ -265,15 +270,15 @@ class EtsyService
                 $this->client($connection)
                     ->attach('image', fopen($fullPath, 'r'), basename($fullPath))
                     ->post("/shops/{$connection->shop_id}/listings/{$listingId}/images", [
-                        'rank'       => $rank,
-                        'overwrite'  => false,
+                        'rank' => $rank,
+                        'overwrite' => false,
                         'is_watermarked' => false,
-                        'alt_text'   => $product->name,
+                        'alt_text' => $product->name,
                     ]);
 
                 $rank++;
             } catch (Exception $e) {
-                Log::warning("Etsy: failed to upload image for listing {$listingId}: " . $e->getMessage());
+                Log::warning("Etsy: failed to upload image for listing {$listingId}: ".$e->getMessage());
             }
         }
     }
@@ -285,7 +290,7 @@ class EtsyService
     public function importNewOrders(): int
     {
         $connection = $this->requireConnection();
-        $since      = $connection->last_order_import_at
+        $since = $connection->last_order_import_at
                         ? $connection->last_order_import_at->timestamp
                         : strtotime('-30 days');
 
@@ -304,7 +309,7 @@ class EtsyService
 
                 $imported++;
             } catch (Exception $e) {
-                Log::error('Etsy: failed to import receipt ' . $receipt['receipt_id'] . ': ' . $e->getMessage());
+                Log::error('Etsy: failed to import receipt '.$receipt['receipt_id'].': '.$e->getMessage());
             }
         }
 
@@ -315,16 +320,16 @@ class EtsyService
 
     private function fetchReceipts(MarketplaceConnection $connection, int $minCreated): array
     {
-        $all     = [];
-        $offset  = 0;
-        $limit   = 100;
+        $all = [];
+        $offset = 0;
+        $limit = 100;
 
         do {
             $response = $this->client($connection)->get("/shops/{$connection->shop_id}/receipts", [
-                'was_paid'    => true,
+                'was_paid' => true,
                 'min_created' => $minCreated,
-                'limit'       => $limit,
-                'offset'      => $offset,
+                'limit' => $limit,
+                'offset' => $offset,
             ]);
 
             if (! $response->successful()) {
@@ -332,8 +337,8 @@ class EtsyService
             }
 
             $results = $response->json('results') ?? [];
-            $all     = array_merge($all, $results);
-            $count   = $response->json('count') ?? 0;
+            $all = array_merge($all, $results);
+            $count = $response->json('count') ?? 0;
             $offset += $limit;
         } while (count($all) < $count);
 
@@ -344,56 +349,56 @@ class EtsyService
     {
         $nameParts = explode(' ', $receipt['name'] ?? 'Etsy Buyer', 2);
         $firstName = $nameParts[0];
-        $lastName  = $nameParts[1] ?? '';
+        $lastName = $nameParts[1] ?? '';
 
-        $costTotal     = $this->parseAmount($receipt['subtotal'] ?? []);
+        $costTotal = $this->parseAmount($receipt['subtotal'] ?? []);
         $shippingTotal = $this->parseAmount($receipt['total_shipping_cost'] ?? []);
-        $taxTotal      = $this->parseAmount($receipt['total_tax_cost'] ?? []);
-        $grandTotal    = $this->parseAmount($receipt['grandtotal'] ?? []);
+        $taxTotal = $this->parseAmount($receipt['total_tax_cost'] ?? []);
+        $grandTotal = $this->parseAmount($receipt['grandtotal'] ?? []);
 
         $order = Order::create([
-            'payment_intent_id'    => 'etsy_' . $receipt['receipt_id'],
-            'payment_type'         => 'etsy',
-            'source'               => 'etsy',
+            'payment_intent_id' => 'etsy_'.$receipt['receipt_id'],
+            'payment_type' => 'etsy',
+            'source' => 'etsy',
             'marketplace_order_id' => (string) $receipt['receipt_id'],
-            'first_name'           => $firstName,
-            'last_name'            => $lastName,
-            'email'                => $receipt['buyer_email'] ?? '',
-            'telephone'            => null,
-            'cost_total'           => $costTotal,
-            'shipping_total'       => $shippingTotal,
-            'tax_total'            => $taxTotal,
-            'grand_total'          => $grandTotal,
-            'billing_line_1'       => $receipt['first_line'] ?? '',
-            'billing_line_2'       => $receipt['second_line'] ?? null,
-            'billing_city'         => $receipt['city'] ?? '',
-            'billing_county'       => $receipt['state'] ?? null,
-            'billing_postcode'     => $receipt['zip'] ?? '',
-            'billing_country'      => $receipt['country_iso'] ?? 'GB',
-            'shipping_line_1'      => $receipt['first_line'] ?? '',
-            'shipping_line_2'      => $receipt['second_line'] ?? null,
-            'shipping_city'        => $receipt['city'] ?? '',
-            'shipping_county'      => $receipt['state'] ?? null,
-            'shipping_postcode'    => $receipt['zip'] ?? '',
-            'shipping_country'     => $receipt['country_iso'] ?? 'GB',
-            'status'               => 'processing',
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $receipt['buyer_email'] ?? '',
+            'telephone' => null,
+            'cost_total' => $costTotal,
+            'shipping_total' => $shippingTotal,
+            'tax_total' => $taxTotal,
+            'grand_total' => $grandTotal,
+            'billing_line_1' => $receipt['first_line'] ?? '',
+            'billing_line_2' => $receipt['second_line'] ?? null,
+            'billing_city' => $receipt['city'] ?? '',
+            'billing_county' => $receipt['state'] ?? null,
+            'billing_postcode' => $receipt['zip'] ?? '',
+            'billing_country' => $receipt['country_iso'] ?? 'GB',
+            'shipping_line_1' => $receipt['first_line'] ?? '',
+            'shipping_line_2' => $receipt['second_line'] ?? null,
+            'shipping_city' => $receipt['city'] ?? '',
+            'shipping_county' => $receipt['state'] ?? null,
+            'shipping_postcode' => $receipt['zip'] ?? '',
+            'shipping_country' => $receipt['country_iso'] ?? 'GB',
+            'status' => 'processing',
         ]);
 
         foreach ($receipt['transactions'] ?? [] as $transaction) {
             $listingId = (string) ($transaction['listing_id'] ?? '');
-            $product   = null;
+            $product = null;
 
             if ($listingId) {
                 $ml = MarketplaceListing::where('marketplace', 'etsy')
-                        ->where('listing_id', $listingId)
-                        ->first();
+                    ->where('listing_id', $listingId)
+                    ->first();
                 $product = $ml?->product;
             }
 
             OrderItem::create([
-                'order_id'     => $order->id,
-                'product_id'   => $product?->id,
-                'quantity'     => (int) ($transaction['quantity'] ?? 1),
+                'order_id' => $order->id,
+                'product_id' => $product?->id,
+                'quantity' => (int) ($transaction['quantity'] ?? 1),
                 'product_cost' => $this->parseAmount($transaction['price'] ?? []),
                 'product_total' => $this->parseAmount($transaction['price'] ?? []) * (int) ($transaction['quantity'] ?? 1),
             ]);
@@ -403,8 +408,8 @@ class EtsyService
     private function orderAlreadyImported(int $receiptId): bool
     {
         return Order::where('marketplace_order_id', (string) $receiptId)
-                    ->where('source', 'etsy')
-                    ->exists();
+            ->where('source', 'etsy')
+            ->exists();
     }
 
     private function parseAmount(array $amountObject): float
@@ -413,7 +418,7 @@ class EtsyService
             return 0.0;
         }
 
-        $amount  = (float) ($amountObject['amount'] ?? 0);
+        $amount = (float) ($amountObject['amount'] ?? 0);
         $divisor = (float) ($amountObject['divisor'] ?? 100);
 
         return $divisor > 0 ? round($amount / $divisor, 2) : 0.0;
@@ -423,13 +428,13 @@ class EtsyService
     {
         try {
             $connection = $this->refreshTokenIfNeeded($connection);
-            $response   = $this->client($connection)->get("/shops/{$connection->shop_id}/shipping-profiles");
+            $response = $this->client($connection)->get("/shops/{$connection->shop_id}/shipping-profiles");
 
             if ($response->successful()) {
                 return $response->json('results') ?? [];
             }
         } catch (Exception $e) {
-            Log::warning('Etsy: could not fetch shipping profiles: ' . $e->getMessage());
+            Log::warning('Etsy: could not fetch shipping profiles: '.$e->getMessage());
         }
 
         return [];
@@ -438,7 +443,7 @@ class EtsyService
     private function fetchAndStoreDefaultShippingProfile(MarketplaceConnection $connection, \Illuminate\Http\Client\PendingRequest $client): void
     {
         $response = $client->get("/shops/{$connection->shop_id}/shipping-profiles");
-        Log::info('Etsy shipping-profiles status=' . $response->status() . ' body=' . $response->body());
+        Log::info('Etsy shipping-profiles status='.$response->status().' body='.$response->body());
 
         $profiles = $response->json('results') ?? [];
         if ($response->successful() && ! empty($profiles)) {
@@ -451,7 +456,7 @@ class EtsyService
     private function fetchAndStoreDefaultReadinessState(MarketplaceConnection $connection, \Illuminate\Http\Client\PendingRequest $client): void
     {
         $response = $client->get("/shops/{$connection->shop_id}/listing-readiness-states");
-        Log::info('Etsy readiness-states status=' . $response->status() . ' body=' . $response->body());
+        Log::info('Etsy readiness-states status='.$response->status().' body='.$response->body());
 
         $states = $response->json('results') ?? [];
         if ($response->successful() && ! empty($states)) {
@@ -471,7 +476,7 @@ class EtsyService
 
         return Http::baseUrl(self::BASE_URL)
             ->withToken($connection->access_token)
-            ->withHeaders(['x-api-key' => $this->clientId . ':' . $this->clientSecret]);
+            ->withHeaders(['x-api-key' => $this->clientId.':'.$this->clientSecret]);
     }
 
     private function requireConnection(): MarketplaceConnection
@@ -494,12 +499,12 @@ class EtsyService
         return MarketplaceConnection::updateOrCreate(
             ['marketplace' => 'etsy'],
             [
-                'access_token'  => $tokens['access_token'],
+                'access_token' => $tokens['access_token'],
                 'refresh_token' => $tokens['refresh_token'] ?? null,
-                'expires_at'    => isset($tokens['expires_in'])
+                'expires_at' => isset($tokens['expires_in'])
                     ? now()->addSeconds($tokens['expires_in'])
                     : null,
-                'scopes'        => $tokens['scope'] ?? null,
+                'scopes' => $tokens['scope'] ?? null,
             ]
         );
     }
@@ -508,8 +513,8 @@ class EtsyService
     {
         if (! $response->successful()) {
             $body = $response->body();
-            Log::error("Etsy API error [{$context}]: " . $body);
-            throw new Exception("{$context}: " . ($response->json('error_description') ?? $response->json('error') ?? $body));
+            Log::error("Etsy API error [{$context}]: ".$body);
+            throw new Exception("{$context}: ".($response->json('error_description') ?? $response->json('error') ?? $body));
         }
     }
 

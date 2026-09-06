@@ -6,23 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Services\CartManager;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
 {
     private $cartManager;
 
-    /**
-     * Inject the CartManager service.
-     */
     public function __construct(CartManager $cartManager)
     {
         $this->cartManager = $cartManager;
     }
 
-    /**
-     * Display the shopping cart contents.
-     */
     public function view()
     {
         // Retrieve the current cart (guest or user, handling merging if a guest just logged in)
@@ -51,13 +44,10 @@ class CartController extends Controller
         return Inertia::render('cart/View', [
             'cartItems' => $cartData,
             'cartTotal' => $cartTotal,
-            'giftVoucher'  => $giftVoucher,
+            'giftVoucher' => $giftVoucher,
         ]);
     }
 
-    /**
-     * Adds an item to the cart (API endpoint).
-     */
     public function add(Request $request)
     {
         $request->validate([
@@ -77,13 +67,10 @@ class CartController extends Controller
         return redirect()->back()->with('success', 'Product added to cart!');
     }
 
-    /**
-     * Updates an item's quantity in the cart (API endpoint).
-     */
     public function update(Request $request, int $productId)
     {
         $request->validate([
-            'quantity' => 'required|integer|min:0'
+            'quantity' => 'required|integer|min:0',
         ]);
 
         $cart = $this->cartManager->getCurrentCart();
@@ -96,9 +83,6 @@ class CartController extends Controller
         return redirect()->back(303); // Use 303 to trigger a GET request/Inertia refresh
     }
 
-    /**
-     * Removes an item from the cart (API endpoint).
-     */
     public function remove(int $productId)
     {
         $cart = $this->cartManager->getCurrentCart();

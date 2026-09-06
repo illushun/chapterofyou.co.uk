@@ -23,7 +23,7 @@ class ImportEtsyOrders implements ShouldQueue
             $count = $etsy->importNewOrders();
             Log::info("Etsy order import: {$count} new order(s) imported.");
         } catch (Exception $e) {
-            Log::error('Etsy order import failed: ' . $e->getMessage());
+            Log::error('Etsy order import failed: '.$e->getMessage());
             throw $e;
         }
     }

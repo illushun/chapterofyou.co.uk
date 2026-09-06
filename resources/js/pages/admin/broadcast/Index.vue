@@ -473,13 +473,6 @@ async function sendWaitlistLaunch() {
 </template>
 
 <style scoped>
-/*
- * Only page-specific styles live here.
- * Shared styles (adm-header, adm-title, adm-sub, adm-btn, adm-card, adm-table,
- * adm-badge, adm-action, adm-empty, adm-pagination, adm-flash, adm-spinner)
- * all come from admin-design-system.css.
- */
-
 /* Opted-in stat bar */
 .bi-stat-bar {
     display: flex;

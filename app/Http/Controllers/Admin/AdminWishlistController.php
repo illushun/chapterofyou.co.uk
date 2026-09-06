@@ -3,15 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Wishlist;
 use App\Models\User;
+use App\Models\Wishlist;
 use Inertia\Inertia;
 
 class AdminWishlistController extends Controller
 {
-    /**
-     * Overview — all wishlisted products ranked by popularity.
-     */
     public function index()
     {
         // Most wishlisted products
@@ -22,11 +19,11 @@ class AdminWishlistController extends Controller
             ->get()
             ->filter(fn ($row) => $row->product !== null)
             ->map(fn ($row) => [
-                'product_id'     => $row->product_id,
-                'name'           => $row->product->name,
-                'mpn'            => $row->product->mpn,
-                'cost'           => $row->product->cost,
-                'stock_qty'      => $row->product->stock_qty,
+                'product_id' => $row->product_id,
+                'name' => $row->product->name,
+                'mpn' => $row->product->mpn,
+                'cost' => $row->product->cost,
+                'stock_qty' => $row->product->stock_qty,
                 'wishlist_count' => $row->wishlist_count,
             ])
             ->values();
@@ -37,9 +34,9 @@ class AdminWishlistController extends Controller
             ->orderByDesc('wishlist_count')
             ->get(['id', 'name', 'email'])
             ->map(fn ($u) => [
-                'id'             => $u->id,
-                'name'           => $u->name,
-                'email'          => $u->email,
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
                 'wishlist_count' => $u->wishlist_count,
             ]);
 
@@ -48,15 +45,12 @@ class AdminWishlistController extends Controller
 
         return Inertia::render('admin/wishlist/Index', [
             'popularProducts' => $popularProducts,
-            'users'           => $users,
-            'totalItems'      => $totalItems,
-            'totalUsers'      => $totalUsers,
+            'users' => $users,
+            'totalItems' => $totalItems,
+            'totalUsers' => $totalUsers,
         ]);
     }
 
-    /**
-     * Show a specific user's wishlist.
-     */
     public function show(User $user)
     {
         $items = Wishlist::where('user_id', $user->id)
@@ -65,20 +59,20 @@ class AdminWishlistController extends Controller
             ->get()
             ->filter(fn ($item) => $item->product !== null)
             ->map(fn ($item) => [
-                'wishlist_id'    => $item->id,
-                'product_id'     => $item->product->id,
-                'name'           => $item->product->name,
-                'mpn'            => $item->product->mpn,
-                'cost'           => $item->product->cost,
-                'stock_qty'      => $item->product->stock_qty,
-                'added_at'       => $item->created_at->format('d M Y, H:i'),
+                'wishlist_id' => $item->id,
+                'product_id' => $item->product->id,
+                'name' => $item->product->name,
+                'mpn' => $item->product->mpn,
+                'cost' => $item->product->cost,
+                'stock_qty' => $item->product->stock_qty,
+                'added_at' => $item->created_at->format('d M Y, H:i'),
             ])
             ->values();
 
         return Inertia::render('admin/wishlist/Show', [
-            'user'  => [
-                'id'    => $user->id,
-                'name'  => $user->name,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
                 'email' => $user->email,
             ],
             'items' => $items,

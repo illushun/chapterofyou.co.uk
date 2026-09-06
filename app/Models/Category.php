@@ -24,17 +24,15 @@ class Category extends Model
         return $this->belongsToMany(Product::class, 'product_category', 'category_id', 'product_id');
     }
 
-    /**
-     * Handles both old full-URL format and new relative storage path format.
-     */
     public function getImageUrlAttribute(): ?string
     {
-        if (!$this->image) {
+        if (! $this->image) {
             return null;
         }
         if (str_starts_with($this->image, 'http')) {
             return $this->image;
         }
-        return asset('storage/' . $this->image);
+
+        return asset('storage/'.$this->image);
     }
 }

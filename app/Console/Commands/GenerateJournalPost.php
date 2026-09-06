@@ -36,7 +36,7 @@ class GenerateJournalPost extends Command
 
         try {
             // Resolved inside the try block (not via method injection) so that a
-            // missing ANTHROPIC_API_KEY — thrown from the constructor — is caught
+            // missing ANTHROPIC_API_KEY - thrown from the constructor - is caught
             // and recorded, rather than crashing the command before this block runs.
             $post = app(JournalPostGenerator::class)->generate($settings->topic_notes);
 

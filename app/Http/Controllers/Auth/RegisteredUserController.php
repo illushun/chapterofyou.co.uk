@@ -15,34 +15,28 @@ use Inertia\Response;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Show the registration page.
-     */
     public function create(): Response
     {
         return Inertia::render('auth/Register');
     }
 
-    /**
-     * Handle an incoming registration request.
-     */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name'               => 'required|string|max:255',
-            'email'              => 'required|string|lowercase|email|max:255|unique:' . User::class,
-            'password'           => ['required', 'confirmed', Rules\Password::defaults()],
-            'marketing_opt_in'   => 'boolean',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'marketing_opt_in' => 'boolean',
         ]);
 
         $optIn = (bool) $request->input('marketing_opt_in', false);
 
         $user = User::create([
-            'name'             => $request->name,
-            'email'            => $request->email,
-            'password'         => Hash::make($request->password),
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
             'marketing_opt_in' => $optIn,
-            'opted_in_at'      => $optIn ? now() : null,
+            'opted_in_at' => $optIn ? now() : null,
         ]);
 
         event(new Registered($user));

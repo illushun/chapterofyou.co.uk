@@ -64,7 +64,7 @@
         <div class="card">
             <p class="greeting">You signed up to be first. We remembered.</p>
             <p class="body-text">
-                Chapter of You is officially live — and because you were one of the very first to believe in me,
+                Chapter of You is officially live - and because you were one of the very first to believe in me,
                 I want to say thank you with something special.
             </p>
             <p class="body-text">
@@ -77,7 +77,7 @@
                 <p class="code-note">Apply at checkout &nbsp;·&nbsp; One use per customer</p>
             </div>
             <p class="body-text">
-                Head over to the shop and find your scent — every product is made with care, crafted just for you.
+                Head over to the shop and find your scent - every product is made with care, crafted just for you.
             </p>
             <div class="cta-wrap">
                 <a href="{{ config('app.url') }}/products" class="cta-btn">Shop the Collection</a>

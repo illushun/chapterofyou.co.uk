@@ -3,43 +3,34 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Courier;
-use App\Models\Product\Courier as ProductCourier;
+use App\Models\Oil;
+use App\Models\Product;
+use App\Models\Product\Faq as ProductFaq;
+use App\Models\Product\Image as ProductImage;
+use App\Models\Product\Material;
+use App\Models\Product\Seo;
+use App\Services\Product\ScentTagSuggester;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use App\Models\Product;
-use App\Models\Category;
-use App\Models\Product\Seo;
-use App\Models\Product\Image as ProductImage;
-use App\Models\Oil;
-use App\Models\Product\Material;
-use App\Models\Product\Faq as ProductFaq;
-use App\Services\Product\ScentTagSuggester;
+use Illuminate\Validation\Rule;
+use Inertia\Inertia;
 use Throwable;
 
 class AdminProductController extends Controller
 {
-    /**
-     * Appends "Reed Diffuser" to a default SEO title/description when the
-     * product name doesn't already mention diffusers, so blank SEO fields
-     * don't lose the keyword we rank products on.
-     */
     private function withDiffuserKeyword(string $text): string
     {
         return preg_match('/\bdiffusers?\b/i', $text) ? $text : "{$text} Reed Diffuser";
     }
 
-    /**
-     * Helper to store uploaded images and create database records.
-     */
     private function handleImageUpload(Product $product, array $files): void
     {
         foreach ($files as $file) {
-            $fileName = time() . '_' . Str::random(10) . '.' . $file->getClientOriginalExtension();
+            $fileName = time().'_'.Str::random(10).'.'.$file->getClientOriginalExtension();
 
             // Store file in the 'product_images' directory within the 'public' disk
             $path = $file->storeAs('product_images', $fileName, 'public');
@@ -51,10 +42,6 @@ class AdminProductController extends Controller
         }
     }
 
-    /**
-    * Replace all product_material rows for this product with the submitted set.
-    * Using deleteAndInsert rather than upsert to keep it simple and reliable.
-    */
     private function syncMaterials(Product $product, array $materials): void
     {
         // Wipe existing rows for this product
@@ -68,15 +55,12 @@ class AdminProductController extends Controller
 
             Material::create([
                 'product_id' => $product->id,
-                'oil_id'     => $material['oil_id'],
+                'oil_id' => $material['oil_id'],
                 'percentage' => round((float) $material['percentage'], 4),
             ]);
         }
     }
 
-    /**
-     * Display a listing of the resource. (Index)
-     */
     public function index()
     {
         $products = Product::with('images:product_id,image,status')
@@ -89,82 +73,75 @@ class AdminProductController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource. (Create)
-     */
     public function create()
     {
-        $categories     = Category::select('id', 'name')->get();
-        $couriers       = Courier::select(['id', 'name'])->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
-        $parentProducts   = Product::select('id', 'name')->get();
+        $categories = Category::select('id', 'name')->get();
+        $couriers = Courier::select(['id', 'name'])->where('status', 'enabled')->orderBy('type', 'ASC')->orderBy('id', 'DESC')->get();
+        $parentProducts = Product::select('id', 'name')->get();
         $refillCandidates = Product::select('id', 'name')->orderBy('name')->get();
-        $oils             = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
+        $oils = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
 
         return Inertia::render('admin/product/CreateEdit', [
-            'categories'       => $categories,
-            'couriers'         => $couriers,
-            'parentProducts'   => $parentProducts,
+            'categories' => $categories,
+            'couriers' => $couriers,
+            'parentProducts' => $parentProducts,
             'refillCandidates' => $refillCandidates,
-            'oils'             => $oils,
+            'oils' => $oils,
             'productMaterials' => [],
-            'isEditing'        => false,
-            'productImages'    => [],
+            'isEditing' => false,
+            'productImages' => [],
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage. (Store)
-     */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'mpn'              => ['required', 'string', 'max:50', Rule::unique('product', 'mpn')],
-            'name'             => ['required', 'string', 'max:255'],
-            'description'      => ['required', 'string'],
-            'details'          => ['nullable', 'string'],
-            'status'           => ['required', Rule::in(['enabled', 'disabled'])],
-            'cost'             => ['required', 'numeric', 'min:0.01'],
-            'stock_qty'        => ['required', 'integer', 'min:0'],
-            'category_ids'     => ['array'],
-            'category_ids.*'   => ['exists:category,id'],
-            'courier_id.*'     => ['exists:courier,id'],
-            'meta_title'       => ['nullable', 'string', 'max:255'],
+            'mpn' => ['required', 'string', 'max:50', Rule::unique('product', 'mpn')],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'details' => ['nullable', 'string'],
+            'status' => ['required', Rule::in(['enabled', 'disabled'])],
+            'cost' => ['required', 'numeric', 'min:0.01'],
+            'stock_qty' => ['required', 'integer', 'min:0'],
+            'category_ids' => ['array'],
+            'category_ids.*' => ['exists:category,id'],
+            'courier_id.*' => ['exists:courier,id'],
+            'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
-            'slug'             => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')],
+            'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')],
             'parent_product_id' => ['nullable', 'exists:product,id'],
-            'refill_product_ids'   => ['nullable', 'array'],
+            'refill_product_ids' => ['nullable', 'array'],
             'refill_product_ids.*' => ['exists:product,id'],
-            'new_images'       => ['nullable', 'array', 'max:5'],
-            'new_images.*'     => ['image', 'max:2048', 'mimes:jpeg,png,webp'],
+            'new_images' => ['nullable', 'array', 'max:5'],
+            'new_images.*' => ['image', 'max:2048', 'mimes:jpeg,png,webp'],
 
             // Oil formulation
-            'materials'              => ['nullable', 'array'],
-            'materials.*.oil_id'     => ['required_with:materials', 'exists:oil,id', 'distinct'],
+            'materials' => ['nullable', 'array'],
+            'materials.*.oil_id' => ['required_with:materials', 'exists:oil,id', 'distinct'],
             'materials.*.percentage' => ['required_with:materials', 'numeric', 'min:0.01', 'max:100'],
 
-
             'how_to_use' => ['nullable', 'string'],
-            'faqs'                  => ['nullable', 'array'],
-            'faqs.*.question'       => ['required_with:faqs', 'string', 'max:500'],
-            'faqs.*.answer'         => ['required_with:faqs', 'string', 'max:2000'],
+            'faqs' => ['nullable', 'array'],
+            'faqs.*.question' => ['required_with:faqs', 'string', 'max:500'],
+            'faqs.*.answer' => ['required_with:faqs', 'string', 'max:2000'],
 
             // Scent profile
-            'scent_families'   => ['nullable', 'array'],
+            'scent_families' => ['nullable', 'array'],
             'scent_families.*' => [Rule::in(Product::SCENT_FAMILIES)],
-            'mood_tags'        => ['nullable', 'array'],
-            'mood_tags.*'      => [Rule::in(Product::MOOD_TAGS)],
-            'room_tags'        => ['nullable', 'array'],
-            'room_tags.*'      => [Rule::in(Product::ROOMS)],
+            'mood_tags' => ['nullable', 'array'],
+            'mood_tags.*' => [Rule::in(Product::MOOD_TAGS)],
+            'room_tags' => ['nullable', 'array'],
+            'room_tags.*' => [Rule::in(Product::ROOMS)],
         ]);
 
-        $validated['scent_families'] = !empty($validated['scent_families']) ? implode(',', $validated['scent_families']) : null;
-        $validated['mood_tags'] = !empty($validated['mood_tags']) ? implode(',', $validated['mood_tags']) : null;
-        $validated['room_tags'] = !empty($validated['room_tags']) ? implode(',', $validated['room_tags']) : null;
+        $validated['scent_families'] = ! empty($validated['scent_families']) ? implode(',', $validated['scent_families']) : null;
+        $validated['mood_tags'] = ! empty($validated['mood_tags']) ? implode(',', $validated['mood_tags']) : null;
+        $validated['room_tags'] = ! empty($validated['room_tags']) ? implode(',', $validated['room_tags']) : null;
 
         return DB::transaction(function () use ($validated, $request) {
             $product = Product::create($validated);
 
-            if (!empty($validated['category_ids'])) {
+            if (! empty($validated['category_ids'])) {
                 $product->categories()->sync($validated['category_ids']);
             }
 
@@ -175,13 +152,13 @@ class AdminProductController extends Controller
             $product->courier()->create([
                 'product_id' => $product->id,
                 'courier_id' => $validated['courier_id'] ?? null,
-                'per_item'   => $validated['courier_per_item'] ?? 'no',
+                'per_item' => $validated['courier_per_item'] ?? 'no',
             ]);
 
             $product->seo()->create([
-                'meta_title'       => $validated['meta_title'] ?? $this->withDiffuserKeyword($validated['name']),
+                'meta_title' => $validated['meta_title'] ?? $this->withDiffuserKeyword($validated['name']),
                 'meta_description' => $validated['meta_description'] ?? $this->withDiffuserKeyword(substr(strip_tags($validated['description']), 0, 160)),
-                'slug'             => $validated['slug'] ?? Str::slug($validated['name']),
+                'slug' => $validated['slug'] ?? Str::slug($validated['name']),
             ]);
 
             if ($request->hasFile('new_images')) {
@@ -198,17 +175,14 @@ class AdminProductController extends Controller
         });
     }
 
-    /**
-     * Show the form for editing the specified resource. (Edit)
-     */
     public function edit(Product $product)
     {
         $product->load(['seo:product_id,meta_title,meta_description,slug', 'categories:id', 'courier']);
 
-        $categories       = Category::select('id', 'name')->get();
-        $parentProducts   = Product::where('id', '!=', $product->id)->select('id', 'name')->get();
+        $categories = Category::select('id', 'name')->get();
+        $parentProducts = Product::where('id', '!=', $product->id)->select('id', 'name')->get();
         $refillCandidates = Product::where('id', '!=', $product->id)->select('id', 'name')->orderBy('name')->get();
-        $oils             = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
+        $oils = Oil::select('id', 'name', 'supplier', 'cas_primary')->orderBy('name')->get();
         $productFaqs = ProductFaq::where('product_id', $product->id)
             ->orderBy('sort_order')
             ->orderBy('id')
@@ -221,6 +195,7 @@ class AdminProductController extends Controller
             ->map(function (ProductImage $image) {
                 $image->file_path = $image->image;
                 $image->is_enabled = $image->status === 'enabled';
+
                 return $image;
             });
 
@@ -235,83 +210,80 @@ class AdminProductController extends Controller
             ->select('oil_id', 'percentage')
             ->get()
             ->map(fn ($m) => [
-                'oil_id'     => $m->oil_id,
+                'oil_id' => $m->oil_id,
                 'percentage' => number_format((float) $m->percentage, 2, '.', ''),
             ]);
 
         return Inertia::render('admin/product/CreateEdit', [
-            'product'           => $product,
-            'categories'        => $categories,
-            'couriers'          => $couriers,
-            'parentProducts'    => $parentProducts,
-            'refillCandidates'  => $refillCandidates,
+            'product' => $product,
+            'categories' => $categories,
+            'couriers' => $couriers,
+            'parentProducts' => $parentProducts,
+            'refillCandidates' => $refillCandidates,
             'selectedCategoryIds' => $product->categories->pluck('id'),
             'selectedRefillProductIds' => $product->refills()->pluck('refill_product_id'),
             'selectedCourierId' => $product->courier?->courier_id,
-            'courierPerItem'    => $product->courier?->per_item,
-            'productImages'     => $productImages,
-            'oils'              => $oils,
-            'productMaterials'  => $productMaterials,
-            'isEditing'         => true,
+            'courierPerItem' => $product->courier?->per_item,
+            'productImages' => $productImages,
+            'oils' => $oils,
+            'productMaterials' => $productMaterials,
+            'isEditing' => true,
             'productFaqs' => $productFaqs,
             'selectedScentFamilies' => $product->scent_families_array,
-            'selectedMoodTags'      => $product->mood_tags_array,
-            'selectedRoomTags'      => $product->room_tags_array,
+            'selectedMoodTags' => $product->mood_tags_array,
+            'selectedRoomTags' => $product->room_tags_array,
         ]);
     }
 
-    /**
-     * Update the specified resource in storage. (Update)
-     */
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'mpn'              => ['required', 'string', 'max:50', Rule::unique('product', 'mpn')->ignore($product->id)],
-            'name'             => ['required', 'string', 'max:255'],
-            'description'      => ['required', 'string'],
-            'details'          => ['nullable', 'string'],
-            'status'           => ['required', Rule::in(['enabled', 'disabled'])],
-            'cost'             => ['required', 'numeric', 'min:0.01'],
-            'stock_qty'        => ['required', 'integer', 'min:0'],
-            'category_ids'     => ['array'],
-            'category_ids.*'   => ['exists:category,id'],
-            'courier_id'       => ['nullable', 'exists:courier,id'],
+            'mpn' => ['required', 'string', 'max:50', Rule::unique('product', 'mpn')->ignore($product->id)],
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string'],
+            'details' => ['nullable', 'string'],
+            'status' => ['required', Rule::in(['enabled', 'disabled'])],
+            'cost' => ['required', 'numeric', 'min:0.01'],
+            'stock_qty' => ['required', 'integer', 'min:0'],
+            'category_ids' => ['array'],
+            'category_ids.*' => ['exists:category,id'],
+            'courier_id' => ['nullable', 'exists:courier,id'],
             'courier_per_item' => ['nullable', Rule::in(['yes', 'no'])],
-            'meta_title'       => ['nullable', 'string', 'max:255'],
+            'meta_title' => ['nullable', 'string', 'max:255'],
             'meta_description' => ['nullable', 'string', 'max:500'],
-            'slug'             => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')->ignore($product->seo->id ?? null, 'id')],
+            'slug' => ['nullable', 'string', 'max:255', Rule::unique('product_seo', 'slug')->ignore($product->seo->id ?? null, 'id')],
             'parent_product_id' => ['nullable', 'exists:product,id', Rule::notIn([$product->id])],
-            'refill_product_ids'   => ['nullable', 'array'],
+            'refill_product_ids' => ['nullable', 'array'],
             'refill_product_ids.*' => ['exists:product,id', Rule::notIn([$product->id])],
-            'new_images'       => ['nullable', 'array', 'max:5'],
-            'new_images.*'     => ['image', 'max:2048', 'mimes:jpeg,png,webp'],
+            'new_images' => ['nullable', 'array', 'max:5'],
+            'new_images.*' => ['image', 'max:2048', 'mimes:jpeg,png,webp'],
             'images_to_delete' => ['nullable', 'array'],
             'images_to_delete.*' => ['exists:product_image,id'],
             'images_to_toggle' => ['nullable', 'array'],
             'images_to_toggle.*' => ['exists:product_image,id'],
 
             // Oil formulation
-            'materials'              => ['nullable', 'array'],
-            'materials.*.oil_id'     => ['required_with:materials', 'exists:oil,id', 'distinct'],
+            'materials' => ['nullable', 'array'],
+            'materials.*.oil_id' => ['required_with:materials', 'exists:oil,id', 'distinct'],
             'materials.*.percentage' => ['required_with:materials', 'numeric', 'min:0.01', 'max:100'],
 
             'how_to_use' => ['nullable', 'string'],
-            'faqs'                  => ['nullable', 'array'],
-            'faqs.*.question'       => ['required_with:faqs', 'string', 'max:500'],
-            'faqs.*.answer'         => ['required_with:faqs', 'string', 'max:2000'],
+            'faqs' => ['nullable', 'array'],
+            'faqs.*.question' => ['required_with:faqs', 'string', 'max:500'],
+            'faqs.*.answer' => ['required_with:faqs', 'string', 'max:2000'],
 
             // Scent profile
-            'scent_families'   => ['nullable', 'array'],
+            'scent_families' => ['nullable', 'array'],
             'scent_families.*' => [Rule::in(Product::SCENT_FAMILIES)],
-            'mood_tags'        => ['nullable', 'array'],
-            'mood_tags.*'      => [Rule::in(Product::MOOD_TAGS)],
-            'room_tags'        => ['nullable', 'array'],
-            'room_tags.*'      => [Rule::in(Product::ROOMS)],
+            'mood_tags' => ['nullable', 'array'],
+            'mood_tags.*' => [Rule::in(Product::MOOD_TAGS)],
+            'room_tags' => ['nullable', 'array'],
+            'room_tags.*' => [Rule::in(Product::ROOMS)],
         ]);
 
-        $validated['scent_families'] = !empty($validated['scent_families']) ? implode(',', $validated['scent_families']) : null;
-        $validated['mood_tags'] = !empty($validated['mood_tags']) ? implode(',', $validated['mood_tags']) : null;
-        $validated['room_tags'] = !empty($validated['room_tags']) ? implode(',', $validated['room_tags']) : null;
+        $validated['scent_families'] = ! empty($validated['scent_families']) ? implode(',', $validated['scent_families']) : null;
+        $validated['mood_tags'] = ! empty($validated['mood_tags']) ? implode(',', $validated['mood_tags']) : null;
+        $validated['room_tags'] = ! empty($validated['room_tags']) ? implode(',', $validated['room_tags']) : null;
 
         return DB::transaction(function () use ($request, $validated, $product) {
             $product->update($validated);
@@ -329,7 +301,7 @@ class AdminProductController extends Controller
                     ['product_id' => $product->id],
                     [
                         'courier_id' => $validated['courier_id'],
-                        'per_item'   => $validated['courier_per_item'] ?? 'no',
+                        'per_item' => $validated['courier_per_item'] ?? 'no',
                     ]
                 );
             }
@@ -337,13 +309,13 @@ class AdminProductController extends Controller
             $product->seo()->updateOrCreate(
                 ['product_id' => $product->id],
                 [
-                    'meta_title'       => $validated['meta_title'] ?? $this->withDiffuserKeyword($validated['name']),
+                    'meta_title' => $validated['meta_title'] ?? $this->withDiffuserKeyword($validated['name']),
                     'meta_description' => $validated['meta_description'] ?? $this->withDiffuserKeyword(substr(strip_tags($validated['description']), 0, 160)),
-                    'slug'             => $validated['slug'] ?? Str::slug($validated['name']),
+                    'slug' => $validated['slug'] ?? Str::slug($validated['name']),
                 ]
             );
 
-            if (!empty($validated['images_to_delete'])) {
+            if (! empty($validated['images_to_delete'])) {
                 $imagesToDelete = ProductImage::whereIn('id', $validated['images_to_delete'])
                     ->where('product_id', $product->id)
                     ->get();
@@ -354,7 +326,7 @@ class AdminProductController extends Controller
                 }
             }
 
-            if (!empty($validated['images_to_toggle'])) {
+            if (! empty($validated['images_to_toggle'])) {
                 $imagesToToggle = ProductImage::whereIn('id', $validated['images_to_toggle'])
                     ->where('product_id', $product->id)
                     ->get();
@@ -378,9 +350,6 @@ class AdminProductController extends Controller
         });
     }
 
-    /**
-     * Remove the specified resource from storage. (Destroy)
-     */
     public function destroy(Product $product)
     {
         $productName = $product->name;
@@ -396,13 +365,6 @@ class AdminProductController extends Controller
             ->with('success', "Product '{$productName}' deleted successfully.");
     }
 
-    /**
-     * Duplicate a product and everything attached to it (categories, images,
-     * oil formulation, FAQs, courier, SEO, refill links) so admins don't
-     * have to rebuild similar products from scratch. The copy is created
-     * disabled with a fresh MPN/slug and sent straight to its edit page for
-     * review before going live.
-     */
     public function duplicate(Product $product)
     {
         $product->load(['categories', 'images', 'courier', 'seo', 'faqs', 'materials', 'refills']);
@@ -421,20 +383,20 @@ class AdminProductController extends Controller
                 $copy->courier()->create([
                     'product_id' => $copy->id,
                     'courier_id' => $product->courier->courier_id,
-                    'per_item'   => $product->courier->per_item,
+                    'per_item' => $product->courier->per_item,
                 ]);
             }
 
             $copy->seo()->create([
-                'meta_title'       => $product->seo?->meta_title ?? $copy->name,
+                'meta_title' => $product->seo?->meta_title ?? $copy->name,
                 'meta_description' => $product->seo?->meta_description ?? '',
-                'slug'             => $this->generateUniqueSlug($product->seo?->slug ?? Str::slug($product->name)),
+                'slug' => $this->generateUniqueSlug($product->seo?->slug ?? Str::slug($product->name)),
             ]);
 
             foreach ($product->materials as $material) {
                 Material::create([
                     'product_id' => $copy->id,
-                    'oil_id'     => $material->oil_id,
+                    'oil_id' => $material->oil_id,
                     'percentage' => $material->percentage,
                 ]);
             }
@@ -442,8 +404,8 @@ class AdminProductController extends Controller
             foreach ($product->faqs as $faq) {
                 ProductFaq::create([
                     'product_id' => $copy->id,
-                    'question'   => $faq->question,
-                    'answer'     => $faq->answer,
+                    'question' => $faq->question,
+                    'answer' => $faq->answer,
                     'sort_order' => $faq->sort_order,
                 ]);
             }
@@ -452,7 +414,7 @@ class AdminProductController extends Controller
                 $copiedPath = $this->copyImageFile($image->image);
                 if ($copiedPath) {
                     $copy->images()->create([
-                        'image'  => Storage::url($copiedPath),
+                        'image' => Storage::url($copiedPath),
                         'status' => $image->status,
                     ]);
                 }
@@ -461,13 +423,10 @@ class AdminProductController extends Controller
             cache()->forget('sitemap.xml');
 
             return redirect()->route('admin.products.edit', $copy->id)
-                ->with('success', "Duplicated '{$product->name}' — review and save the copy.");
+                ->with('success', "Duplicated '{$product->name}' - review and save the copy.");
         });
     }
 
-    /**
-     * Appends "-COPY" (and a numeric suffix if needed) to produce an unused MPN.
-     */
     private function generateUniqueMpn(string $baseMpn): string
     {
         $mpn = "{$baseMpn}-COPY";
@@ -480,9 +439,6 @@ class AdminProductController extends Controller
         return $mpn;
     }
 
-    /**
-     * Appends "-copy" (and a numeric suffix if needed) to produce an unused SEO slug.
-     */
     private function generateUniqueSlug(string $baseSlug): string
     {
         $slug = "{$baseSlug}-copy";
@@ -495,12 +451,6 @@ class AdminProductController extends Controller
         return $slug;
     }
 
-    /**
-     * Copies the actual file behind a stored image URL (not just the DB row) so the
-     * original and the duplicate don't end up pointing at the same file on disk.
-     * Returns the new file's path relative to the 'public' disk, or null if the
-     * source file no longer exists.
-     */
     private function copyImageFile(string $imageUrl): ?string
     {
         $relativePath = ltrim(Str::after($imageUrl, '/storage/'), '/');
@@ -510,7 +460,7 @@ class AdminProductController extends Controller
         }
 
         $extension = pathinfo($relativePath, PATHINFO_EXTENSION);
-        $newPath = 'product_images/' . time() . '_' . Str::random(10) . ($extension ? ".{$extension}" : '');
+        $newPath = 'product_images/'.time().'_'.Str::random(10).($extension ? ".{$extension}" : '');
 
         Storage::disk('public')->copy($relativePath, $newPath);
 
@@ -522,12 +472,12 @@ class AdminProductController extends Controller
         $products = Product::select('id', 'name', 'mpn', 'status', 'stock_qty', 'parent_product_id')
             ->get()
             ->map(fn ($p) => [
-                'id'         => $p->id,
-                'name'       => $p->name,
-                'mpn'        => $p->mpn,
-                'status'     => $p->status,
-                'stock_qty'  => $p->stock_qty,
-                'parent_id'  => $p->parent_product_id,
+                'id' => $p->id,
+                'name' => $p->name,
+                'mpn' => $p->mpn,
+                'status' => $p->status,
+                'stock_qty' => $p->stock_qty,
+                'parent_id' => $p->parent_product_id,
             ]);
 
         return Inertia::render('admin/product/Relationships', [
@@ -539,12 +489,12 @@ class AdminProductController extends Controller
     {
         $request->validate([
             'parent_id' => ['required', 'exists:product,id'],
-            'child_id'  => ['required', 'exists:product,id', 'different:parent_id'],
+            'child_id' => ['required', 'exists:product,id', 'different:parent_id'],
         ]);
 
-        // Prevent circular reference — child cannot be an ancestor of the parent
+        // Prevent circular reference - child cannot be an ancestor of the parent
         $parentId = $request->parent_id;
-        $childId  = $request->child_id;
+        $childId = $request->child_id;
 
         // Walk up the parent chain to check for cycles
         $current = Product::find($parentId);
@@ -571,18 +521,12 @@ class AdminProductController extends Controller
         return back()->with('success', 'Product removed from parent.');
     }
 
-    /**
-     * Ask Claude to suggest scent tags from the in-progress product form
-     * (works for both create and edit, since the product may not be saved
-     * yet). Returns the suggestion as JSON for the admin to review and edit
-     * before saving — it is never persisted directly.
-     */
     public function suggestScentTags(Request $request)
     {
         $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'details'     => ['nullable', 'string'],
+            'details' => ['nullable', 'string'],
         ]);
 
         try {
@@ -600,10 +544,6 @@ class AdminProductController extends Controller
         }
     }
 
-    /**
-    * Replace all FAQ rows for this product with the submitted set.
-    * Preserves sort_order based on submission order.
-    */
     private function syncFaqs(Product $product, array $faqs): void
     {
         // Wipe existing rows
@@ -611,7 +551,7 @@ class AdminProductController extends Controller
 
         foreach ($faqs as $index => $faq) {
             $question = trim($faq['question'] ?? '');
-            $answer   = trim($faq['answer']   ?? '');
+            $answer = trim($faq['answer'] ?? '');
 
             // Skip entirely blank rows
             if ($question === '' && $answer === '') {
@@ -620,8 +560,8 @@ class AdminProductController extends Controller
 
             ProductFaq::create([
                 'product_id' => $product->id,
-                'question'   => $question,
-                'answer'     => $answer,
+                'question' => $question,
+                'answer' => $answer,
                 'sort_order' => $index,
             ]);
         }

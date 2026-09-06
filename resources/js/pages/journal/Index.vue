@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import NavBar from '@/components/NavBar.vue';
 import Footer from '@/components/Footer.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import { Link } from '@inertiajs/vue3';
@@ -8,9 +8,14 @@ import { Link } from '@inertiajs/vue3';
 defineProps<{
     posts: {
         data: Array<{
-            id: number; title: string; slug: string;
-            excerpt: string | null; cover_image: string | null;
-            tags: string[]; published_at: string; reading_time: number;
+            id: number;
+            title: string;
+            slug: string;
+            excerpt: string | null;
+            cover_image: string | null;
+            tags: string[];
+            published_at: string;
+            reading_time: number;
             views: number;
         }>;
         links: any[];
@@ -20,7 +25,8 @@ defineProps<{
 
 const seo = useSeoHead({
     title: 'Journal',
-    description: 'Tips, guides and inspiration for home fragrance, aromatherapy and self-care from Chapter of You.',
+    description:
+        'Tips, guides and inspiration for home fragrance, aromatherapy and self-care from Chapter of You.',
     canonical: '/journal',
     ogType: 'website',
 });
@@ -30,13 +36,14 @@ const seo = useSeoHead({
     <NavBar />
     <SeoHead v-bind="seo" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="jl">
         <div class="jl-wrap">
-
             <!-- Header -->
             <header class="jl-header">
                 <p class="jl-eyebrow">Chapter of You</p>
@@ -45,60 +52,116 @@ const seo = useSeoHead({
                     <span></span><span class="jl-petal">✿</span><span></span>
                 </div>
                 <p class="jl-intro">
-                    Tips, guides and inspiration for creating a home that feels like sanctuary.
+                    Tips, guides and inspiration for creating a home that feels
+                    like sanctuary.
                 </p>
             </header>
 
             <!-- Empty state -->
             <div v-if="!posts.data.length" class="jl-empty">
-                <p class="jl-petal" style="font-size:2rem;">✿</p>
+                <p class="jl-petal" style="font-size: 2rem">✿</p>
                 <p>No articles yet, check back soon.</p>
             </div>
 
             <!-- Grid -->
             <div v-else class="jl-grid">
-                <article v-for="post in posts.data" :key="post.id" class="jl-card">
+                <article
+                    v-for="post in posts.data"
+                    :key="post.id"
+                    class="jl-card"
+                >
                     <!-- Cover image -->
-                    <Link :href="`/journal/${post.slug}`" class="jl-card-img-wrap">
-                    <img v-if="post.cover_image" :src="post.cover_image" :alt="post.title" class="jl-card-img"
-                        loading="lazy" />
-                    <div v-else class="jl-card-img-placeholder" aria-hidden="true">✿</div>
+                    <Link
+                        :href="`/journal/${post.slug}`"
+                        class="jl-card-img-wrap"
+                    >
+                        <img
+                            v-if="post.cover_image"
+                            :src="post.cover_image"
+                            :alt="post.title"
+                            class="jl-card-img"
+                            loading="lazy"
+                        />
+                        <div
+                            v-else
+                            class="jl-card-img-placeholder"
+                            aria-hidden="true"
+                        >
+                            ✿
+                        </div>
                     </Link>
 
                     <div class="jl-card-body">
                         <!-- Tags -->
                         <div v-if="post.tags.length" class="jl-tags">
-                            <span v-for="tag in post.tags.slice(0, 3)" :key="tag" class="jl-tag">{{ tag }}</span>
+                            <span
+                                v-for="tag in post.tags.slice(0, 3)"
+                                :key="tag"
+                                class="jl-tag"
+                                >{{ tag }}</span
+                            >
                         </div>
 
                         <h2 class="jl-card-title">
-                            <Link :href="`/journal/${post.slug}`">{{ post.title }}</Link>
+                            <Link :href="`/journal/${post.slug}`">{{
+                                post.title
+                            }}</Link>
                         </h2>
 
-                        <p v-if="post.excerpt" class="jl-card-excerpt">{{ post.excerpt }}</p>
+                        <p v-if="post.excerpt" class="jl-card-excerpt">
+                            {{ post.excerpt }}
+                        </p>
 
                         <div class="jl-card-meta">
                             <span>{{ post.published_at }}</span>
-                            <span class="jl-meta-sep" aria-hidden="true">·</span>
+                            <span class="jl-meta-sep" aria-hidden="true"
+                                >·</span
+                            >
                             <span>{{ post.reading_time }} min read</span>
-                            <span class="jl-meta-sep" aria-hidden="true">·</span>
+                            <span class="jl-meta-sep" aria-hidden="true"
+                                >·</span
+                            >
                             <span>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="display:inline; vertical-align:-1px;">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    style="
+                                        display: inline;
+                                        vertical-align: -1px;
+                                    "
+                                >
+                                    <path
+                                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                                    />
                                     <circle cx="12" cy="12" r="3" />
                                 </svg>
                                 {{ post.views.toLocaleString() }}
                             </span>
                         </div>
 
-                        <Link :href="`/journal/${post.slug}`" class="jl-read-more">
-                        Read article
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
+                        <Link
+                            :href="`/journal/${post.slug}`"
+                            class="jl-read-more"
+                        >
+                            Read article
+                            <svg
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
                         </Link>
                     </div>
                 </article>
@@ -107,12 +170,20 @@ const seo = useSeoHead({
             <!-- Pagination -->
             <div v-if="posts.links?.length > 3" class="jl-pagination">
                 <template v-for="link in posts.links" :key="link.label">
-                    <Link v-if="link.url" :href="link.url" class="jl-page-btn"
-                        :class="{ 'jl-page-btn--active': link.active }" v-html="link.label" />
-                    <span v-else class="jl-page-btn jl-page-btn--disabled" v-html="link.label" />
+                    <Link
+                        v-if="link.url"
+                        :href="link.url"
+                        class="jl-page-btn"
+                        :class="{ 'jl-page-btn--active': link.active }"
+                        ><span v-html="link.label"
+                    /></Link>
+                    <span
+                        v-else
+                        class="jl-page-btn jl-page-btn--disabled"
+                        v-html="link.label"
+                    />
                 </template>
             </div>
-
         </div>
     </main>
 
@@ -226,7 +297,9 @@ const seo = useSeoHead({
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    transition: box-shadow 0.2s, transform 0.2s;
+    transition:
+        box-shadow 0.2s,
+        transform 0.2s;
 }
 
 .jl-card:hover {

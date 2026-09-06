@@ -39,7 +39,7 @@ interface ClpReasoning {
     p_statement_sources: { code: string; text: string; triggered_by: string }[];
 }
 
-const props = defineProps<{ products: Product[] }>();
+defineProps<{ products: Product[] }>();
 
 const selectedProductId = ref<number | null>(null);
 const loading = ref(false);

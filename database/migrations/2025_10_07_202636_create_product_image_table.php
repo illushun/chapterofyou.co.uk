@@ -6,17 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('product_image', function (Blueprint $table) {
             $table->id();
 
             $table->unsignedBigInteger('product_id');
-            $table->string("image")->nullable(true)->default(null);
-            $table->enum("status", ["enabled", "disabled"])->default("enabled");
+            $table->string('image')->nullable(true)->default(null);
+            $table->enum('status', ['enabled', 'disabled'])->default('enabled');
 
             $table->foreign('product_id')->references('id')->on('product')->onDelete('cascade');
 
@@ -24,9 +21,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('product_image');

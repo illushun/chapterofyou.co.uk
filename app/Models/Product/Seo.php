@@ -11,11 +11,7 @@ class Seo extends Model
 
     protected $table = 'product_seo';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    /** @var list<string> */
     protected $fillable = [
         'product_id',
         'meta_title',
@@ -23,10 +19,6 @@ class Seo extends Model
         'slug',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
+    /** @var list<string> */
     protected $hidden = [];
 }

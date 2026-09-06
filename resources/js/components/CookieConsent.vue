@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { onMounted, ref } from 'vue';
 
 const GA_ID = 'G-HKD85XSYN0';
 const STORAGE_KEY = 'coy_cookie_consent';
@@ -11,7 +11,9 @@ const accepted = ref(false);
 onMounted(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) {
-        setTimeout(() => { visible.value = true; }, 800);
+        setTimeout(() => {
+            visible.value = true;
+        }, 800);
     } else {
         accepted.value = stored === 'accepted';
         if (accepted.value) loadAnalytics();
@@ -32,14 +34,16 @@ function decline() {
 }
 
 function loadAnalytics() {
-    // Only inject GA script after consent — prevents PECR violation
+    // Only inject GA script after consent - prevents PECR violation
     if (typeof window === 'undefined') return;
     if (document.getElementById('ga-script')) return; // already loaded
 
     // GA4 requires arguments (not rest params) so it can be processed by the dataLayer queue
     (window as any).dataLayer = (window as any).dataLayer || [];
-    // eslint-disable-next-line prefer-rest-params
-    (window as any).gtag = function() { (window as any).dataLayer.push(arguments); };
+    (window as any).gtag = function () {
+        // eslint-disable-next-line prefer-rest-params
+        (window as any).dataLayer.push(arguments);
+    };
     (window as any).gtag('js', new Date());
     (window as any).gtag('config', GA_ID);
 
@@ -49,7 +53,7 @@ function loadAnalytics() {
     script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
     document.head.appendChild(script);
 
-    // Fire a page_view on each Inertia navigation (SPA — no full page reload)
+    // Fire a page_view on each Inertia navigation (SPA - no full page reload)
     router.on('navigate', (event) => {
         (window as any).gtag('event', 'page_view', {
             page_title: document.title,
@@ -61,14 +65,20 @@ function loadAnalytics() {
 
 <template>
     <Transition name="cc-slide">
-        <div v-if="visible" class="cc-banner" role="dialog" aria-label="Cookie consent" aria-live="polite">
+        <div
+            v-if="visible"
+            class="cc-banner"
+            role="dialog"
+            aria-label="Cookie consent"
+            aria-live="polite"
+        >
             <div class="cc-inner">
                 <div class="cc-text">
                     <p class="cc-title">I use cookies</p>
                     <p class="cc-body">
-                        I like to use analytics cookies to understand how you use our site so I can
-                        make it better. I won't set them without your permission.
-                        Read my
+                        I like to use analytics cookies to understand how you
+                        use our site so I can make it better. I won't set them
+                        without your permission. Read my
                         <a href="/privacy" class="cc-link">Privacy Policy</a>.
                     </p>
                 </div>
@@ -157,7 +167,9 @@ function loadAnalytics() {
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: transform 0.15s, box-shadow 0.15s;
+    transition:
+        transform 0.15s,
+        box-shadow 0.15s;
     white-space: nowrap;
 }
 
@@ -186,7 +198,7 @@ function loadAnalytics() {
 
 /* Slide up animation */
 .cc-slide-enter-active {
-    transition: all 0.35s cubic-bezier(.34, 1.56, .64, 1);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .cc-slide-leave-active {

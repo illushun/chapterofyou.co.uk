@@ -2,7 +2,6 @@
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { LogOut, Menu, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
-import type { Route } from 'ziggy-js';
 
 import CartsIcon from '@/components/icons/CartsIcon.vue';
 import CategoriesIcon from '@/components/icons/CategoriesIcon.vue';
@@ -16,8 +15,6 @@ import RelationshipsIcon from '@/components/icons/RelationshipsIcon.vue';
 import ReviewsIcon from '@/components/icons/ReviewsIcon.vue';
 import UsersIcon from '@/components/icons/UsersIcon.vue';
 import ViewWebsiteIcon from '@/components/icons/ViewWebsiteIcon.vue';
-
-declare const route: Route;
 
 const isRouteActive = (name: string): boolean => {
     if (route().current(name)) return true;

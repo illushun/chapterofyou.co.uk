@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import NavBar from '@/components/NavBar.vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { Link } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
 
 const form = useForm({
@@ -24,80 +23,140 @@ const submit = () => {
 
     <Head title="Create Account" />
 
-    <component :is="'link'"
+    <component
+        :is="'link'"
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet" />
+        rel="stylesheet"
+    />
 
     <main class="rp">
         <div class="rp-card">
-
             <!-- Header -->
             <div class="rp-header">
                 <h1 class="rp-title">Create an account</h1>
-                <p class="rp-sub">Join Chapter of You and start your self-care journey</p>
+                <p class="rp-sub">
+                    Join Chapter of You and start your self-care journey
+                </p>
             </div>
 
             <form @submit.prevent="submit" class="rp-form">
-
                 <!-- Name -->
                 <div class="field">
                     <label for="name" class="field-label">Full Name</label>
-                    <input id="name" v-model="form.name" type="text" required autofocus autocomplete="name"
-                        placeholder="Your name" class="field-input"
-                        :class="{ 'field-input--error': form.errors.name }" />
-                    <p v-if="form.errors.name" class="field-error">{{ form.errors.name }}</p>
+                    <input
+                        id="name"
+                        v-model="form.name"
+                        type="text"
+                        required
+                        autofocus
+                        autocomplete="name"
+                        placeholder="Your name"
+                        class="field-input"
+                        :class="{ 'field-input--error': form.errors.name }"
+                    />
+                    <p v-if="form.errors.name" class="field-error">
+                        {{ form.errors.name }}
+                    </p>
                 </div>
 
                 <!-- Email -->
                 <div class="field">
                     <label for="email" class="field-label">Email Address</label>
-                    <input id="email" v-model="form.email" type="email" required autocomplete="email"
-                        placeholder="you@example.com" class="field-input"
-                        :class="{ 'field-input--error': form.errors.email }" />
-                    <p v-if="form.errors.email" class="field-error">{{ form.errors.email }}</p>
+                    <input
+                        id="email"
+                        v-model="form.email"
+                        type="email"
+                        required
+                        autocomplete="email"
+                        placeholder="you@example.com"
+                        class="field-input"
+                        :class="{ 'field-input--error': form.errors.email }"
+                    />
+                    <p v-if="form.errors.email" class="field-error">
+                        {{ form.errors.email }}
+                    </p>
                 </div>
 
                 <!-- Password -->
                 <div class="field">
                     <label for="password" class="field-label">Password</label>
-                    <input id="password" v-model="form.password" type="password" required autocomplete="new-password"
-                        placeholder="••••••••" class="field-input"
-                        :class="{ 'field-input--error': form.errors.password }" />
-                    <p v-if="form.errors.password" class="field-error">{{ form.errors.password }}</p>
+                    <input
+                        id="password"
+                        v-model="form.password"
+                        type="password"
+                        required
+                        autocomplete="new-password"
+                        placeholder="••••••••"
+                        class="field-input"
+                        :class="{ 'field-input--error': form.errors.password }"
+                    />
+                    <p v-if="form.errors.password" class="field-error">
+                        {{ form.errors.password }}
+                    </p>
                 </div>
 
                 <!-- Confirm password -->
                 <div class="field">
-                    <label for="password_confirmation" class="field-label">Confirm Password</label>
-                    <input id="password_confirmation" v-model="form.password_confirmation" type="password" required
-                        autocomplete="new-password" placeholder="••••••••" class="field-input"
-                        :class="{ 'field-input--error': form.errors.password_confirmation }" />
-                    <p v-if="form.errors.password_confirmation" class="field-error">
+                    <label for="password_confirmation" class="field-label"
+                        >Confirm Password</label
+                    >
+                    <input
+                        id="password_confirmation"
+                        v-model="form.password_confirmation"
+                        type="password"
+                        required
+                        autocomplete="new-password"
+                        placeholder="••••••••"
+                        class="field-input"
+                        :class="{
+                            'field-input--error':
+                                form.errors.password_confirmation,
+                        }"
+                    />
+                    <p
+                        v-if="form.errors.password_confirmation"
+                        class="field-error"
+                    >
                         {{ form.errors.password_confirmation }}
                     </p>
                 </div>
 
                 <!-- Marketing opt-in -->
                 <label class="rp-optin">
-                    <input type="checkbox" v-model="form.marketing_opt_in" class="rp-optin-check" />
+                    <input
+                        type="checkbox"
+                        v-model="form.marketing_opt_in"
+                        class="rp-optin-check"
+                    />
                     <span>
-                        I'd like to receive updates, news and exclusive offers from Chapter of You.
-                        <span class="rp-optin-note">(Optional, you can change this in your account at any time)</span>
+                        I'd like to receive updates, news and exclusive offers
+                        from Chapter of You.
+                        <span class="rp-optin-note"
+                            >(Optional, you can change this in your account at
+                            any time)</span
+                        >
                     </span>
                 </label>
 
                 <!-- Submit -->
-                <button type="submit" :disabled="form.processing" class="btn-rose btn-rose--full">
+                <button
+                    type="submit"
+                    :disabled="form.processing"
+                    class="btn-rose btn-rose--full"
+                >
                     <LoaderCircle v-if="form.processing" class="rp-spinner" />
-                    {{ form.processing ? 'Creating account…' : 'Create account' }}
+                    {{
+                        form.processing ? 'Creating account…' : 'Create account'
+                    }}
                 </button>
 
                 <!-- Login link -->
                 <p class="rp-login">
                     Already have an account?
-                    <Link :href="route('login')" class="rp-login-link">Sign in</Link>
+                    <Link :href="route('login')" class="rp-login-link"
+                        >Sign in</Link
+                    >
                 </p>
-
             </form>
         </div>
     </main>
@@ -209,7 +268,9 @@ const submit = () => {
     font-family: 'Nunito', sans-serif;
     font-size: 0.92rem;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition:
+        border-color 0.2s,
+        box-shadow 0.2s;
     width: 100%;
 }
 
@@ -279,7 +340,9 @@ const submit = () => {
     letter-spacing: 0.02em;
     cursor: pointer;
     box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
     margin-top: 0.5rem;
 }
 

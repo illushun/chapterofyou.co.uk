@@ -10,7 +10,8 @@ use Illuminate\Support\Facades\Mail;
 
 class SendOrderReviewEmail extends Command
 {
-    protected $signature   = 'email:send:order-review';
+    protected $signature = 'email:send:order-review';
+
     protected $description = 'Send review request emails to customers whose orders were delivered ~7 days ago.';
 
     public function handle()
@@ -22,7 +23,7 @@ class SendOrderReviewEmail extends Command
 
         // Only email customers whose order was placed 7 days ago (±1 day window)
         $from = now()->subDays(8)->startOfDay();
-        $to   = now()->subDays(6)->endOfDay();
+        $to = now()->subDays(6)->endOfDay();
 
         $orders = Order::where('status', 'successful')
             ->whereBetween('created_at', [$from, $to])
@@ -31,12 +32,13 @@ class SendOrderReviewEmail extends Command
 
         if ($orders->isEmpty()) {
             $this->info('No eligible orders found.');
+
             return Command::SUCCESS;
         }
 
         $this->info("Found {$orders->count()} order(s) to email.");
 
-        $sent   = 0;
+        $sent = 0;
         $failed = 0;
 
         foreach ($orders as $order) {
@@ -45,8 +47,8 @@ class SendOrderReviewEmail extends Command
 
                 OrderReview::create([
                     'order_id' => $order->id,
-                    'email'    => $order->email,
-                    'sent'     => now(),
+                    'email' => $order->email,
+                    'sent' => now(),
                 ]);
 
                 $this->info("Sent to {$order->email} (Order #{$order->id})");

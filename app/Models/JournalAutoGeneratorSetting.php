@@ -24,7 +24,7 @@ class JournalAutoGeneratorSetting extends Model
         'last_generated_at' => 'datetime',
     ];
 
-    // Single-row settings table — always returns the one settings record.
+    // Single-row settings table - always returns the one settings record.
     public static function current(): self
     {
         return static::query()->firstOrCreate([]);
