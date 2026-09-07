@@ -42,8 +42,7 @@ const props = defineProps<{
     testimonials?: Testimonial[];
     season?: Season;
 }>();
-const primaryProduct = computed(() => props.featuredProducts?.[0]);
-const secondaryProduct = computed(() => props.featuredProducts?.[1]);
+const heroProduct = computed(() => props.featuredProducts?.[0]);
 const reviews = computed(() => props.testimonials?.slice(0, 3) ?? []);
 const productUrl = (product: Product) =>
     product.slug ? `/product/${product.slug}` : `/product/${product.id}`;
@@ -74,7 +73,7 @@ async function submitCtaEmail() {
 
 const seo = useSeoHead({
     description:
-        'Thoughtful handmade home fragrance, created in the UK to make everyday moments feel special. Discover reed diffusers, gifts and your perfect scent.',
+        'Luxury handmade reed diffusers crafted to order in the UK. Discover long-lasting home fragrance, thoughtful gifts and your perfect scent.',
     canonical: '/',
 });
 const siteSchemas = computed(() => {
@@ -97,166 +96,126 @@ const siteSchemas = computed(() => {
     <NavBar />
     <SeoHead v-bind="seo" />
     <JsonLdSchema :schema="siteSchemas" />
+
     <main class="home coy-storefront">
         <aside v-if="season" class="announcement" aria-label="Seasonal news">
-            <span>{{ season.banner }}</span
-            ><a href="/products">Explore the collection</a>
+            <span>{{ season.banner }}</span>
+            <a href="/products">Shop now</a>
         </aside>
 
-        <section class="hero" aria-labelledby="home-heading">
-            <div class="hero-copy">
-                <p class="coy-eyebrow">A moment that is yours</p>
-                <h1 id="home-heading" class="coy-heading">
-                    A little time,<br /><em>just for you.</em>
-                </h1>
-                <p class="hero-intro">
-                    Thoughtful home fragrance and everyday rituals, created to
-                    make ordinary moments feel special.
-                </p>
-                <div class="hero-actions">
-                    <a href="/products" class="coy-button coy-button--primary"
-                        >Shop home fragrance
-                        <span aria-hidden="true">↗</span></a
-                    >
-                    <a href="/about" class="text-link">Discover our story</a>
-                </div>
-                <dl class="hero-notes">
-                    <div>
-                        <dt>Made</dt>
-                        <dd>By hand in the UK</dd>
-                    </div>
-                    <div>
-                        <dt>Chosen</dt>
-                        <dd>For your kind of calm</dd>
-                    </div>
-                </dl>
-            </div>
-            <div class="hero-gallery" aria-label="Featured home fragrance">
-                <a
-                    v-if="primaryProduct"
-                    :href="productUrl(primaryProduct)"
-                    class="hero-main"
-                >
-                    <img
-                        v-if="primaryProduct.image"
-                        :src="primaryProduct.image"
-                        :alt="primaryProduct.name"
-                    />
-                    <span v-else class="placeholder">Made for your space</span>
-                    <span class="hero-caption"
-                        ><span>{{ primaryProduct.name }}</span
-                        ><strong
-                            >£{{ primaryProduct.cost.toFixed(2) }}</strong
-                        ></span
-                    >
-                </a>
-                <div v-else class="hero-main">
-                    <span class="placeholder">Made for your space</span>
-                </div>
-                <a
-                    v-if="secondaryProduct"
-                    :href="productUrl(secondaryProduct)"
-                    class="hero-detail"
-                >
-                    <img
-                        v-if="secondaryProduct.image"
-                        :src="secondaryProduct.image"
-                        :alt="secondaryProduct.name"
-                    />
-                    <span v-else class="placeholder">Made with care</span>
-                </a>
-                <p class="handnote" aria-hidden="true">
-                    Small rituals,<br />beautifully made
-                </p>
-                <span class="chapter" aria-hidden="true">Chapter 01</span>
-            </div>
-        </section>
-
-        <section class="trust" aria-label="Our promises">
-            <p>Hand-poured with care</p>
-            <i></i>
-            <p>Premium fragrance oils</p>
-            <i></i>
-            <p>Made to order</p>
-            <i></i>
-            <p>Free UK delivery over £50</p>
-        </section>
-
-        <section class="discovery coy-section" aria-labelledby="discover-title">
-            <div class="coy-container">
-                <header class="split-heading">
-                    <div>
-                        <p class="coy-eyebrow">Begin where you are</p>
-                        <h2 id="discover-title" class="coy-heading">
-                            Find what feels like <em>you</em>
-                        </h2>
-                    </div>
+        <section class="hero" aria-labelledby="home-title">
+            <div class="hero-inner coy-container">
+                <div class="hero-copy">
+                    <p class="coy-eyebrow">Handmade home fragrance</p>
+                    <h1 id="home-title" class="coy-heading">
+                        Make your space feel more like <em>you</em>
+                    </h1>
                     <p>
-                        Whether you know your favourite notes or only how you
-                        want a room to feel, there is an easy place to begin.
+                        Long-lasting reed diffusers, hand-poured in the UK with
+                        premium fragrance oils and made especially for your
+                        home.
                     </p>
-                </header>
-                <div class="discovery-grid">
-                    <a
-                        href="/scent-finder"
-                        class="discovery-card discovery-card--main"
-                        ><b>01</b>
-                        <div>
-                            <small>Guided discovery</small>
-                            <h3>Find your scent</h3>
-                            <span>Take the two-minute quiz ↗</span>
-                        </div></a
-                    >
-                    <a
-                        href="/products"
-                        class="discovery-card discovery-card--rose"
-                        ><b>02</b>
-                        <div>
-                            <small>Customer favourites</small>
-                            <h3>Shop the most loved</h3>
-                            <span>Discover bestsellers ↗</span>
-                        </div></a
-                    >
-                    <a
-                        href="/gift-vouchers"
-                        class="discovery-card discovery-card--light"
-                        ><b>03</b>
-                        <div>
-                            <small>Something thoughtful</small>
-                            <h3>Give them the choice</h3>
-                            <span>Explore gift vouchers ↗</span>
-                        </div></a
-                    >
+                    <div class="hero-actions">
+                        <a
+                            href="/products"
+                            class="coy-button coy-button--primary"
+                            >Shop all diffusers</a
+                        >
+                        <a
+                            href="/scent-finder"
+                            class="coy-button coy-button--secondary"
+                            >Find my scent</a
+                        >
+                    </div>
+                    <p class="hero-delivery">
+                        Free UK delivery on orders of £50 or more
+                    </p>
+                </div>
+                <a
+                    v-if="heroProduct"
+                    :href="productUrl(heroProduct)"
+                    class="hero-product"
+                >
+                    <div class="hero-image">
+                        <img
+                            v-if="heroProduct.image"
+                            :src="heroProduct.image"
+                            :alt="heroProduct.name"
+                        />
+                        <span v-else>Hand-poured for you</span>
+                    </div>
+                    <div class="hero-product-info">
+                        <span
+                            ><strong>{{ heroProduct.name }}</strong
+                            ><small>Featured fragrance</small></span
+                        ><b>£{{ heroProduct.cost.toFixed(2) }}</b>
+                    </div>
+                </a>
+                <div v-else class="hero-product hero-placeholder">
+                    Hand-poured for you
+                </div>
+            </div>
+        </section>
+
+        <section class="benefits" aria-label="Why shop with Chapter of You">
+            <div class="coy-container benefits-grid">
+                <div>
+                    <span aria-hidden="true">♡</span>
+                    <p>
+                        <strong>Made by hand</strong
+                        ><small>Poured and finished with care</small>
+                    </p>
+                </div>
+                <div>
+                    <span aria-hidden="true">◇</span>
+                    <p>
+                        <strong>Premium quality</strong
+                        ><small>Beautiful, lasting fragrance</small>
+                    </p>
+                </div>
+                <div>
+                    <span aria-hidden="true">♢</span>
+                    <p>
+                        <strong>Made to order</strong
+                        ><small>Prepared especially for you</small>
+                    </p>
+                </div>
+                <div>
+                    <span aria-hidden="true">☆</span>
+                    <p>
+                        <strong>Loved by customers</strong
+                        ><small>Real reviews, real homes</small>
+                    </p>
                 </div>
             </div>
         </section>
 
         <section
             v-if="featuredProducts?.length"
-            class="collection coy-section"
-            aria-labelledby="collection-title"
+            class="bestsellers coy-section"
+            aria-labelledby="bestsellers-title"
         >
             <div class="coy-container">
-                <header class="collection-heading">
+                <header class="section-header">
                     <div>
                         <p class="coy-eyebrow">
-                            {{ season?.sectionLabel ?? 'Most loved' }}
+                            {{ season?.sectionLabel ?? 'Customer favourites' }}
                         </p>
-                        <h2 id="collection-title" class="coy-heading">
-                            Scents worth <em>staying home for</em>
+                        <h2 id="bestsellers-title" class="coy-heading">
+                            Meet the bestsellers
                         </h2>
                     </div>
-                    <a href="/products" class="text-link"
-                        >View all fragrances</a
+                    <a href="/products" class="simple-link"
+                        >Shop all fragrances
+                        <span aria-hidden="true">→</span></a
                     >
                 </header>
-                <div class="products">
+                <div class="product-grid">
                     <a
-                        v-for="(product, index) in featuredProducts"
+                        v-for="product in featuredProducts"
                         :key="product.id"
                         :href="productUrl(product)"
-                        class="product"
-                        :class="`product--${index + 1}`"
+                        class="product-card"
                     >
                         <div class="product-image">
                             <img
@@ -265,86 +224,75 @@ const siteSchemas = computed(() => {
                                 :alt="product.name"
                                 loading="lazy"
                             />
-                            <span v-else class="placeholder"
-                                >Chapter of You</span
-                            >
-                            <span v-if="index === 0" class="product-label"
-                                >Signature scent</span
-                            >
+                            <span v-else>Chapter of You</span>
+                            <b v-if="product.views > 100">Popular</b>
                         </div>
-                        <div class="product-info">
-                            <div>
-                                <h3>{{ product.name }}</h3>
-                                <p>Handmade reed diffuser</p>
-                            </div>
-                            <strong>£{{ product.cost.toFixed(2) }}</strong>
+                        <div class="product-copy">
+                            <span
+                                ><strong>{{ product.name }}</strong
+                                ><small>Handmade reed diffuser</small></span
+                            ><b>£{{ product.cost.toFixed(2) }}</b>
                         </div>
                     </a>
                 </div>
             </div>
         </section>
 
-        <section class="manifesto" aria-labelledby="manifesto-title">
-            <span class="manifesto-chapter" aria-hidden="true">Chapter 02</span>
-            <div>
-                <p class="coy-eyebrow">A gentler pace</p>
-                <h2 id="manifesto-title" class="coy-heading">
-                    Self-care does not need to be elaborate.
-                    <em>Sometimes it begins with the room around you.</em>
-                </h2>
-                <p>
-                    A familiar fragrance. A slower morning. Five quiet minutes
-                    at the end of the day. Chapter of You is made for those
-                    small, meaningful rituals.
-                </p>
+        <section class="finder coy-section" aria-labelledby="finder-title">
+            <div class="coy-container finder-card">
+                <div class="finder-copy">
+                    <p class="coy-eyebrow">Your perfect match</p>
+                    <h2 id="finder-title" class="coy-heading">
+                        Not sure which scent to choose?
+                    </h2>
+                    <p>
+                        Tell us how you want your room to feel and our
+                        two-minute Scent Finder will point you towards
+                        fragrances chosen for you.
+                    </p>
+                    <a
+                        href="/scent-finder"
+                        class="coy-button coy-button--primary"
+                        >Take the Scent Finder</a
+                    >
+                </div>
+                <div class="finder-options" aria-hidden="true">
+                    <span>Fresh</span><span>Calming</span><span>Floral</span
+                    ><span>Warm</span><span>Fruity</span><span>Clean</span>
+                </div>
             </div>
         </section>
 
         <section class="story coy-section" aria-labelledby="story-title">
             <div class="coy-container story-grid">
-                <div class="story-visual">
-                    <div>
-                        <img
-                            v-if="secondaryProduct?.image"
-                            :src="secondaryProduct.image"
-                            alt="A Chapter of You fragrance made with care"
-                            loading="lazy"
-                        /><span v-else class="placeholder"
-                            >Made personally</span
-                        >
-                    </div>
-                    <p>Created in small batches<br />and finished by hand</p>
+                <div class="story-image">
+                    <img
+                        v-if="featuredProducts?.[1]?.image"
+                        :src="featuredProducts[1].image!"
+                        alt="A Chapter of You diffuser made with care"
+                        loading="lazy"
+                    />
+                    <span v-else>Made with care</span>
                 </div>
                 <div class="story-copy">
-                    <p class="coy-eyebrow">Behind the brand</p>
+                    <p class="coy-eyebrow">A personal touch</p>
                     <h2 id="story-title" class="coy-heading">
-                        Made personally.<br /><em>Chosen personally.</em>
+                        A small business with a big heart
                     </h2>
                     <p>
-                        Chapter of You is an independent business built around
-                        one simple belief: the smallest moments of care can
-                        change how a day feels.
+                        Chapter of You began with a simple idea: everyday
+                        self-care should feel personal, thoughtful and easy to
+                        enjoy.
                     </p>
                     <p>
-                        Every diffuser is poured, blended and finished by hand,
-                        with the kind of attention that mass production cannot
-                        recreate.
+                        Every diffuser is blended, poured and finished by hand.
+                        When you order from Chapter of You, your fragrance is
+                        made by a person who genuinely cares about what arrives
+                        at your door.
                     </p>
-                    <a href="/about" class="text-link">Meet the maker</a>
-                    <dl>
-                        <div>
-                            <dt>100%</dt>
-                            <dd>Hand-poured</dd>
-                        </div>
-                        <div>
-                            <dt>Made</dt>
-                            <dd>To order</dd>
-                        </div>
-                        <div>
-                            <dt>Yours</dt>
-                            <dd>To enjoy</dd>
-                        </div>
-                    </dl>
+                    <a href="/about" class="simple-link"
+                        >Read my story <span aria-hidden="true">→</span></a
+                    >
                 </div>
             </div>
         </section>
@@ -355,29 +303,43 @@ const siteSchemas = computed(() => {
             aria-labelledby="reviews-title"
         >
             <div class="coy-container">
-                <header>
-                    <p class="coy-eyebrow">Kind words</p>
+                <header class="reviews-header">
+                    <p class="coy-eyebrow">Customer love</p>
                     <h2 id="reviews-title" class="coy-heading">
-                        Notes from your <em>chapters</em>
+                        Why customers come back
                     </h2>
+                    <p>
+                        Kind words from people who have made Chapter of You part
+                        of their homes.
+                    </p>
                 </header>
                 <div class="review-grid">
-                    <blockquote class="review-main">
-                        <StarRating :rating="reviews[0].rating" :size="18" />
-                        <p>“{{ reviews[0].message }}”</p>
-                        <footer>{{ reviews[0].user.name }}</footer>
+                    <blockquote v-for="review in reviews" :key="review.id">
+                        <StarRating :rating="review.rating" :size="18" />
+                        <p>“{{ review.message }}”</p>
+                        <footer>{{ review.user.name }}</footer>
                     </blockquote>
-                    <div v-if="reviews.length > 1" class="review-side">
-                        <blockquote
-                            v-for="review in reviews.slice(1)"
-                            :key="review.id"
-                        >
-                            <StarRating :rating="review.rating" :size="15" />
-                            <p>“{{ review.message }}”</p>
-                            <footer>{{ review.user.name }}</footer>
-                        </blockquote>
-                    </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="gift coy-section" aria-labelledby="gift-title">
+            <div class="coy-container gift-card">
+                <div>
+                    <p class="coy-eyebrow">A thoughtful gift</p>
+                    <h2 id="gift-title" class="coy-heading">
+                        Let them choose their perfect scent
+                    </h2>
+                    <p>
+                        Chapter of You gift vouchers make giving something
+                        personal beautifully simple.
+                    </p>
+                </div>
+                <a
+                    href="/gift-vouchers"
+                    class="coy-button coy-button--secondary"
+                    >Shop gift vouchers</a
+                >
             </div>
         </section>
 
@@ -385,14 +347,14 @@ const siteSchemas = computed(() => {
             class="newsletter coy-section"
             aria-labelledby="newsletter-title"
         >
-            <div>
-                <p class="coy-eyebrow">A quieter kind of inbox</p>
+            <div class="newsletter-inner">
+                <p class="coy-eyebrow">Stay in the know</p>
                 <h2 id="newsletter-title" class="coy-heading">
-                    New scents, thoughtful rituals<br />and an occasional treat.
+                    Enjoy 10% off your first order
                 </h2>
                 <p>
-                    Join the Chapter of You community and receive 10% off your
-                    first order.
+                    Join for new fragrances, thoughtful inspiration and
+                    occasional treats.
                 </p>
                 <form v-if="!ctaSubmitted" @submit.prevent="submitCtaEmail">
                     <label for="home-email">Email address</label>
@@ -410,20 +372,13 @@ const siteSchemas = computed(() => {
                             type="submit"
                             :disabled="ctaSubmitting"
                         >
-                            {{
-                                ctaSubmitting
-                                    ? 'Joining…'
-                                    : 'Join the community'
-                            }}
+                            {{ ctaSubmitting ? 'Joining…' : 'Get my 10% off' }}
                         </button>
                     </div>
                     <p v-if="ctaError" class="error" role="alert">
                         {{ ctaError }}
                     </p>
-                    <small
-                        >No noise. Just the lovely things. Unsubscribe any
-                        time.</small
-                    >
+                    <small>No spam. Unsubscribe at any time.</small>
                 </form>
                 <p v-else class="success" role="status">
                     You are in. Check your inbox for your discount code.
@@ -438,529 +393,366 @@ const siteSchemas = computed(() => {
 .home {
     overflow: hidden;
     padding-top: var(--coy-nav-height);
+    font-size: 1.125rem;
 }
 .announcement {
-    min-height: 2.5rem;
+    min-height: 2.75rem;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    padding: 0.55rem var(--coy-gutter);
+    padding: 0.65rem var(--coy-gutter);
     color: var(--coy-color-on-accent);
     background: var(--coy-color-accent);
-    font-size: var(--coy-text-xs);
-    line-height: 1.35;
+    font-size: 1rem;
+    line-height: 1.4;
     text-align: center;
 }
 .announcement a {
     color: inherit;
-    font-weight: 600;
+    font-weight: 700;
     text-underline-offset: 0.25rem;
     white-space: nowrap;
 }
 .hero {
-    min-height: min(53rem, calc(100svh - var(--coy-nav-height)));
+    padding: clamp(2rem, 5vw, 4.5rem) 0;
+    background: linear-gradient(
+        100deg,
+        var(--coy-color-page) 0 58%,
+        var(--coy-color-blush) 58%
+    );
+}
+.hero-inner {
     display: grid;
-    grid-template-columns: minmax(0, 0.85fr) minmax(28rem, 1.15fr);
+    grid-template-columns: minmax(0, 0.92fr) minmax(26rem, 1.08fr);
+    gap: clamp(2rem, 6vw, 6rem);
+    align-items: center;
 }
 .hero-copy {
-    max-width: 41rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: clamp(4rem, 7vw, 8rem) var(--coy-gutter) clamp(3rem, 6vw, 6rem)
-        max(var(--coy-gutter), calc((100vw - var(--coy-container-xl)) / 2));
+    padding-block: 2rem;
 }
 .hero-copy h1 {
-    max-width: 10ch;
-    margin: 1.5rem 0 0;
-    font-size: clamp(3.7rem, 6.6vw, 7.8rem);
-    font-weight: 400;
-    letter-spacing: -0.045em;
-    line-height: 0.92;
+    max-width: 12ch;
+    margin: 1rem 0 0;
+    font-size: clamp(3rem, 5.2vw, 5rem);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+    line-height: 1;
 }
-.hero em,
-.split-heading em,
-.collection-heading em,
-.story-copy em,
-.reviews em {
+.hero-copy h1 em {
     color: var(--coy-color-accent);
     font-weight: 400;
 }
-.hero-intro {
-    max-width: 31rem;
-    margin: 2rem 0 0;
-    font-size: var(--coy-text-lead);
-    line-height: 1.55;
+.hero-copy > p:not(.coy-eyebrow, .hero-delivery) {
+    max-width: 35rem;
+    margin: 1.5rem 0 0;
+    line-height: 1.6;
 }
 .hero-actions {
     display: flex;
-    align-items: center;
-    gap: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
     margin-top: 2rem;
 }
-.text-link {
-    width: fit-content;
-    color: var(--coy-color-heading);
+.hero-delivery {
+    margin: 1rem 0 0;
+    font-size: 1rem;
     font-weight: 600;
-    text-decoration-color: var(--coy-color-rose-gold);
-    text-underline-offset: 0.35rem;
 }
-.text-link:hover {
-    color: var(--coy-color-accent);
-}
-.hero-notes {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin: clamp(3rem, 7vw, 6rem) 0 0;
-    padding-top: 1rem;
-    border-top: 1px solid var(--coy-color-border);
-}
-.hero-notes div,
-.story-copy dl div {
-    display: flex;
-    flex-direction: column;
-}
-.hero-notes dt,
-.story-copy dt {
-    color: var(--coy-color-accent);
-    font-family: var(--coy-font-display);
-    font-size: 1.35rem;
-}
-.hero-notes dd,
-.story-copy dd {
-    margin: 0;
-    font-size: var(--coy-text-xs);
-}
-.hero-gallery {
-    position: relative;
-    min-height: 43rem;
-    margin: clamp(1.5rem, 3vw, 3rem) clamp(1.5rem, 3vw, 3rem)
-        clamp(1.5rem, 3vw, 3rem) 0;
-    background: var(--coy-color-blush);
-    border-radius: 0 0 0 clamp(3rem, 8vw, 9rem);
-}
-.hero-main,
-.hero-detail {
-    position: absolute;
+.hero-product {
     display: block;
-    overflow: hidden;
     color: var(--coy-color-heading);
-    background: var(--coy-color-champagne);
-    text-decoration: none;
-}
-.hero-main {
-    inset: clamp(2rem, 5vw, 5rem) clamp(2rem, 5vw, 5rem) clamp(5rem, 8vw, 8rem)
-        clamp(2rem, 4vw, 4rem);
-    border-radius: var(--coy-radius-sm) var(--coy-radius-sm)
-        clamp(2rem, 4vw, 4rem);
-}
-.hero-detail {
-    width: clamp(8.5rem, 16vw, 14rem);
-    aspect-ratio: 4/5;
-    right: clamp(1rem, 2vw, 2rem);
-    bottom: clamp(1.5rem, 3vw, 3rem);
-    border: 0.5rem solid var(--coy-color-page);
+    background: var(--coy-color-surface);
+    border-radius: var(--coy-radius-md);
     box-shadow: var(--coy-shadow-md);
+    text-decoration: none;
+    overflow: hidden;
 }
-.hero-main img,
-.hero-detail img,
+.hero-image {
+    aspect-ratio: 5/4;
+    overflow: hidden;
+    background: var(--coy-color-champagne);
+}
+.hero-image img,
 .product-image img,
-.story-visual img {
+.story-image img {
     width: 100%;
     height: 100%;
     display: block;
     object-fit: cover;
-    transition: transform 700ms var(--coy-ease);
+    transition: transform 0.45s var(--coy-ease);
 }
-.hero-main:hover img,
-.product:hover img {
+.hero-product:hover img,
+.product-card:hover img {
     transform: scale(1.025);
 }
-.hero-caption {
-    position: absolute;
-    inset: auto 0 0;
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1.25rem;
-    color: white;
-    background: linear-gradient(transparent, rgb(52 42 40/76%));
-}
-.handnote {
-    position: absolute;
-    left: -1.5rem;
-    bottom: 3rem;
-    margin: 0;
-    padding: 0.75rem 1rem;
-    color: var(--coy-color-accent);
-    background: var(--coy-color-page);
-    font-family: var(--coy-font-display);
-    font-size: 1.25rem;
-    font-style: italic;
-    line-height: 1.15;
-    transform: rotate(-4deg);
-}
-.chapter,
-.manifesto-chapter {
-    position: absolute;
-    color: var(--coy-color-accent);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    writing-mode: vertical-rl;
-}
-.chapter {
-    top: 2rem;
-    right: 0.85rem;
-}
-.placeholder {
-    width: 100%;
+.hero-image > span,
+.product-image > span,
+.story-image > span,
+.hero-placeholder {
     height: 100%;
     display: grid;
     place-items: center;
-    padding: 2rem;
     font-family: var(--coy-font-display);
     font-size: 1.5rem;
-    font-style: italic;
-    text-align: center;
 }
-.trust {
+.hero-product-info,
+.product-copy {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: clamp(0.75rem, 2vw, 2rem);
-    padding: 1rem var(--coy-gutter);
-    background: var(--coy-color-surface);
-    border-block: 1px solid var(--coy-color-border-soft);
-    font-size: var(--coy-text-xs);
-    text-align: center;
-}
-.trust p {
-    margin: 0;
-}
-.trust i {
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: var(--coy-color-rose-gold);
-}
-.split-heading,
-.collection-heading {
-    display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
-    align-items: end;
-    gap: clamp(2rem, 7vw, 7rem);
-    margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
-}
-.split-heading h2,
-.collection-heading h2,
-.story-copy h2,
-.reviews h2,
-.newsletter h2 {
-    margin: 0.75rem 0 0;
-    font-size: var(--coy-text-h2);
-    font-weight: 400;
-    letter-spacing: -0.025em;
-}
-.split-heading > p {
-    max-width: 34rem;
-    margin: 0;
-}
-.discovery-grid {
-    display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    grid-template-rows: 1fr 1fr;
+    justify-content: space-between;
     gap: 1rem;
+    padding: 1.1rem 1.25rem;
 }
-.discovery-card {
-    position: relative;
+.hero-product-info > span,
+.product-copy > span {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    min-height: 13rem;
-    padding: clamp(1.5rem, 3vw, 2.5rem);
-    color: var(--coy-color-heading);
-    background: var(--coy-color-champagne);
-    border: 1px solid transparent;
-    border-radius: var(--coy-radius-sm);
-    text-decoration: none;
-    transition: transform 0.2s;
 }
-.discovery-card:hover {
-    transform: translateY(-3px);
-}
-.discovery-card--main {
-    grid-row: 1/-1;
-    justify-content: flex-end;
-    min-height: 28rem;
-    padding-right: 25%;
-    color: white;
-    background: var(--coy-color-accent);
-    border-radius: var(--coy-radius-sm) var(--coy-radius-sm) 5rem;
-}
-.discovery-card--rose {
-    background: var(--coy-color-blush);
-}
-.discovery-card--light {
-    background: var(--coy-color-surface);
-    border-color: var(--coy-color-border);
-}
-.discovery-card > b {
-    position: absolute;
-    top: 1.25rem;
-    right: 1.5rem;
-    font-size: 0.75rem;
-    letter-spacing: 0.14em;
-}
-.discovery-card small {
-    font-size: var(--coy-text-xs);
-}
-.discovery-card h3 {
-    max-width: 13ch;
-    margin: 0.4rem 0 1rem;
+.hero-product-info strong,
+.product-copy strong {
     font-family: var(--coy-font-display);
-    font-size: var(--coy-text-h3);
-    font-weight: 400;
-    line-height: 1.1;
-}
-.discovery-card span {
+    font-size: 1.35rem;
     font-weight: 600;
 }
-.collection {
+.hero-product-info small,
+.product-copy small {
+    margin-top: 0.15rem;
+    color: var(--coy-color-text);
+    font-size: 1rem;
+}
+.hero-product-info > b,
+.product-copy > b {
+    color: var(--coy-color-accent);
+    font-size: 1.125rem;
+    white-space: nowrap;
+}
+.benefits {
+    padding: 1.5rem 0;
     background: var(--coy-color-surface);
+    border-block: 1px solid var(--coy-color-border-soft);
 }
-.collection-heading {
-    grid-template-columns: 1fr auto;
-}
-.products {
+.benefits-grid {
     display: grid;
-    grid-template-columns: 1.2fr 0.8fr 0.8fr;
-    gap: clamp(1rem, 2vw, 1.5rem);
-    align-items: start;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
 }
-.product {
+.benefits-grid > div {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+.benefits-grid > div > span {
+    color: var(--coy-color-accent);
+    font-size: 1.5rem;
+}
+.benefits-grid p {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+.benefits-grid strong {
+    color: var(--coy-color-heading);
+    font-size: 1rem;
+}
+.benefits-grid small {
+    font-size: 1rem;
+    line-height: 1.4;
+}
+.section-header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+}
+.section-header h2,
+.finder h2,
+.story h2,
+.reviews h2,
+.gift h2,
+.newsletter h2 {
+    margin: 0.65rem 0 0;
+    font-size: clamp(2.25rem, 3.7vw, 3.25rem);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+.simple-link {
+    color: var(--coy-color-heading);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    text-decoration-color: var(--coy-color-rose-gold);
+    text-underline-offset: 0.3rem;
+    white-space: nowrap;
+}
+.simple-link:hover {
+    color: var(--coy-color-accent);
+}
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+}
+.product-card {
     color: var(--coy-color-heading);
     text-decoration: none;
-}
-.product--1 {
-    grid-row: span 2;
-}
-.product--4 {
-    grid-column: 2/-1;
-    width: calc(50% - 0.75rem);
-    justify-self: end;
 }
 .product-image {
     position: relative;
-    aspect-ratio: 4/5;
+    aspect-ratio: 1/1.12;
     overflow: hidden;
-    background: var(--coy-color-page);
-    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-champagne);
+    border-radius: var(--coy-radius-md);
 }
-.product--1 .product-image {
-    aspect-ratio: 4/5.5;
-    border-radius: var(--coy-radius-sm) var(--coy-radius-sm) 4rem;
-}
-.product-label {
+.product-image > b {
     position: absolute;
-    top: 1rem;
-    left: 1rem;
-    padding: 0.4rem 0.75rem;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.4rem 0.7rem;
     color: white;
     background: var(--coy-color-accent);
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 600;
+    border-radius: var(--coy-radius-pill);
+    font-size: 1rem;
 }
-.product-info {
-    display: flex;
+.product-copy {
     align-items: start;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 0 1.5rem;
+    padding: 1rem 0.1rem;
 }
-.product-info h3 {
-    margin: 0;
-    font-family: var(--coy-font-display);
-    font-size: 1.35rem;
-    font-weight: 500;
-    line-height: 1.2;
+.product-copy strong {
+    font-size: 1.25rem;
 }
-.product-info p {
-    margin: 0.2rem 0 0;
-    color: var(--coy-color-text);
-    font-size: var(--coy-text-xs);
+.product-copy > b {
+    font-size: 1rem;
 }
-.product-info strong {
-    color: var(--coy-color-accent);
-    font-weight: 600;
-    white-space: nowrap;
+.finder {
+    background: var(--coy-color-surface);
 }
-.manifesto {
-    position: relative;
+.finder-card {
     display: grid;
-    place-items: center;
-    min-height: clamp(34rem, 60vw, 46rem);
-    padding: var(--coy-section-space) var(--coy-gutter);
-    color: white;
-    background: var(--coy-color-heading);
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.8fr);
+    gap: clamp(2rem, 7vw, 7rem);
+    align-items: center;
+    padding: clamp(2.5rem, 5vw, 5rem);
+    background: var(--coy-color-blush);
+    border-radius: var(--coy-radius-xl);
+}
+.finder-copy > p:not(.coy-eyebrow) {
+    max-width: 38rem;
+    margin: 1.25rem 0 1.75rem;
+    line-height: 1.6;
+}
+.finder-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+}
+.finder-options span {
+    min-width: 7rem;
+    padding: 1rem;
+    color: var(--coy-color-heading);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-pill);
+    font-family: var(--coy-font-display);
+    font-size: 1.25rem;
     text-align: center;
-}
-.manifesto > div {
-    max-width: 58rem;
-}
-.manifesto .coy-eyebrow {
-    color: var(--coy-color-champagne);
-}
-.manifesto h2 {
-    margin: 1rem 0 2rem;
-    color: inherit;
-    font-size: clamp(2.5rem, 5vw, 4.8rem);
-    font-weight: 400;
-    line-height: 1.08;
-    letter-spacing: -0.03em;
-}
-.manifesto h2 em {
-    display: block;
-    color: var(--coy-color-blush);
-}
-.manifesto div > p:last-child {
-    max-width: 39rem;
-    margin: auto;
-    color: var(--coy-color-champagne);
-    font-size: var(--coy-text-lead);
-}
-.manifesto-chapter {
-    left: var(--coy-gutter);
-    top: 50%;
-    color: var(--coy-color-champagne);
-    transform: translateY(-50%);
 }
 .story-grid {
     display: grid;
-    grid-template-columns: minmax(20rem, 0.9fr) minmax(25rem, 1.1fr);
-    gap: clamp(3rem, 9vw, 8rem);
+    grid-template-columns: minmax(22rem, 0.9fr) minmax(25rem, 1.1fr);
+    gap: clamp(3rem, 8vw, 7rem);
     align-items: center;
 }
-.story-visual {
-    position: relative;
-    padding: 0 0 3rem 3rem;
-}
-.story-visual > div {
-    aspect-ratio: 4/5;
+.story-image {
+    aspect-ratio: 5/4;
     overflow: hidden;
     background: var(--coy-color-champagne);
-    border-radius: 45% 45% var(--coy-radius-sm) var(--coy-radius-sm);
-}
-.story-visual > p {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    margin: 0;
-    padding: 1rem 1.25rem;
-    color: white;
-    background: var(--coy-color-accent);
-    font-family: var(--coy-font-display);
-    font-size: 1.2rem;
-    font-style: italic;
-    line-height: 1.2;
+    border-radius: var(--coy-radius-lg);
 }
 .story-copy > p:not(.coy-eyebrow) {
-    max-width: 35rem;
+    max-width: 39rem;
     margin: 1.25rem 0 0;
+    line-height: 1.65;
 }
-.story-copy .text-link {
-    display: block;
-    margin-top: 2rem;
-}
-.story-copy dl {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-    margin: 3rem 0 0;
-    padding-top: 1.5rem;
-    border-top: 1px solid var(--coy-color-border);
+.story-copy .simple-link {
+    display: inline-block;
+    margin-top: 1.75rem;
 }
 .reviews {
-    background: var(--coy-color-blush);
+    background: var(--coy-color-page);
 }
-.reviews header {
+.reviews-header {
     max-width: 42rem;
-    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+    margin: 0 auto 2.5rem;
+    text-align: center;
+}
+.reviews-header > p:last-child {
+    margin: 1rem 0 0;
 }
 .review-grid {
     display: grid;
-    grid-template-columns: 1.25fr 0.75fr;
-    gap: 1rem;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
 }
-.reviews blockquote {
+.review-grid blockquote {
     margin: 0;
-    background: var(--coy-color-surface);
-    border-radius: var(--coy-radius-sm);
-}
-.review-main {
-    min-height: 23rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: clamp(2rem, 5vw, 4rem);
-}
-.review-main > p {
-    max-width: 25ch;
-    margin: 1.5rem 0;
-    color: var(--coy-color-heading);
-    font-family: var(--coy-font-display);
-    font-size: clamp(1.7rem, 3vw, 2.7rem);
-    line-height: 1.25;
-}
-.reviews footer {
-    color: var(--coy-color-accent);
-    font-weight: 600;
-}
-.review-side {
-    display: grid;
-    gap: 1rem;
-}
-.review-side blockquote {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     padding: 2rem;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-sm);
 }
-.review-side p {
-    margin: 1rem 0;
+.review-grid blockquote > p {
+    margin: 1.25rem 0;
     color: var(--coy-color-heading);
     font-family: var(--coy-font-display);
-    font-size: 1.25rem;
-    line-height: 1.4;
+    font-size: 1.35rem;
+    line-height: 1.5;
+}
+.review-grid footer {
+    color: var(--coy-color-accent);
+    font-size: 1rem;
+    font-weight: 700;
+}
+.gift {
+    background: var(--coy-color-surface);
+}
+.gift-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 3rem;
+    padding: clamp(2rem, 5vw, 4rem);
+    background: var(--coy-color-champagne);
+    border-radius: var(--coy-radius-lg);
+}
+.gift-card > div {
+    max-width: 45rem;
+}
+.gift-card p:not(.coy-eyebrow) {
+    margin: 1rem 0 0;
 }
 .newsletter {
     text-align: center;
 }
-.newsletter > div {
-    width: min(100% - 2 * var(--coy-gutter), 48rem);
+.newsletter-inner {
+    width: min(100% - 2 * var(--coy-gutter), 43rem);
     margin: auto;
 }
-.newsletter h2 {
-    font-size: clamp(2.3rem, 4.5vw, 4rem);
-}
-.newsletter > div > p:not(.coy-eyebrow) {
-    margin: 1.5rem auto 2rem;
-    font-size: var(--coy-text-lead);
+.newsletter-inner > p:not(.coy-eyebrow, .success) {
+    margin: 1rem 0 2rem;
 }
 .newsletter form {
-    max-width: 39rem;
-    margin: auto;
     text-align: left;
 }
 .newsletter label {
     display: block;
     margin-bottom: 0.5rem;
     color: var(--coy-color-heading);
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 700;
 }
 .newsletter form > div {
     display: grid;
@@ -969,153 +761,148 @@ const siteSchemas = computed(() => {
 }
 .newsletter small {
     display: block;
-    margin-top: 0.65rem;
+    margin-top: 0.7rem;
+    font-size: 1rem;
     text-align: center;
 }
 .error {
     color: var(--coy-color-error);
-    font-weight: 600;
+    font-size: 1rem;
+    font-weight: 700;
 }
 .success {
-    width: fit-content;
-    padding: 0.75rem 1rem;
+    padding: 1rem;
     color: var(--coy-color-success);
     background: var(--coy-color-success-soft);
     border: 1px solid;
-    border-radius: var(--coy-radius-sm);
+    border-radius: var(--coy-radius-md);
 }
-@media (max-width: 900px) {
+@media (max-width: 950px) {
     .hero {
-        grid-template-columns: 1fr;
+        background: var(--coy-color-page);
     }
-    .hero-copy {
-        max-width: none;
-        padding-inline: var(--coy-gutter);
+    .hero-inner {
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
     }
-    .hero-gallery {
-        min-height: min(42rem, 105vw);
-        margin: 0 var(--coy-gutter) var(--coy-gutter);
-        border-radius: var(--coy-radius-sm) var(--coy-radius-sm) 5rem;
-    }
-    .handnote {
-        left: 1rem;
-    }
-    .products {
+    .benefits-grid {
         grid-template-columns: 1fr 1fr;
     }
-    .product--1 {
-        grid-row: auto;
+    .product-grid {
+        grid-template-columns: 1fr 1fr;
     }
-    .product--4 {
-        grid-column: auto;
-        width: auto;
+    .finder-card,
+    .story-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 2.5rem;
     }
-    .product--1 .product-image {
-        aspect-ratio: 4/5;
-        border-radius: var(--coy-radius-sm);
+    .review-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .review-grid blockquote:last-child {
+        grid-column: 1/-1;
     }
 }
-@media (max-width: 680px) {
+@media (max-width: 700px) {
+    .home {
+        font-size: 1.0625rem;
+    }
     .announcement {
         align-items: flex-start;
         flex-direction: column;
         gap: 0.2rem;
         text-align: left;
     }
+    .hero {
+        padding: 2.5rem 0;
+    }
+    .hero-inner,
+    .finder-card,
+    .story-grid {
+        grid-template-columns: 1fr;
+    }
     .hero-copy {
-        padding-block: 3.5rem 2.5rem;
+        padding: 0;
     }
     .hero-copy h1 {
-        font-size: clamp(3.2rem, 16vw, 5rem);
+        font-size: clamp(2.75rem, 13vw, 4rem);
     }
-    .hero-actions {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: 1.25rem;
+    .hero-product {
+        margin-top: 0.5rem;
     }
-    .hero-gallery {
-        min-height: 31rem;
+    .hero-image {
+        aspect-ratio: 1/1;
     }
-    .hero-main {
-        inset: 1.25rem 1.25rem 4.5rem;
-    }
-    .hero-detail {
-        width: 7.5rem;
-        right: 0.75rem;
-        bottom: 1rem;
-        border-width: 0.35rem;
-    }
-    .handnote,
-    .chapter,
-    .manifesto-chapter {
-        display: none;
-    }
-    .trust {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.65rem 1rem;
-        text-align: left;
-    }
-    .trust i {
-        display: none;
-    }
-    .split-heading,
-    .collection-heading {
+    .benefits-grid {
         grid-template-columns: 1fr;
+    }
+    .benefits-grid > div {
+        padding: 0.25rem 0;
+    }
+    .section-header {
         align-items: start;
-        gap: 1.25rem;
+        flex-direction: column;
+        gap: 1rem;
     }
-    .discovery-grid {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
+    .section-header h2,
+    .finder h2,
+    .story h2,
+    .reviews h2,
+    .gift h2,
+    .newsletter h2 {
+        font-size: clamp(2rem, 9vw, 2.75rem);
     }
-    .discovery-card--main {
-        grid-row: auto;
-        min-height: 19rem;
+    .product-grid {
+        gap: 0.75rem;
     }
-    .product-info {
+    .product-copy {
+        align-items: start;
         flex-direction: column;
         gap: 0.35rem;
     }
-    .product-info h3 {
-        font-size: 1.15rem;
-    }
-    .product-info p {
+    .product-copy small {
         display: none;
     }
-    .manifesto h2 {
-        font-size: clamp(2.4rem, 11vw, 3.6rem);
+    .finder-card {
+        padding: 2rem 1.25rem;
     }
-    .story-grid,
+    .finder-options {
+        justify-content: flex-start;
+    }
+    .finder-options span {
+        min-width: calc(50% - 0.375rem);
+    }
+    .story-grid {
+        display: flex;
+        flex-direction: column;
+    }
+    .story-image {
+        width: 100%;
+    }
     .review-grid {
         grid-template-columns: 1fr;
     }
-    .story-visual {
-        padding-left: 1.5rem;
+    .review-grid blockquote:last-child {
+        grid-column: auto;
     }
-    .story-copy dl {
-        gap: 0.5rem;
-    }
-    .review-main {
-        min-height: auto;
-        padding: 2rem;
-    }
-    .newsletter h2 br {
-        display: none;
+    .gift-card {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 1.5rem;
     }
     .newsletter form > div {
         grid-template-columns: 1fr;
     }
-    .newsletter button {
+    .newsletter form button {
         width: 100%;
     }
 }
-@media (max-width: 370px) {
-    .hero-notes,
-    .products,
-    .story-copy dl,
-    .trust {
+@media (max-width: 380px) {
+    .product-grid {
         grid-template-columns: 1fr;
+    }
+    .hero-actions .coy-button {
+        width: 100%;
     }
 }
 </style>
