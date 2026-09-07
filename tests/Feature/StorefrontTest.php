@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use App\Models\JournalPost;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,5 +55,27 @@ class StorefrontTest extends TestCase
                 ->where('filters.sort', 'name,asc')
                 ->where('products.data.0.name', 'Alpine')
                 ->where('products.data.1.name', 'Zest'));
+    }
+
+    public function test_products_can_be_filtered_with_a_shareable_category_slug(): void
+    {
+        $category = Category::create([
+            'name' => 'Luxury Gifts', 'slug' => 'luxury-gifts', 'status' => 'enabled',
+        ]);
+        $matching = Product::create([
+            'mpn' => 'GIFT', 'name' => 'Gift Diffuser', 'description' => 'Test',
+            'cost' => 20, 'stock_qty' => 1, 'status' => 'enabled',
+        ]);
+        Product::create([
+            'mpn' => 'OTHER', 'name' => 'Other Diffuser', 'description' => 'Test',
+            'cost' => 20, 'stock_qty' => 1, 'status' => 'enabled',
+        ]);
+        $matching->categories()->attach($category);
+
+        $this->get(route('products', ['category' => 'luxury-gifts']))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.categories', ['luxury-gifts'])
+                ->has('products.data', 1)
+                ->where('products.data.0.name', 'Gift Diffuser'));
     }
 }

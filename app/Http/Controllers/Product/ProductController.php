@@ -10,6 +10,7 @@ use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class ProductController extends Controller
@@ -28,9 +29,32 @@ class ProductController extends Controller
     {
 
         $perPage = 12;
-        $filters = $request->only([
-            'search', 'categories', 'min_price', 'max_price', 'sort', 'in_stock',
-        ]);
+        $filters = $request->only(['search', 'min_price', 'max_price', 'sort', 'in_stock']);
+        $categories = Category::select('id', 'name', 'slug')
+            ->where('status', 'enabled')
+            ->orderBy('name')
+            ->get()
+            ->map(function (Category $category) {
+                $category->filter_slug = $category->slug ?: Str::slug($category->name).'-'.$category->id;
+
+                return $category;
+            });
+        $requestedCategories = $request->input('category', $request->input('categories', []));
+        $requestedCategories = is_array($requestedCategories)
+            ? $requestedCategories
+            : explode(',', (string) $requestedCategories);
+        $filters['categories'] = collect($requestedCategories)
+            ->map(function ($value) use ($categories) {
+                if (is_numeric($value)) {
+                    return $categories->firstWhere('id', (int) $value)?->filter_slug;
+                }
+
+                return trim((string) $value);
+            })
+            ->filter(fn ($slug) => $categories->contains('filter_slug', $slug))
+            ->unique()
+            ->values()
+            ->all();
         $sorts = [
             'name,asc' => ['name', 'asc'],
             'name,desc' => ['name', 'desc'],
@@ -42,24 +66,30 @@ class ProductController extends Controller
             : 'name,asc';
         [$sortColumn, $sortDirection] = $sorts[$filters['sort']];
 
+        $queryFilters = $filters;
+        $queryFilters['category_ids'] = $categories
+            ->whereIn('filter_slug', $filters['categories'])
+            ->pluck('id')
+            ->all();
+
         $products = Product::with('categories')
             ->with('images')
             ->with('reviews')
             ->with('seo:product_id,slug')
             ->withCount('uniqueViews')
-            ->filter($filters)
+            ->filter($queryFilters)
             ->orderBy($sortColumn, $sortDirection)
             ->paginate($perPage)
             ->withQueryString()
             ->toArray();
 
-        $categories = Category::select('id', 'name')
-            ->where('status', 'enabled')
-            ->get();
-
         return Inertia::render('product/View', [
             'products' => $products,
-            'categories' => $categories,
+            'categories' => $categories->map(fn (Category $category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'slug' => $category->filter_slug,
+            ]),
             'filters' => $filters,
             'wishlistedIds' => Auth::check()
                 ? Wishlist::where('user_id', Auth::id())

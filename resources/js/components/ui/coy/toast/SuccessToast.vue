@@ -1,74 +1,18 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-
-interface ToastData {
-  message: string;
-  icon: string;
-  color: string;
-}
-
-const isVisible = ref(false);
-const toast = ref<ToastData>({ message: '', icon: '', color: '' });
-let timeoutId: number | null = null;
-
-
-const show = (message: string, type: 'cart' | 'favourite' | 'check' | 'trash' | 'star') => {
-  if (timeoutId) {
-    clearTimeout(timeoutId);
-  }
-
-  if (type === 'cart') {
-    toast.value = {
-      message: message,
-      icon: '🛒',
-      color: 'bg-green-600',
-    };
-  } else if (type === 'favourite') {
-    toast.value = {
-      message: message,
-      icon: '❤️',
-      color: 'bg-red-600',
-    };
-  } else {
-    toast.value = { message, icon: { check: '✓', trash: '✓', star: '★' }[type], color: 'bg-green-600' };
-  }
-
-  isVisible.value = true;
-
-  // Automatically hide after 3 seconds
-  timeoutId = setTimeout(() => {
-    isVisible.value = false;
-    timeoutId = null;
-  }, 3000);
-};
-
-defineExpose({ show });
+import { computed, onBeforeUnmount, ref } from 'vue';
+type ToastType='cart'|'favourite'|'check'|'trash'|'star';
+const visible=ref(false);const data=ref<{message:string;type:ToastType}>({message:'',type:'check'});let timer:ReturnType<typeof setTimeout>|undefined;let remaining=6000;let started=0;
+const action=computed(()=>data.value.type==='cart'?{label:'Go to checkout',href:'/checkout'}:data.value.type==='favourite'?{label:'View wishlist',href:'/account/wishlist'}:null);
+const title=computed(()=>data.value.type==='cart'?'Added to your basket':data.value.type==='favourite'?'Saved to your wishlist':data.value.type==='star'?'Thank you':'All done');
+function start(){started=Date.now();timer=setTimeout(hide,remaining)}
+function pause(){if(!timer)return;clearTimeout(timer);timer=undefined;remaining-=Date.now()-started}
+function resume(){if(visible.value&&!timer)start()}
+function hide(){visible.value=false;clearTimeout(timer);timer=undefined}
+function show(message:string,type:ToastType){clearTimeout(timer);data.value={message,type};remaining=6000;visible.value=true;start()}
+onBeforeUnmount(()=>clearTimeout(timer));defineExpose({show});
 </script>
-
-<template>
-  <Transition name="slide-up">
-    <div
-      v-if="isVisible"
-      :class="['fixed bottom-5 right-5 z-[100] p-4 text-white rounded-lg shadow-2xl flex items-center gap-3 min-w-[250px] transition-colors', toast.color]"
-      role="alert"
-    >
-      <span class="text-xl">{{ toast.icon }}</span>
-      <p class="text-sm font-semibold">
-        {{ toast.message }}
-      </p>
-    </div>
-  </Transition>
-</template>
-
+<template><Transition name="toast"><aside v-if="visible" class="toast" role="status" aria-live="polite" @mouseenter="pause" @mouseleave="resume" @focusin="pause" @focusout="resume"><div class="icon" :class="`icon--${data.type}`" aria-hidden="true"><svg v-if="data.type==='cart'" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0" /></svg><svg v-else-if="data.type==='favourite'" viewBox="0 0 24 24"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1 7.8 7.7 7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8Z" /></svg><svg v-else viewBox="0 0 24 24"><path d="m5 12 4 4L19 6" /></svg></div><div class="content"><strong>{{ title }}</strong><p>{{ data.message }}</p><a v-if="action" :href="action.href">{{ action.label }} <span aria-hidden="true">→</span></a></div><button type="button" class="close" aria-label="Dismiss notification" @click="hide">×</button><span class="progress" aria-hidden="true"></span></aside></Transition></template>
 <style scoped>
-.slide-up-enter-active,
-.slide-up-leave-active {
-  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
-
-.slide-up-enter-from,
-.slide-up-leave-to {
-  opacity: 0;
-  transform: translateY(100%);
-}
+.toast{position:fixed;z-index:100;right:clamp(1rem,3vw,2rem);bottom:clamp(1rem,3vw,2rem);width:min(calc(100vw - 2rem),25rem);display:grid;grid-template-columns:auto 1fr auto;gap:.9rem;padding:1.1rem 1.1rem 1.2rem;color:var(--coy-color-text);background:var(--coy-color-surface);border:1px solid var(--coy-color-border);border-radius:var(--coy-radius-lg);box-shadow:0 18px 50px rgb(52 42 40/22%);overflow:hidden;font-family:var(--coy-font-body)}.icon{width:2.75rem;height:2.75rem;display:grid;place-items:center;color:var(--coy-color-success);background:var(--coy-color-success-soft);border-radius:50%}.icon--favourite{color:var(--coy-color-accent);background:var(--coy-color-blush)}.icon svg{width:1.25rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.icon--favourite svg{fill:currentColor}.content{min-width:0}.content>strong{display:block;color:var(--coy-color-heading);font-family:var(--coy-font-display);font-size:1.3rem;line-height:1.2}.content p{margin:.3rem 0 0;font-size:1rem;line-height:1.45}.content a{display:inline-block;margin-top:.75rem;color:var(--coy-color-accent);font-size:1rem;font-weight:700;text-underline-offset:.25rem}.close{width:2.25rem;height:2.25rem;display:grid;place-items:center;margin:-.35rem -.35rem 0 0;color:var(--coy-color-text);background:transparent;border:0;border-radius:50%;font-size:1.5rem;cursor:pointer}.close:hover{background:var(--coy-color-page)}.progress{position:absolute;inset:auto 0 0;height:3px;background:var(--coy-color-accent);transform-origin:left;animation:progress 6s linear}.toast:hover .progress,.toast:focus-within .progress{animation-play-state:paused}.toast-enter-active,.toast-leave-active{transition:opacity .25s,transform .3s var(--coy-ease)}.toast-enter-from,.toast-leave-to{opacity:0;transform:translateY(1rem) scale(.98)}@keyframes progress{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media(prefers-reduced-motion:reduce){.progress{animation:none}.toast-enter-active,.toast-leave-active{transition:none}}
 </style>

@@ -204,7 +204,7 @@ class Product extends Model
         });
 
         // Category Filter
-        $query->when($filters['categories'] ?? false, function ($query, $categoryIds) {
+        $query->when($filters['category_ids'] ?? false, function ($query, $categoryIds) {
             $query->whereHas('categories', function ($q) use ($categoryIds) {
                 $q->whereIn('category_id', $categoryIds);
             });

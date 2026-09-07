@@ -14,6 +14,7 @@ import { computed, reactive, ref, watch } from 'vue';
 interface Category {
     id: number;
     name: string;
+    slug: string;
 }
 interface Product {
     id: number;
@@ -54,7 +55,7 @@ const props = defineProps<Props>();
 const form = reactive({
     search: props.filters.search || '',
     categories: Array.isArray(props.filters.categories)
-        ? props.filters.categories.map(Number)
+        ? props.filters.categories
         : [],
     min_price: Number(props.filters.min_price) || 0,
     max_price: Number(props.filters.max_price) || 500,
@@ -108,8 +109,8 @@ watch(
             {
                 sort: form.sort,
                 search: form.search || undefined,
-                categories: form.categories.length
-                    ? form.categories
+                category: form.categories.length
+                    ? form.categories.join(',')
                     : undefined,
                 min_price: form.min_price > 0 ? form.min_price : undefined,
                 max_price: form.max_price < 500 ? form.max_price : undefined,
@@ -236,7 +237,7 @@ async function favourite(product: Product) {
                         ><input
                             v-model="form.categories"
                             type="checkbox"
-                            :value="category.id"
+                            :value="category.slug"
                         />
                         {{ category.name }}</label
                     >
@@ -394,7 +395,7 @@ async function favourite(product: Product) {
                             ><input
                                 v-model="form.categories"
                                 type="checkbox"
-                                :value="category.id"
+                                :value="category.slug"
                             />
                             {{ category.name }}</label
                         >
