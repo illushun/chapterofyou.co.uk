@@ -332,7 +332,7 @@ const articleSchema = computed(() => ({
 .js {
     font-family: 'Nunito', sans-serif;
     min-height: 100vh;
-    padding-top: 64px;
+    padding-top: var(--coy-nav-height);
     background: #fdf4f3;
     color: #2d1a1a;
 }

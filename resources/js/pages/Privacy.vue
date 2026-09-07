@@ -480,7 +480,7 @@ const lastUpdated = '6 April 2026';
 .pp {
     font-family: 'Nunito', sans-serif;
     min-height: 100vh;
-    padding-top: 64px;
+    padding-top: var(--coy-nav-height);
     background: #fdf4f3;
     color: #2d1a1a;
 }

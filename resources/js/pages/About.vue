@@ -334,7 +334,7 @@ const qualifications = [
     color: #2d1a1a;
     background: #fdf4f3;
     overflow-x: hidden;
-    padding-top: 64px;
+    padding-top: var(--coy-nav-height);
 }
 
 /* Scroll reveal */

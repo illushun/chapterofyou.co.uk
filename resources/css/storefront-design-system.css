@@ -77,7 +77,13 @@
     --coy-duration-base: 220ms;
     --coy-ease: cubic-bezier(0.2, 0, 0, 1);
     --coy-control-height: 2.75rem;
-    --coy-nav-height: 4rem;
+    --coy-nav-height: 7.25rem;
+}
+
+@media (max-width: 900px) {
+    :root {
+        --coy-nav-height: 7.75rem;
+    }
 }
 
 .coy-storefront {
