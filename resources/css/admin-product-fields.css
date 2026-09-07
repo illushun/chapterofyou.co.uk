@@ -1,0 +1,67 @@
+.admin-root .pe-icon-remove {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: none;
+    color: var(--adm-ink-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition:
+        background 0.15s,
+        color 0.15s;
+}
+
+.admin-root .pe-icon-remove:hover {
+    background: var(--adm-danger-bg);
+    color: var(--adm-danger);
+}
+
+.admin-root .pe-hint {
+    font-size: 0.82rem;
+    color: var(--adm-ink-dim);
+    font-style: italic;
+    line-height: 1.5;
+    margin-top: -0.25rem;
+}
+
+.admin-root .pe-empty-note {
+    font-size: 0.82rem;
+    color: var(--adm-ink-dim);
+    font-style: italic;
+}
+
+.admin-root .pe-dashed-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    width: 100%;
+    padding: 0.55rem;
+    border-radius: var(--adm-radius);
+    border: 1.5px dashed var(--adm-line);
+    background: none;
+    color: var(--adm-ink-dim);
+    font-family: var(--adm-font);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        border-color 0.15s,
+        color 0.15s,
+        background 0.15s;
+}
+
+.admin-root .pe-dashed-btn:hover:not(:disabled) {
+    border-color: var(--adm-stamp-deep);
+    color: var(--adm-stamp-deep);
+    background: var(--adm-stamp-dim);
+}
+
+.admin-root .pe-dashed-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}

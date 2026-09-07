@@ -2,6 +2,8 @@
 import Footer from '@/components/Footer.vue';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
 import NavBar from '@/components/NavBar.vue';
+import ProductFaqAccordion from '@/components/product/ProductFaqAccordion.vue';
+import ProductGallery from '@/components/product/ProductGallery.vue';
 import RecentJournalPosts from '@/components/RecentJournalPosts.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import {
@@ -9,6 +11,7 @@ import {
     useProductSchema,
 } from '@/composables/useProductSchema';
 import { useSeoHead } from '@/composables/useSeoHead';
+import type { ProductFaq, ProductImage } from '@/types/product';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
@@ -18,9 +21,6 @@ import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import StarRating from '@/components/ui/coy/StarRating.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 
-interface ProductImage {
-    image: string;
-}
 interface ProductReview {
     id: number;
     product_id: number;
@@ -39,10 +39,6 @@ interface ProductVariation {
     cost: number;
     stock_qty: number;
     parent_product_id: number;
-}
-interface FaqItem {
-    question: string;
-    answer: string;
 }
 interface ProductRefill {
     id: number;
@@ -67,7 +63,7 @@ interface ProductDetailData {
     refills?: ProductRefill[];
     details: string;
     how_to_use?: string | null;
-    faqs?: FaqItem[] | null;
+    faqs?: ProductFaq[] | null;
     seo?: { slug: string; meta_title: string; meta_description: string };
 }
 interface JournalPostSummary {
@@ -90,8 +86,7 @@ interface ProductProps {
 
 const props = defineProps<ProductProps>();
 const page = usePage();
-// Prefer journal posts that specifically reference this product; fall back
-// to the site-wide recent posts when none have been linked yet.
+// Prefer linked journal posts over the shared recent posts.
 const recentPosts = computed(() =>
     props.journalPosts?.length
         ? props.journalPosts
@@ -103,9 +98,7 @@ const isModalOpen = ref(false);
 const isWishlisted = ref(props.wishlisted ?? false);
 const wishlistedIds = ref<number[]>(props.wishlistedIds ?? []);
 
-// Product names are just scent names (e.g. "Peppermint Pines") with no
-// "diffuser" keyword, which hurts relevance for diffuser searches - append
-// it here so every title/H1 carries the keyword without renaming products.
+// Include the product type in search titles without renaming the product.
 const withDiffuserKeyword = (text: string) =>
     /\bdiffusers?\b/i.test(text) ? text : `${text} Reed Diffuser`;
 
@@ -166,21 +159,9 @@ const decreaseQuantity = () => {
 };
 
 const selectedImageIndex = ref(0);
-const mainImageUrl = computed(
-    () =>
-        props.product.images[selectedImageIndex.value]?.image ||
-        '/images/placeholder.jpg',
-);
 const openImageModal = () => {
-    if ((props.product.images || []).length > 0) isModalOpen.value = true;
+    if (props.product.images.length > 0) isModalOpen.value = true;
 };
-
-// ── FAQ accordion ─────────────────────────────────────────────────────────
-const openFaqIndex = ref<number | null>(null);
-const toggleFaq = (i: number) => {
-    openFaqIndex.value = openFaqIndex.value === i ? null : i;
-};
-
 // ── Review form ───────────────────────────────────────────────────────────
 const reviewForm = useForm({ rating: 0, message: '', images: [] as File[] });
 
@@ -231,7 +212,6 @@ const currentVariation = computed(() => {
 });
 
 const isOutOfStock = computed(() => currentVariation.value.stock_qty <= 0);
-const isPopular = computed(() => props.product.total_unique_views > 100);
 const fmt = (v: number | string) => {
     const n = Number(v);
     return isNaN(n) ? 'N/A' : `£${n.toFixed(2)}`;
@@ -369,57 +349,13 @@ onUnmounted(() => {
             <!-- ── Product main grid ── -->
             <div class="pd-grid">
                 <!-- Images -->
-                <div class="pd-images">
-                    <button
-                        @click="openImageModal"
-                        class="pd-main-img-btn"
-                        aria-label="View full image"
-                    >
-                        <div class="pd-main-img-wrap">
-                            <span v-if="isPopular" class="pd-popular-badge"
-                                >Popular</span
-                            >
-                            <img
-                                :src="mainImageUrl"
-                                :alt="product.name"
-                                class="pd-main-img"
-                            />
-                            <div class="pd-img-zoom-hint" aria-hidden="true">
-                                <svg
-                                    width="22"
-                                    height="22"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <circle cx="11" cy="11" r="8" />
-                                    <path d="m21 21-4.3-4.3M11 8v6M8 11h6" />
-                                </svg>
-                            </div>
-                        </div>
-                    </button>
-                    <div v-if="product.images.length > 1" class="pd-thumbs">
-                        <button
-                            v-for="(img, i) in product.images"
-                            :key="i"
-                            @click="selectedImageIndex = i"
-                            class="pd-thumb"
-                            :class="{
-                                'pd-thumb--active': selectedImageIndex === i,
-                            }"
-                        >
-                            <img
-                                :src="img.image"
-                                :alt="`${product.name} - view ${i + 1}`"
-                                class="pd-thumb-img"
-                                loading="lazy"
-                            />
-                        </button>
-                    </div>
-                </div>
+                <ProductGallery
+                    :images="product.images"
+                    :name="product.name"
+                    :popular="product.total_unique_views > 100"
+                    v-model:selected-index="selectedImageIndex"
+                    @open="isModalOpen = true"
+                />
 
                 <!-- Info -->
                 <div class="pd-info">
@@ -852,45 +788,7 @@ onUnmounted(() => {
                     </svg>
                     Frequently Asked Questions
                 </h2>
-                <div class="pd-faq-list">
-                    <div
-                        v-for="(faq, i) in product.faqs"
-                        :key="i"
-                        class="pd-faq-item"
-                    >
-                        <button
-                            class="pd-faq-trigger"
-                            @click="toggleFaq(i)"
-                            :aria-expanded="openFaqIndex === i"
-                            :aria-controls="`faq-body-${i}`"
-                        >
-                            <span class="pd-faq-q">{{ faq.question }}</span>
-                            <svg
-                                class="pd-faq-chevron"
-                                :class="{
-                                    'pd-faq-chevron--open': openFaqIndex === i,
-                                }"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="m6 9 6 6 6-6" />
-                            </svg>
-                        </button>
-                        <div
-                            :id="`faq-body-${i}`"
-                            class="pd-faq-body"
-                            :class="{ 'pd-faq-body--open': openFaqIndex === i }"
-                        >
-                            <p class="pd-faq-a">{{ faq.answer }}</p>
-                        </div>
-                    </div>
-                </div>
+                <ProductFaqAccordion :faqs="product.faqs ?? []" />
             </section>
 
             <!-- ── Reviews ────────────────────────────────────────────────── -->
@@ -1269,111 +1167,6 @@ onUnmounted(() => {
         grid-template-columns: 1fr;
         gap: 2rem;
     }
-}
-
-@media (min-width: 860px) {
-    .pd-images {
-        position: sticky;
-        top: 88px;
-    }
-}
-
-.pd-main-img-btn {
-    display: block;
-    width: 100%;
-    border: none;
-    background: none;
-    padding: 0;
-    cursor: zoom-in;
-    border-radius: 20px;
-    overflow: hidden;
-    margin-bottom: 0.85rem;
-}
-
-.pd-main-img-wrap {
-    position: relative;
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    overflow: hidden;
-    background: #fdf4f3;
-    aspect-ratio: 1 / 1;
-}
-
-.pd-popular-badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    z-index: 10;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    background: #8c4a50;
-    color: #fff;
-    border-radius: 999px;
-    padding: 0.2rem 0.65rem;
-}
-
-.pd-main-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.pd-main-img-btn:hover .pd-main-img {
-    transform: scale(1.04);
-}
-
-.pd-img-zoom-hint {
-    position: absolute;
-    bottom: 12px;
-    right: 12px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: rgba(255, 250, 250, 0.88);
-    border: 1px solid #e5c9c7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #8c4a50;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.pd-main-img-btn:hover .pd-img-zoom-hint {
-    opacity: 1;
-}
-
-.pd-thumbs {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.6rem;
-}
-
-.pd-thumb {
-    border-radius: 12px;
-    border: 1px solid #e5c9c7;
-    overflow: hidden;
-    background: #fdf4f3;
-    aspect-ratio: 1/1;
-    cursor: pointer;
-    padding: 0;
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
-}
-
-.pd-thumb--active {
-    border-color: #8c4a50;
-    box-shadow: 0 0 0 2px rgba(140, 74, 80, 0.15);
-}
-
-.pd-thumb-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
 }
 
 .pd-info {
@@ -1797,84 +1590,6 @@ onUnmounted(() => {
 .pd-how-to-use :deep(strong) {
     font-weight: 700;
     color: #2d1a1a;
-}
-
-/* FAQ accordion */
-.pd-faq-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-}
-
-.pd-faq-item {
-    border: 1px solid #e5c9c7;
-    border-radius: 14px;
-    background: #fffafa;
-    overflow: hidden;
-    transition: box-shadow 0.2s;
-}
-
-.pd-faq-item:hover {
-    box-shadow: 0 2px 12px rgba(229, 201, 199, 0.4);
-}
-
-.pd-faq-trigger {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1.25rem;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    transition: background 0.15s;
-}
-
-.pd-faq-trigger:hover {
-    background: rgba(229, 201, 199, 0.12);
-}
-
-.pd-faq-q {
-    font-family: 'Nunito', sans-serif;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #2d1a1a;
-    line-height: 1.4;
-}
-
-.pd-faq-chevron {
-    color: #8c4a50;
-    flex-shrink: 0;
-    transition: transform 0.25s ease;
-}
-
-.pd-faq-chevron--open {
-    transform: rotate(180deg);
-}
-
-/* Collapse/expand via max-height transition */
-.pd-faq-body {
-    max-height: 0;
-    overflow: hidden;
-    transition:
-        max-height 0.3s ease,
-        padding 0.3s ease;
-    padding: 0 1.25rem;
-}
-
-.pd-faq-body--open {
-    max-height: 800px;
-    padding: 0 1.25rem 1.1rem;
-}
-
-.pd-faq-a {
-    font-size: 1rem;
-    color: #6b4f4f;
-    line-height: 1.7;
-    padding-top: 0.6rem;
-    border-top: 1px solid #f0dcd8;
 }
 
 /* Reviews (unchanged from original) */

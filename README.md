@@ -4,7 +4,7 @@ Laravel 12, Inertia, Vue 3, and TypeScript storefront with an administration are
 
 ## Local setup
 
-Use PHP 8.4, Composer, and Node 22 to match CI.
+Use PHP 8.4, Composer, and Node 22.22.2 or newer in the Node 22 series to match CI. The frontend test tools also support Node 24.15+ and Node 26+.
 
 ```sh
 composer install
@@ -30,6 +30,7 @@ vendor/bin/pint --test
 npm run format:check
 npm run lint
 npm run typecheck
+npm run test:frontend
 npm run check:conventions
 npm run build
 ```
@@ -37,6 +38,8 @@ npm run build
 On a fresh checkout, run `php artisan wayfinder:generate --with-form` before type checking. Vite also regenerates route helpers when building. Generated helpers are not committed.
 
 PHP tests use an isolated in-memory SQLite database. Checkout tests replace Stripe access and fake email delivery. Invoice tests render a real PDF. The test suite does not prove that production credentials or external services are configured correctly.
+
+Frontend interaction tests use Vitest, Vue Test Utils, and jsdom. They exercise upload queues, image visibility, FAQ editing, usage previews, gallery selection, and the product editor submission payload without making network requests.
 
 Use `vendor/bin/pint`, `npm run format`, and `npm run lint:fix` to apply formatting fixes deliberately. CI runs checks without modifying files. Keep comments to one physical line and do not use em dashes or their encoded equivalents.
 
@@ -49,6 +52,12 @@ Use `vendor/bin/pint`, `npm run format`, and `npm run lint:fix` to apply formatt
 - `OrderNotifications` runs after a successful commit; notification failures are logged without undoing the purchase.
 
 Shipping behaviour remains: the lowest flat courier rate when no item uses per-item shipping, per-item charges otherwise, free shipping from GBP 50 before discounts, and GBP 2.99 additional postage for physical gift vouchers.
+
+## Product components
+
+The product editor keeps its Inertia form and submission in `pages/admin/product/CreateEdit.vue`. `components/admin/product/` owns the image, FAQ, and usage fields through typed models. Shared editor controls use `resources/css/admin-product-fields.css`; each section keeps its own scoped styles.
+
+The storefront gallery and FAQ accordion live in `components/product/`. The product page retains payment/cart actions, reviews, metadata, and the full-screen image viewer.
 
 ## Deployment notes
 

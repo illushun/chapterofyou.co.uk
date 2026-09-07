@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { useAdmin } from '@/composables/useAdmin';
+import ProductFaqEditor from '@/components/admin/product/ProductFaqEditor.vue';
+import ProductImagesEditor from '@/components/admin/product/ProductImagesEditor.vue';
+import ProductUsageEditor from '@/components/admin/product/ProductUsageEditor.vue';
 import AdminLayout from '@/layouts/AdminLayout.vue';
 import { MOOD_TAGS, ROOMS, SCENT_FAMILIES } from '@/lib/scentTaxonomy';
+import type { EditableProductImage, ProductFaq } from '@/types/product';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useDebounceFn as debounce } from '@vueuse/core';
 import axios from 'axios';
 import { computed, ref, watch } from 'vue';
+import '../../../../css/admin-product-fields.css';
 
 interface Category {
     id: number;
@@ -25,14 +29,6 @@ interface ParentProduct {
 interface RefillProduct {
     id: number;
     name: string;
-}
-interface ProductImage {
-    id: number;
-    product_id: number;
-    image: string;
-    status: string;
-    file_path: string;
-    is_enabled: boolean;
 }
 interface Product {
     id: number;
@@ -63,10 +59,6 @@ interface ProductMaterial {
     oil_id: number;
     percentage: string;
 }
-interface FaqItem {
-    question: string;
-    answer: string;
-}
 
 const props = defineProps<{
     product?: Product;
@@ -80,8 +72,8 @@ const props = defineProps<{
     courierPerItem: string;
     oils: Oil[];
     productMaterials: ProductMaterial[];
-    productFaqs: FaqItem[]; // comes from its own DB table now
-    productImages: ProductImage[];
+    productFaqs: ProductFaq[];
+    productImages: EditableProductImage[];
     isEditing: boolean;
     errors: Record<string, string>;
     selectedScentFamilies?: string[];
@@ -89,15 +81,13 @@ const props = defineProps<{
     selectedRoomTags?: string[];
 }>();
 
-const { fmtSize } = useAdmin();
-
 const form = useForm({
     mpn: props.product?.mpn || '',
     name: props.product?.name || '',
     description: props.product?.description || '',
     details: props.product?.details || '',
     how_to_use: props.product?.how_to_use || '',
-    faqs: (props.productFaqs ?? []) as FaqItem[],
+    faqs: (props.productFaqs ?? []) as ProductFaq[],
     status: props.product?.status || 'enabled',
     cost: props.product?.cost?.toString() || '0.00',
     stock_qty: props.product?.stock_qty || 0,
@@ -128,16 +118,6 @@ const submitLabel = computed(() =>
     props.isEditing ? 'Save Changes' : 'Create Product',
 );
 
-const filteredExistingImages = computed(() =>
-    props.productImages
-        .filter((img) => !form.images_to_delete.includes(img.id))
-        .map((img) =>
-            form.images_to_toggle.includes(img.id)
-                ? { ...img, is_enabled: !img.is_enabled }
-                : img,
-        ),
-);
-
 watch(
     () => form.name,
     debounce((n: string) => {
@@ -155,31 +135,6 @@ watch(
             form.meta_title = n;
     }, 500),
 );
-
-// ── Image helpers ──────────────────────────────────────────────────────────
-const handleFileUpload = (e: Event) => {
-    const t = e.target as HTMLInputElement;
-    if (t.files) {
-        Array.from(t.files).forEach((f) => {
-            if (form.new_images.length < 5) form.new_images.push(f);
-        });
-        t.value = '';
-    }
-};
-const removeNewImage = (i: number) => form.new_images.splice(i, 1);
-const toggleImageStatus = (id: number) => {
-    const idx = form.images_to_toggle.indexOf(id);
-    if (idx === -1) {
-        form.images_to_toggle.push(id);
-    } else {
-        form.images_to_toggle.splice(idx, 1);
-    }
-};
-const deleteExistingImage = (id: number) => {
-    if (!form.images_to_delete.includes(id)) form.images_to_delete.push(id);
-    const ti = form.images_to_toggle.indexOf(id);
-    if (ti !== -1) form.images_to_toggle.splice(ti, 1);
-};
 
 // ── Category / courier ─────────────────────────────────────────────────────
 const handleCategoryChange = (id: number, checked: boolean) => {
@@ -206,10 +161,6 @@ const handleRefillChange = (id: number, checked: boolean) => {
         );
     }
 };
-
-// ── FAQ helpers ────────────────────────────────────────────────────────────
-const addFaq = () => form.faqs.push({ question: '', answer: '' });
-const removeFaq = (i: number) => form.faqs.splice(i, 1);
 
 // ── Oil formulation ────────────────────────────────────────────────────────
 const addMaterial = () => form.materials.push({ oil_id: 0, percentage: '' });
@@ -551,353 +502,20 @@ const submit = () => {
                     </div>
                 </section>
 
-                <!-- Images -->
-                <section class="adm-card">
-                    <h2 class="adm-card-title">
-                        Product Images
-                        <span class="adm-card-title-note">max 5 total</span>
-                    </h2>
+                <ProductImagesEditor
+                    :images="productImages"
+                    :error="form.errors.new_images"
+                    v-model:new-images="form.new_images"
+                    v-model:deleted-ids="form.images_to_delete"
+                    v-model:toggled-ids="form.images_to_toggle"
+                />
 
-                    <label for="file-upload" class="adm-upload-zone">
-                        <svg
-                            width="22"
-                            height="22"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path
-                                d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-                            />
-                            <polyline points="17 8 12 3 7 8" />
-                            <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
-                        <span>Click to upload or drag &amp; drop</span>
-                        <span class="adm-upload-note"
-                            >JPEG, PNG, WebP (max 2 MB each)</span
-                        >
-                        <input
-                            type="file"
-                            id="file-upload"
-                            multiple
-                            accept="image/jpeg,image/png,image/webp"
-                            @change="handleFileUpload"
-                            style="display: none"
-                        />
-                    </label>
-                    <p v-if="form.errors['new_images']" class="adm-err">
-                        {{ form.errors['new_images'] }}
-                    </p>
+                <ProductUsageEditor
+                    v-model="form.how_to_use"
+                    :error="form.errors.how_to_use"
+                />
 
-                    <!-- Queued new images -->
-                    <div v-if="form.new_images.length" class="pe-queue">
-                        <p class="pe-sub-label">
-                            Queued for upload ({{ form.new_images.length }})
-                        </p>
-                        <div class="pe-queue-list">
-                            <div
-                                v-for="(file, i) in form.new_images"
-                                :key="i"
-                                class="pe-queue-item"
-                            >
-                                <div class="pe-queue-thumb">
-                                    <svg
-                                        width="14"
-                                        height="14"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <rect
-                                            x="3"
-                                            y="3"
-                                            width="18"
-                                            height="18"
-                                            rx="2"
-                                        />
-                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                        <polyline points="21 15 16 10 5 21" />
-                                    </svg>
-                                </div>
-                                <div class="pe-queue-info">
-                                    <p class="pe-queue-name">{{ file.name }}</p>
-                                    <p class="pe-queue-size">
-                                        {{ fmtSize(file.size) }}
-                                    </p>
-                                </div>
-                                <button
-                                    type="button"
-                                    @click="removeNewImage(i)"
-                                    class="pe-icon-remove"
-                                    aria-label="Remove"
-                                >
-                                    <svg
-                                        width="13"
-                                        height="13"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <path d="M18 6 6 18M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Existing images -->
-                    <div v-if="filteredExistingImages.length">
-                        <p class="pe-sub-label">
-                            Existing images ({{
-                                filteredExistingImages.length
-                            }})
-                        </p>
-                        <div class="pe-img-grid">
-                            <div
-                                v-for="img in filteredExistingImages"
-                                :key="img.id"
-                                class="pe-img-card"
-                                :class="{
-                                    'pe-img-card--disabled': !img.is_enabled,
-                                }"
-                            >
-                                <img
-                                    :src="img.file_path"
-                                    :alt="`Image ${img.id}`"
-                                    class="pe-img-thumb"
-                                />
-                                <div
-                                    v-if="!img.is_enabled"
-                                    class="pe-img-hidden-tag"
-                                >
-                                    Hidden
-                                </div>
-                                <div class="pe-img-actions">
-                                    <button
-                                        type="button"
-                                        @click="toggleImageStatus(img.id)"
-                                        class="pe-img-btn"
-                                        :class="
-                                            img.is_enabled
-                                                ? 'pe-img-btn--hide'
-                                                : 'pe-img-btn--show'
-                                        "
-                                        :title="
-                                            img.is_enabled ? 'Hide' : 'Show'
-                                        "
-                                    >
-                                        <svg
-                                            v-if="img.is_enabled"
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <path
-                                                d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"
-                                            />
-                                            <path
-                                                d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"
-                                            />
-                                            <line
-                                                x1="1"
-                                                y1="1"
-                                                x2="23"
-                                                y2="23"
-                                            />
-                                        </svg>
-                                        <svg
-                                            v-else
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <path
-                                                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                                            />
-                                            <circle cx="12" cy="12" r="3" />
-                                        </svg>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        @click="deleteExistingImage(img.id)"
-                                        class="pe-img-btn pe-img-btn--del"
-                                        title="Delete"
-                                    >
-                                        <svg
-                                            width="12"
-                                            height="12"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
-                                            stroke-linejoin="round"
-                                        >
-                                            <path d="M3 6h18" />
-                                            <path
-                                                d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"
-                                            />
-                                            <path
-                                                d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"
-                                            />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- ── How to Use ── -->
-                <section class="adm-card">
-                    <h2 class="adm-card-title">
-                        How to Use
-                        <span class="adm-card-title-note"
-                            >shown on product page</span
-                        >
-                    </h2>
-                    <p class="pe-hint">
-                        Write instructions for the customer. Supports basic
-                        HTML: paragraphs, lists, bold text.
-                    </p>
-                    <div class="adm-field">
-                        <textarea
-                            v-model="form.how_to_use"
-                            rows="6"
-                            class="adm-textarea pe-mono"
-                            placeholder="<p>Apply a few drops to your wrists...</p>&#10;<ul>&#10;  <li>Step 1: ...</li>&#10;</ul>"
-                        ></textarea>
-                        <p v-if="form.errors.how_to_use" class="adm-err">
-                            {{ form.errors.how_to_use }}
-                        </p>
-                    </div>
-                    <!-- Live preview -->
-                    <div v-if="form.how_to_use?.trim()" class="pe-preview">
-                        <p class="pe-preview-label">Preview</p>
-                        <div
-                            class="pe-preview-body"
-                            v-html="form.how_to_use"
-                        ></div>
-                    </div>
-                </section>
-
-                <!-- ── FAQ ── -->
-                <section class="adm-card">
-                    <h2 class="adm-card-title">
-                        FAQs
-                        <span class="adm-card-title-note"
-                            >shown on product page</span
-                        >
-                    </h2>
-                    <p class="pe-hint">
-                        Add product-specific questions. These display as a
-                        collapsible accordion on the product page.
-                    </p>
-
-                    <div class="pe-faq-list">
-                        <div
-                            v-for="(faq, i) in form.faqs"
-                            :key="i"
-                            class="pe-faq-item"
-                        >
-                            <div class="pe-faq-num">{{ i + 1 }}</div>
-                            <div class="pe-faq-fields">
-                                <div class="adm-field">
-                                    <label
-                                        class="adm-label"
-                                        style="
-                                            font-size: 0.7rem;
-                                            letter-spacing: 0.07em;
-                                            text-transform: uppercase;
-                                            color: var(--adm-ink-dim);
-                                        "
-                                        >Question</label
-                                    >
-                                    <input
-                                        type="text"
-                                        v-model="faq.question"
-                                        class="adm-input adm-input--sm"
-                                        placeholder="e.g. How long does the scent last?"
-                                    />
-                                </div>
-                                <div class="adm-field">
-                                    <label
-                                        class="adm-label"
-                                        style="
-                                            font-size: 0.7rem;
-                                            letter-spacing: 0.07em;
-                                            text-transform: uppercase;
-                                            color: var(--adm-ink-dim);
-                                        "
-                                        >Answer</label
-                                    >
-                                    <textarea
-                                        v-model="faq.answer"
-                                        rows="3"
-                                        class="adm-textarea adm-input--sm"
-                                        placeholder="e.g. My fragrances typically last 6–8 hours on skin..."
-                                    ></textarea>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                @click="removeFaq(i)"
-                                class="pe-icon-remove"
-                                aria-label="Remove FAQ"
-                            >
-                                <svg
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path d="M18 6 6 18M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <p v-if="form.faqs.length === 0" class="pe-empty-note">
-                            No FAQs added yet.
-                        </p>
-                    </div>
-
-                    <button type="button" @click="addFaq" class="pe-dashed-btn">
-                        <svg
-                            width="13"
-                            height="13"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                        >
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>
-                        Add FAQ
-                    </button>
-                </section>
+                <ProductFaqEditor v-model="form.faqs" />
 
                 <!-- SEO -->
                 <section class="adm-card">
@@ -1415,320 +1033,6 @@ const submit = () => {
 </template>
 
 <style scoped>
-/* ── Image queue ── */
-.pe-queue {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.pe-sub-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--adm-ink-dim);
-    margin-bottom: 0.35rem;
-}
-
-.pe-queue-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-}
-
-.pe-queue-item {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    padding: 0.55rem 0.75rem;
-    border-radius: var(--adm-radius);
-    background: var(--adm-paper);
-    border: 1px solid var(--adm-line);
-}
-
-.pe-queue-thumb {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    background: var(--adm-stamp-dim);
-    color: var(--adm-stamp-deep);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.pe-queue-info {
-    flex: 1;
-    min-width: 0;
-}
-
-.pe-queue-name {
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: var(--adm-ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.pe-queue-size {
-    font-size: 0.7rem;
-    color: var(--adm-ink-dim);
-}
-
-/* ── Shared small icon buttons ── */
-.pe-icon-remove {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: none;
-    background: none;
-    color: var(--adm-ink-dim);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition:
-        background 0.15s,
-        color 0.15s;
-}
-
-.pe-icon-remove:hover {
-    background: var(--adm-danger-bg);
-    color: var(--adm-danger);
-}
-
-/* ── Existing images ── */
-.pe-img-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.6rem;
-    margin-top: 0.5rem;
-}
-
-@media (max-width: 640px) {
-    .pe-img-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-.pe-img-card {
-    position: relative;
-    border-radius: var(--adm-radius);
-    border: 1px solid var(--adm-line);
-    overflow: hidden;
-    aspect-ratio: 1;
-    background: var(--adm-paper);
-    transition: opacity 0.15s;
-}
-
-.pe-img-card--disabled {
-    opacity: 0.5;
-}
-
-.pe-img-thumb {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.pe-img-hidden-tag {
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: rgba(178, 58, 38, 0.85);
-    color: var(--adm-paper-raised);
-    font-size: 0.55rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 2px 5px;
-}
-
-.pe-img-actions {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    display: flex;
-    gap: 2px;
-    padding: 3px;
-    background: rgba(42, 39, 35, 0.55);
-    border-top-left-radius: 6px;
-}
-
-.pe-img-btn {
-    width: 22px;
-    height: 22px;
-    border-radius: 4px;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--adm-paper-raised);
-    transition: opacity 0.15s;
-}
-
-.pe-img-btn:hover {
-    opacity: 0.8;
-}
-
-.pe-img-btn--hide {
-    background: var(--adm-warning);
-}
-
-.pe-img-btn--show {
-    background: var(--adm-success);
-}
-
-.pe-img-btn--del {
-    background: var(--adm-danger);
-}
-
-/* ── Section hints ── */
-.pe-hint {
-    font-size: 0.82rem;
-    color: var(--adm-ink-dim);
-    font-style: italic;
-    line-height: 1.5;
-    margin-top: -0.25rem;
-}
-
-/* Monospace textarea for HTML */
-.pe-mono {
-    font-family: var(--adm-font, monospace);
-    font-size: 0.82rem;
-    line-height: 1.65;
-}
-
-/* Live preview */
-.pe-preview {
-    border: 1px solid var(--adm-line);
-    border-radius: var(--adm-radius);
-    background: var(--adm-paper);
-    overflow: hidden;
-}
-
-.pe-preview-label {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--adm-ink-dim);
-    padding: 0.4rem 0.85rem;
-    background: var(--adm-paper-raised);
-    border-bottom: 1px solid var(--adm-line);
-}
-
-.pe-preview-body {
-    padding: 0.85rem 1rem;
-    font-size: 0.88rem;
-    color: var(--adm-ink);
-    line-height: 1.7;
-}
-
-.pe-preview-body :deep(p) {
-    margin-bottom: 0.65rem;
-}
-
-.pe-preview-body :deep(ul),
-.pe-preview-body :deep(ol) {
-    padding-left: 1.25rem;
-    margin-bottom: 0.65rem;
-}
-
-.pe-preview-body :deep(li) {
-    margin-bottom: 0.25rem;
-}
-
-.pe-preview-body :deep(strong) {
-    font-weight: 700;
-}
-
-/* ── FAQ ── */
-.pe-faq-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-}
-
-.pe-faq-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.85rem;
-    border-radius: var(--adm-radius);
-    background: var(--adm-paper);
-    border: 1px solid var(--adm-line);
-}
-
-.pe-faq-num {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    background: var(--adm-stamp-dim);
-    color: var(--adm-stamp-deep);
-    font-size: 0.68rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 2px;
-}
-
-.pe-faq-fields {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.pe-empty-note {
-    font-size: 0.82rem;
-    color: var(--adm-ink-dim);
-    font-style: italic;
-}
-
-/* ── Dashed add button (shared for FAQ and materials) ── */
-.pe-dashed-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4rem;
-    width: 100%;
-    padding: 0.55rem;
-    border-radius: var(--adm-radius);
-    border: 1.5px dashed var(--adm-line);
-    background: none;
-    color: var(--adm-ink-dim);
-    font-family: var(--adm-font);
-    font-size: 0.82rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition:
-        border-color 0.15s,
-        color 0.15s,
-        background 0.15s;
-}
-
-.pe-dashed-btn:hover:not(:disabled) {
-    border-color: var(--adm-stamp-deep);
-    color: var(--adm-stamp-deep);
-    background: var(--adm-stamp-dim);
-}
-
-.pe-dashed-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-
-/* ── Courier ── */
 .pe-courier-item {
     flex-direction: column;
     align-items: flex-start;
@@ -1760,8 +1064,6 @@ const submit = () => {
     gap: 0.5rem;
     padding-left: 1.6rem;
 }
-
-/* ── Fragrance formulation ── */
 .pe-total-bar {
     display: flex;
     justify-content: space-between;
