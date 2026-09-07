@@ -4,7 +4,7 @@ import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 
 interface CartItem {
     id: number;
@@ -59,6 +59,30 @@ const progress = computed(() =>
 );
 const pending = ref<Record<number, boolean>>({});
 const removing = ref<Record<number, boolean>>({});
+const summaryCard = ref<HTMLElement | null>(null);
+const summaryInView = ref(true);
+let summaryObserver: IntersectionObserver | null = null;
+
+watch(
+    summaryCard,
+    (element) => {
+        summaryObserver?.disconnect();
+        if (!element || !('IntersectionObserver' in window)) return;
+        const bounds = element.getBoundingClientRect();
+        summaryInView.value =
+            bounds.top < window.innerHeight && bounds.bottom > 0;
+        summaryObserver = new IntersectionObserver(
+            ([entry]) => {
+                summaryInView.value = entry.isIntersecting;
+            },
+            { threshold: 0.01 },
+        );
+        summaryObserver.observe(element);
+    },
+    { flush: 'post' },
+);
+
+onBeforeUnmount(() => summaryObserver?.disconnect());
 
 function updateQuantity(productId: number, quantity: number) {
     const item = props.cartItems.find(
@@ -357,7 +381,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                 </section>
 
                 <aside class="order-summary" aria-labelledby="summary-title">
-                    <div class="summary-card">
+                    <div ref="summaryCard" class="summary-card">
                         <p class="coy-eyebrow">Almost yours</p>
                         <h2 id="summary-title">Order summary</h2>
                         <dl>
@@ -375,7 +399,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                             </div>
                         </dl>
                         <div class="summary-total">
-                            <span>Total before delivery</span
+                            <span>Total</span
                             ><strong>{{ formatPrice(finalTotal) }}</strong>
                         </div>
                         <Link href="/checkout" class="checkout-button">
@@ -438,6 +462,18 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
             </section>
         </div>
     </main>
+
+    <Transition name="mobile-checkout">
+        <div v-if="hasItems && !summaryInView" class="mobile-checkout-bar">
+            <Link href="/checkout" class="mobile-checkout-button">
+                <span>Checkout</span>
+                <strong>{{ formatPrice(finalTotal) }}</strong>
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                    <path d="M5 12h14m-7-7 7 7-7 7" />
+                </svg>
+            </Link>
+        </div>
+    </Transition>
 
     <Footer />
 </template>
@@ -909,6 +945,9 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     font-weight: 700;
     text-underline-offset: 0.3rem;
 }
+.mobile-checkout-bar {
+    display: none;
+}
 .item-enter-active,
 .item-leave-active {
     transition:
@@ -935,6 +974,9 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     }
 }
 @media (max-width: 620px) {
+    .basket {
+        padding-bottom: 5rem;
+    }
     .header-inner {
         min-height: 0;
         align-items: flex-start;
@@ -955,11 +997,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
         padding: 1rem;
     }
     .item-actions {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-    .remove-button {
-        align-self: flex-end;
+        align-items: center;
     }
     .delivery-progress {
         padding: 1rem;
@@ -970,23 +1008,101 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     .summary-card {
         padding: 1.4rem;
     }
+    .mobile-checkout-bar {
+        position: fixed;
+        z-index: 55;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: block;
+        padding: 0.75rem var(--coy-gutter)
+            calc(0.75rem + env(safe-area-inset-bottom));
+        background: rgb(255 253 251 / 96%);
+        border-top: 1px solid var(--coy-color-border);
+        box-shadow: 0 -10px 30px rgb(52 42 40 / 14%);
+        backdrop-filter: blur(10px);
+    }
+    .mobile-checkout-button {
+        min-height: 3.25rem;
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.7rem 1rem;
+        color: var(--coy-color-on-accent);
+        background: var(--coy-color-accent);
+        border-radius: 999px;
+        font-size: 1rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .mobile-checkout-button strong {
+        padding-left: 0.75rem;
+        border-left: 1px solid rgb(255 255 255 / 35%);
+        font-size: 1.125rem;
+    }
+    .mobile-checkout-button svg {
+        width: 1rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .mobile-checkout-enter-active,
+    .mobile-checkout-leave-active {
+        transition:
+            opacity 0.2s,
+            transform 0.25s var(--coy-ease);
+    }
+    .mobile-checkout-enter-from,
+    .mobile-checkout-leave-to {
+        opacity: 0;
+        transform: translateY(100%);
+    }
 }
 @media (max-width: 430px) {
     .basket-item {
-        grid-template-columns: 5.5rem minmax(0, 1fr);
+        grid-template-columns: 1fr;
+        gap: 1.1rem;
+        padding: 1rem;
+    }
+    .item-image {
+        width: 100%;
+        max-height: 13rem;
+        aspect-ratio: 4 / 3;
+    }
+    .item-image img {
+        object-fit: contain;
     }
     .item-topline {
         flex-direction: column;
+        gap: 0.5rem;
     }
     .line-total {
-        font-size: 1.125rem;
+        font-size: 1.25rem;
     }
     .quantity-field {
-        width: 100%;
-        justify-content: space-between;
+        width: auto;
+    }
+    .quantity-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
     }
     .quantity-control {
         grid-template-columns: 2.35rem 2.35rem 2.35rem;
+    }
+    .item-actions {
+        flex-direction: row;
+    }
+    .remove-button {
+        align-self: center;
     }
 }
 </style>
