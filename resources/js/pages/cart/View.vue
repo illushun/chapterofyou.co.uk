@@ -589,7 +589,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 }
 .section-heading {
     display: flex;
-    align-items: end;
+    align-items: baseline;
     justify-content: space-between;
     gap: 1rem;
     margin-bottom: 1rem;
@@ -1102,6 +1102,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
         min-width: 0;
         box-sizing: border-box;
         flex-direction: row;
+        padding-right: 0.35rem;
     }
     .remove-button {
         max-width: 100%;
