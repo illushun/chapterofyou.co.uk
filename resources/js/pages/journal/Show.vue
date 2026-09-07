@@ -53,10 +53,10 @@ const props = defineProps<{
 const wishlistedIds = ref<number[]>(props.wishlistedIds ?? []);
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
 
-const handleAddToCart = (product: RelatedProduct) => {
+const handleAddToCart = (product: RelatedProduct, quantity = 1) => {
     router.post(
         '/cart/add',
-        { product_id: product.id, quantity: 1 },
+        { product_id: product.id, quantity },
         {
             preserveScroll: true,
             onSuccess: () =>
@@ -221,7 +221,7 @@ const articleSchema = computed(() => ({
                         <ProductSpringCard
                             :product="product"
                             :wishlisted="wishlistedIds.includes(product.id)"
-                            @add-to-cart="handleAddToCart(product)"
+                            @add-to-cart="handleAddToCart(product, $event)"
                             @favourite="handleFavourite(product)"
                         />
                     </li>

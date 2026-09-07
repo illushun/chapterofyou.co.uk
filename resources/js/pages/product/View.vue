@@ -155,10 +155,10 @@ function paginate(url: string) {
         },
     );
 }
-function addToCart(product: Product) {
+function addToCart(product: Product, quantity = 1) {
     router.post(
         '/cart/add',
-        { product_id: product.id, quantity: 1 },
+        { product_id: product.id, quantity },
         {
             preserveScroll: true,
             onSuccess: () =>
@@ -320,7 +320,7 @@ async function favourite(product: Product) {
                             <ProductSpringCard
                                 :product="product"
                                 :wishlisted="wishlistedIds.includes(product.id)"
-                                @add-to-cart="addToCart(product)"
+                                @add-to-cart="addToCart(product, $event)"
                                 @favourite="favourite(product)"
                             />
                         </li>

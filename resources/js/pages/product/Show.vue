@@ -241,9 +241,12 @@ const refillOutOfStock = computed(
     () => (primaryRefill.value?.stock_qty ?? 0) <= 0,
 );
 
-const handleAddToCart = (quickAddProduct: ProductDetailData | null = null) => {
+const handleAddToCart = (
+    quickAddProduct: ProductDetailData | null = null,
+    quickAddQuantity = 1,
+) => {
     const itemToAdd = quickAddProduct ?? currentVariation.value;
-    const qty = quickAddProduct ? 1 : quantity.value;
+    const qty = quickAddProduct ? quickAddQuantity : quantity.value;
     const name = quickAddProduct ? quickAddProduct.name : props.product.name;
     if (!itemToAdd?.id || qty < 1 || itemToAdd.stock_qty < qty) return;
     const includeRefill =
@@ -1142,7 +1145,7 @@ onUnmounted(() => {
                         <ProductSpringCard
                             :product="rp"
                             :wishlisted="wishlistedIds.includes(rp.id)"
-                            @add-to-cart="handleAddToCart(rp)"
+                            @add-to-cart="handleAddToCart(rp, $event)"
                             @favourite="handleFavourite(rp)"
                         />
                     </li>

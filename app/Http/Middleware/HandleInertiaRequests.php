@@ -55,6 +55,24 @@ class HandleInertiaRequests extends Middleware
                     ? (int) $cart->items()->sum('quantity')
                     : 0;
             },
+            'cartProductIds' => function () use ($request) {
+                if ($request->user()) {
+                    $cart = \App\Models\Cart::where('user_id', $request->user()->id)->first();
+                } else {
+                    $sessionId = $request->session()->get('cart_session_id');
+                    if (! $sessionId) {
+                        return [];
+                    }
+
+                    $cart = \App\Models\Cart::where('session_id', $sessionId)
+                        ->whereNull('user_id')
+                        ->first();
+                }
+
+                return $cart
+                    ? $cart->items()->pluck('product_id')->map(fn ($id) => (int) $id)->values()
+                    : [];
+            },
             'recentJournalPosts' => fn () => JournalPost::published()
                 ->select('title', 'slug', 'excerpt', 'body', 'cover_image', 'published_at')
                 ->latest('published_at')
