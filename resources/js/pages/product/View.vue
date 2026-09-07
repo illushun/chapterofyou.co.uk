@@ -812,6 +812,7 @@ async function favourite(product: Product) {
 }
 @media (max-width: 620px) {
     .collection {
+        padding-bottom: 5.5rem;
         font-size: 1rem;
     }
     .collection-hero {
@@ -837,6 +838,25 @@ async function favourite(product: Product) {
     }
     .toolbar select {
         width: 100%;
+    }
+    .filter-trigger {
+        position: fixed;
+        z-index: 50;
+        right: 1rem;
+        bottom: calc(1rem + env(safe-area-inset-bottom));
+        left: 1rem;
+        min-height: 3.25rem;
+        justify-content: center;
+        padding: 0.7rem 1.25rem;
+        color: white;
+        background: var(--coy-color-heading);
+        border-color: var(--coy-color-heading);
+        border-radius: 999px;
+        box-shadow: 0 12px 32px rgb(52 42 40 / 28%);
+    }
+    .filter-trigger b {
+        color: var(--coy-color-heading);
+        background: var(--coy-color-blush);
     }
     .product-grid {
         gap: 0.75rem;
