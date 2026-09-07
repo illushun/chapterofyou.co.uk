@@ -993,7 +993,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     .basket-item {
         grid-template-columns: 6.5rem minmax(0, 1fr);
         gap: 1rem;
-        padding: 1rem;
+        padding: 1rem 1.35rem 1.25rem 1rem;
     }
     .item-actions {
         align-items: center;
@@ -1064,7 +1064,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     .basket-item {
         grid-template-columns: 1fr;
         gap: 1.1rem;
-        padding: 1rem;
+        padding: 1rem 1.35rem 1.25rem 1rem;
     }
     .item-image {
         width: 100%;
@@ -1098,11 +1098,8 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
         grid-template-columns: 2.35rem 2.35rem 2.35rem;
     }
     .item-actions {
-        width: 100%;
         min-width: 0;
-        box-sizing: border-box;
         flex-direction: row;
-        padding-right: 0.35rem;
     }
     .remove-button {
         max-width: 100%;
