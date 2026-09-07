@@ -931,7 +931,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                         </div>
 
                         <div
-                            v-if="hasClientSecret"
+                            v-if="clientSecret"
                             ref="paymentContainer"
                             class="co-stripe-container"
                         ></div>
