@@ -136,6 +136,11 @@ function clearFilters() {
     form.in_stock = false;
     filterOpen.value = false;
 }
+function paginationLabel(label: string) {
+    if (label.includes('Previous')) return '← Previous';
+    if (label.includes('Next')) return 'Next →';
+    return label.replace(/&[^;]+;/g, '').trim();
+}
 function paginate(url: string) {
     isLoading.value = true;
     router.get(
@@ -350,13 +355,7 @@ async function favourite(product: Product) {
                             :aria-label="link.label"
                             @click="paginate(link.url)"
                         >
-                            {{
-                                link.label
-                                    .replace('Previous', 'Previous')
-                                    .replace('Next', 'Next')
-                                    .replace('&laquo;', '')
-                                    .replace('&raquo;', '')
-                            }}
+                            {{ paginationLabel(link.label) }}
                         </button></template
                     >
                 </nav>
@@ -454,26 +453,27 @@ async function favourite(product: Product) {
     font-size: 1.0625rem;
 }
 .collection-hero {
-    padding: clamp(3rem, 6vw, 5.5rem) 0;
+    padding: clamp(1.75rem, 3vw, 2.75rem) 0;
     background: var(--coy-color-blush);
 }
 .collection-hero > div {
-    max-width: 52rem;
-    text-align: center;
+    max-width: var(--coy-container-lg);
+    text-align: left;
 }
 .collection-hero h1 {
-    margin: 0.75rem 0 1rem;
-    font-size: clamp(2.75rem, 5vw, 4.25rem);
+    margin: 0.45rem 0 0.65rem;
+    font-size: clamp(2.25rem, 3.5vw, 3.25rem);
     font-weight: 500;
     line-height: 1.04;
 }
 .collection-hero p:not(.coy-eyebrow) {
-    margin: 0 auto;
+    max-width: 48rem;
+    margin: 0;
     line-height: 1.6;
 }
 .collection-hero a {
     display: inline-block;
-    margin-top: 1.25rem;
+    margin-top: 0.85rem;
     color: var(--coy-color-heading);
     font-weight: 700;
     text-underline-offset: 0.3rem;
@@ -488,16 +488,15 @@ async function favourite(product: Product) {
     position: sticky;
     top: calc(var(--coy-nav-height) + 1.5rem);
     align-self: start;
-    padding: 1.4rem;
-    background: var(--coy-color-surface);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-md);
+    padding: 0;
+    background: transparent;
+    border-top: 2px solid var(--coy-color-heading);
 }
 .filters-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding-bottom: 1rem;
+    padding: 1rem 0;
     border-bottom: 1px solid var(--coy-color-border-soft);
 }
 .filters-heading h2,
@@ -526,7 +525,7 @@ async function favourite(product: Product) {
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
+    gap: 0.35rem;
     margin: 0;
     padding: 1.25rem 0;
     border: 0;
@@ -546,9 +545,15 @@ async function favourite(product: Product) {
 .filter-group label {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 0.7rem;
+    min-height: 2.5rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: var(--coy-radius-sm);
     font-size: 1rem;
     cursor: pointer;
+}
+.filter-group label:hover {
+    background: var(--coy-color-surface);
 }
 .filter-group input[type='checkbox'] {
     width: 1.15rem;
@@ -562,6 +567,11 @@ async function favourite(product: Product) {
 }
 .price-inputs label {
     display: block;
+    min-height: auto;
+    padding: 0;
+}
+.price-inputs label:hover {
+    background: transparent;
 }
 .price-inputs span {
     height: 2.75rem;
