@@ -3,7 +3,7 @@ import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
-import { router, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 interface CartItem {
@@ -29,43 +29,50 @@ const props = defineProps<{
 }>();
 
 const seo = useSeoHead({ noIndex: true });
-
 const hasItems = computed(
     () => props.cartItems.length > 0 || !!props.giftVoucher,
 );
-const itemCount = computed(() =>
-    props.cartItems.reduce((s, i) => s + Number(i.quantity), 0),
+const itemCount = computed(
+    () =>
+        props.cartItems.reduce(
+            (total, item) => total + Number(item.quantity),
+            0,
+        ) + (props.giftVoucher ? 1 : 0),
 );
-const n = (v: unknown) => Number(v) || 0;
-const fmt = (v: unknown) => `£${n(v).toFixed(2)}`;
-
-const finalTotal = computed(() => n(props.cartTotal));
-const remaining = computed(() => Math.max(0, 50 - n(props.cartTotal)));
-const freeShip = computed(() => n(props.cartTotal) >= 50);
+const numberValue = (value: unknown) => Number(value) || 0;
+const formatPrice = (value: unknown) => `£${numberValue(value).toFixed(2)}`;
+const finalTotal = computed(() => numberValue(props.cartTotal));
+const remaining = computed(() =>
+    Math.max(0, 50 - numberValue(props.cartTotal)),
+);
+const freeShipping = computed(() => numberValue(props.cartTotal) >= 50);
 const shippingLabel = computed(() => {
-    if (props.giftVoucher?.delivery_type === 'physical')
-        return freeShip.value
+    if (props.giftVoucher?.delivery_type === 'physical') {
+        return freeShipping.value
             ? 'Physical voucher postage £2.99'
             : 'Calculated at checkout';
-    return freeShip.value ? 'Free' : 'Calculated at checkout';
+    }
+    return freeShipping.value ? 'Free' : 'Calculated at checkout';
 });
-const progress = computed(() => Math.min(100, (n(props.cartTotal) / 50) * 100));
-
+const progress = computed(() =>
+    Math.min(100, (numberValue(props.cartTotal) / 50) * 100),
+);
 const pending = ref<Record<number, boolean>>({});
 const removing = ref<Record<number, boolean>>({});
 
-const updateQty = (productId: number, qty: number) => {
-    const item = props.cartItems.find((i) => i.product_id === productId);
+function updateQuantity(productId: number, quantity: number) {
+    const item = props.cartItems.find(
+        (cartItem) => cartItem.product_id === productId,
+    );
     if (!item) return;
-    if (qty < 1) {
-        remove(productId);
+    if (quantity < 1) {
+        removeItem(productId);
         return;
     }
-    qty = Math.min(qty, item.stock_qty);
     pending.value[productId] = true;
     router.put(
         `/cart/update/${productId}`,
-        { quantity: qty },
+        { quantity: Math.min(quantity, item.stock_qty) },
         {
             preserveScroll: true,
             preserveState: true,
@@ -73,18 +80,18 @@ const updateQty = (productId: number, qty: number) => {
             onFinish: () => delete pending.value[productId],
         },
     );
-};
+}
 
-const remove = (productId: number) => {
+function removeItem(productId: number) {
     removing.value[productId] = true;
     router.delete(`/cart/remove/${productId}`, {
         preserveScroll: true,
         onFinish: () => delete removing.value[productId],
     });
-};
+}
 
 const removingGiftVoucher = ref(false);
-const removeGiftVoucher = () => {
+function removeGiftVoucher() {
     removingGiftVoucher.value = true;
     router.post(
         route('gift-vouchers.remove-from-cart'),
@@ -96,394 +103,339 @@ const removeGiftVoucher = () => {
             },
         },
     );
-};
+}
 
 const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 </script>
 
 <template>
     <NavBar />
-
     <SeoHead v-bind="seo" />
 
-    <component
-        :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-
-    <main class="cp">
-        <div class="cp-wrap">
-            <!-- ── Header ── -->
-            <header class="cp-head">
-                <div class="cp-head-left">
-                    <div>
-                        <h1 class="cp-title">
-                            Your Basket
-                            <span v-if="hasItems" class="item-badge"
-                                >{{ itemCount }}
-                                {{ itemCount === 1 ? 'item' : 'items' }}</span
-                            >
-                        </h1>
-                        <a href="/products" class="cp-back">
-                            <svg
-                                width="13"
-                                height="13"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="m15 18-6-6 6-6" />
-                            </svg>
-                            Continue shopping
-                        </a>
-                    </div>
-                </div>
-
-                <div v-if="hasItems" class="ship-nudge">
-                    <p class="ship-text">
-                        <span v-if="freeShip">Free shipping unlocked!</span>
-                        <span v-else
-                            >Add <em>{{ fmt(remaining) }}</em> more for free
-                            shipping</span
-                        >
+    <main class="basket coy-storefront">
+        <header class="basket-header">
+            <div class="coy-container header-inner">
+                <div>
+                    <p class="coy-eyebrow">Your order</p>
+                    <h1 class="coy-heading">Your basket</h1>
+                    <p v-if="hasItems">
+                        {{ itemCount }}
+                        {{ itemCount === 1 ? 'item' : 'items' }}, ready when you
+                        are.
                     </p>
-                    <div class="ship-track">
-                        <div
-                            class="ship-fill"
-                            :style="{ width: progress + '%' }"
-                        ></div>
+                    <p v-else>A thoughtful choice can start here.</p>
+                </div>
+                <Link :href="route('products')" class="continue-link">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg>
+                    Continue shopping
+                </Link>
+            </div>
+        </header>
+
+        <div class="coy-container basket-content">
+            <section
+                v-if="hasItems"
+                class="delivery-progress"
+                aria-labelledby="delivery-title"
+            >
+                <div class="delivery-copy">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path
+                            d="M3 6h13v11H3zM16 10h3l2 3v4h-5zM7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
+                        />
+                    </svg>
+                    <div>
+                        <h2 id="delivery-title">
+                            {{
+                                freeShipping
+                                    ? 'You have unlocked free UK delivery'
+                                    : `${formatPrice(remaining)} away from free UK delivery`
+                            }}
+                        </h2>
+                        <p>
+                            {{
+                                freeShipping
+                                    ? 'That is one less thing to think about.'
+                                    : 'Add another favourite and we will cover standard delivery.'
+                            }}
+                        </p>
                     </div>
                 </div>
-            </header>
+                <div
+                    class="progress-track"
+                    role="progressbar"
+                    aria-label="Progress towards free delivery"
+                    :aria-valuenow="Math.round(progress)"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                >
+                    <span :style="{ width: `${progress}%` }"></span>
+                </div>
+            </section>
 
-            <!-- ── Grid ── -->
-            <div class="cp-grid">
-                <!-- Items column -->
-                <section class="cp-items">
-                    <!-- Empty state -->
-                    <div v-if="!hasItems" class="cp-empty">
-                        <h2>Your basket is empty</h2>
-                        <p>
-                            Nothing here yet, let's find you something lovely.
-                        </p>
-                        <a href="/products" class="btn-rose"
-                            >Browse the collection</a
+            <div v-if="hasItems" class="basket-grid">
+                <section class="basket-items" aria-labelledby="items-title">
+                    <div class="section-heading">
+                        <h2 id="items-title">Your selection</h2>
+                        <span
+                            >{{ itemCount }}
+                            {{ itemCount === 1 ? 'item' : 'items' }}</span
                         >
                     </div>
 
-                    <TransitionGroup
-                        v-else
-                        name="card"
-                        tag="div"
-                        class="card-list"
-                    >
-                        <div
+                    <TransitionGroup name="item" tag="div" class="item-list">
+                        <article
                             v-for="item in cartItems"
                             :key="item.product_id"
-                            class="item-card"
+                            class="basket-item"
                             :class="{
-                                'item-card--out': removing[item.product_id],
+                                'basket-item--removing':
+                                    removing[item.product_id],
                             }"
                         >
-                            <div class="ci-img">
+                            <Link
+                                :href="`/product/${item.product_id}`"
+                                class="item-image"
+                                :aria-label="`View ${item.name}`"
+                            >
                                 <img :src="item.image_url" :alt="item.name" />
-                            </div>
-
-                            <div class="ci-body">
-                                <div class="ci-top">
+                            </Link>
+                            <div class="item-details">
+                                <div class="item-topline">
                                     <div>
-                                        <h2 class="ci-name">{{ item.name }}</h2>
-                                        <p class="ci-unit">
-                                            {{ fmt(item.cost) }} each
+                                        <p class="item-label">Chapter of You</p>
+                                        <h3>
+                                            <Link
+                                                :href="`/product/${item.product_id}`"
+                                                >{{ item.name }}</Link
+                                            >
+                                        </h3>
+                                        <p class="unit-price">
+                                            {{ formatPrice(item.cost) }} each
                                         </p>
                                     </div>
-                                    <button
-                                        @click="remove(item.product_id)"
-                                        :disabled="removing[item.product_id]"
-                                        class="ci-remove"
-                                        :aria-label="`Remove ${item.name}`"
-                                    >
-                                        <svg
-                                            width="11"
-                                            height="11"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
-                                        >
-                                            <path d="M18 6 6 18M6 6l12 12" />
-                                        </svg>
-                                    </button>
+                                    <strong class="line-total">{{
+                                        formatPrice(
+                                            numberValue(item.cost) *
+                                                numberValue(item.quantity),
+                                        )
+                                    }}</strong>
                                 </div>
-
-                                <div class="ci-bottom">
+                                <div class="item-actions">
                                     <div
-                                        class="qty-wrap"
+                                        class="quantity-field"
                                         :class="{
-                                            'qty-wrap--busy':
+                                            'quantity-field--pending':
                                                 pending[item.product_id],
                                         }"
                                     >
-                                        <button
-                                            class="qty-btn"
-                                            @click="
-                                                updateQty(
-                                                    item.product_id,
-                                                    item.quantity - 1,
-                                                )
-                                            "
-                                            :disabled="
-                                                item.quantity <= 1 ||
-                                                !!pending[item.product_id]
-                                            "
-                                            aria-label="Decrease"
+                                        <span class="quantity-label"
+                                            >Quantity</span
                                         >
-                                            <svg
-                                                width="10"
-                                                height="10"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="3"
-                                                stroke-linecap="round"
+                                        <div class="quantity-control">
+                                            <button
+                                                type="button"
+                                                :disabled="
+                                                    item.quantity <= 1 ||
+                                                    !!pending[item.product_id]
+                                                "
+                                                :aria-label="`Decrease quantity of ${item.name}`"
+                                                @click="
+                                                    updateQuantity(
+                                                        item.product_id,
+                                                        item.quantity - 1,
+                                                    )
+                                                "
                                             >
-                                                <path d="M5 12h14" />
-                                            </svg>
-                                        </button>
-                                        <span class="qty-num">{{
-                                            item.quantity
-                                        }}</span>
-                                        <button
-                                            class="qty-btn"
-                                            @click="
-                                                updateQty(
-                                                    item.product_id,
-                                                    item.quantity + 1,
-                                                )
-                                            "
-                                            :disabled="
-                                                item.quantity >=
-                                                    item.stock_qty ||
-                                                !!pending[item.product_id]
-                                            "
-                                            aria-label="Increase"
-                                        >
-                                            <svg
-                                                width="10"
-                                                height="10"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                stroke-width="3"
-                                                stroke-linecap="round"
+                                                −
+                                            </button>
+                                            <span aria-live="polite">{{
+                                                item.quantity
+                                            }}</span>
+                                            <button
+                                                type="button"
+                                                :disabled="
+                                                    item.quantity >=
+                                                        item.stock_qty ||
+                                                    !!pending[item.product_id]
+                                                "
+                                                :aria-label="`Increase quantity of ${item.name}`"
+                                                @click="
+                                                    updateQuantity(
+                                                        item.product_id,
+                                                        item.quantity + 1,
+                                                    )
+                                                "
                                             >
-                                                <path d="M5 12h14" />
-                                                <path d="M12 5v14" />
-                                            </svg>
-                                        </button>
+                                                +
+                                            </button>
+                                        </div>
                                     </div>
-                                    <p class="ci-line-total">
-                                        {{
-                                            fmt(n(item.cost) * n(item.quantity))
-                                        }}
-                                    </p>
+                                    <button
+                                        type="button"
+                                        class="remove-button"
+                                        :disabled="removing[item.product_id]"
+                                        @click="removeItem(item.product_id)"
+                                    >
+                                        <svg
+                                            aria-hidden="true"
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path
+                                                d="M4 7h16M9 7V4h6v3M8 7l1 13h6l1-13M11 11v5M13 11v5"
+                                            />
+                                        </svg>
+                                        Remove
+                                    </button>
                                 </div>
                             </div>
-                        </div>
+                        </article>
 
-                        <div
+                        <article
                             v-if="giftVoucher"
                             key="gift-voucher"
-                            class="item-card gv-cart-card"
+                            class="basket-item voucher-item"
                         >
-                            <div class="gv-cart-icon" aria-hidden="true">
-                                🎁
+                            <div
+                                class="item-image voucher-image"
+                                aria-hidden="true"
+                            >
+                                <svg viewBox="0 0 24 24">
+                                    <path
+                                        d="M3 9h18v12H3zM2 5h20v4H2zM12 5v16M12 5H8.5A2.5 2.5 0 1 1 11 2.5L12 5Zm0 0h3.5A2.5 2.5 0 1 0 13 2.5L12 5Z"
+                                    />
+                                </svg>
                             </div>
-                            <div class="ci-body">
-                                <div class="ci-top">
+                            <div class="item-details">
+                                <div class="item-topline">
                                     <div>
-                                        <h2 class="ci-name">Gift Voucher</h2>
-                                        <p class="ci-unit">
+                                        <p class="item-label">
+                                            A thoughtful gift
+                                        </p>
+                                        <h3>Gift voucher</h3>
+                                        <p class="unit-price">
                                             {{
                                                 giftVoucher.delivery_type ===
                                                 'email'
-                                                    ? 'E-Voucher'
-                                                    : 'Physical Voucher'
+                                                    ? 'Email delivery'
+                                                    : 'Physical delivery'
                                             }}
-                                            · For:
-                                            {{ giftVoucher.recipient_name }}
+                                            for {{ giftVoucher.recipient_name }}
                                         </p>
                                     </div>
+                                    <strong class="line-total">{{
+                                        formatPrice(giftVoucher.amount)
+                                    }}</strong>
+                                </div>
+                                <div class="item-actions">
+                                    <span class="voucher-note"
+                                        >Valid for one year on all
+                                        products</span
+                                    >
                                     <button
-                                        @click="removeGiftVoucher"
+                                        type="button"
+                                        class="remove-button"
                                         :disabled="removingGiftVoucher"
-                                        class="ci-remove"
-                                        aria-label="Remove gift voucher"
+                                        @click="removeGiftVoucher"
                                     >
                                         <svg
-                                            width="11"
-                                            height="11"
+                                            aria-hidden="true"
                                             viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            stroke-width="2.5"
-                                            stroke-linecap="round"
                                         >
-                                            <path d="M18 6 6 18M6 6l12 12" />
+                                            <path
+                                                d="M4 7h16M9 7V4h6v3M8 7l1 13h6l1-13M11 11v5M13 11v5"
+                                            />
                                         </svg>
+                                        Remove
                                     </button>
                                 </div>
-                                <div class="ci-bottom">
-                                    <span class="gv-cart-badge"
-                                        >Valid 1 year · All products</span
-                                    >
-                                    <p class="ci-line-total">
-                                        {{ fmt(giftVoucher.amount) }}
-                                    </p>
-                                </div>
                             </div>
-                        </div>
+                        </article>
                     </TransitionGroup>
                 </section>
 
-                <!-- Summary sidebar -->
-                <aside v-if="hasItems" class="cp-summary">
-                    <div class="sum-card">
-                        <div class="sum-floral" aria-hidden="true">
-                            <svg
-                                viewBox="0 0 200 36"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                            >
-                                <circle
-                                    cx="100"
-                                    cy="18"
-                                    r="5"
-                                    fill="#a85058"
-                                    opacity=".4"
-                                />
-                                <circle
-                                    cx="80"
-                                    cy="18"
-                                    r="3"
-                                    fill="#a85058"
-                                    opacity=".25"
-                                />
-                                <circle
-                                    cx="120"
-                                    cy="18"
-                                    r="3"
-                                    fill="#a85058"
-                                    opacity=".25"
-                                />
-                                <circle
-                                    cx="62"
-                                    cy="18"
-                                    r="2"
-                                    fill="#a85058"
-                                    opacity=".18"
-                                />
-                                <circle
-                                    cx="138"
-                                    cy="18"
-                                    r="2"
-                                    fill="#a85058"
-                                    opacity=".18"
-                                />
-                                <line
-                                    x1="0"
-                                    y1="18"
-                                    x2="56"
-                                    y2="18"
-                                    stroke="#a85058"
-                                    stroke-width="0.8"
-                                    opacity=".3"
-                                />
-                                <line
-                                    x1="144"
-                                    y1="18"
-                                    x2="200"
-                                    y2="18"
-                                    stroke="#a85058"
-                                    stroke-width="0.8"
-                                    opacity=".3"
-                                />
-                            </svg>
-                        </div>
-
-                        <h2 class="sum-title">Order Summary</h2>
-
-                        <div class="sum-rows">
-                            <div class="sum-row">
-                                <span>Subtotal</span>
-                                <span>{{ fmt(cartTotal) }}</span>
+                <aside class="order-summary" aria-labelledby="summary-title">
+                    <div class="summary-card">
+                        <p class="coy-eyebrow">Almost yours</p>
+                        <h2 id="summary-title">Order summary</h2>
+                        <dl>
+                            <div>
+                                <dt>Subtotal</dt>
+                                <dd>{{ formatPrice(cartTotal) }}</dd>
                             </div>
-                            <div v-if="vatRegistered" class="sum-row">
-                                <span>VAT</span>
-                                <span class="sum-vat-note">Included</span>
+                            <div v-if="vatRegistered">
+                                <dt>VAT</dt>
+                                <dd>Included</dd>
                             </div>
-                            <div class="sum-row">
-                                <span>Shipping</span>
-                                <span class="sum-ship-note">
-                                    {{ shippingLabel }}
-                                </span>
+                            <div>
+                                <dt>Delivery</dt>
+                                <dd>{{ shippingLabel }}</dd>
                             </div>
+                        </dl>
+                        <div class="summary-total">
+                            <span>Total before delivery</span
+                            ><strong>{{ formatPrice(finalTotal) }}</strong>
                         </div>
-
-                        <div class="sum-dash" aria-hidden="true"></div>
-
-                        <div class="sum-total-row">
-                            <span class="sum-total-label">Basket subtotal</span>
-                            <span class="sum-total-val">{{
-                                fmt(finalTotal)
-                            }}</span>
+                        <Link href="/checkout" class="checkout-button">
+                            Continue to checkout
+                            <svg aria-hidden="true" viewBox="0 0 24 24">
+                                <path d="M5 12h14m-7-7 7 7-7 7" />
+                            </svg>
+                        </Link>
+                        <div class="checkout-reassurance">
+                            <p>
+                                <svg aria-hidden="true" viewBox="0 0 24 24">
+                                    <rect
+                                        x="4"
+                                        y="10"
+                                        width="16"
+                                        height="11"
+                                        rx="2"
+                                    />
+                                    <path d="M8 10V7a4 4 0 0 1 8 0v3" /></svg
+                                >Secure checkout
+                            </p>
+                            <p>
+                                <svg aria-hidden="true" viewBox="0 0 24 24">
+                                    <path d="m4 12 5 5L20 6" /></svg
+                                >30-day returns
+                            </p>
                         </div>
-
-                        <a href="/checkout" class="btn-checkout">
-                            Checkout
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                            >
-                                <path d="M5 12h14" />
-                                <path d="m12 5 7 7-7 7" />
-                            </svg>
-                        </a>
-
-                        <p class="sum-secure">
-                            <svg
-                                width="10"
-                                height="10"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            >
-                                <rect
-                                    x="3"
-                                    y="11"
-                                    width="18"
-                                    height="11"
-                                    rx="2"
-                                />
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                            Secure checkout · Stripe
-                        </p>
                     </div>
+                    <p class="help-copy">
+                        Need help with your order?
+                        <Link :href="route('contact')">Contact us</Link>
+                    </p>
                 </aside>
             </div>
+
+            <section v-else class="empty-basket">
+                <div class="empty-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0"
+                        />
+                    </svg>
+                </div>
+                <p class="coy-eyebrow">Room for something lovely</p>
+                <h2 class="coy-heading">Your basket is waiting</h2>
+                <p>
+                    Explore thoughtful scents and gifts chosen to make everyday
+                    moments feel more personal.
+                </p>
+                <Link
+                    :href="route('products')"
+                    class="coy-button coy-button--primary"
+                    >Browse all products</Link
+                >
+                <Link
+                    :href="route('scent-finder.index')"
+                    class="empty-secondary"
+                    >Or find your perfect scent</Link
+                >
+            </section>
         </div>
     </main>
 
@@ -491,574 +443,550 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 </template>
 
 <style scoped>
-.cp {
-    font-family: 'Nunito', sans-serif;
+.basket {
     min-height: 100vh;
-    padding-top: 64px;
-    background: #fdf4f3;
-    color: #2d1a1a;
+    padding-top: var(--coy-nav-height);
+    background: var(--coy-color-page);
 }
-
-.cp-wrap {
-    max-width: 1060px;
-    margin: 0 auto;
-    padding: 2.5rem 1.25rem 5rem;
+.basket-header {
+    background: var(--coy-color-blush);
+    border-bottom: 1px solid var(--coy-color-border);
 }
-
-/* Header */
-.cp-head {
+.header-inner {
+    min-height: 13rem;
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 1.5rem;
-    margin-bottom: 2.5rem;
+    gap: 2rem;
+    padding-block: 2.5rem;
 }
-
-.cp-head-left {
+.header-inner h1 {
+    margin: 0.25rem 0 0;
+    font-size: clamp(2.6rem, 5vw, 4.25rem);
+    font-weight: 500;
+    line-height: 1;
+}
+.header-inner > div > p:last-child {
+    margin: 0.7rem 0 0;
+    font-size: 1.125rem;
+}
+.continue-link {
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1rem;
+    color: var(--coy-color-heading);
+    background: rgb(255 253 251/60%);
+    border: 1px solid var(--coy-color-border);
+    border-radius: 999px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+.continue-link:hover {
+    background: var(--coy-color-surface);
+}
+.continue-link svg {
+    width: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.basket-content {
+    padding-block: clamp(2rem, 5vw, 4rem) clamp(4rem, 7vw, 7rem);
+}
+.delivery-progress {
+    margin-bottom: 2rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-sm);
+}
+.delivery-copy {
     display: flex;
     align-items: center;
     gap: 1rem;
 }
-
-.cp-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: clamp(1.9rem, 5vw, 2.8rem);
-    font-weight: 400;
-    font-style: italic;
-    color: #2d1a1a;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    line-height: 1.1;
-    margin-bottom: 0.3rem;
+.delivery-copy > svg {
+    width: 2rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: var(--coy-color-accent);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
-
-.item-badge {
-    font-family: 'Nunito', sans-serif;
-    font-style: normal;
-    font-size: 0.875rem;
+.delivery-copy h2 {
+    margin: 0;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: 1.3rem;
     font-weight: 600;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: #8c4a50;
-    background: #faeaea;
-    border: 1px solid #e8c0c0;
+    line-height: 1.25;
+}
+.delivery-copy p {
+    margin: 0.2rem 0 0;
+    font-size: 1rem;
+}
+.progress-track {
+    height: 0.45rem;
+    margin-top: 1rem;
+    overflow: hidden;
+    background: var(--coy-color-border-soft);
     border-radius: 999px;
-    padding: 0.2rem 0.7rem;
-    vertical-align: middle;
 }
-
-.cp-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    font-size: 0.9rem;
-    color: #6b4f4f;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.cp-back:hover {
-    color: #8c4a50;
-}
-
-/* Shipping nudge */
-.ship-nudge {
-    min-width: 200px;
-    max-width: 280px;
-}
-
-.ship-text {
-    font-size: 0.9rem;
-    color: #6b4f4f;
-    margin-bottom: 0.45rem;
-    line-height: 1.4;
-}
-
-.ship-text em {
-    font-style: normal;
-    font-weight: 600;
-    color: #8c4a50;
-}
-
-.ship-track {
-    height: 5px;
-    background: #eedcda;
-    border-radius: 999px;
-    overflow: visible;
-    position: relative;
-}
-
-.ship-fill {
+.progress-track span {
     height: 100%;
-    background: linear-gradient(90deg, #e8a4a8, #c9747a);
-    border-radius: 999px;
-    transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-    position: relative;
+    display: block;
+    background: var(--coy-color-accent);
+    border-radius: inherit;
+    transition: width 0.4s var(--coy-ease);
 }
-
-/* Grid */
-.cp-grid {
+.basket-grid {
     display: grid;
-    grid-template-columns: 1fr 316px;
-    gap: 2rem;
+    grid-template-columns: minmax(0, 1fr) minmax(19rem, 23rem);
+    gap: clamp(2rem, 5vw, 4rem);
     align-items: start;
 }
-
-@media (max-width: 820px) {
-    .cp-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .ship-nudge {
-        max-width: 100%;
-        min-width: 0;
-        width: 100%;
-    }
-
-    .cp-head {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+.section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
-
-/* Empty */
-.cp-empty {
-    text-align: center;
-    padding: 5rem 2rem;
-    border: 1.5px dashed #c9a8a4;
-    border-radius: 24px;
-    background: #fffafa;
+.section-heading h2 {
+    margin: 0;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+    font-weight: 600;
 }
-
-.cp-empty h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.7rem;
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 0.5rem;
-}
-
-.cp-empty p {
+.section-heading span {
     font-size: 1rem;
-    color: #6b4f4f;
-    margin-bottom: 1.75rem;
-    line-height: 1.6;
+    font-weight: 600;
 }
-
-/* Card list */
-.card-list {
+.item-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
-
-/* Item card */
-.item-card {
-    display: flex;
-    gap: 1.1rem;
-    padding: 1.2rem 1.3rem;
-    border-radius: 20px;
-    border: 1px solid #e5c9c7;
-    background: #fffafa;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
+.basket-item {
     position: relative;
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    gap: 1.25rem;
+    padding: 1.25rem;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-sm);
     transition:
-        box-shadow 0.25s,
-        transform 0.25s,
-        opacity 0.3s;
-    overflow: hidden;
+        opacity 0.25s,
+        transform 0.25s;
 }
-
-.item-card::before {
-    content: '✿';
-    position: absolute;
-    bottom: -6px;
-    right: 8px;
-    font-size: 3.5rem;
-    color: #c9a4a4;
-    opacity: 0.12;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-}
-
-.item-card::after {
-    content: '✿';
-    position: absolute;
-    top: 6px;
-    left: 10px;
-    font-size: 1rem;
-    color: #c9a4a4;
-    opacity: 0.22;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-}
-
-.item-card:hover {
-    box-shadow: 0 6px 28px rgba(229, 201, 199, 0.5);
-    transform: translateY(-2px);
-}
-
-.item-card--out {
+.basket-item--removing {
     opacity: 0.35;
     pointer-events: none;
+    transform: translateX(-0.75rem);
 }
-
-.ci-img {
-    width: 82px;
-    height: 82px;
-    flex-shrink: 0;
-    border-radius: 14px;
-    border: 1px solid #e5c9c7;
+.item-image {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
     overflow: hidden;
-    background: #fdf4f3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: var(--coy-color-champagne);
+    border-radius: var(--coy-radius-md);
 }
-
-.ci-img img {
+.item-image img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
-    padding: 6px;
+    object-fit: cover;
 }
-
-.ci-body {
-    flex: 1;
+.item-details {
     min-width: 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    gap: 0.6rem;
+    gap: 1.25rem;
 }
-
-.ci-top {
+.item-topline {
     display: flex;
-    justify-content: space-between;
     align-items: flex-start;
-    gap: 0.5rem;
-}
-
-.ci-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.1rem;
-    font-weight: 500;
-    color: #2d1a1a;
-    line-height: 1.3;
-    margin-bottom: 0.15rem;
-}
-
-.ci-unit {
-    font-size: 0.875rem;
-    color: #6b4f4f;
-    font-style: italic;
-}
-
-.ci-remove {
-    flex-shrink: 0;
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
-    border: 1px solid #d4aaa8;
-    background: transparent;
-    color: #6b4f4f;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition:
-        background 0.2s,
-        color 0.2s,
-        border-color 0.2s;
-}
-
-.ci-remove:hover {
-    background: #faeaea;
-    color: #8c4a50;
-    border-color: #6b4f4f;
-}
-
-.ci-bottom {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
+    gap: 1rem;
 }
-
-/* Qty stepper */
-.qty-wrap {
-    display: inline-flex;
+.item-label {
+    margin: 0;
+    color: var(--coy-color-accent);
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.item-topline h3 {
+    margin: 0.2rem 0 0;
+    font-family: var(--coy-font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+.item-topline h3 a {
+    color: var(--coy-color-heading);
+    text-decoration: none;
+}
+.item-topline h3 a:hover {
+    color: var(--coy-color-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.25rem;
+}
+.unit-price {
+    margin: 0.35rem 0 0;
+    font-size: 1rem;
+}
+.line-total {
+    flex: 0 0 auto;
+    color: var(--coy-color-heading);
+    font-size: 1.2rem;
+}
+.item-actions {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--coy-color-border-soft);
+}
+.quantity-field {
+    display: flex;
     align-items: center;
-    border: 1px solid #d4aaa8;
-    border-radius: 999px;
-    background: #fdf4f3;
-    overflow: hidden;
+    gap: 0.75rem;
     transition: opacity 0.2s;
 }
-
-.qty-wrap--busy {
-    opacity: 0.22;
+.quantity-field--pending {
+    opacity: 0.45;
     pointer-events: none;
 }
-
-.qty-btn {
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    color: #8c4a50;
-    transition: background 0.15s;
-}
-
-.qty-btn:hover:not(:disabled) {
-    background: #faeaea;
-}
-
-.qty-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.qty-num {
-    min-width: 28px;
-    text-align: center;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #2d1a1a;
-    border-left: 1px solid #e5c9c7;
-    border-right: 1px solid #e5c9c7;
-    line-height: 30px;
-    padding: 0 2px;
-}
-
-.ci-line-total {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.25rem;
-    font-weight: 500;
-    color: #8c4a50;
-}
-
-/* Summary card */
-.cp-summary {
-    position: sticky;
-    top: 88px;
-}
-
-.sum-card {
-    border: 1px solid #e5c9c7;
-    border-radius: 24px;
-    background: #fffafa;
-    box-shadow: 0 4px 24px rgba(229, 201, 199, 0.4);
-    padding: 1.75rem 1.5rem;
-    text-align: center;
-}
-
-.sum-floral {
-    color: #8c4a50;
-    margin-bottom: 0.75rem;
-}
-
-.sum-floral svg {
-    width: 140px;
-    height: auto;
-    display: inline-block;
-}
-
-.sum-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.45rem;
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 1.25rem;
-}
-
-.sum-rows {
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-    text-align: left;
-    margin-bottom: 1rem;
-}
-
-.sum-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.95rem;
-    color: #6b4f4f;
-}
-
-.sum-row span:last-child {
-    font-weight: 600;
-    color: #2d1a1a;
-}
-
-.sum-ship-note {
-    font-style: italic;
-    font-weight: 400 !important;
-    color: #8c4a50 !important;
-    font-size: 0.9rem;
-}
-
-.sum-dash {
-    border-top: 1px dashed #c9a8a4;
-    margin: 1rem 0;
-}
-
-.sum-total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 1.4rem;
-}
-
-.sum-total-label {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.1rem;
-    font-style: italic;
-    color: #2d1a1a;
-}
-
-.sum-total-val {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 2rem;
-    font-weight: 500;
-    color: #8c4a50;
-}
-
-.btn-checkout {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    width: 100%;
-    padding: 0.85rem 1.5rem;
-    border-radius: 999px;
-    border: 1px solid #a85058;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
+.quantity-label {
     font-size: 1rem;
     font-weight: 600;
-    letter-spacing: 0.04em;
-    text-decoration: none;
-    box-shadow: 0 4px 18px rgba(168, 80, 88, 0.22);
-    transition:
-        box-shadow 0.25s,
-        transform 0.25s;
 }
-
-.btn-checkout:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(168, 80, 88, 0.32);
+.quantity-control {
+    height: 2.5rem;
+    display: grid;
+    grid-template-columns: 2.5rem 2.5rem 2.5rem;
+    overflow: hidden;
+    background: var(--coy-color-page);
+    border: 1px solid var(--coy-color-border);
+    border-radius: 999px;
 }
-
-.btn-rose {
+.quantity-control button {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: var(--coy-color-heading);
+    background: transparent;
+    border: 0;
+    font: 700 1.1rem var(--coy-font-body);
+    cursor: pointer;
+}
+.quantity-control button:hover:not(:disabled) {
+    background: var(--coy-color-blush);
+}
+.quantity-control button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.quantity-control span {
+    display: grid;
+    place-items: center;
+    border-inline: 1px solid var(--coy-color-border-soft);
+    font-size: 1rem;
+    font-weight: 700;
+}
+.remove-button {
+    min-height: 2.5rem;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.7rem 1.6rem;
-    border-radius: 999px;
-    border: 1px solid #a85058;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.95rem;
+    gap: 0.35rem;
+    padding: 0.4rem 0.65rem;
+    color: var(--coy-color-accent);
+    background: transparent;
+    border: 0;
+    border-radius: var(--coy-radius-sm);
+    font: 600 1rem var(--coy-font-body);
+    cursor: pointer;
+}
+.remove-button:hover {
+    background: var(--coy-color-surface-soft);
+}
+.remove-button svg {
+    width: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.voucher-item {
+    border-color: var(--coy-color-rose-gold);
+}
+.voucher-image svg {
+    width: 3.5rem;
+    fill: none;
+    stroke: var(--coy-color-accent);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.voucher-note {
+    font-size: 1rem;
+}
+.order-summary {
+    position: sticky;
+    top: calc(var(--coy-nav-height) + 1.5rem);
+}
+.summary-card {
+    padding: 1.75rem;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-md);
+}
+.summary-card h2 {
+    margin: 0.25rem 0 1.5rem;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: 2rem;
     font-weight: 600;
-    text-decoration: none;
-    box-shadow: 0 3px 14px rgba(168, 80, 88, 0.2);
-    transition:
-        transform 0.2s,
-        box-shadow 0.2s;
 }
-
-.btn-rose:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(168, 80, 88, 0.28);
+.summary-card dl {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin: 0;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--coy-color-border);
 }
-
-.sum-secure {
+.summary-card dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 1rem;
+}
+.summary-card dt,
+.summary-card dd {
+    margin: 0;
+}
+.summary-card dd {
+    color: var(--coy-color-heading);
+    font-weight: 600;
+    text-align: right;
+}
+.summary-total {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.35rem 0;
+}
+.summary-total span {
+    font-size: 1rem;
+    font-weight: 600;
+}
+.summary-total strong {
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: 2rem;
+    line-height: 1;
+}
+.checkout-button {
+    min-height: 3.25rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.35rem;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border: 1px solid var(--coy-color-accent);
+    border-radius: 999px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    transition:
+        background 0.2s,
+        transform 0.2s;
+}
+.checkout-button:hover {
+    background: var(--coy-color-accent-hover);
+    transform: translateY(-1px);
+}
+.checkout-button svg {
+    width: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.checkout-reassurance {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    margin-top: 1rem;
+}
+.checkout-reassurance p {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0;
     font-size: 0.875rem;
-    color: #6b4f4f;
-    margin-top: 0.85rem;
-    font-style: italic;
 }
-
-/* Transitions */
-.card-enter-active {
+.checkout-reassurance svg {
+    width: 0.9rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.help-copy {
+    margin: 1rem 0 0;
+    font-size: 1rem;
+    text-align: center;
+}
+.help-copy a {
+    color: var(--coy-color-accent);
+    font-weight: 700;
+    text-underline-offset: 0.25rem;
+}
+.empty-basket {
+    max-width: 46rem;
+    margin: auto;
+    padding: clamp(3rem, 8vw, 6rem) 1.5rem;
+    text-align: center;
+}
+.empty-icon {
+    width: 5.5rem;
+    height: 5.5rem;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 1.5rem;
+    color: var(--coy-color-accent);
+    background: var(--coy-color-blush);
+    border-radius: 50%;
+}
+.empty-icon svg {
+    width: 2.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.empty-basket h2 {
+    margin: 0.35rem 0 0.75rem;
+    font-size: clamp(2.4rem, 6vw, 3.75rem);
+    font-weight: 500;
+}
+.empty-basket > p:not(.coy-eyebrow) {
+    max-width: 35rem;
+    margin: 0 auto 1.75rem;
+    font-size: 1.125rem;
+}
+.empty-secondary {
+    display: block;
+    margin-top: 1rem;
+    color: var(--coy-color-accent);
+    font-size: 1rem;
+    font-weight: 700;
+    text-underline-offset: 0.3rem;
+}
+.item-enter-active,
+.item-leave-active {
     transition:
-        opacity 0.4s ease,
-        transform 0.4s ease;
+        opacity 0.25s,
+        transform 0.25s;
 }
-
-.card-leave-active {
-    transition:
-        opacity 0.28s ease,
-        transform 0.28s ease;
-}
-
-.card-enter-from {
+.item-enter-from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(0.5rem);
 }
-
-.card-leave-to {
+.item-leave-to {
     opacity: 0;
-    transform: translateX(-12px);
+    transform: translateX(-0.75rem);
 }
-
-/* Mobile */
-@media (max-width: 480px) {
-    .item-card {
+@media (max-width: 850px) {
+    .basket-grid {
+        grid-template-columns: 1fr;
+    }
+    .order-summary {
+        position: static;
+    }
+    .summary-card {
+        max-width: none;
+    }
+}
+@media (max-width: 620px) {
+    .header-inner {
+        min-height: 0;
+        align-items: flex-start;
+        flex-direction: column;
+        padding-block: 2rem;
+    }
+    .header-inner h1 {
+        font-size: 3rem;
+    }
+    .continue-link {
+        padding-left: 0;
+        background: transparent;
+        border: 0;
+    }
+    .basket-item {
+        grid-template-columns: 6.5rem minmax(0, 1fr);
+        gap: 1rem;
+        padding: 1rem;
+    }
+    .item-actions {
+        align-items: flex-start;
         flex-direction: column;
     }
-
-    .ci-img {
-        width: 100%;
-        height: 120px;
+    .remove-button {
+        align-self: flex-end;
+    }
+    .delivery-progress {
+        padding: 1rem;
+    }
+    .delivery-copy {
+        align-items: flex-start;
+    }
+    .summary-card {
+        padding: 1.4rem;
     }
 }
-
-.gv-cart-card {
-    background: linear-gradient(135deg, #fffafa 0%, #fff8f0 100%);
-    border-color: #c9a84c;
-}
-
-.gv-cart-icon {
-    font-size: 2.5rem;
-    width: 82px;
-    height: 82px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    border-radius: 14px;
-    border: 1px solid #e5c9c7;
-    background: #fdf4f3;
-}
-
-.gv-cart-badge {
-    font-size: 0.875rem;
-    font-style: italic;
-    color: #8a6a5a;
-}
-
-.sum-vat-note {
-    font-weight: 400 !important;
-    font-style: italic;
-    color: #9a7070 !important;
-    font-size: 0.9rem;
+@media (max-width: 430px) {
+    .basket-item {
+        grid-template-columns: 5.5rem minmax(0, 1fr);
+    }
+    .item-topline {
+        flex-direction: column;
+    }
+    .line-total {
+        font-size: 1.125rem;
+    }
+    .quantity-field {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .quantity-control {
+        grid-template-columns: 2.35rem 2.35rem 2.35rem;
+    }
 }
 </style>
