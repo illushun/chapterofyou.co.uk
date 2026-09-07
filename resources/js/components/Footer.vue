@@ -4,7 +4,7 @@ const currentYear = new Date().getFullYear();
 </script>
 
 <template>
-    <footer class="ft">
+    <footer class="ft coy-storefront">
         <!-- ── Top wave / petal divider ── -->
         <div class="ft-crown" aria-hidden="true">
             <span class="ft-crown-petal">✿</span>
@@ -154,9 +154,9 @@ const currentYear = new Date().getFullYear();
 
 <style scoped>
 .ft {
-    font-family: 'Nunito', sans-serif;
-    background: #2d1a1a;
-    color: #e5c9c7;
+    font-family: var(--coy-font-body);
+    background: var(--coy-color-heading);
+    color: var(--coy-color-champagne);
     margin-top: auto;
 }
 
@@ -216,7 +216,7 @@ const currentYear = new Date().getFullYear();
 
 /* ── Brand column ── */
 .ft-brand-name {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: var(--coy-font-display);
     font-size: 1.5rem;
     font-style: italic;
     font-weight: 400;
@@ -273,7 +273,7 @@ const currentYear = new Date().getFullYear();
     background: transparent;
     border: none;
     outline: none;
-    font-family: 'Nunito', sans-serif;
+    font-family: var(--coy-font-body);
     font-size: 0.85rem;
     color: #fffafa;
     min-width: 0;

@@ -25,9 +25,8 @@
 
         <meta name="theme-color" content="#8c4a50">
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600|newsreader:400,500,600,400i,500i|source-sans-3:400,500,600,700" rel="stylesheet" />
 
         <title inertia>Chapter of You</title>
 

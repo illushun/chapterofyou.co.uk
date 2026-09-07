@@ -120,13 +120,7 @@ const siteSchemas = computed(() => {
     <SeoHead v-bind="seo" />
     <JsonLdSchema :schema="siteSchemas" />
 
-    <component
-        :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-
-    <main class="lp">
+    <main class="lp coy-storefront">
         <!-- ── Seasonal banner ── -->
         <div
             v-if="season"
@@ -294,7 +288,10 @@ const siteSchemas = computed(() => {
                     ><span></span>
                 </div>
                 <div class="lp-hero-actions">
-                    <a href="/products" class="btn-rose btn-rose--lg">
+                    <a
+                        href="/products"
+                        class="btn-rose btn-rose--lg coy-button coy-button--primary"
+                    >
                         Shop the Collection
                         <svg
                             width="16"
@@ -309,7 +306,12 @@ const siteSchemas = computed(() => {
                             <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                     </a>
-                    <a href="/about" class="btn-ghost"> My Story </a>
+                    <a
+                        href="/about"
+                        class="btn-ghost coy-button coy-button--secondary"
+                    >
+                        My Story
+                    </a>
                 </div>
             </div>
 
@@ -729,9 +731,9 @@ const siteSchemas = computed(() => {
 <style scoped>
 /* ── Base ── */
 .lp {
-    font-family: 'Nunito', sans-serif;
-    color: #2d1a1a;
-    background: #fdf4f3;
+    font-family: var(--coy-font-body);
+    color: var(--coy-color-text);
+    background: var(--coy-color-page);
     overflow-x: hidden;
     padding-top: 64px;
 }
@@ -764,7 +766,7 @@ const siteSchemas = computed(() => {
     gap: 0.6rem;
     flex-wrap: wrap;
     padding: 0.55rem 1.25rem;
-    font-family: 'Nunito', sans-serif;
+    font-family: var(--coy-font-body);
     font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -823,7 +825,7 @@ const siteSchemas = computed(() => {
     justify-content: center;
     text-align: center;
     overflow: hidden;
-    background: #fdf4f3;
+    background: var(--coy-color-page);
     padding: 5rem 1.5rem 4rem;
     /* seasonal blob colour variables */
     --blob1: #e5c9c7;
@@ -977,10 +979,10 @@ const siteSchemas = computed(() => {
 }
 
 .lp-hero-pcard-name {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: var(--coy-font-display);
     font-size: 1rem;
     font-weight: 500;
-    color: #2d1a1a;
+    color: var(--coy-color-heading);
     line-height: 1.3;
     margin-bottom: 0.25rem;
     white-space: nowrap;
@@ -989,41 +991,41 @@ const siteSchemas = computed(() => {
 }
 
 .lp-hero-pcard-price {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--coy-font-display);
     font-size: 1.1rem;
     font-weight: 500;
-    color: #8c4a50;
+    color: var(--coy-color-accent);
 }
 
 .lp-hero-eyebrow {
-    font-family: 'Nunito', sans-serif;
+    font-family: var(--coy-font-body);
     font-size: 0.9rem;
     font-weight: 600;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: #8c4a50;
+    color: var(--coy-color-accent);
     margin-bottom: 1.25rem;
     animation: lp-fadeUp 0.9s ease both;
 }
 
 .lp-hero-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: clamp(4.5rem, 14vw, 9.5rem);
-    font-weight: 300;
+    font-family: var(--coy-font-display);
+    font-size: var(--coy-text-h1);
+    font-weight: var(--coy-font-weight-medium);
     line-height: 0.9;
-    color: #2d1a1a;
+    color: var(--coy-color-heading);
     margin-bottom: 1.5rem;
     animation: lp-fadeUp 0.9s 0.12s ease both;
 }
 
 .lp-hero-title em {
     font-style: italic;
-    color: #8c4a50;
+    color: var(--coy-color-accent);
 }
 
 .lp-hero-product-type {
     margin-top: 0.75rem;
-    color: #8c4a50;
+    color: var(--coy-color-accent);
     font-size: 0.8rem;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -1031,9 +1033,9 @@ const siteSchemas = computed(() => {
 }
 
 .lp-hero-sub {
-    font-size: clamp(0.95rem, 2vw, 1.1rem);
-    color: #6b4f4f;
-    line-height: 1.75;
+    font-size: var(--coy-text-lead);
+    color: var(--coy-color-text);
+    line-height: var(--coy-leading-body);
     max-width: 480px;
     margin: 0 auto 2rem;
     font-style: italic;
@@ -1121,11 +1123,11 @@ const siteSchemas = computed(() => {
 
 /* ── Shared section layout ── */
 .lp-section {
-    padding: 5rem 1.5rem;
+    padding: var(--coy-section-space) var(--coy-gutter);
 }
 
 .lp-section-inner {
-    max-width: 1100px;
+    max-width: var(--coy-container-lg);
     margin: 0 auto;
 }
 
@@ -1139,7 +1141,7 @@ const siteSchemas = computed(() => {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.18em;
-    color: #8c4a50;
+    color: var(--coy-color-accent);
     margin-bottom: 0.75rem;
     display: block;
 }
@@ -1149,16 +1151,16 @@ const siteSchemas = computed(() => {
 }
 
 .lp-section-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2rem, 4.5vw, 2.9rem);
-    font-weight: 400;
-    line-height: 1.2;
-    color: #2d1a1a;
+    font-family: var(--coy-font-display);
+    font-size: var(--coy-text-h2);
+    font-weight: var(--coy-font-weight-medium);
+    line-height: var(--coy-leading-heading);
+    color: var(--coy-color-heading);
 }
 
 .lp-section-title em {
     font-style: italic;
-    color: #8c4a50;
+    color: var(--coy-color-accent);
 }
 
 /* ── Story strip ── */
@@ -1184,7 +1186,7 @@ const siteSchemas = computed(() => {
 }
 
 .lp-story-title {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--coy-font-display);
     font-size: clamp(1.8rem, 4vw, 2.8rem);
     font-weight: 400;
     line-height: 1.2;
@@ -1247,7 +1249,7 @@ const siteSchemas = computed(() => {
 }
 
 .lp-stat-val {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--coy-font-display);
     font-size: 2rem;
     font-weight: 400;
     color: #fff;
@@ -1315,7 +1317,7 @@ const siteSchemas = computed(() => {
 }
 
 .lp-feature-title {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--coy-font-display);
     font-size: 1.2rem;
     font-style: italic;
     font-weight: 400;
@@ -1486,7 +1488,7 @@ const siteSchemas = computed(() => {
 }
 
 .lp-hot-name {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: var(--coy-font-display);
     font-size: 1.05rem;
     font-weight: 500;
     color: #2d1a1a;
@@ -1504,7 +1506,7 @@ const siteSchemas = computed(() => {
 }
 
 .lp-hot-price {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--coy-font-display);
     font-size: 1.35rem;
     font-weight: 500;
     color: #8c4a50;
@@ -1545,7 +1547,7 @@ const siteSchemas = computed(() => {
 }
 
 .lp-sf-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: var(--coy-font-display);
     font-size: 1.9rem;
     font-weight: 400;
     color: #2d1a1a;
@@ -1605,7 +1607,7 @@ const siteSchemas = computed(() => {
 }
 
 .lp-cta-title {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--coy-font-display);
     font-size: clamp(1.8rem, 4vw, 2.5rem);
     font-weight: 400;
     color: #2d1a1a;
@@ -1627,10 +1629,10 @@ const siteSchemas = computed(() => {
     gap: 0.5rem;
     padding: 0.72rem 1.5rem;
     border-radius: 999px;
-    border: 1px solid #a85058;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
+    border: 1px solid var(--coy-color-accent);
+    background: var(--coy-color-accent);
+    color: var(--coy-color-on-accent);
+    font-family: var(--coy-font-body);
     font-size: 1rem;
     font-weight: 600;
     text-decoration: none;
@@ -1657,10 +1659,10 @@ const siteSchemas = computed(() => {
     gap: 0.45rem;
     padding: 0.72rem 1.5rem;
     border-radius: 999px;
-    border: 1px solid #e5c9c7;
-    background: rgba(255, 250, 250, 0.7);
-    color: #6b4f4f;
-    font-family: 'Nunito', sans-serif;
+    border: 1px solid var(--coy-color-border);
+    background: var(--coy-color-surface);
+    color: var(--coy-color-text);
+    font-family: var(--coy-font-body);
     font-size: 1rem;
     font-weight: 600;
     text-decoration: none;
@@ -1719,7 +1721,7 @@ const siteSchemas = computed(() => {
     position: absolute;
     top: -8px;
     left: 12px;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--coy-font-display);
     font-size: 5rem;
     color: #e5c9c7;
     line-height: 1;
@@ -1734,7 +1736,7 @@ const siteSchemas = computed(() => {
 }
 
 .lp-testimonial-body {
-    font-family: 'Cormorant Garamond', serif;
+    font-family: var(--coy-font-display);
     font-size: 1.05rem;
     font-style: italic;
     color: #2d1a1a;
@@ -1769,7 +1771,7 @@ const siteSchemas = computed(() => {
     border-radius: 999px;
     background: #fdf4f3;
     color: #2d1a1a;
-    font-family: 'Nunito', sans-serif;
+    font-family: var(--coy-font-body);
     font-size: 1rem;
     outline: none;
     transition:

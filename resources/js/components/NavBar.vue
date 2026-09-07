@@ -1,5 +1,5 @@
 <template>
-    <nav class="nav">
+    <nav class="nav coy-storefront">
         <div class="nav-inner">
             <div class="nav-row">
                 <!-- Logo -->
@@ -945,10 +945,10 @@ const cartCount = computed<number>(
     left: 0;
     right: 0;
     z-index: 20;
-    background: #fffafa;
-    border-bottom: 1px solid #e5c9c7;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.28);
-    font-family: 'Nunito', sans-serif;
+    background: var(--coy-color-surface);
+    border-bottom: 1px solid var(--coy-color-border);
+    box-shadow: var(--coy-shadow-sm);
+    font-family: var(--coy-font-body);
 }
 
 .nav-inner {
@@ -998,7 +998,7 @@ const cartCount = computed<number>(
     padding: 0.4rem 0.8rem;
     font-size: 0.875rem;
     font-weight: 600;
-    color: #6b4f4f;
+    color: var(--coy-color-text);
     text-decoration: none;
     border-radius: 999px;
     transition:
@@ -1008,8 +1008,8 @@ const cartCount = computed<number>(
 }
 
 .nav-link:hover {
-    color: #2d1a1a;
-    background: #fdf4f3;
+    color: var(--coy-color-heading);
+    background: var(--coy-color-page);
 }
 
 /* ── Actions ── */
@@ -1028,9 +1028,9 @@ const cartCount = computed<number>(
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    border: 1px solid #e5c9c7;
-    background: #fdf4f3;
-    color: #6b4f4f;
+    border: 1px solid var(--coy-color-border);
+    background: var(--coy-color-page);
+    color: var(--coy-color-text);
     text-decoration: none;
     flex-shrink: 0;
     transition:
@@ -1040,9 +1040,9 @@ const cartCount = computed<number>(
 }
 
 .nav-cart:hover {
-    background: #faeaea;
-    border-color: #c9a4a4;
-    color: #8c4a50;
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-rose-gold);
+    color: var(--coy-color-accent);
 }
 
 /* ── Cart badge ── */
@@ -1091,10 +1091,10 @@ const cartCount = computed<number>(
     gap: 0.4rem;
     padding: 0.42rem 0.9rem;
     border-radius: 999px;
-    border: 1px solid #e5c9c7;
-    background: #fdf4f3;
-    color: #2d1a1a;
-    font-family: 'Nunito', sans-serif;
+    border: 1px solid var(--coy-color-border);
+    background: var(--coy-color-page);
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-body);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
@@ -1105,8 +1105,8 @@ const cartCount = computed<number>(
 }
 
 .nav-account-btn:hover {
-    background: #faeaea;
-    border-color: #c9a4a4;
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-rose-gold);
 }
 
 /* ── Dropdown ── */
@@ -1115,10 +1115,10 @@ const cartCount = computed<number>(
     right: 0;
     top: calc(100% + 8px);
     width: 175px;
-    border: 1px solid #e5c9c7;
+    border: 1px solid var(--coy-color-border);
     border-radius: 16px;
-    background: #fffafa;
-    box-shadow: 0 8px 32px rgba(229, 201, 199, 0.55);
+    background: var(--coy-color-surface);
+    box-shadow: var(--coy-shadow-md);
     overflow: hidden;
     z-index: 30;
 }
@@ -1126,10 +1126,10 @@ const cartCount = computed<number>(
 .nav-dd-item {
     display: block;
     padding: 0.6rem 1rem;
-    font-family: 'Nunito', sans-serif;
+    font-family: var(--coy-font-body);
     font-size: 0.85rem;
     font-weight: 500;
-    color: #2d1a1a;
+    color: var(--coy-color-heading);
     text-decoration: none;
     background: none;
     border: none;
@@ -1180,10 +1180,10 @@ const cartCount = computed<number>(
     align-items: center;
     padding: 0.42rem 1.1rem;
     border-radius: 999px;
-    border: 1px solid #a85058;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
+    border: 1px solid var(--coy-color-accent);
+    background: var(--coy-color-accent);
+    color: var(--coy-color-on-accent);
+    font-family: var(--coy-font-body);
     font-size: 0.85rem;
     font-weight: 600;
     text-decoration: none;
@@ -1207,9 +1207,9 @@ const cartCount = computed<number>(
     width: 38px;
     height: 38px;
     border-radius: 50%;
-    border: 1px solid #e5c9c7;
-    background: #fdf4f3;
-    color: #6b4f4f;
+    border: 1px solid var(--coy-color-border);
+    background: var(--coy-color-page);
+    color: var(--coy-color-text);
     cursor: pointer;
     flex-shrink: 0;
     transition:
@@ -1218,8 +1218,8 @@ const cartCount = computed<number>(
 }
 
 .nav-hamburger:hover {
-    background: #faeaea;
-    border-color: #c9a4a4;
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-rose-gold);
 }
 
 @media (min-width: 640px) {
@@ -1230,8 +1230,8 @@ const cartCount = computed<number>(
 
 /* ── Mobile panel ── */
 .nav-mobile {
-    border-top: 1px solid #e5c9c7;
-    background: #fffafa;
+    border-top: 1px solid var(--coy-color-border);
+    background: var(--coy-color-surface);
 }
 
 .nav-mobile-inner {
@@ -1249,9 +1249,9 @@ const cartCount = computed<number>(
     gap: 0.45rem;
     padding: 0.5rem 0.9rem;
     border-radius: 999px;
-    border: 1px solid #e5c9c7;
-    background: #fdf4f3;
-    color: #2d1a1a;
+    border: 1px solid var(--coy-color-border);
+    background: var(--coy-color-page);
+    color: var(--coy-color-heading);
     font-size: 0.88rem;
     font-weight: 600;
     text-decoration: none;
@@ -1272,7 +1272,7 @@ const cartCount = computed<number>(
     border-radius: 10px;
     font-size: 1rem;
     font-weight: 500;
-    color: #6b4f4f;
+    color: var(--coy-color-text);
     text-decoration: none;
     transition:
         background 0.15s,
@@ -1280,8 +1280,8 @@ const cartCount = computed<number>(
 }
 
 .nav-mobile-link:hover {
-    background: #fdf4f3;
-    color: #2d1a1a;
+    background: var(--coy-color-page);
+    color: var(--coy-color-heading);
 }
 
 .nav-mobile-footer {
@@ -1302,7 +1302,7 @@ const cartCount = computed<number>(
     border: none;
     text-align: left;
     cursor: pointer;
-    font-family: 'Nunito', sans-serif;
+    font-family: var(--coy-font-body);
     transition: background 0.15s;
 }
 
