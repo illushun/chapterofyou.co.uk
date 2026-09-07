@@ -10,6 +10,7 @@ interface ProductCardData {
     stock_qty: number;
     images?: { image: string }[];
     total_unique_views?: number;
+    scent_families?: string | null;
     seo?: { slug: string };
 }
 
@@ -28,6 +29,22 @@ const isLowStock = computed(() =>
 );
 const imageUrl = computed(() => props.product.images?.[0]?.image || '/images/placeholder.jpg');
 const isTapped = ref(false);
+const scentLabel = computed(() => {
+    const families = props.product.scent_families
+        ?.split(',')
+        .map((family) =>
+            family
+                .trim()
+                .replaceAll('_', ' ')
+                .replace(/\b\w/g, (letter) => letter.toUpperCase()),
+        )
+        .filter(Boolean)
+        .slice(0, 2);
+    if (families?.length) return families.join(' · ');
+    return props.product.name.toLowerCase().includes('refill')
+        ? 'Reed diffuser refill'
+        : 'Reed diffuser';
+});
 
 // Spring animation - gentler values to feel soft not mechanical
 const springTransition = { type: 'spring' as const, stiffness: 180, damping: 18, mass: 1 };
@@ -126,6 +143,7 @@ const handleTouchEnd = (event: Event) => {
         <!-- Card body -->
         <div class="psc-body">
             <p class="psc-name">{{ truncatedName }}</p>
+            <p class="psc-scent">{{ scentLabel }}</p>
 
             <div class="psc-footer">
                 <span class="psc-price">{{ fmt }}</span>
@@ -158,6 +176,13 @@ const handleTouchEnd = (event: Event) => {
     position: relative;
     cursor: pointer;
     transition: box-shadow 0.3s ease;
+}
+
+.psc-scent {
+    margin-top: 0.2rem;
+    color: #8c6d6d;
+    font-size: 0.78rem;
+    line-height: 1.35;
 }
 
 /* Deepen shadow on hover (spring handles lift) */

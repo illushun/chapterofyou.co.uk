@@ -42,6 +42,13 @@ const fmt = (v: unknown) => `£${n(v).toFixed(2)}`;
 const finalTotal = computed(() => n(props.cartTotal));
 const remaining = computed(() => Math.max(0, 50 - n(props.cartTotal)));
 const freeShip = computed(() => n(props.cartTotal) >= 50);
+const shippingLabel = computed(() => {
+    if (props.giftVoucher?.delivery_type === 'physical')
+        return freeShip.value
+            ? 'Physical voucher postage £2.99'
+            : 'Calculated at checkout';
+    return freeShip.value ? 'Free' : 'Calculated at checkout';
+});
 const progress = computed(() => Math.min(100, (n(props.cartTotal) / 50) * 100));
 
 const pending = ref<Record<number, boolean>>({});
@@ -423,7 +430,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                             <div class="sum-row">
                                 <span>Shipping</span>
                                 <span class="sum-ship-note">
-                                    {{ freeShip ? 'Free!' : 'At checkout' }}
+                                    {{ shippingLabel }}
                                 </span>
                             </div>
                         </div>
@@ -431,7 +438,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                         <div class="sum-dash" aria-hidden="true"></div>
 
                         <div class="sum-total-row">
-                            <span class="sum-total-label">Total</span>
+                            <span class="sum-total-label">Basket subtotal</span>
                             <span class="sum-total-val">{{
                                 fmt(finalTotal)
                             }}</span>

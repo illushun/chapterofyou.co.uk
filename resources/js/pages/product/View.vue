@@ -28,6 +28,7 @@ interface Product {
     cost: number;
     stock_qty: number;
     parent_product_id: number;
+    scent_families?: string | null;
 }
 interface ProductsPaginated {
     current_page: number;
@@ -57,7 +58,7 @@ const seo = computed(() =>
     useSeoHead({
         title: 'Shop Reed Diffusers',
         description:
-            'Browse my full collection of hand-crafted reed diffusers. Free UK delivery on orders over £50.',
+            'Browse my full collection of hand-crafted reed diffusers. Free UK delivery on orders of £50 or more.',
         canonical:
             props.products.current_page > 1
                 ? `/products?page=${props.products.current_page}`
@@ -72,7 +73,7 @@ const form = reactive({
         : [],
     min_price: Number(props.filters.min_price) || 0,
     max_price: Number(props.filters.max_price) || 500,
-    sort: props.filters.sort || 'mpn,asc',
+    sort: props.filters.sort || 'name,asc',
     in_stock:
         props.filters.in_stock === 'true' || props.filters.in_stock === true,
 });
@@ -118,7 +119,7 @@ const clearFilters = () => {
     form.categories = [];
     form.min_price = 0;
     form.max_price = 500;
-    form.sort = 'mpn,asc';
+    form.sort = 'name,asc';
     form.in_stock = false;
     filterOpen.value = false;
 };
@@ -168,6 +169,7 @@ interface ProductCardData {
     stock_qty: number;
     images?: { image: string }[];
     total_unique_views?: number;
+    scent_families?: string | null;
 }
 
 const handleAddToCart = (product: ProductCardData) => {
@@ -458,6 +460,9 @@ const productListSchema = computed(() => ({
                                 Filters
                             </button>
                         </div>
+                        <a href="/scent-finder" class="pv-scent-link"
+                            >Help me choose a scent</a
+                        >
                     </div>
 
                     <!-- Product grid -->
@@ -990,6 +995,16 @@ const productListSchema = computed(() => ({
 
 .pv-sort-select:focus {
     border-color: #8c4a50;
+}
+
+.pv-scent-link {
+    flex: 0 0 100%;
+    width: 100%;
+    color: #8c4a50;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: right;
+    text-underline-offset: 3px;
 }
 
 .pv-filter-btn {

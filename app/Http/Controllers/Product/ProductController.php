@@ -31,6 +31,16 @@ class ProductController extends Controller
         $filters = $request->only([
             'search', 'categories', 'min_price', 'max_price', 'sort', 'in_stock',
         ]);
+        $sorts = [
+            'name,asc' => ['name', 'asc'],
+            'name,desc' => ['name', 'desc'],
+            'cost,asc' => ['cost', 'asc'],
+            'cost,desc' => ['cost', 'desc'],
+        ];
+        $filters['sort'] = array_key_exists($filters['sort'] ?? '', $sorts)
+            ? $filters['sort']
+            : 'name,asc';
+        [$sortColumn, $sortDirection] = $sorts[$filters['sort']];
 
         $products = Product::with('categories')
             ->with('images')
@@ -38,10 +48,7 @@ class ProductController extends Controller
             ->with('seo:product_id,slug')
             ->withCount('uniqueViews')
             ->filter($filters)
-            ->when($request->get('sort'), function ($query, $sort) {
-                [$column, $direction] = explode(',', $sort);
-                $query->orderBy($column, $direction);
-            })
+            ->orderBy($sortColumn, $sortDirection)
             ->paginate($perPage)
             ->withQueryString()
             ->toArray();

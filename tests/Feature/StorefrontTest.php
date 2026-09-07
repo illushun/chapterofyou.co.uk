@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\JournalPost;
+use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -35,5 +36,23 @@ class StorefrontTest extends TestCase
         $this->get(route('home'))->assertInertia(fn (Assert $page) => $page
             ->has('recentJournalPosts', 1)
             ->where('recentJournalPosts.0.reading_time', 4));
+    }
+
+    public function test_products_use_a_visible_and_valid_default_sort(): void
+    {
+        Product::create([
+            'mpn' => 'ZED', 'name' => 'Zest', 'description' => 'Test',
+            'cost' => 10, 'stock_qty' => 1, 'status' => 'enabled',
+        ]);
+        Product::create([
+            'mpn' => 'ALP', 'name' => 'Alpine', 'description' => 'Test',
+            'cost' => 10, 'stock_qty' => 1, 'status' => 'enabled',
+        ]);
+
+        $this->get(route('products', ['sort' => 'invalid,desc']))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('filters.sort', 'name,asc')
+                ->where('products.data.0.name', 'Alpine')
+                ->where('products.data.1.name', 'Zest'));
     }
 }

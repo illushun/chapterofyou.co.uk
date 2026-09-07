@@ -17,19 +17,34 @@ const getRoute = (name: string, params: any = {}, absolute: boolean = true) => {
 };
 
 const loadStripeScript = (): Promise<void> =>
-    new Promise((resolve) => {
+    new Promise((resolve, reject) => {
         if (typeof Stripe !== 'undefined') return resolve();
         const scriptId = 'stripe-script';
-        let script = document.getElementById(scriptId) as HTMLScriptElement;
-        if (script) {
-            script.onload = () => resolve();
-        } else {
-            script = document.createElement('script');
-            script.src = 'https://js.stripe.com/v3/';
-            script.id = scriptId;
-            script.onload = () => resolve();
-            document.head.appendChild(script);
-        }
+        document.getElementById(scriptId)?.remove();
+        const script = document.createElement('script');
+        const timeout = window.setTimeout(
+            () => finish(new Error('Payment loading timed out. Please retry.')),
+            15000,
+        );
+        const finish = (error?: Error) => {
+            window.clearTimeout(timeout);
+            script.onload = null;
+            script.onerror = null;
+            if (error) {
+                script.remove();
+                reject(error);
+            } else resolve();
+        };
+        script.src = 'https://js.stripe.com/v3/';
+        script.id = scriptId;
+        script.onload = () => finish();
+        script.onerror = () =>
+            finish(
+                new Error(
+                    'Payment could not load. Check your connection and retry.',
+                ),
+            );
+        document.head.appendChild(script);
     });
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -76,6 +91,8 @@ const props = defineProps<{
         delivery_type: 'email' | 'physical';
         recipient_name: string;
         recipient_email: string | null;
+        sender_name?: string;
+        sender_email?: string;
     } | null;
 }>();
 
@@ -139,11 +156,32 @@ const stripe = ref<any>(null);
 const elements = ref<any>(null);
 const paymentElement = ref<any>(null);
 const clientSecret = ref('');
-const paymentIntentId = ref('');
+const confirmedPaymentId = ref('');
+const paymentDisabled = computed(
+    () =>
+        isProcessing.value ||
+        isLoadingInitialData.value ||
+        !hasClientSecret.value,
+);
+const isDigitalOnly = computed(
+    () =>
+        props.cartItems.length === 0 &&
+        props.giftVoucher?.delivery_type === 'email',
+);
+const isPhysicalGiftOnly = computed(
+    () =>
+        props.cartItems.length === 0 &&
+        props.giftVoucher?.delivery_type === 'physical',
+);
+const addressHeading = computed(() => {
+    if (isDigitalOnly.value) return 'Billing Address';
+    if (isPhysicalGiftOnly.value) return 'Recipient Delivery Address';
+    return 'Shipping Address';
+});
 
 const addressForm = useForm({
-    email: '',
-    fullName: '',
+    email: props.giftVoucher?.sender_email ?? '',
+    fullName: props.giftVoucher?.sender_name ?? '',
     telephone: '',
     addressLine1: '',
     addressLine2: '',
@@ -151,7 +189,6 @@ const addressForm = useForm({
     county: '',
     postcode: '',
     country: 'United Kingdom',
-    saveInfo: false,
 });
 
 const formatAddress = (address: Address): string[] =>
@@ -215,123 +252,183 @@ const fetchPaymentIntent = async () => {
         if (!response.ok || data.error)
             throw new Error(data.error || 'Failed to fetch payment intent.');
         clientSecret.value = data.clientSecret;
-        paymentIntentId.value = data.paymentIntentId;
     } catch (error: any) {
         paymentError.value = 'Could not initialise payment: ' + error.message;
     }
 };
 
 const initializeStripe = async () => {
-    await fetchPaymentIntent();
-    if (!clientSecret.value || paymentError.value) {
-        isLoadingInitialData.value = false;
-        return;
-    }
-    hasClientSecret.value = true;
-    await nextTick();
-    stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
-    elements.value = stripe.value.elements({
-        clientSecret: clientSecret.value,
-    });
-    paymentElement.value = elements.value.create('payment', {
-        layout: 'tabs',
-        appearance: {
-            theme: 'stripe',
-            variables: {
-                colorPrimary: '#8c4a50',
-                colorText: '#2d1a1a',
-                colorBackground: '#fffafa',
+    if (isProcessing.value || confirmedPaymentId.value) return;
+    isLoadingInitialData.value = true;
+    hasClientSecret.value = false;
+    paymentError.value = null;
+    clientSecret.value = '';
+    paymentElement.value?.destroy();
+    paymentElement.value = null;
+    try {
+        await loadStripeScript();
+        await fetchPaymentIntent();
+        if (!clientSecret.value || paymentError.value) {
+            isLoadingInitialData.value = false;
+            return;
+        }
+        await nextTick();
+        stripe.value = Stripe(import.meta.env.VITE_STRIPE_KEY);
+        elements.value = stripe.value.elements({
+            clientSecret: clientSecret.value,
+        });
+        paymentElement.value = elements.value.create('payment', {
+            layout: 'tabs',
+            appearance: {
+                theme: 'stripe',
+                variables: {
+                    colorPrimary: '#8c4a50',
+                    colorText: '#2d1a1a',
+                    colorBackground: '#fffafa',
+                },
             },
-        },
-    });
-    const maxRetries = 10;
-    let attempts = 0;
-    let mounted = false;
-    while (attempts < maxRetries && !mounted) {
-        const container = paymentContainer.value;
-        if (container) {
-            try {
-                paymentElement.value.mount(container);
-                mounted = true;
-            } catch {
+        });
+        const maxRetries = 10;
+        let attempts = 0;
+        let mounted = false;
+        while (attempts < maxRetries && !mounted) {
+            const container = paymentContainer.value;
+            if (container) {
+                try {
+                    paymentElement.value.mount(container);
+                    mounted = true;
+                } catch {
+                    await delay(50);
+                }
+            } else {
                 await delay(50);
             }
-        } else {
-            await delay(50);
+            attempts++;
         }
-        attempts++;
+        if (!mounted)
+            throw new Error('Payment system failed to load. Please retry.');
+        hasClientSecret.value = true;
+    } catch (error) {
+        paymentError.value =
+            error instanceof Error
+                ? error.message
+                : 'Payment could not load. Please retry.';
+    } finally {
+        isLoadingInitialData.value = false;
     }
-    if (!mounted) paymentError.value = 'Payment system failed to load.';
-    isLoadingInitialData.value = false;
 };
 
+async function focusFirstError() {
+    isManualAddressVisible.value = true;
+    await nextTick();
+    document.getElementById(Object.keys(addressForm.errors)[0])?.focus();
+}
+
+function submitOrder() {
+    router.post(
+        getRoute('checkout.process_payment'),
+        {
+            ...addressForm.data(),
+            paymentIntentId: confirmedPaymentId.value,
+            paymentType: 'card',
+        },
+        {
+            onError: (errors) => {
+                addressForm.setError(errors);
+                paymentError.value =
+                    Object.values(errors)[0] ||
+                    'Order confirmation failed. Please retry.';
+                void focusFirstError();
+            },
+            onSuccess: (page) => {
+                const flash = page.props.flash as
+                    | { error?: string }
+                    | undefined;
+                if (flash?.error) paymentError.value = flash.error;
+            },
+            onFinish: () => {
+                isProcessing.value = false;
+            },
+            preserveState: true,
+        },
+    );
+}
+
 const handleCardPayment = async () => {
+    if (paymentDisabled.value) return;
+    addressForm.clearErrors();
+    const requiredFields = {
+        email: 'Enter your email address.',
+        fullName: 'Enter your full name.',
+        addressLine1: 'Enter your address.',
+        city: 'Enter your town or city.',
+        postcode: 'Enter your postcode.',
+    } as const;
+    for (const field of Object.keys(
+        requiredFields,
+    ) as (keyof typeof requiredFields)[]) {
+        if (!addressForm[field].trim())
+            addressForm.setError(field, requiredFields[field]);
+    }
     if (
-        !addressForm.email ||
-        !addressForm.addressLine1 ||
-        !addressForm.postcode ||
-        !addressForm.fullName
+        addressForm.email &&
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(addressForm.email)
     ) {
-        paymentError.value = 'Please complete all required fields.';
+        addressForm.setError('email', 'Enter a valid email address.');
+    }
+    if (addressForm.hasErrors) {
+        paymentError.value = 'Please check the highlighted details.';
+        await focusFirstError();
         return;
     }
     isProcessing.value = true;
     paymentError.value = null;
-    if (!stripe.value || !paymentElement.value) {
-        paymentError.value = 'Payment system not loaded.';
-        isProcessing.value = false;
+    if (confirmedPaymentId.value) {
+        submitOrder();
         return;
     }
-    const { error: stripeError, paymentIntent } =
-        await stripe.value.confirmPayment({
-            elements: elements.value,
-            confirmParams: {
-                return_url:
-                    window.location.origin +
-                    getRoute('checkout.index', {}, false),
-                payment_method_data: {
-                    billing_details: {
-                        name: addressForm.fullName,
-                        email: addressForm.email,
-                        phone: addressForm.telephone || undefined,
-                        address: {
-                            line1: addressForm.addressLine1,
-                            line2: addressForm.addressLine2 || undefined,
-                            city: addressForm.city,
-                            state: addressForm.county || undefined,
-                            postal_code: addressForm.postcode,
-                            country: 'GB',
+    try {
+        const { error: stripeError, paymentIntent } =
+            await stripe.value.confirmPayment({
+                elements: elements.value,
+                confirmParams: {
+                    return_url:
+                        window.location.origin +
+                        getRoute('checkout.index', {}, false),
+                    payment_method_data: {
+                        billing_details: {
+                            name: addressForm.fullName,
+                            email: addressForm.email,
+                            phone: addressForm.telephone || undefined,
+                            address: {
+                                line1: addressForm.addressLine1,
+                                line2: addressForm.addressLine2 || undefined,
+                                city: addressForm.city,
+                                state: addressForm.county || undefined,
+                                postal_code: addressForm.postcode,
+                                country: 'GB',
+                            },
                         },
                     },
                 },
-            },
-            redirect: 'if_required',
-        });
-    if (stripeError) {
-        paymentError.value = stripeError.message || 'An error occurred.';
-        isProcessing.value = false;
-        return;
-    }
-    if (paymentIntent?.status === 'succeeded') {
-        router.post(
-            getRoute('checkout.process_payment'),
-            {
-                ...addressForm.data(),
-                paymentIntentId: paymentIntent.id,
-                paymentType: 'card',
-            },
-            {
-                onError: (errors) => {
-                    paymentError.value =
-                        (Object.values(errors)[0] as string) || 'Order failed.';
-                },
-                onFinish: () => {
-                    isProcessing.value = false;
-                },
-            },
-        );
-    } else {
-        paymentError.value = 'Payment status: ' + paymentIntent?.status;
+                redirect: 'if_required',
+            });
+        if (stripeError) {
+            paymentError.value = stripeError.message || 'An error occurred.';
+            isProcessing.value = false;
+            return;
+        }
+        if (paymentIntent?.status === 'succeeded') {
+            confirmedPaymentId.value = paymentIntent.id;
+            submitOrder();
+        } else {
+            paymentError.value =
+                'Your payment has not completed. Please check your payment details and try again.';
+            isProcessing.value = false;
+        }
+    } catch {
+        paymentError.value =
+            'Payment could not be confirmed. Please check your connection and retry.';
         isProcessing.value = false;
     }
 };
@@ -350,7 +447,6 @@ onMounted(async () => {
         }
     }
     if (hasItems.value) {
-        await loadStripeScript();
         await initializeStripe();
     } else {
         isLoadingInitialData.value = false;
@@ -464,7 +560,11 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                     <section class="co-card">
                         <h2 class="co-card-title">
                             <span class="co-step">1</span>
-                            Contact &amp; Shipping
+                            {{
+                                isDigitalOnly
+                                    ? 'Contact & Billing'
+                                    : 'Contact & Shipping'
+                            }}
                         </h2>
 
                         <form
@@ -481,6 +581,14 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     >
                                     <input
                                         id="email"
+                                        :aria-invalid="
+                                            !!addressForm.errors.email
+                                        "
+                                        :aria-describedby="
+                                            addressForm.errors.email
+                                                ? 'email-error'
+                                                : undefined
+                                        "
                                         type="email"
                                         v-model="addressForm.email"
                                         required
@@ -494,6 +602,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     />
                                     <p
                                         v-if="addressForm.errors.email"
+                                        id="email-error"
                                         class="field-error"
                                     >
                                         {{ addressForm.errors.email }}
@@ -508,6 +617,14 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     >
                                     <input
                                         id="fullName"
+                                        :aria-invalid="
+                                            !!addressForm.errors.fullName
+                                        "
+                                        :aria-describedby="
+                                            addressForm.errors.fullName
+                                                ? 'fullName-error'
+                                                : undefined
+                                        "
                                         type="text"
                                         v-model="addressForm.fullName"
                                         required
@@ -521,6 +638,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     />
                                     <p
                                         v-if="addressForm.errors.fullName"
+                                        id="fullName-error"
                                         class="field-error"
                                     >
                                         {{ addressForm.errors.fullName }}
@@ -566,7 +684,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     >
                                         <path d="M12 5v14M5 12h14" />
                                     </svg>
-                                    Add Shipping Address
+                                    Add {{ addressHeading }}
                                 </button>
                             </div>
 
@@ -575,9 +693,13 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                 class="co-address-fields"
                             >
                                 <h3 class="co-address-fields-title">
-                                    Shipping Address
+                                    {{ addressHeading }}
                                 </h3>
 
+                                <p v-if="isDigitalOnly">
+                                    Your voucher is delivered by email. This
+                                    address is used for billing only.
+                                </p>
                                 <div class="field">
                                     <label
                                         for="addressLine1"
@@ -589,6 +711,14 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     >
                                     <input
                                         id="addressLine1"
+                                        :aria-invalid="
+                                            !!addressForm.errors.addressLine1
+                                        "
+                                        :aria-describedby="
+                                            addressForm.errors.addressLine1
+                                                ? 'addressLine1-error'
+                                                : undefined
+                                        "
                                         type="text"
                                         v-model="addressForm.addressLine1"
                                         required
@@ -602,6 +732,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     />
                                     <p
                                         v-if="addressForm.errors.addressLine1"
+                                        id="addressLine1-error"
                                         class="field-error"
                                     >
                                         {{ addressForm.errors.addressLine1 }}
@@ -637,6 +768,14 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                         >
                                         <input
                                             id="city"
+                                            :aria-invalid="
+                                                !!addressForm.errors.city
+                                            "
+                                            :aria-describedby="
+                                                addressForm.errors.city
+                                                    ? 'city-error'
+                                                    : undefined
+                                            "
                                             type="text"
                                             v-model="addressForm.city"
                                             required
@@ -650,6 +789,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                         />
                                         <p
                                             v-if="addressForm.errors.city"
+                                            id="city-error"
                                             class="field-error"
                                         >
                                             {{ addressForm.errors.city }}
@@ -666,6 +806,14 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                         >
                                         <input
                                             id="postcode"
+                                            :aria-invalid="
+                                                !!addressForm.errors.postcode
+                                            "
+                                            :aria-describedby="
+                                                addressForm.errors.postcode
+                                                    ? 'postcode-error'
+                                                    : undefined
+                                            "
                                             type="text"
                                             v-model="addressForm.postcode"
                                             required
@@ -679,6 +827,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                         />
                                         <p
                                             v-if="addressForm.errors.postcode"
+                                            id="postcode-error"
                                             class="field-error"
                                         >
                                             {{ addressForm.errors.postcode }}
@@ -716,19 +865,6 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     />
                                 </div>
                             </div>
-
-                            <!-- Save info - logged-in users only -->
-                            <label v-if="!isGuest" class="co-save-label">
-                                <input
-                                    type="checkbox"
-                                    v-model="addressForm.saveInfo"
-                                    class="co-save-check"
-                                />
-                                <span
-                                    >Save my details for faster checkout next
-                                    time</span
-                                >
-                            </label>
 
                             <!-- Guest prompt -->
                             <div v-if="isGuest" class="co-guest-prompt">
@@ -800,7 +936,11 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                             class="co-stripe-container"
                         ></div>
 
-                        <div v-if="paymentError" class="co-payment-error">
+                        <div
+                            v-if="paymentError"
+                            class="co-payment-error"
+                            role="alert"
+                        >
                             <svg
                                 width="14"
                                 height="14"
@@ -819,20 +959,19 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                         </div>
 
                         <button
+                            v-if="!hasClientSecret && !isLoadingInitialData"
+                            type="button"
+                            class="btn-rose btn-rose--full"
+                            @click="initializeStripe"
+                        >
+                            Retry loading payment
+                        </button>
+                        <button
                             @click.prevent="handleCardPayment"
-                            :disabled="
-                                isProcessing ||
-                                isLoadingInitialData ||
-                                !hasClientSecret ||
-                                !!paymentError
-                            "
+                            :disabled="paymentDisabled"
                             class="btn-rose btn-rose--full co-pay-btn"
                             :class="{
-                                'btn-rose--disabled':
-                                    isProcessing ||
-                                    isLoadingInitialData ||
-                                    !hasClientSecret ||
-                                    !!paymentError,
+                                'btn-rose--disabled': paymentDisabled,
                             }"
                         >
                             <svg

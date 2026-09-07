@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch, ref } from 'vue';
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
 
 interface ProductImage { image: string; }
 
@@ -12,10 +12,9 @@ const props = defineProps<{
 const emit = defineEmits(['update:open']);
 
 const currentModalIndex = ref(props.initialIndex);
-
-watch(() => props.open, (newOpen) => {
-    if (newOpen) currentModalIndex.value = props.initialIndex;
-});
+const modal = ref<HTMLElement | null>(null);
+const closeButton = ref<HTMLButtonElement | null>(null);
+let returnFocus: HTMLElement | null = null;
 
 watch(() => props.initialIndex, (newIndex) => {
     currentModalIndex.value = newIndex;
@@ -41,25 +40,47 @@ const handleKeydown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') closeModal();
     if (event.key === 'ArrowLeft') showPrevious();
     if (event.key === 'ArrowRight') showNext();
+    if (event.key !== 'Tab' || !modal.value) return;
+    const focusable = [...modal.value.querySelectorAll<HTMLElement>('button:not([disabled])')];
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+    }
 };
 
-watch(() => props.open, (newOpen) => {
+watch(() => props.open, async (newOpen) => {
     if (typeof window === 'undefined') return;
-    newOpen
-        ? window.addEventListener('keydown', handleKeydown)
-        : window.removeEventListener('keydown', handleKeydown);
+    if (newOpen) {
+        currentModalIndex.value = props.initialIndex;
+        returnFocus = document.activeElement as HTMLElement;
+        window.addEventListener('keydown', handleKeydown);
+        await nextTick();
+        closeButton.value?.focus();
+    } else {
+        window.removeEventListener('keydown', handleKeydown);
+        returnFocus?.focus();
+        returnFocus = null;
+    }
 }, { immediate: true });
+
+onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
 </script>
 
 <template>
     <Transition name="miv-fade">
-        <div v-if="open" class="miv-backdrop" @click.self="closeModal" role="dialog" aria-modal="true"
+        <div v-if="open" ref="modal" class="miv-backdrop" @click.self="closeModal" role="dialog" aria-modal="true"
             aria-label="Image viewer">
 
             <div class="miv-box">
 
                 <!-- Close -->
-                <button @click="closeModal" class="miv-close" aria-label="Close image viewer">
+                <button ref="closeButton" @click="closeModal" class="miv-close" aria-label="Close image viewer">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M18 6 6 18M6 6l12 12" />

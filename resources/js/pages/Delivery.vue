@@ -8,7 +8,7 @@ import { useSeoHead } from '@/composables/useSeoHead';
 const seo = useSeoHead({
     title: 'Delivery Information',
     description:
-        'Everything you need to know about delivery at Chapter of You. Orders dispatched within 2–3 working days with tracking included.',
+        'Everything you need to know about delivery at Chapter of You. Orders typically dispatch within 3 to 5 working days with tracking included.',
     canonical: '/delivery',
 });
 </script>
@@ -59,7 +59,7 @@ const seo = useSeoHead({
                     <p class="dv-card-body">
                         I aim to prepare and dispatch all orders as quickly as
                         possible. Orders are typically processed within
-                        <strong>2–3 working days</strong>. During busier
+                        <strong>3 to 5 working days</strong>. During busier
                         periods, this may take slightly longer, I appreciate
                         your patience.
                     </p>
@@ -112,10 +112,10 @@ const seo = useSeoHead({
                     </div>
                     <h2 class="dv-card-title">Delivery Times</h2>
                     <p class="dv-card-body">
-                        Delivery times may vary depending on your location and
-                        the courier service used. Please allow additional time
-                        during <strong>peak periods</strong> or in the event of
-                        any unforeseen delays.
+                        UK delivery usually takes
+                        <strong>2 to 3 working days after dispatch</strong>.
+                        Tracking is provided when your order leaves me. Please
+                        allow extra time during peak periods.
                     </p>
                 </div>
 
@@ -139,9 +139,11 @@ const seo = useSeoHead({
                     </div>
                     <h2 class="dv-card-title">Free Delivery</h2>
                     <p class="dv-card-body">
-                        Enjoy <strong>free UK delivery</strong> on all orders
-                        over <strong>£50</strong>. A small treat to say thank
-                        you for choosing Chapter of You.
+                        Enjoy <strong>free UK delivery</strong> on orders of
+                        <strong>£50 or more</strong>. Delivery below the
+                        threshold is calculated from the items in your basket
+                        and shown at checkout. Physical gift vouchers include
+                        £2.99 postage.
                     </p>
                 </div>
             </div>

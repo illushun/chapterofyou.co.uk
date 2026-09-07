@@ -103,6 +103,11 @@ const withDiffuserKeyword = (text: string) =>
     /\bdiffusers?\b/i.test(text) ? text : `${text} Reed Diffuser`;
 
 const displayTitle = computed(() => withDiffuserKeyword(props.product.name));
+const shortDescription = computed(() => {
+    const text =
+        props.product.description?.replace(/<[^>]*>/g, '').trim() ?? '';
+    return text.length > 150 ? `${text.slice(0, 147).trim()}...` : text;
+});
 
 const seo = useSeoHead({
     title: props.product.seo?.meta_title || displayTitle.value,
@@ -159,8 +164,18 @@ const decreaseQuantity = () => {
 };
 
 const selectedImageIndex = ref(0);
+const modalImages = ref<ProductImage[]>(props.product.images);
+const modalImageIndex = ref(0);
 const openImageModal = () => {
-    if (props.product.images.length > 0) isModalOpen.value = true;
+    if (!props.product.images.length) return;
+    modalImages.value = props.product.images;
+    modalImageIndex.value = selectedImageIndex.value;
+    isModalOpen.value = true;
+};
+const openReviewImage = (images: string[], index: number) => {
+    modalImages.value = images.map((image) => ({ image }));
+    modalImageIndex.value = index;
+    isModalOpen.value = true;
 };
 // ── Review form ───────────────────────────────────────────────────────────
 const reviewForm = useForm({ rating: 0, message: '', images: [] as File[] });
@@ -348,13 +363,33 @@ onUnmounted(() => {
         <div class="pd-wrap">
             <!-- ── Product main grid ── -->
             <div class="pd-grid">
+                <div class="pd-mobile-intro">
+                    <nav class="pd-breadcrumb" aria-label="Breadcrumb">
+                        <a href="/products" class="pd-crumb">Products</a>
+                        <span
+                            v-if="product.categories.length"
+                            class="pd-crumb-sep"
+                            >/</span
+                        >
+                        <span
+                            v-if="product.categories.length"
+                            class="pd-crumb"
+                            >{{ product.categories[0].name }}</span
+                        >
+                    </nav>
+                    <h1 class="pd-title">{{ displayTitle }}</h1>
+                    <p class="pd-price">{{ formattedCost }}</p>
+                    <p v-if="shortDescription" class="pd-mobile-summary">
+                        {{ shortDescription }}
+                    </p>
+                </div>
                 <!-- Images -->
                 <ProductGallery
                     :images="product.images"
                     :name="product.name"
                     :popular="product.total_unique_views > 100"
                     v-model:selected-index="selectedImageIndex"
-                    @open="isModalOpen = true"
+                    @open="openImageModal"
                 />
 
                 <!-- Info -->
@@ -643,7 +678,8 @@ onUnmounted(() => {
                             <circle cx="12" cy="12" r="10" />
                             <polyline points="12 6 12 12 16 14" />
                         </svg>
-                        Made to order. Typically dispatches in 3-5 working days
+                        Made to order. Typically dispatches in 3 to 5 working
+                        days
                     </p>
 
                     <!-- Trust badges -->
@@ -685,7 +721,7 @@ onUnmounted(() => {
                                 <circle cx="5.5" cy="18.5" r="2.5" />
                                 <circle cx="18.5" cy="18.5" r="2.5" />
                             </svg>
-                            Free delivery over £50
+                            Free UK delivery on orders of £50 or more
                         </div>
                         <div class="pd-trust-item">
                             <svg
@@ -1046,15 +1082,21 @@ onUnmounted(() => {
                             v-if="review.review_images?.length"
                             class="pd-review-imgs"
                         >
-                            <img
+                            <button
                                 v-for="(img, idx) in review.review_images"
                                 :key="idx"
-                                :src="img"
-                                :alt="`${product.name} - photo ${idx + 1} from ${review.user.name}'s review`"
                                 class="pd-review-img"
-                                loading="lazy"
-                                @click="openImageModal"
-                            />
+                                :aria-label="`View photo ${idx + 1} from ${review.user.name}'s review`"
+                                @click="
+                                    openReviewImage(review.review_images, idx)
+                                "
+                            >
+                                <img
+                                    :src="img"
+                                    :alt="`${product.name} photo ${idx + 1} from ${review.user.name}'s review`"
+                                    loading="lazy"
+                                />
+                            </button>
                         </div>
                         <div v-if="review.admin_reply" class="pd-admin-reply">
                             <div class="pd-admin-reply-head">
@@ -1130,8 +1172,8 @@ onUnmounted(() => {
 
     <SuccessToast ref="successToastRef" />
     <ModalImageViewer
-        :images="product.images || []"
-        :initial-index="selectedImageIndex"
+        :images="modalImages"
+        :initial-index="modalImageIndex"
         :open="isModalOpen"
         @update:open="isModalOpen = $event"
     />
@@ -1162,10 +1204,31 @@ onUnmounted(() => {
     margin-bottom: 4rem;
 }
 
+.pd-mobile-intro {
+    display: none;
+}
+
+.pd-mobile-summary {
+    color: #6b4f4f;
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
 @media (max-width: 860px) {
     .pd-grid {
         grid-template-columns: 1fr;
         gap: 2rem;
+    }
+
+    .pd-mobile-intro {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    .pd-info > .pd-breadcrumb,
+    .pd-info > .pd-title {
+        display: none;
     }
 }
 
@@ -1782,10 +1845,17 @@ onUnmounted(() => {
 .pd-review-img {
     width: 56px;
     height: 56px;
-    object-fit: cover;
+    padding: 0;
+    overflow: hidden;
     border-radius: 8px;
     border: 1px solid #e5c9c7;
     cursor: pointer;
+}
+
+.pd-review-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .pd-no-reviews {

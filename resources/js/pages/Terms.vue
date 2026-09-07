@@ -122,8 +122,9 @@ const lastUpdated = '6 April 2026';
                         <div class="tc-section-body">
                             <p>
                                 Orders are typically processed and dispatched
-                                within <strong>2–3 working days</strong>. During
-                                busier periods, this may take slightly longer.
+                                within <strong>3 to 5 working days</strong>.
+                                During busier periods, this may take slightly
+                                longer.
                             </p>
                             <p>
                                 Delivery times may vary depending on your

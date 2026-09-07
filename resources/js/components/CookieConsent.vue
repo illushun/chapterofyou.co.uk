@@ -223,12 +223,26 @@ function loadAnalytics() {
     }
 
     .cc-inner {
-        padding: 1rem;
+        padding: 0.75rem 0.85rem 0.85rem;
+        gap: 0.65rem;
+    }
+
+    .cc-title {
+        margin-bottom: 0.2rem;
+    }
+
+    .cc-body {
+        font-size: 0.78rem;
+        line-height: 1.45;
     }
 
     .cc-actions {
         width: 100%;
         justify-content: flex-end;
+    }
+
+    .cc-btn {
+        padding: 0.48rem 0.9rem;
     }
 }
 </style>

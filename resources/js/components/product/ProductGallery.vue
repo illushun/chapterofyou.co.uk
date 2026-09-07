@@ -58,6 +58,7 @@ function openImageModal() {
                 :class="{
                     'pd-thumb--active': selectedImageIndex === i,
                 }"
+                :aria-label="`View ${name} image ${i + 1}`"
             >
                 <img
                     :src="img.image"
@@ -150,6 +151,21 @@ function openImageModal() {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 0.6rem;
+}
+
+@media (max-width: 859px) {
+    .pd-thumbs {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+        scroll-snap-type: x proximity;
+    }
+
+    .pd-thumb {
+        width: 72px;
+        flex: 0 0 72px;
+        scroll-snap-align: start;
+    }
 }
 
 .pd-thumb {

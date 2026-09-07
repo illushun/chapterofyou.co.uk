@@ -3,7 +3,7 @@ import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 
 import axios from 'axios';
 
@@ -30,6 +30,16 @@ const senderEmail = ref('');
 
 const errors = ref<Record<string, string>>({});
 const submitting = ref(false);
+const errorSummary = ref<HTMLElement | null>(null);
+const firstError = computed(() => Object.values(errors.value)[0]);
+const errorKeys: Record<string, string> = {
+    recipient_name: 'recipientName',
+    recipient_email: 'recipientEmail',
+    sender_name: 'senderName',
+    sender_email: 'senderEmail',
+    personal_message: 'personalMessage',
+    delivery_type: 'deliveryType',
+};
 
 const finalAmount = computed(() => {
     if (selectedAmount.value) return selectedAmount.value;
@@ -69,7 +79,10 @@ function validate(): boolean {
 }
 
 async function submit() {
-    if (!validate() || submitting.value) return;
+    if (!validate() || submitting.value) {
+        await focusFirstError();
+        return;
+    }
     submitting.value = true;
     try {
         const res = await axios.post(route('gift-vouchers.checkout'), {
@@ -81,17 +94,16 @@ async function submit() {
             sender_name: senderName.value,
             sender_email: senderEmail.value,
         });
-        // Redirect to checkout with gift voucher in cart
         if (res.data?.redirect) {
             window.location.href = res.data.redirect;
         }
     } catch (e: any) {
         const data = e?.response?.data;
         if (data?.errors) {
-            // Laravel validation errors
             Object.entries(data.errors).forEach(([k, v]: any) => {
-                errors.value[k] = Array.isArray(v) ? v[0] : v;
+                errors.value[errorKeys[k] ?? k] = Array.isArray(v) ? v[0] : v;
             });
+            await focusFirstError();
         } else {
             errors.value.general =
                 data?.message ?? 'Something went wrong. Please try again.';
@@ -99,6 +111,13 @@ async function submit() {
     } finally {
         submitting.value = false;
     }
+}
+
+async function focusFirstError() {
+    await nextTick();
+    const field = document.querySelector<HTMLElement>('[aria-invalid="true"]');
+    if (field) field.focus();
+    else errorSummary.value?.focus();
 }
 </script>
 
@@ -131,6 +150,15 @@ async function submit() {
             <div class="gv-grid">
                 <!-- ── Left: form ── -->
                 <div class="gv-form-col">
+                    <p
+                        v-if="firstError"
+                        ref="errorSummary"
+                        class="gv-err gv-err--general"
+                        role="alert"
+                        tabindex="-1"
+                    >
+                        Please check the form: {{ firstError }}
+                    </p>
                     <!-- Step 1: Amount -->
                     <div class="gv-card">
                         <h2 class="gv-card-title">
@@ -252,7 +280,7 @@ async function submit() {
                                     </p>
                                     <p class="gv-delivery-desc">
                                         Printed and posted to the recipient's
-                                        address
+                                        address. £2.99 postage applies
                                     </p>
                                 </div>
                                 <span
@@ -278,6 +306,7 @@ async function submit() {
                             <input
                                 v-model="recipientName"
                                 type="text"
+                                :aria-invalid="!!errors.recipientName"
                                 class="gv-input"
                                 :class="{
                                     'gv-input--err': errors.recipientName,
@@ -296,6 +325,7 @@ async function submit() {
                             <input
                                 v-model="recipientEmail"
                                 type="email"
+                                :aria-invalid="!!errors.recipientEmail"
                                 class="gv-input"
                                 :class="{
                                     'gv-input--err': errors.recipientEmail,
@@ -344,10 +374,11 @@ async function submit() {
                                         >"A little moment of self-care, chosen
                                         just for you 🤍"</em
                                     ><br />
-                                    <span class="gv-message-hint-note"
-                                        >Messages are handwritten for a personal
-                                        touch</span
-                                    >
+                                    <span class="gv-message-hint-note">{{
+                                        deliveryType === 'physical'
+                                            ? 'Your message is handwritten for a personal touch'
+                                            : 'Your message is included in the voucher email'
+                                    }}</span>
                                 </span>
                             </div>
                         </div>
@@ -368,6 +399,7 @@ async function submit() {
                                 <input
                                     v-model="senderName"
                                     type="text"
+                                    :aria-invalid="!!errors.senderName"
                                     class="gv-input"
                                     :class="{
                                         'gv-input--err': errors.senderName,
@@ -386,6 +418,7 @@ async function submit() {
                                 <input
                                     v-model="senderEmail"
                                     type="email"
+                                    :aria-invalid="!!errors.senderEmail"
                                     class="gv-input"
                                     :class="{
                                         'gv-input--err': errors.senderEmail,

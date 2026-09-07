@@ -3,6 +3,7 @@ import ProductImagesEditor from '@/components/admin/product/ProductImagesEditor.
 import ProductUsageEditor from '@/components/admin/product/ProductUsageEditor.vue';
 import ProductFaqAccordion from '@/components/product/ProductFaqAccordion.vue';
 import ProductGallery from '@/components/product/ProductGallery.vue';
+import ModalImageViewer from '@/components/ui/coy/ModalImageViewer.vue';
 import ProductEditor from '@/pages/admin/product/CreateEdit.vue';
 import { router } from '@inertiajs/vue3';
 import { enableAutoUnmount, mount, type DOMWrapper } from '@vue/test-utils';
@@ -60,6 +61,30 @@ function imageFiles(count: number) {
         (_, i) => new File(['image'], `image-${i}.png`, { type: 'image/png' }),
     );
 }
+
+describe('image viewer', () => {
+    it('moves focus into the dialog and restores it when closed', async () => {
+        const trigger = document.createElement('button');
+        document.body.appendChild(trigger);
+        trigger.focus();
+        const wrapper = mount(ModalImageViewer, {
+            props: {
+                images: [{ image: '/one.jpg' }, { image: '/two.jpg' }],
+                initialIndex: 1,
+                open: true,
+            },
+            attachTo: document.body,
+        });
+        await nextTick();
+        expect(document.activeElement).toBe(wrapper.get('.miv-close').element);
+        expect(wrapper.get('.miv-img').attributes('src')).toBe('/two.jpg');
+        await wrapper.get('.miv-close').trigger('click');
+        await wrapper.setProps({ open: false });
+        await nextTick();
+        expect(document.activeElement).toBe(trigger);
+        trigger.remove();
+    });
+});
 
 describe('product image editor', () => {
     it('keeps the upload queue capped at five and allows replacing a removed file', async () => {

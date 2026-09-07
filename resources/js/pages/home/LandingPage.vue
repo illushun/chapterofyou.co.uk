@@ -282,6 +282,7 @@ const siteSchemas = computed(() => {
                     {{ season?.eyebrow ?? 'Handcrafted with love' }}
                 </p>
                 <h1 class="lp-hero-title"><em>Chapter</em><br />of You</h1>
+                <p class="lp-hero-product-type">Handmade reed diffusers</p>
                 <p class="lp-hero-sub">
                     {{
                         season?.sub ??
@@ -399,7 +400,7 @@ const siteSchemas = computed(() => {
                         <circle cx="5.5" cy="18.5" r="2.5" />
                         <circle cx="18.5" cy="18.5" r="2.5" />
                     </svg>
-                    <span>Free shipping over £50</span>
+                    <span>Free UK delivery on orders of £50 or more</span>
                 </div>
                 <div class="lp-trust-sep" aria-hidden="true">✦</div>
                 <div class="lp-trust-item">
@@ -1018,6 +1019,15 @@ const siteSchemas = computed(() => {
 .lp-hero-title em {
     font-style: italic;
     color: #8c4a50;
+}
+
+.lp-hero-product-type {
+    margin-top: 0.75rem;
+    color: #8c4a50;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
 }
 
 .lp-hero-sub {

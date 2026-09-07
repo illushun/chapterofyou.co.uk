@@ -204,7 +204,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                             <p class="cf-step-head">We prepare your order</p>
                             <p class="cf-step-body">
                                 Your order is carefully handcrafted and packaged
-                                within 2–3 working days.
+                                within 3 to 5 working days.
                             </p>
                         </div>
                     </div>
