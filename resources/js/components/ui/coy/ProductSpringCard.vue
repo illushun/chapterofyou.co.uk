@@ -1,396 +1,57 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useMotion } from '@vueuse/motion';
+import { computed, ref, watch } from 'vue';
 
-interface ProductCardData {
-    id: number;
-    name: string;
-    mpn: string;
-    cost: number;
-    stock_qty: number;
-    images?: { image: string }[];
-    total_unique_views?: number;
-    scent_families?: string | null;
-    seo?: { slug: string };
-}
-
-const props = defineProps<{
-    product: ProductCardData;
-    className?: string;
-    wishlisted?: boolean;
-}>();
-
+interface ProductCardData { id: number; name: string; mpn: string; cost: number; stock_qty: number; images?: { image: string }[]; total_unique_views?: number; scent_families?: string | null; seo?: { slug: string } }
+const props = defineProps<{ product: ProductCardData; className?: string; wishlisted?: boolean }>();
 const emit = defineEmits(['addToCart', 'favourite']);
-
 const isWishlisted = ref(props.wishlisted ?? false);
+watch(() => props.wishlisted, (value) => { isWishlisted.value = value ?? false; });
 const isPopular = computed(() => (props.product.total_unique_views || 0) > 100);
-const isLowStock = computed(() =>
-    props.product.stock_qty > 0 && props.product.stock_qty <= 5
-);
-const imageUrl = computed(() => props.product.images?.[0]?.image || '/images/placeholder.jpg');
-const isTapped = ref(false);
+const isLowStock = computed(() => props.product.stock_qty > 0 && props.product.stock_qty <= 5);
+const imageUrl = computed(() => props.product.images?.[0]?.image);
 const scentLabel = computed(() => {
-    const families = props.product.scent_families
-        ?.split(',')
-        .map((family) =>
-            family
-                .trim()
-                .replaceAll('_', ' ')
-                .replace(/\b\w/g, (letter) => letter.toUpperCase()),
-        )
-        .filter(Boolean)
-        .slice(0, 2);
+    const families = props.product.scent_families?.split(',').map((family) => family.trim().replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase())).filter(Boolean).slice(0, 2);
     if (families?.length) return families.join(' · ');
-    return props.product.name.toLowerCase().includes('refill')
-        ? 'Reed diffuser refill'
-        : 'Reed diffuser';
+    return props.product.name.toLowerCase().includes('refill') ? 'Reed diffuser refill' : 'Handmade reed diffuser';
 });
+const price = computed(() => `£${Number(props.product.cost).toFixed(2)}`);
+const productLink = computed(() => props.product.seo?.slug ? `/product/${props.product.seo.slug}` : `/product/${props.product.id}`);
 
-// Spring animation - gentler values to feel soft not mechanical
-const springTransition = { type: 'spring' as const, stiffness: 180, damping: 18, mass: 1 };
-const cardRef = ref<HTMLElement | null>(null);
-
-const motionCard = useMotion(cardRef, {
-    initial: { y: 0, scale: 1, transition: springTransition },
-    hovered: { y: -5, scale: 1.01, transition: springTransition },
-});
-
-const truncatedName = computed(() => {
-    const max = 30;
-    return props.product.name.length > max
-        ? props.product.name.substring(0, max).trim() + '…'
-        : props.product.name;
-});
-
-const fmt = computed(() => {
-    const n = Number(props.product.cost);
-    return isNaN(n) ? 'N/A' : `£${n.toFixed(2)}`;
-});
-
-const productLink = computed(() =>
-    props.product.seo?.slug
-        ? `/product/${props.product.seo.slug}`
-        : `/product/${props.product.id}`
-);
-
-const handleFavourite = () => {
+function toggleFavourite() {
     isWishlisted.value = !isWishlisted.value;
     emit('favourite', props.product.id);
-};
-
-const handleTouchStart = () => {
-    if (!isTapped.value) {
-        isTapped.value = true;
-        motionCard.apply('hovered');
-        document.addEventListener('touchstart', handleTouchEnd, { once: true, capture: true });
-    }
-};
-
-const handleTouchEnd = (event: Event) => {
-    const target = event.target as HTMLElement;
-    if (cardRef.value && !cardRef.value.contains(target)) {
-        isTapped.value = false;
-        motionCard.apply('initial');
-    } else if (isTapped.value) {
-        setTimeout(() => {
-            isTapped.value = false;
-            motionCard.apply('initial');
-        }, 300);
-    }
-    document.removeEventListener('touchstart', handleTouchEnd, { capture: true });
-};
+}
 </script>
 
 <template>
-    <div ref="cardRef" class="psc" @mouseenter="motionCard.apply('hovered')" @mouseleave="motionCard.apply('initial')"
-        @touchstart.stop="handleTouchStart">
-
-        <!-- Popular / low stock badge -->
-        <span v-if="isLowStock" class="psc-badge psc-badge--low">Only {{ product.stock_qty }} left</span>
-        <span v-else-if="isPopular" class="psc-badge">Popular</span>
-
-        <!-- Invisible full-card link -->
-        <a :href="productLink" class="psc-link" :aria-label="`View ${product.name}`">
-            <span class="sr-only">View product: {{ product.name }}</span>
-        </a>
-
-        <!-- Wishlist button -->
-        <button class="psc-wish" :class="{ 'psc-wish--active': isWishlisted }"
-            :aria-label="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'"
-            @click.stop.prevent="handleFavourite">
-            <!-- Filled heart -->
-            <svg v-if="isWishlisted" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-                fill="currentColor">
-                <path
-                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-            <!-- Outline heart -->
-            <svg v-else xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path
-                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-        </button>
-
-        <!-- Product image -->
-        <div class="psc-img-wrap">
-            <img :src="imageUrl" :alt="product.name" class="psc-img" loading="lazy" />
-            <div v-if="product.stock_qty <= 0" class="psc-oos">
-                <span>Out of Stock</span>
-            </div>
+    <article class="product-card" :class="className">
+        <div class="product-visual">
+            <a :href="productLink" :aria-label="`View ${product.name}`">
+                <img v-if="imageUrl" :src="imageUrl" :alt="product.name" loading="lazy" />
+                <span v-else class="placeholder">Chapter of You</span>
+            </a>
+            <span v-if="isLowStock" class="badge badge--stock">Only {{ product.stock_qty }} left</span>
+            <span v-else-if="isPopular" class="badge">Popular</span>
+            <button type="button" class="wishlist" :class="{ 'wishlist--active': isWishlisted }" :aria-label="isWishlisted ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`" @click="toggleFavourite">
+                <svg viewBox="0 0 24 24" :fill="isWishlisted ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1 7.8 7.7 7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8Z" /></svg>
+            </button>
+            <div v-if="product.stock_qty <= 0" class="out-of-stock">Out of stock</div>
         </div>
-
-        <!-- Card body -->
-        <div class="psc-body">
-            <p class="psc-name">{{ truncatedName }}</p>
-            <p class="psc-scent">{{ scentLabel }}</p>
-
-            <div class="psc-footer">
-                <span class="psc-price">{{ fmt }}</span>
-                <button class="psc-cart" :disabled="product.stock_qty <= 0" aria-label="Add to cart"
-                    @click.stop="$emit('addToCart', product.id)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                        <line x1="3" y1="6" x2="21" y2="6" />
-                        <path d="M16 10a4 4 0 0 1-8 0" />
-                    </svg>
+        <div class="product-body">
+            <a :href="productLink"><h3>{{ product.name }}</h3></a>
+            <p>{{ scentLabel }}</p>
+            <div class="product-footer">
+                <strong>{{ price }}</strong>
+                <button type="button" :disabled="product.stock_qty <= 0" @click="$emit('addToCart', product.id)">
+                    <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0" /></svg>
+                    {{ product.stock_qty > 0 ? 'Add to basket' : 'Unavailable' }}
                 </button>
             </div>
         </div>
-
-    </div>
+    </article>
 </template>
 
 <style scoped>
-/* ── Card ── */
-.psc {
-    width: 100%;
-    border-radius: 20px;
-    border: 1px solid #e5c9c7;
-    background: #fffafa;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.4);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
-    cursor: pointer;
-    transition: box-shadow 0.3s ease;
-}
-
-.psc-scent {
-    margin-top: 0.2rem;
-    color: #8c6d6d;
-    font-size: 0.78rem;
-    line-height: 1.35;
-}
-
-/* Deepen shadow on hover (spring handles lift) */
-.psc:hover {
-    box-shadow: 0 8px 32px rgba(201, 164, 164, 0.45);
-}
-
-/* Petal watermarks */
-.psc::before {
-    content: '✿';
-    position: absolute;
-    bottom: -5px;
-    right: 7px;
-    font-size: 3rem;
-    color: #c9a4a4;
-    opacity: 0.12;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-    z-index: 0;
-}
-
-.psc::after {
-    content: '✿';
-    position: absolute;
-    top: 6px;
-    left: 9px;
-    font-size: 0.9rem;
-    color: #c9a4a4;
-    opacity: 0.22;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-    z-index: 0;
-}
-
-/* ── Popular / low stock badge ── */
-.psc-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 10;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    background: #8c4a50;
-    color: #fff;
-    border-radius: 999px;
-    padding: 0.18rem 0.6rem;
-    box-shadow: 0 1px 6px rgba(140, 74, 80, 0.3);
-}
-
-.psc-badge--low {
-    background: #a05a10;
-    box-shadow: 0 1px 6px rgba(160, 90, 16, 0.3);
-}
-
-/* ── Invisible full-card link ── */
-.psc-link {
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    display: block;
-}
-
-/* ── Wishlist button ── */
-.psc-wish {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 20;
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    border: 1px solid #eedcda;
-    background: rgba(255, 250, 250, 0.92);
-    color: #c9a4a4;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
-}
-
-.psc-wish:hover {
-    background: #faeaea;
-    color: #8c4a50;
-    border-color: #c9a4a4;
-}
-
-.psc-wish--active {
-    background: #faeaea;
-    color: #8c4a50;
-    border-color: #c9a4a4;
-}
-
-/* ── Image ── */
-.psc-img-wrap {
-    position: relative;
-    height: 190px;
-    overflow: hidden;
-    background: #fdf4f3;
-    border-bottom: 1px solid #f0dcd8;
-    flex-shrink: 0;
-}
-
-.psc-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-}
-
-.psc:hover .psc-img {
-    transform: scale(1.05);
-}
-
-/* Out of stock overlay */
-.psc-oos {
-    position: absolute;
-    inset: 0;
-    background: rgba(253, 244, 243, 0.75);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.psc-oos span {
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #8c4a50;
-    background: #fffafa;
-    border: 1px solid #e5c9c7;
-    border-radius: 999px;
-    padding: 0.22rem 0.75rem;
-}
-
-/* ── Body ── */
-.psc-body {
-    padding: 0.9rem 1rem 1rem;
-    background: #fffafa;
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    flex: 1;
-}
-
-.psc-name {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #2d1a1a;
-    line-height: 1.3;
-    margin-bottom: 0.5rem;
-}
-
-.psc-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: auto;
-    padding-top: 0.6rem;
-    border-top: 1px solid #f0dcd8;
-}
-
-.psc-price {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.35rem;
-    font-weight: 500;
-    color: #8c4a50;
-    letter-spacing: -0.01em;
-}
-
-/* ── Cart button ── */
-.psc-cart {
-    z-index: 20;
-    position: relative;
-    width: 32px;
-    height: 32px;
-    border-radius: 999px;
-    border: 1px solid #e5c9c7;
-    background: #fdf4f3;
-    color: #8c4a50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-}
-
-.psc-cart:hover:not(:disabled) {
-    background: linear-gradient(135deg, #c47078, #a85058);
-    border-color: #a85058;
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(168, 80, 88, 0.25);
-}
-
-.psc-cart:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-}
+.product-card{height:100%;display:flex;flex-direction:column;color:var(--coy-color-text);background:var(--coy-color-surface);border:1px solid var(--coy-color-border);border-radius:var(--coy-radius-md);overflow:hidden;transition:border-color .2s,box-shadow .2s}.product-card:hover{border-color:var(--coy-color-rose-gold);box-shadow:var(--coy-shadow-md)}.product-visual{position:relative;aspect-ratio:1/1.05;overflow:hidden;background:var(--coy-color-champagne)}.product-visual>a{display:block;width:100%;height:100%}.product-visual img{width:100%;height:100%;display:block;object-fit:cover;transition:transform .45s var(--coy-ease)}.product-card:hover .product-visual img{transform:scale(1.025)}.placeholder{width:100%;height:100%;display:grid;place-items:center;color:var(--coy-color-heading);font-family:var(--coy-font-display);font-size:1.35rem}.badge{position:absolute;top:.75rem;left:.75rem;padding:.4rem .7rem;color:var(--coy-color-on-accent);background:var(--coy-color-accent);border-radius:var(--coy-radius-pill);font-size:1rem;font-weight:700;line-height:1}.badge--stock{background:#805022}.wishlist{position:absolute;top:.65rem;right:.65rem;width:2.75rem;height:2.75rem;display:grid;place-items:center;color:var(--coy-color-accent);background:rgb(255 253 251/92%);border:1px solid var(--coy-color-border);border-radius:50%;cursor:pointer}.wishlist:hover,.wishlist--active{background:var(--coy-color-blush)}.wishlist svg{width:1.25rem}.out-of-stock{position:absolute;inset:auto 0 0;padding:.7rem;color:var(--coy-color-heading);background:rgb(250 246 242/92%);font-size:1rem;font-weight:700;text-align:center}.product-body{display:flex;flex:1;flex-direction:column;padding:1.15rem}.product-body>a{color:var(--coy-color-heading);text-decoration:none}.product-body h3{margin:0;font-family:var(--coy-font-display);font-size:1.4rem;font-weight:600;line-height:1.2}.product-body>p{margin:.35rem 0 1.2rem;font-size:1rem;line-height:1.45}.product-footer{display:flex;align-items:center;justify-content:space-between;gap:.75rem;margin-top:auto}.product-footer>strong{color:var(--coy-color-heading);font-size:1.125rem}.product-footer button{min-height:2.75rem;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.55rem .85rem;color:var(--coy-color-on-accent);background:var(--coy-color-accent);border:1px solid var(--coy-color-accent);border-radius:var(--coy-radius-pill);font:inherit;font-size:1rem;font-weight:700;cursor:pointer}.product-footer button:hover:not(:disabled){background:var(--coy-color-accent-hover)}.product-footer button:disabled{opacity:.55;cursor:not-allowed}.product-footer svg{width:1rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:600px){.product-visual{aspect-ratio:1/1}.product-body{padding:1rem}.product-body h3{font-size:1.25rem}.product-footer{align-items:stretch;flex-direction:column}.product-footer button{width:100%}}
 </style>

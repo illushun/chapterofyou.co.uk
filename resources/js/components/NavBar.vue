@@ -112,7 +112,7 @@ const firstName = computed(() => {
 
         <nav class="category-row" aria-label="Main navigation">
             <div class="coy-container">
-                <a href="/products">Shop</a
+                <a href="/products">Products</a
                 ><a href="/scent-finder">Scent Finder</a
                 ><a href="/gift-vouchers">Gifts</a><a href="/about">Our Story</a
                 ><a href="/journal">Journal</a>
@@ -127,7 +127,7 @@ const firstName = computed(() => {
                 class="mobile-menu"
                 aria-label="Mobile navigation"
             >
-                <a href="/products">Shop all products <span>→</span></a
+                <a href="/products">Products <span>→</span></a
                 ><a href="/scent-finder">Find my scent <span>→</span></a
                 ><a href="/gift-vouchers">Gift vouchers <span>→</span></a
                 ><a href="/about">Our Story <span>→</span></a
