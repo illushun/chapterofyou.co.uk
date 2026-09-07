@@ -1,438 +1,354 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+
 const currentYear = new Date().getFullYear();
 </script>
 
 <template>
-    <footer class="ft coy-storefront">
-        <!-- ── Top wave / petal divider ── -->
-        <div class="ft-crown" aria-hidden="true">
-            <span class="ft-crown-petal">✿</span>
-            <span class="ft-crown-line"></span>
-            <span class="ft-crown-petal ft-crown-petal--sm">✿</span>
-            <span class="ft-crown-line"></span>
-            <span class="ft-crown-petal">✿</span>
-        </div>
+    <footer class="footer coy-storefront">
+        <section class="footer-support" aria-label="Shopping reassurance">
+            <div class="coy-container support-grid">
+                <div class="support-item">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path
+                            d="M3 6h13v11H3zM16 10h3l2 3v4h-5zM7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"
+                        />
+                    </svg>
+                    <div>
+                        <strong>Free UK delivery</strong
+                        ><span>On orders of £50 or more</span>
+                    </div>
+                </div>
+                <div class="support-item">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path
+                            d="M12 21s-7-4.5-7-11a4 4 0 0 1 7-2.7A4 4 0 0 1 19 10c0 6.5-7 11-7 11Z"
+                        />
+                    </svg>
+                    <div>
+                        <strong>Made with care</strong
+                        ><span>Thoughtfully created in the UK</span>
+                    </div>
+                </div>
+                <div class="support-item">
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                        <path
+                            d="M12 3 4 6v5c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10V6l-8-3Z"
+                        />
+                        <path d="m9 12 2 2 4-4" />
+                    </svg>
+                    <div>
+                        <strong>Shop with confidence</strong
+                        ><span>Secure checkout and helpful support</span>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <div class="ft-inner">
-            <!-- ── Brand column ── -->
-            <div class="ft-brand">
-                <p class="ft-brand-name">Chapter of You</p>
-                <p class="ft-brand-tagline">Your chapter, your self-care.</p>
-                <p class="ft-brand-desc">
-                    Luxurious hand-crafted reed diffusers, made with love and
-                    care for your home and well-being.
-                </p>
+        <div class="footer-main">
+            <div class="coy-container footer-grid">
+                <div class="footer-brand">
+                    <Link href="/" class="footer-logo">Chapter of You</Link>
+                    <p class="footer-tagline">Self-care that feels personal.</p>
+                    <p class="footer-intro">
+                        Thoughtful products and rituals created to bring a
+                        little more calm, confidence and joy to everyday life.
+                    </p>
+                    <div class="footer-cta">
+                        <p>Not sure where to begin?</p>
+                        <Link :href="route('scent-finder.index')"
+                            >Find your scent
+                            <span aria-hidden="true">→</span></Link
+                        >
+                    </div>
+                </div>
+
+                <nav class="footer-nav" aria-label="Footer navigation">
+                    <section>
+                        <h2>Explore</h2>
+                        <ul>
+                            <li>
+                                <Link :href="route('products')"
+                                    >All products</Link
+                                >
+                            </li>
+                            <li>
+                                <Link :href="route('gift-vouchers.index')"
+                                    >Gift vouchers</Link
+                                >
+                            </li>
+                            <li>
+                                <Link :href="route('scent-finder.index')"
+                                    >Scent finder</Link
+                                >
+                            </li>
+                            <li>
+                                <Link :href="route('journal.index')"
+                                    >Journal</Link
+                                >
+                            </li>
+                            <li>
+                                <Link :href="route('about')">Our story</Link>
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Here to help</h2>
+                        <ul>
+                            <li>
+                                <Link :href="route('contact')">Contact us</Link>
+                            </li>
+                            <li>
+                                <Link :href="route('delivery')"
+                                    >Delivery information</Link
+                                >
+                            </li>
+                            <li>
+                                <Link :href="route('returns')"
+                                    >Returns and refunds</Link
+                                >
+                            </li>
+                            <li>
+                                <Link :href="route('cart.view')"
+                                    >Your basket</Link
+                                >
+                            </li>
+                        </ul>
+                    </section>
+                    <section>
+                        <h2>Your account</h2>
+                        <ul>
+                            <li>
+                                <Link :href="route('account.index')"
+                                    >Account overview</Link
+                                >
+                            </li>
+                            <li>
+                                <Link :href="route('account.orders.index')"
+                                    >Your orders</Link
+                                >
+                            </li>
+                            <li>
+                                <Link :href="route('wishlist.index')"
+                                    >Wishlist</Link
+                                >
+                            </li>
+                            <li><Link :href="route('login')">Sign in</Link></li>
+                        </ul>
+                    </section>
+                </nav>
             </div>
 
-            <!-- ── Links columns ── -->
-            <nav class="ft-nav" aria-label="Footer navigation">
-                <div class="ft-nav-col">
-                    <p class="ft-nav-heading">Shop</p>
-                    <ul class="ft-nav-list">
-                        <li>
-                            <Link :href="route('products')" class="ft-nav-link"
-                                >All Products</Link
-                            >
-                        </li>
-                        <li>
-                            <Link :href="route('cart.view')" class="ft-nav-link"
-                                >My Basket</Link
-                            >
-                        </li>
-                        <li>
-                            <Link
-                                :href="route('wishlist.index')"
-                                class="ft-nav-link"
-                                >Wishlist</Link
-                            >
-                        </li>
-                        <li>
-                            <Link
-                                :href="route('gift-vouchers.index')"
-                                class="ft-nav-link"
-                                >Gift Vouchers</Link
-                            >
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="ft-nav-col">
-                    <p class="ft-nav-heading">Account</p>
-                    <ul class="ft-nav-list">
-                        <li>
-                            <Link
-                                :href="route('account.index')"
-                                class="ft-nav-link"
-                                >My Account</Link
-                            >
-                        </li>
-                        <li>
-                            <Link
-                                :href="route('account.orders.index')"
-                                class="ft-nav-link"
-                                >My Orders</Link
-                            >
-                        </li>
-                        <li>
-                            <Link :href="route('login')" class="ft-nav-link"
-                                >Sign In</Link
-                            >
-                        </li>
-                        <li>
-                            <Link :href="route('register')" class="ft-nav-link"
-                                >Register</Link
-                            >
-                        </li>
-                    </ul>
-                </div>
-
-                <div class="ft-nav-col">
-                    <p class="ft-nav-heading">Information</p>
-                    <ul class="ft-nav-list">
-                        <li>
-                            <Link :href="route('delivery')" class="ft-nav-link"
-                                >Delivery Information</Link
-                            >
-                        </li>
-                        <li>
-                            <Link :href="route('returns')" class="ft-nav-link"
-                                >Returns &amp; Refunds</Link
-                            >
-                        </li>
-                        <li>
-                            <Link :href="route('terms')" class="ft-nav-link"
-                                >Terms &amp; Conditions</Link
-                            >
-                        </li>
-                        <li>
-                            <Link :href="route('privacy')" class="ft-nav-link"
-                                >Privacy Policy</Link
-                            >
-                        </li>
-                        <li>
-                            <Link :href="route('contact')" class="ft-nav-link"
-                                >Contact Me</Link
-                            >
-                        </li>
-                        <li>
-                            <Link
-                                :href="route('journal.index')"
-                                class="ft-nav-link"
-                                >My Journal</Link
-                            >
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-        </div>
-
-        <!-- ── Bottom bar ── -->
-        <div class="ft-bottom">
-            <div class="ft-bottom-inner">
-                <p class="ft-copyright">
+            <div class="coy-container footer-bottom">
+                <p>
                     &copy; {{ currentYear }} Chapter of You. All rights
                     reserved.
                 </p>
-                <div class="ft-bottom-links">
-                    <Link :href="route('privacy')" class="ft-bottom-link"
-                        >Privacy</Link
-                    >
-                    <span class="ft-bottom-sep" aria-hidden="true">·</span>
-                    <Link :href="route('terms')" class="ft-bottom-link"
-                        >Terms</Link
-                    >
-                    <span class="ft-bottom-sep" aria-hidden="true">·</span>
-                    <Link :href="route('returns')" class="ft-bottom-link"
-                        >Returns</Link
-                    >
-                </div>
+                <nav aria-label="Legal">
+                    <Link :href="route('privacy')">Privacy</Link>
+                    <Link :href="route('terms')">Terms</Link>
+                    <Link :href="route('returns')">Returns</Link>
+                </nav>
             </div>
         </div>
     </footer>
 </template>
 
 <style scoped>
-.ft {
-    font-family: var(--coy-font-body);
-    background: var(--coy-color-heading);
-    color: var(--coy-color-champagne);
+.footer {
     margin-top: auto;
+    color: var(--coy-color-text);
+    background: var(--coy-color-page);
 }
-
-/* ── Crown divider ── */
-.ft-crown {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 1.25rem 1.25rem 0;
+.footer-support {
+    background: var(--coy-color-champagne);
+    border-top: 1px solid var(--coy-color-border);
 }
-
-.ft-crown-line {
-    display: block;
-    flex: 1;
-    max-width: 120px;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #6b4040, transparent);
-}
-
-.ft-crown-petal {
-    font-size: 0.85rem;
-    color: #c9a4a4;
-    opacity: 0.7;
-}
-
-.ft-crown-petal--sm {
-    font-size: 0.55rem;
-    opacity: 0.45;
-}
-
-/* ── Main inner ── */
-.ft-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 2.5rem 1.5rem 3rem;
+.support-grid {
     display: grid;
-    grid-template-columns: 1.4fr 1fr 1fr 1fr;
-    gap: 3rem;
-    align-items: start;
+    grid-template-columns: repeat(3, 1fr);
 }
-
-@media (max-width: 900px) {
-    .ft-inner {
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-    }
-}
-
-@media (max-width: 560px) {
-    .ft-inner {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-        padding: 2rem 1.25rem 2.5rem;
-    }
-}
-
-/* ── Brand column ── */
-.ft-brand-name {
-    font-family: var(--coy-font-display);
-    font-size: 1.5rem;
-    font-style: italic;
-    font-weight: 400;
-    color: #fffafa;
-    margin-bottom: 0.35rem;
-    letter-spacing: 0.02em;
-}
-
-.ft-brand-tagline {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: #c9a4a4;
-    margin-bottom: 0.9rem;
-}
-
-.ft-brand-desc {
-    font-size: 0.85rem;
-    color: #9a7070;
-    line-height: 1.7;
-    max-width: 280px;
-    margin-bottom: 1.5rem;
-}
-
-/* ── Newsletter ── */
-.ft-newsletter-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: #c9a4a4;
-    margin-bottom: 0.6rem;
-}
-
-.ft-newsletter-form {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    border: 1px solid #6b4040;
-    border-radius: 999px;
-    overflow: hidden;
-    background: rgba(255, 250, 250, 0.05);
-    transition: border-color 0.2s;
-}
-
-.ft-newsletter-form:focus-within {
-    border-color: #c9a4a4;
-}
-
-.ft-newsletter-input {
-    flex: 1;
-    padding: 0.6rem 1rem;
-    background: transparent;
-    border: none;
-    outline: none;
-    font-family: var(--coy-font-body);
-    font-size: 0.85rem;
-    color: #fffafa;
-    min-width: 0;
-}
-
-.ft-newsletter-input::placeholder {
-    color: #6b4040;
-}
-
-.ft-newsletter-input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.ft-newsletter-btn {
-    width: 38px;
-    height: 38px;
-    flex-shrink: 0;
-    border: none;
-    border-radius: 0 999px 999px 0;
-    background: #8c4a50;
-    color: #fffafa;
+.support-item {
+    min-height: 7.5rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    transition: background 0.2s;
+    gap: 0.9rem;
+    padding: 1.5rem;
 }
-
-.ft-newsletter-btn:hover:not(:disabled) {
-    background: #a85058;
+.support-item + .support-item {
+    border-left: 1px solid rgb(102 90 87/20%);
 }
-
-.ft-newsletter-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
+.support-item svg {
+    width: 1.8rem;
+    flex: 0 0 auto;
+    fill: none;
+    stroke: var(--coy-color-accent);
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
-
-.ft-newsletter-error {
-    font-size: 0.75rem;
-    color: #e08080;
-    margin-top: 0.4rem;
+.support-item strong,
+.support-item span {
+    display: block;
 }
-
-.ft-newsletter-success {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.82rem;
-    color: #a8d8a8;
+.support-item strong {
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: 1.25rem;
     font-weight: 600;
-    padding: 0.5rem 0;
+    line-height: 1.2;
 }
-
-.ft-newsletter-note {
-    font-size: 0.7rem;
-    color: #5a3838;
-    margin-top: 0.4rem;
+.support-item span {
+    margin-top: 0.25rem;
+    font-size: 1rem;
+    line-height: 1.35;
 }
-
-/* ── Nav columns ── */
-.ft-nav {
-    display: contents;
-    /* Let grid handle the columns */
+.footer-main {
+    color: #eadfda;
+    background: var(--coy-color-heading);
 }
-
-.ft-nav-col {
+.footer-grid {
+    display: grid;
+    grid-template-columns: minmax(17rem, 1.1fr) minmax(0, 2fr);
+    gap: clamp(3rem, 7vw, 7rem);
+    padding-block: clamp(3.5rem, 7vw, 6rem);
 }
-
-.ft-nav-heading {
-    font-size: 0.7rem;
+.footer-logo {
+    color: var(--coy-color-white);
+    font-family: var(--coy-font-display);
+    font-size: clamp(2rem, 3vw, 2.75rem);
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+}
+.footer-tagline {
+    margin: 0.75rem 0 0;
+    color: var(--coy-color-rose);
+    font-size: 1rem;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #c9a4a4;
-    margin-bottom: 1rem;
-    padding-bottom: 0.6rem;
-    border-bottom: 1px solid #3d2424;
 }
-
-.ft-nav-list {
-    list-style: none;
-    padding: 0;
+.footer-intro {
+    max-width: 31rem;
+    margin: 1.25rem 0 0;
+    font-size: 1.0625rem;
+    line-height: 1.65;
+}
+.footer-cta {
+    margin-top: 2rem;
+    padding: 1.1rem 1.25rem;
+    background: rgb(255 253 251/7%);
+    border: 1px solid rgb(235 199 207/24%);
+    border-radius: var(--coy-radius-md);
+}
+.footer-cta p {
     margin: 0;
+    font-size: 1rem;
+}
+.footer-cta a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 0.35rem;
+    color: var(--coy-color-white);
+    font-size: 1.0625rem;
+    font-weight: 700;
+    text-underline-offset: 0.3rem;
+}
+.footer-nav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1.75rem, 4vw, 4rem);
+}
+.footer-nav h2 {
+    margin: 0;
+    padding-bottom: 0.8rem;
+    color: var(--coy-color-white);
+    border-bottom: 1px solid rgb(235 199 207/24%);
+    font-family: var(--coy-font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+}
+.footer-nav ul {
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0.7rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
 }
-
-.ft-nav-link {
-    font-size: 0.88rem;
-    color: #9a7070;
-    text-decoration: none;
-    transition: color 0.15s;
-    display: inline-block;
+.footer-nav a,
+.footer-bottom a {
+    color: #eadfda;
+    font-size: 1rem;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.3rem;
+    transition:
+        color var(--coy-duration-fast),
+        text-decoration-color var(--coy-duration-fast);
 }
-
-.ft-nav-link:hover {
-    color: #e5c9c7;
+.footer-nav a:hover,
+.footer-bottom a:hover {
+    color: var(--coy-color-white);
+    text-decoration-color: currentColor;
 }
-
-/* ── Bottom bar ── */
-.ft-bottom {
-    border-top: 1px solid #3d2424;
-}
-
-.ft-bottom-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 1rem 1.5rem;
+.footer-bottom {
+    min-height: 5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 1.5rem;
+    padding-block: 1.25rem;
+    border-top: 1px solid rgb(235 199 207/18%);
 }
-
-.ft-copyright {
-    font-size: 0.75rem;
-    color: #9a7070;
+.footer-bottom p {
+    margin: 0;
+    font-size: 1rem;
 }
-
-.ft-bottom-links {
+.footer-bottom nav {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
+    flex-wrap: wrap;
+    gap: 1.5rem;
 }
-
-.ft-bottom-link {
-    font-size: 0.75rem;
-    color: #9a7070;
-    text-decoration: none;
-    transition: color 0.15s;
-}
-
-.ft-bottom-link:hover {
-    color: #9a7070;
-}
-
-.ft-bottom-sep {
-    color: #3d2424;
-    font-size: 0.75rem;
-}
-
-/* ── Spinner ── */
-.ft-spinner {
-    width: 14px;
-    height: 14px;
-    animation: ft-spin 0.8s linear infinite;
-    flex-shrink: 0;
-}
-
-@keyframes ft-spin {
-    from {
-        transform: rotate(0deg);
+@media (max-width: 850px) {
+    .footer-grid {
+        grid-template-columns: 1fr;
     }
-
-    to {
-        transform: rotate(360deg);
+}
+@media (max-width: 700px) {
+    .support-grid {
+        grid-template-columns: 1fr;
+        padding-block: 0.5rem;
+    }
+    .support-item {
+        min-height: 0;
+        justify-content: flex-start;
+        padding: 1.1rem 0;
+    }
+    .support-item + .support-item {
+        border-top: 1px solid rgb(102 90 87/20%);
+        border-left: 0;
+    }
+    .footer-nav {
+        grid-template-columns: 1fr 1fr;
+    }
+    .footer-bottom {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+@media (max-width: 480px) {
+    .footer-grid {
+        gap: 2.75rem;
+    }
+    .footer-nav {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    .footer-bottom nav {
+        gap: 1.25rem;
     }
 }
 </style>
