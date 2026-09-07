@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import Footer from '@/components/Footer.vue';
-import NavBar from '@/components/NavBar.vue';
-
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
+import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import StarRating from '@/components/ui/coy/StarRating.vue';
 import {
@@ -12,9 +11,9 @@ import {
 } from '@/composables/useProductSchema';
 import { useSeoHead } from '@/composables/useSeoHead';
 import axios from 'axios';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 
-interface FeaturedProduct {
+interface Product {
     id: number;
     name: string;
     mpn: string;
@@ -23,14 +22,12 @@ interface FeaturedProduct {
     slug: string | null;
     views: number;
 }
-
 interface Testimonial {
     id: number;
     rating: number;
     message: string;
     user: { name: string };
 }
-
 interface Season {
     id: 'spring' | 'summer' | 'autumn' | 'winter';
     banner: string;
@@ -41,29 +38,15 @@ interface Season {
 }
 
 const props = defineProps<{
-    featuredProducts?: FeaturedProduct[];
+    featuredProducts?: Product[];
     testimonials?: Testimonial[];
     season?: Season;
 }>();
-
-// Spotlight cycles through featured products automatically
-const spotlightIndex = ref(0);
-let spotlightTimer: ReturnType<typeof setInterval> | null = null;
-
-onMounted(() => {
-    if ((props.featuredProducts?.length ?? 0) > 1) {
-        spotlightTimer = setInterval(() => {
-            spotlightIndex.value =
-                (spotlightIndex.value + 1) % props.featuredProducts!.length;
-        }, 2800);
-    }
-});
-
-onUnmounted(() => {
-    if (spotlightTimer) clearInterval(spotlightTimer);
-});
-
-// Email capture
+const primaryProduct = computed(() => props.featuredProducts?.[0]);
+const secondaryProduct = computed(() => props.featuredProducts?.[1]);
+const reviews = computed(() => props.testimonials?.slice(0, 3) ?? []);
+const productUrl = (product: Product) =>
+    product.slug ? `/product/${product.slug}` : `/product/${product.id}`;
 const ctaEmail = ref('');
 const ctaSubmitting = ref(false);
 const ctaSubmitted = ref(false);
@@ -91,1752 +74,1048 @@ async function submitCtaEmail() {
 
 const seo = useSeoHead({
     description:
-        'Luxury handmade reed diffusers crafted to order in the UK. Shop premium home fragrance gifts from Chapter of You - hand-poured with care, made just for you.',
+        'Thoughtful handmade home fragrance, created in the UK to make everyday moments feel special. Discover reed diffusers, gifts and your perfect scent.',
     canonical: '/',
 });
-
 const siteSchemas = computed(() => {
     const schemas: object[] = [useOrganizationSchema(), useWebsiteSchema()];
-
-    if (props.featuredProducts?.length) {
+    if (props.featuredProducts?.length)
         schemas.push(
             useItemListSchema(
-                props.featuredProducts.map((p) => ({
-                    name: p.name,
-                    url: p.slug ? `/product/${p.slug}` : `/product/${p.id}`,
-                    image: p.image,
+                props.featuredProducts.map((product) => ({
+                    name: product.name,
+                    url: productUrl(product),
+                    image: product.image,
                 })),
             ),
         );
-    }
-
     return schemas;
 });
 </script>
 
 <template>
     <NavBar />
-
     <SeoHead v-bind="seo" />
     <JsonLdSchema :schema="siteSchemas" />
+    <main class="home coy-storefront">
+        <aside v-if="season" class="announcement" aria-label="Seasonal news">
+            <span>{{ season.banner }}</span
+            ><a href="/products">Explore the collection</a>
+        </aside>
 
-    <main class="lp coy-storefront">
-        <!-- ── Seasonal banner ── -->
-        <div
-            v-if="season"
-            class="lp-season-banner"
-            :class="`lp-season-banner--${season.id}`"
-        >
-            <span class="lp-season-banner-motif" aria-hidden="true">{{
-                season.motif
-            }}</span>
-            <span class="lp-season-banner-text">{{ season.banner }}</span>
-            <a href="/products" class="lp-season-banner-cta">
-                Shop now
-                <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2.5"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                >
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-            </a>
-        </div>
-
-        <!-- ── Hero ── -->
-        <section
-            class="lp-hero"
-            :class="season?.id ? `lp-hero--${season.id}` : ''"
-        >
-            <!-- Decorative blobs -->
-            <div class="lp-blob lp-blob--1" aria-hidden="true"></div>
-            <div class="lp-blob lp-blob--2" aria-hidden="true"></div>
-
-            <!-- Scattered petal marks -->
-            <svg
-                class="lp-petals"
-                viewBox="0 0 900 600"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-            >
-                <ellipse
-                    cx="80"
-                    cy="100"
-                    rx="22"
-                    ry="8"
-                    fill="#c9a4a4"
-                    opacity=".13"
-                    transform="rotate(-30 80 100)"
-                />
-                <ellipse
-                    cx="820"
-                    cy="140"
-                    rx="16"
-                    ry="6"
-                    fill="#c9a4a4"
-                    opacity=".10"
-                    transform="rotate(40 820 140)"
-                />
-                <ellipse
-                    cx="160"
-                    cy="440"
-                    rx="20"
-                    ry="7"
-                    fill="#c9a4a4"
-                    opacity=".09"
-                    transform="rotate(15 160 440)"
-                />
-                <ellipse
-                    cx="740"
-                    cy="400"
-                    rx="18"
-                    ry="6"
-                    fill="#c9a4a4"
-                    opacity=".11"
-                    transform="rotate(-20 740 400)"
-                />
-                <ellipse
-                    cx="450"
-                    cy="560"
-                    rx="14"
-                    ry="5"
-                    fill="#c9a4a4"
-                    opacity=".08"
-                    transform="rotate(5 450 560)"
-                />
-                <ellipse
-                    cx="50"
-                    cy="320"
-                    rx="12"
-                    ry="4"
-                    fill="#c9a4a4"
-                    opacity=".09"
-                    transform="rotate(25 50 320)"
-                />
-                <ellipse
-                    cx="860"
-                    cy="480"
-                    rx="20"
-                    ry="7"
-                    fill="#c9a4a4"
-                    opacity=".07"
-                    transform="rotate(-45 860 480)"
-                />
-                <text
-                    x="200"
-                    y="180"
-                    font-size="18"
-                    fill="#c9a4a4"
-                    opacity=".15"
-                    transform="rotate(-20 200 180)"
-                >
-                    {{ season?.motif ?? '✿' }}
-                </text>
-                <text
-                    x="650"
-                    y="100"
-                    font-size="14"
-                    fill="#c9a4a4"
-                    opacity=".12"
-                    transform="rotate(15 650 100)"
-                >
-                    {{ season?.motif ?? '✿' }}
-                </text>
-                <text
-                    x="750"
-                    y="550"
-                    font-size="22"
-                    fill="#c9a4a4"
-                    opacity=".10"
-                    transform="rotate(-10 750 550)"
-                >
-                    {{ season?.motif ?? '✿' }}
-                </text>
-                <text
-                    x="100"
-                    y="550"
-                    font-size="16"
-                    fill="#c9a4a4"
-                    opacity=".11"
-                    transform="rotate(20 100 550)"
-                >
-                    {{ season?.motif ?? '✿' }}
-                </text>
-            </svg>
-
-            <!-- Centred brand text -->
-            <div class="lp-hero-content">
-                <p class="lp-hero-eyebrow">
-                    {{ season?.eyebrow ?? 'Handcrafted with love' }}
+        <section class="hero" aria-labelledby="home-heading">
+            <div class="hero-copy">
+                <p class="coy-eyebrow">A moment that is yours</p>
+                <h1 id="home-heading" class="coy-heading">
+                    A little time,<br /><em>just for you.</em>
+                </h1>
+                <p class="hero-intro">
+                    Thoughtful home fragrance and everyday rituals, created to
+                    make ordinary moments feel special.
                 </p>
-                <h1 class="lp-hero-title"><em>Chapter</em><br />of You</h1>
-                <p class="lp-hero-product-type">Handmade reed diffusers</p>
-                <p class="lp-hero-sub">
-                    {{
-                        season?.sub ??
-                        'Your space, your scent, your self-care. Premium reed diffusers poured by hand, made to order, just for you.'
-                    }}
-                </p>
-                <div class="lp-hero-divider" aria-hidden="true">
-                    <span></span><span class="lp-hero-divider-dot">✦</span
-                    ><span></span>
-                </div>
-                <div class="lp-hero-actions">
-                    <a
-                        href="/products"
-                        class="btn-rose btn-rose--lg coy-button coy-button--primary"
+                <div class="hero-actions">
+                    <a href="/products" class="coy-button coy-button--primary"
+                        >Shop home fragrance
+                        <span aria-hidden="true">↗</span></a
                     >
-                        Shop the Collection
-                        <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                    </a>
-                    <a
-                        href="/about"
-                        class="btn-ghost coy-button coy-button--secondary"
-                    >
-                        My Story
-                    </a>
+                    <a href="/about" class="text-link">Discover our story</a>
                 </div>
-            </div>
-
-            <!-- Interactive product strip -->
-            <div
-                v-if="featuredProducts?.length"
-                class="lp-hero-strip"
-                aria-label="Featured products"
-            >
-                <a
-                    v-for="(p, i) in featuredProducts"
-                    :key="p.id"
-                    :href="p.slug ? `/product/${p.slug}` : `/product/${p.id}`"
-                    class="lp-hero-pcard"
-                    :class="{ 'lp-hero-pcard--lit': spotlightIndex === i }"
-                    @mouseenter="spotlightIndex = i"
-                >
-                    <div class="lp-hero-pcard-img">
-                        <img
-                            :src="p.image ?? '/images/placeholder.jpg'"
-                            :alt="p.name"
-                            loading="lazy"
-                        />
-                    </div>
-                    <div class="lp-hero-pcard-body">
-                        <p class="lp-hero-pcard-name">{{ p.name }}</p>
-                        <p class="lp-hero-pcard-price">
-                            £{{ Number(p.cost).toFixed(2) }}
-                        </p>
-                    </div>
-                </a>
-            </div>
-        </section>
-
-        <!-- ── Trust bar ── -->
-        <section class="lp-trust" aria-label="Why Chapter of You">
-            <div class="lp-trust-inner">
-                <div class="lp-trust-item">
-                    <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                        />
-                    </svg>
-                    <span>Made with love</span>
-                </div>
-                <div class="lp-trust-sep" aria-hidden="true">✦</div>
-                <div class="lp-trust-item">
-                    <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    </svg>
-                    <span>Premium ingredients only</span>
-                </div>
-                <div class="lp-trust-sep" aria-hidden="true">✦</div>
-                <div class="lp-trust-item">
-                    <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <rect x="1" y="3" width="15" height="13" rx="2" />
-                        <path d="M16 8h4l3 5v3h-7V8z" />
-                        <circle cx="5.5" cy="18.5" r="2.5" />
-                        <circle cx="18.5" cy="18.5" r="2.5" />
-                    </svg>
-                    <span>Free UK delivery on orders of £50 or more</span>
-                </div>
-                <div class="lp-trust-sep" aria-hidden="true">✦</div>
-                <div class="lp-trust-item">
-                    <svg
-                        width="20"
-                        height="20"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
-                        />
-                    </svg>
-                    <span>Made to order</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- ── Story strip ── -->
-        <section class="lp-story">
-            <div class="lp-story-inner">
-                <div class="lp-story-text">
-                    <p class="lp-section-eyebrow lp-section-eyebrow--light">
-                        The story
-                    </p>
-                    <h2 class="lp-story-title">
-                        A small business<br /><em>with a big heart</em>
-                    </h2>
-                    <p class="lp-story-body">
-                        Welcome to Chapter of You, a one-woman business built on
-                        a single belief: that proper self-care starts with the
-                        small, quiet moments you carve out for yourself.
-                    </p>
-                    <p class="lp-story-body">
-                        Every diffuser is poured, blended and finished by hand,
-                        because your space deserves something made with genuine
-                        care, not a factory line.
-                    </p>
-                    <a href="/about" class="lp-story-link">
-                        Read more about me
-                        <svg
-                            width="13"
-                            height="13"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                    </a>
-                </div>
-                <div class="lp-story-stats">
-                    <div class="lp-stat-card">
-                        <p class="lp-stat-val">100%</p>
-                        <p class="lp-stat-label">Hand-poured &amp; blended</p>
-                    </div>
-                    <div class="lp-stat-card">
-                        <p class="lp-stat-val">Premium</p>
-                        <p class="lp-stat-label">Fragrance oils only</p>
-                    </div>
-                    <div class="lp-stat-card">
-                        <p class="lp-stat-val">Made</p>
-                        <p class="lp-stat-label">To order, just for you</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ── Why choose us ── -->
-        <section class="lp-section">
-            <div class="lp-section-inner">
-                <div class="lp-section-header">
-                    <p class="lp-section-eyebrow">My craft</p>
-                    <h2 class="lp-section-title">
-                        Reed diffusers <em>designed for your sanctuary</em>
-                    </h2>
-                </div>
-                <div class="lp-features">
-                    <div class="lp-feature-card">
-                        <div class="lp-feature-icon" aria-hidden="true">✦</div>
-                        <h3 class="lp-feature-title">Meticulously blended</h3>
-                        <p class="lp-feature-body">
-                            Every scent is carefully crafted from premium
-                            fragrance oils, balanced by hand to fill your home
-                            with a gentle, lasting aroma.
-                        </p>
-                    </div>
-                    <div class="lp-feature-card">
-                        <div class="lp-feature-icon" aria-hidden="true">✦</div>
-                        <h3 class="lp-feature-title">Poured with intention</h3>
-                        <p class="lp-feature-body">
-                            Each diffuser is hand-finished individually, never
-                            rushed, never mass-produced. Your order is made to
-                            order, just for you.
-                        </p>
-                    </div>
-                    <div class="lp-feature-card">
-                        <div class="lp-feature-icon" aria-hidden="true">✦</div>
-                        <h3 class="lp-feature-title">Quality ingredients</h3>
-                        <p class="lp-feature-body">
-                            Only the highest quality reed diffuser base and
-                            fragrance oils make it into my products. Nothing
-                            unnecessary, nothing cheap.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ── Testimonials ── -->
-        <section v-if="testimonials?.length" class="lp-testimonials">
-            <div class="lp-testimonials-inner">
-                <div class="lp-section-header">
-                    <p class="lp-section-eyebrow">Customer love</p>
-                    <h2 class="lp-section-title">
-                        What people are <em>saying</em>
-                    </h2>
-                </div>
-                <div class="lp-testimonials-grid">
-                    <div
-                        v-for="t in testimonials"
-                        :key="t.id"
-                        class="lp-testimonial-card"
-                    >
-                        <div class="lp-testimonial-stars">
-                            <StarRating :rating="t.rating" :size="16" />
-                        </div>
-                        <p class="lp-testimonial-body">"{{ t.message }}"</p>
-                        <p class="lp-testimonial-author">- {{ t.user.name }}</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ── Hottest products ── -->
-        <section v-if="featuredProducts?.length" class="lp-hot">
-            <div class="lp-hot-inner">
-                <div class="lp-hot-header">
+                <dl class="hero-notes">
                     <div>
-                        <p class="lp-section-eyebrow">
-                            {{ season?.sectionLabel ?? 'Most loved' }}
-                        </p>
-                        <h2 class="lp-section-title">
-                            My <em>bestsellers</em>
+                        <dt>Made</dt>
+                        <dd>By hand in the UK</dd>
+                    </div>
+                    <div>
+                        <dt>Chosen</dt>
+                        <dd>For your kind of calm</dd>
+                    </div>
+                </dl>
+            </div>
+            <div class="hero-gallery" aria-label="Featured home fragrance">
+                <a
+                    v-if="primaryProduct"
+                    :href="productUrl(primaryProduct)"
+                    class="hero-main"
+                >
+                    <img
+                        v-if="primaryProduct.image"
+                        :src="primaryProduct.image"
+                        :alt="primaryProduct.name"
+                    />
+                    <span v-else class="placeholder">Made for your space</span>
+                    <span class="hero-caption"
+                        ><span>{{ primaryProduct.name }}</span
+                        ><strong
+                            >£{{ primaryProduct.cost.toFixed(2) }}</strong
+                        ></span
+                    >
+                </a>
+                <div v-else class="hero-main">
+                    <span class="placeholder">Made for your space</span>
+                </div>
+                <a
+                    v-if="secondaryProduct"
+                    :href="productUrl(secondaryProduct)"
+                    class="hero-detail"
+                >
+                    <img
+                        v-if="secondaryProduct.image"
+                        :src="secondaryProduct.image"
+                        :alt="secondaryProduct.name"
+                    />
+                    <span v-else class="placeholder">Made with care</span>
+                </a>
+                <p class="handnote" aria-hidden="true">
+                    Small rituals,<br />beautifully made
+                </p>
+                <span class="chapter" aria-hidden="true">Chapter 01</span>
+            </div>
+        </section>
+
+        <section class="trust" aria-label="Our promises">
+            <p>Hand-poured with care</p>
+            <i></i>
+            <p>Premium fragrance oils</p>
+            <i></i>
+            <p>Made to order</p>
+            <i></i>
+            <p>Free UK delivery over £50</p>
+        </section>
+
+        <section class="discovery coy-section" aria-labelledby="discover-title">
+            <div class="coy-container">
+                <header class="split-heading">
+                    <div>
+                        <p class="coy-eyebrow">Begin where you are</p>
+                        <h2 id="discover-title" class="coy-heading">
+                            Find what feels like <em>you</em>
                         </h2>
                     </div>
-                    <a href="/products" class="lp-hot-see-all">
-                        View all
-                        <svg
-                            width="13"
-                            height="13"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                    </a>
-                </div>
-
-                <div class="lp-hot-grid">
+                    <p>
+                        Whether you know your favourite notes or only how you
+                        want a room to feel, there is an easy place to begin.
+                    </p>
+                </header>
+                <div class="discovery-grid">
                     <a
-                        v-for="product in featuredProducts"
-                        :key="product.id"
-                        :href="
-                            product.slug
-                                ? `/product/${product.slug}`
-                                : `/product/${product.id}`
-                        "
-                        class="lp-hot-card"
+                        href="/scent-finder"
+                        class="discovery-card discovery-card--main"
+                        ><b>01</b>
+                        <div>
+                            <small>Guided discovery</small>
+                            <h3>Find your scent</h3>
+                            <span>Take the two-minute quiz ↗</span>
+                        </div></a
                     >
-                        <!-- Badge -->
-                        <span v-if="product.views > 100" class="lp-hot-badge"
-                            >Popular</span
-                        >
+                    <a
+                        href="/products"
+                        class="discovery-card discovery-card--rose"
+                        ><b>02</b>
+                        <div>
+                            <small>Customer favourites</small>
+                            <h3>Shop the most loved</h3>
+                            <span>Discover bestsellers ↗</span>
+                        </div></a
+                    >
+                    <a
+                        href="/gift-vouchers"
+                        class="discovery-card discovery-card--light"
+                        ><b>03</b>
+                        <div>
+                            <small>Something thoughtful</small>
+                            <h3>Give them the choice</h3>
+                            <span>Explore gift vouchers ↗</span>
+                        </div></a
+                    >
+                </div>
+            </div>
+        </section>
 
-                        <!-- Image -->
-                        <div class="lp-hot-img-wrap">
+        <section
+            v-if="featuredProducts?.length"
+            class="collection coy-section"
+            aria-labelledby="collection-title"
+        >
+            <div class="coy-container">
+                <header class="collection-heading">
+                    <div>
+                        <p class="coy-eyebrow">
+                            {{ season?.sectionLabel ?? 'Most loved' }}
+                        </p>
+                        <h2 id="collection-title" class="coy-heading">
+                            Scents worth <em>staying home for</em>
+                        </h2>
+                    </div>
+                    <a href="/products" class="text-link"
+                        >View all fragrances</a
+                    >
+                </header>
+                <div class="products">
+                    <a
+                        v-for="(product, index) in featuredProducts"
+                        :key="product.id"
+                        :href="productUrl(product)"
+                        class="product"
+                        :class="`product--${index + 1}`"
+                    >
+                        <div class="product-image">
                             <img
-                                :src="
-                                    product.image ?? '/images/placeholder.jpg'
-                                "
+                                v-if="product.image"
+                                :src="product.image"
                                 :alt="product.name"
-                                class="lp-hot-img"
+                                loading="lazy"
                             />
+                            <span v-else class="placeholder"
+                                >Chapter of You</span
+                            >
+                            <span v-if="index === 0" class="product-label"
+                                >Signature scent</span
+                            >
                         </div>
-
-                        <!-- Body -->
-                        <div class="lp-hot-body">
-                            <p class="lp-hot-name">{{ product.name }}</p>
-                            <div class="lp-hot-footer">
-                                <span class="lp-hot-price"
-                                    >£{{
-                                        Number(product.cost).toFixed(2)
-                                    }}</span
-                                >
-                                <span class="lp-hot-cta">
-                                    View
-                                    <svg
-                                        width="11"
-                                        height="11"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <path d="M5 12h14M12 5l7 7-7 7" />
-                                    </svg>
-                                </span>
+                        <div class="product-info">
+                            <div>
+                                <h3>{{ product.name }}</h3>
+                                <p>Handmade reed diffuser</p>
                             </div>
+                            <strong>£{{ product.cost.toFixed(2) }}</strong>
                         </div>
                     </a>
                 </div>
             </div>
         </section>
 
-        <!-- ── Scent Finder banner ── -->
-        <section class="lp-sf-banner">
-            <div class="lp-sf-inner">
-                <p class="lp-sf-petal" aria-hidden="true">✿</p>
-                <h2 class="lp-sf-title">
-                    Not sure which scent is <em>you</em>?
+        <section class="manifesto" aria-labelledby="manifesto-title">
+            <span class="manifesto-chapter" aria-hidden="true">Chapter 02</span>
+            <div>
+                <p class="coy-eyebrow">A gentler pace</p>
+                <h2 id="manifesto-title" class="coy-heading">
+                    Self-care does not need to be elaborate.
+                    <em>Sometimes it begins with the room around you.</em>
                 </h2>
-                <p class="lp-sf-body">
-                    Take our two-minute Scent Finder quiz and we'll match you
-                    with the fragrance you'll love most.
+                <p>
+                    A familiar fragrance. A slower morning. Five quiet minutes
+                    at the end of the day. Chapter of You is made for those
+                    small, meaningful rituals.
                 </p>
-                <a href="/scent-finder" class="btn-rose btn-rose--lg"
-                    >Find my scent</a
-                >
             </div>
         </section>
 
-        <!-- ── CTA / Email capture ── -->
-        <section class="lp-cta-section">
-            <div class="lp-cta-card">
-                <div class="lp-cta-petals" aria-hidden="true">
-                    <span>✿</span><span>✦</span><span>✿</span><span>✦</span
-                    ><span>✿</span>
+        <section class="story coy-section" aria-labelledby="story-title">
+            <div class="coy-container story-grid">
+                <div class="story-visual">
+                    <div>
+                        <img
+                            v-if="secondaryProduct?.image"
+                            :src="secondaryProduct.image"
+                            alt="A Chapter of You fragrance made with care"
+                            loading="lazy"
+                        /><span v-else class="placeholder"
+                            >Made personally</span
+                        >
+                    </div>
+                    <p>Created in small batches<br />and finished by hand</p>
                 </div>
-                <h2 class="lp-cta-title">Get 10% off your first order</h2>
-                <p class="lp-cta-body">
-                    Join my little community and receive an exclusive discount
-                    on your first order, plus early access to new scents and
-                    behind-the-scenes updates.
-                </p>
+                <div class="story-copy">
+                    <p class="coy-eyebrow">Behind the brand</p>
+                    <h2 id="story-title" class="coy-heading">
+                        Made personally.<br /><em>Chosen personally.</em>
+                    </h2>
+                    <p>
+                        Chapter of You is an independent business built around
+                        one simple belief: the smallest moments of care can
+                        change how a day feels.
+                    </p>
+                    <p>
+                        Every diffuser is poured, blended and finished by hand,
+                        with the kind of attention that mass production cannot
+                        recreate.
+                    </p>
+                    <a href="/about" class="text-link">Meet the maker</a>
+                    <dl>
+                        <div>
+                            <dt>100%</dt>
+                            <dd>Hand-poured</dd>
+                        </div>
+                        <div>
+                            <dt>Made</dt>
+                            <dd>To order</dd>
+                        </div>
+                        <div>
+                            <dt>Yours</dt>
+                            <dd>To enjoy</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </section>
 
-                <template v-if="!ctaSubmitted">
-                    <form class="lp-cta-form" @submit.prevent="submitCtaEmail">
+        <section
+            v-if="reviews.length"
+            class="reviews coy-section"
+            aria-labelledby="reviews-title"
+        >
+            <div class="coy-container">
+                <header>
+                    <p class="coy-eyebrow">Kind words</p>
+                    <h2 id="reviews-title" class="coy-heading">
+                        Notes from your <em>chapters</em>
+                    </h2>
+                </header>
+                <div class="review-grid">
+                    <blockquote class="review-main">
+                        <StarRating :rating="reviews[0].rating" :size="18" />
+                        <p>“{{ reviews[0].message }}”</p>
+                        <footer>{{ reviews[0].user.name }}</footer>
+                    </blockquote>
+                    <div v-if="reviews.length > 1" class="review-side">
+                        <blockquote
+                            v-for="review in reviews.slice(1)"
+                            :key="review.id"
+                        >
+                            <StarRating :rating="review.rating" :size="15" />
+                            <p>“{{ review.message }}”</p>
+                            <footer>{{ review.user.name }}</footer>
+                        </blockquote>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section
+            class="newsletter coy-section"
+            aria-labelledby="newsletter-title"
+        >
+            <div>
+                <p class="coy-eyebrow">A quieter kind of inbox</p>
+                <h2 id="newsletter-title" class="coy-heading">
+                    New scents, thoughtful rituals<br />and an occasional treat.
+                </h2>
+                <p>
+                    Join the Chapter of You community and receive 10% off your
+                    first order.
+                </p>
+                <form v-if="!ctaSubmitted" @submit.prevent="submitCtaEmail">
+                    <label for="home-email">Email address</label>
+                    <div>
                         <input
+                            id="home-email"
                             v-model="ctaEmail"
+                            class="coy-field"
                             type="email"
-                            placeholder="Your email address"
-                            class="lp-cta-input"
-                            required
                             autocomplete="email"
-                        />
-                        <button
+                            placeholder="you@example.com"
+                            required
+                        /><button
+                            class="coy-button coy-button--primary"
                             type="submit"
-                            class="btn-rose btn-rose--lg"
                             :disabled="ctaSubmitting"
                         >
                             {{
-                                ctaSubmitting ? 'Joining…' : 'Claim my 10% off'
+                                ctaSubmitting
+                                    ? 'Joining…'
+                                    : 'Join the community'
                             }}
                         </button>
-                    </form>
-                    <p v-if="ctaError" class="lp-cta-error">{{ ctaError }}</p>
-                    <p class="lp-cta-disclaimer">
-                        No spam, ever. Unsubscribe any time.
+                    </div>
+                    <p v-if="ctaError" class="error" role="alert">
+                        {{ ctaError }}
                     </p>
-                </template>
-
-                <div v-else class="lp-cta-success">
-                    <svg
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        aria-hidden="true"
+                    <small
+                        >No noise. Just the lovely things. Unsubscribe any
+                        time.</small
                     >
-                        <path d="M20 6 9 17l-5-5" />
-                    </svg>
-                    You're in! Check your inbox for your discount code.
-                </div>
-
-                <a href="/products" class="lp-cta-shop-link">
-                    Browse the collection
-                    <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                </a>
+                </form>
+                <p v-else class="success" role="status">
+                    You are in. Check your inbox for your discount code.
+                </p>
             </div>
         </section>
     </main>
-
     <Footer />
 </template>
 
 <style scoped>
-/* ── Base ── */
-.lp {
-    font-family: var(--coy-font-body);
-    color: var(--coy-color-text);
-    background: var(--coy-color-page);
-    overflow-x: hidden;
-    padding-top: 64px;
-}
-
-/* ── Promo banner ── */
-.lp-promo {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    padding: 0.55rem 1rem;
-    text-align: center;
-}
-
-.lp-promo svg {
-    opacity: 0.7;
-    flex-shrink: 0;
-}
-
-/* ── Seasonal banner ── */
-.lp-season-banner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-    padding: 0.55rem 1.25rem;
-    font-family: var(--coy-font-body);
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    color: #fff;
-    text-align: center;
-    background: linear-gradient(135deg, #c47078, #a85058);
-}
-
-.lp-season-banner--summer {
-    background: linear-gradient(135deg, #d4961e, #b87418);
-}
-.lp-season-banner--autumn {
-    background: linear-gradient(135deg, #b06030, #8c4418);
-}
-.lp-season-banner--winter {
-    background: linear-gradient(135deg, #5a4880, #3e3060);
-}
-.lp-season-banner--spring {
-    background: linear-gradient(135deg, #9858b8, #7840a0);
-}
-
-.lp-season-banner-motif {
-    font-size: 1rem;
-    opacity: 0.9;
-}
-
-.lp-season-banner-text {
-    opacity: 0.95;
-}
-
-.lp-season-banner-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    color: #fff;
-    text-decoration: none;
-    font-weight: 700;
-    opacity: 0.9;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-    padding-bottom: 1px;
-    white-space: nowrap;
-    transition: opacity 0.2s;
-}
-
-.lp-season-banner-cta:hover {
-    opacity: 1;
-    border-color: #fff;
-}
-
-/* ── Hero ── */
-.lp-hero {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
+.home {
     overflow: hidden;
-    background: var(--coy-color-page);
-    padding: 5rem 1.5rem 4rem;
-    /* seasonal blob colour variables */
-    --blob1: #e5c9c7;
-    --blob2: #f0dcd8;
+    padding-top: var(--coy-nav-height);
 }
-
-.lp-hero--summer {
-    --blob1: #f5d4a8;
-    --blob2: #f0e0b8;
-}
-.lp-hero--autumn {
-    --blob1: #e8c090;
-    --blob2: #e0b870;
-}
-.lp-hero--winter {
-    --blob1: #ccc0dc;
-    --blob2: #dcd4e8;
-}
-.lp-hero--spring {
-    --blob1: #d8c0ec;
-    --blob2: #e8d4f4;
-}
-
-/* Blobs */
-.lp-blob {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(80px);
-    pointer-events: none;
-}
-
-.lp-blob--1 {
-    width: 480px;
-    height: 480px;
-    background: var(--blob1);
-    top: -80px;
-    left: -120px;
-    opacity: 0.45;
-}
-
-.lp-blob--2 {
-    width: 380px;
-    height: 380px;
-    background: var(--blob2);
-    bottom: -60px;
-    right: -80px;
-    opacity: 0.4;
-}
-
-/* Scattered petals SVG */
-.lp-petals {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-}
-
-.lp-hero-content {
-    position: relative;
-    z-index: 1;
-    max-width: 680px;
-}
-
-/* ── Hero product strip ── */
-.lp-hero-strip {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+.announcement {
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 1rem;
-    max-width: 1000px;
-    width: 100%;
-    margin-top: 3.5rem;
-    padding: 0 0 1rem;
+    padding: 0.55rem var(--coy-gutter);
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    font-size: var(--coy-text-xs);
+    line-height: 1.35;
+    text-align: center;
 }
-
-@media (max-width: 860px) {
-    .lp-hero-strip {
-        grid-template-columns: repeat(2, 1fr);
-        max-width: 480px;
-        margin-top: 2.5rem;
-    }
+.announcement a {
+    color: inherit;
+    font-weight: 600;
+    text-underline-offset: 0.25rem;
+    white-space: nowrap;
 }
-
-.lp-hero-pcard {
-    --base-y: 0px;
+.hero {
+    min-height: min(53rem, calc(100svh - var(--coy-nav-height)));
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(28rem, 1.15fr);
+}
+.hero-copy {
+    max-width: 41rem;
     display: flex;
     flex-direction: column;
-    border-radius: 18px;
-    overflow: hidden;
-    border: 1px solid #e5c9c7;
-    background: #fffafa;
-    text-decoration: none;
-    transform: translateY(var(--base-y));
-    transition:
-        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-        box-shadow 0.35s ease,
-        border-color 0.25s ease;
-    box-shadow: 0 2px 12px rgba(229, 201, 199, 0.3);
+    justify-content: center;
+    padding: clamp(4rem, 7vw, 8rem) var(--coy-gutter) clamp(3rem, 6vw, 6rem)
+        max(var(--coy-gutter), calc((100vw - var(--coy-container-xl)) / 2));
 }
-
-.lp-hero-pcard:nth-child(1) {
-    --base-y: 0px;
+.hero-copy h1 {
+    max-width: 10ch;
+    margin: 1.5rem 0 0;
+    font-size: clamp(3.7rem, 6.6vw, 7.8rem);
+    font-weight: 400;
+    letter-spacing: -0.045em;
+    line-height: 0.92;
 }
-.lp-hero-pcard:nth-child(2) {
-    --base-y: 18px;
-}
-.lp-hero-pcard:nth-child(3) {
-    --base-y: -8px;
-}
-.lp-hero-pcard:nth-child(4) {
-    --base-y: 10px;
-}
-
-@media (max-width: 860px) {
-    .lp-hero-pcard:nth-child(n) {
-        --base-y: 0px;
-    }
-}
-
-.lp-hero-pcard:hover,
-.lp-hero-pcard--lit {
-    transform: translateY(calc(var(--base-y) - 14px));
-    border-color: #c9a4a4;
-    box-shadow: 0 18px 40px rgba(140, 74, 80, 0.18);
-}
-
-.lp-hero-pcard-img {
-    aspect-ratio: 1 / 1;
-    overflow: hidden;
-    background: #fdf4f3;
-    border-bottom: 1px solid #f0dcd8;
-}
-
-.lp-hero-pcard-img img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.45s ease;
-    display: block;
-}
-
-.lp-hero-pcard:hover .lp-hero-pcard-img img,
-.lp-hero-pcard--lit .lp-hero-pcard-img img {
-    transform: scale(1.05);
-}
-
-.lp-hero-pcard-body {
-    padding: 0.7rem 0.85rem 0.85rem;
-}
-
-.lp-hero-pcard-name {
-    font-family: var(--coy-font-display);
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--coy-color-heading);
-    line-height: 1.3;
-    margin-bottom: 0.25rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.lp-hero-pcard-price {
-    font-family: var(--coy-font-display);
-    font-size: 1.1rem;
-    font-weight: 500;
+.hero em,
+.split-heading em,
+.collection-heading em,
+.story-copy em,
+.reviews em {
     color: var(--coy-color-accent);
+    font-weight: 400;
 }
-
-.lp-hero-eyebrow {
-    font-family: var(--coy-font-body);
-    font-size: 0.9rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--coy-color-accent);
-    margin-bottom: 1.25rem;
-    animation: lp-fadeUp 0.9s ease both;
-}
-
-.lp-hero-title {
-    font-family: var(--coy-font-display);
-    font-size: var(--coy-text-h1);
-    font-weight: var(--coy-font-weight-medium);
-    line-height: 0.9;
-    color: var(--coy-color-heading);
-    margin-bottom: 1.5rem;
-    animation: lp-fadeUp 0.9s 0.12s ease both;
-}
-
-.lp-hero-title em {
-    font-style: italic;
-    color: var(--coy-color-accent);
-}
-
-.lp-hero-product-type {
-    margin-top: 0.75rem;
-    color: var(--coy-color-accent);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-}
-
-.lp-hero-sub {
+.hero-intro {
+    max-width: 31rem;
+    margin: 2rem 0 0;
     font-size: var(--coy-text-lead);
-    color: var(--coy-color-text);
-    line-height: var(--coy-leading-body);
-    max-width: 480px;
-    margin: 0 auto 2rem;
-    font-style: italic;
-    animation: lp-fadeUp 0.9s 0.24s ease both;
+    line-height: 1.55;
 }
-
-.lp-hero-divider {
+.hero-actions {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-bottom: 2.25rem;
-    animation: lp-fadeUp 0.9s 0.35s ease both;
+    gap: 1.5rem;
+    margin-top: 2rem;
 }
-
-.lp-hero-divider span:not(.lp-hero-divider-dot) {
-    display: block;
-    width: 70px;
-    height: 1px;
-    background: #e5c9c7;
-}
-
-.lp-hero-divider-dot {
-    color: #c9a4a4;
-    font-size: 1rem;
-}
-
-.lp-hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.85rem;
-    justify-content: center;
-    animation: lp-fadeUp 0.9s 0.45s ease both;
-}
-
-@keyframes lp-fadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(22px);
-    }
-
-    to {
-        opacity: 1;
-        transform: none;
-    }
-}
-
-/* ── Trust bar ── */
-.lp-trust {
-    background: #fffafa;
-    border-top: 1px solid #e5c9c7;
-    border-bottom: 1px solid #e5c9c7;
-    padding: 1.1rem 1.5rem;
-}
-
-.lp-trust-inner {
-    max-width: 860px;
-    margin: 0 auto;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 1.25rem 2rem;
-}
-
-.lp-trust-item {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #6b4f4f;
-    white-space: nowrap;
-}
-
-.lp-trust-item svg {
-    color: #c9a4a4;
-    flex-shrink: 0;
-}
-
-.lp-trust-sep {
-    font-size: 0.6rem;
-    color: #e5c9c7;
-}
-
-/* ── Shared section layout ── */
-.lp-section {
-    padding: var(--coy-section-space) var(--coy-gutter);
-}
-
-.lp-section-inner {
-    max-width: var(--coy-container-lg);
-    margin: 0 auto;
-}
-
-.lp-section-header {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.lp-section-eyebrow {
-    font-size: 0.875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--coy-color-accent);
-    margin-bottom: 0.75rem;
-    display: block;
-}
-
-.lp-section-eyebrow--light {
-    color: rgba(255, 255, 255, 0.75);
-}
-
-.lp-section-title {
-    font-family: var(--coy-font-display);
-    font-size: var(--coy-text-h2);
-    font-weight: var(--coy-font-weight-medium);
-    line-height: var(--coy-leading-heading);
+.text-link {
+    width: fit-content;
     color: var(--coy-color-heading);
+    font-weight: 600;
+    text-decoration-color: var(--coy-color-rose-gold);
+    text-underline-offset: 0.35rem;
 }
-
-.lp-section-title em {
-    font-style: italic;
+.text-link:hover {
     color: var(--coy-color-accent);
 }
-
-/* ── Story strip ── */
-.lp-story {
-    background: #8c4a50;
-    padding: 5rem 1.5rem;
-}
-
-.lp-story-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-}
-
-@media (max-width: 768px) {
-    .lp-story-inner {
-        grid-template-columns: 1fr;
-        gap: 2.5rem;
-    }
-}
-
-.lp-story-title {
-    font-family: var(--coy-font-display);
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    font-weight: 400;
-    line-height: 1.2;
-    color: #fff;
-    margin-bottom: 1.25rem;
-}
-
-.lp-story-title em {
-    font-style: italic;
-    opacity: 0.85;
-}
-
-.lp-story-body {
-    font-size: 1rem;
-    line-height: 1.8;
-    color: rgba(255, 255, 255, 0.82);
-    margin-bottom: 1rem;
-}
-
-.lp-story-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #fff;
-    text-decoration: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-    padding-bottom: 0.1rem;
-    transition: border-color 0.2s;
-    margin-top: 0.5rem;
-}
-
-.lp-story-link:hover {
-    border-color: #fff;
-}
-
-.lp-story-stats {
+.hero-notes {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
+    margin: clamp(3rem, 7vw, 6rem) 0 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--coy-color-border);
 }
-
-.lp-stat-card:first-child {
-    grid-column: 1 / -1;
+.hero-notes div,
+.story-copy dl div {
+    display: flex;
+    flex-direction: column;
 }
-
-.lp-stat-card {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
-    padding: 1.5rem 1.25rem;
-    text-align: center;
-    backdrop-filter: blur(4px);
-    transition: background 0.2s;
-}
-
-.lp-stat-card:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.lp-stat-val {
+.hero-notes dt,
+.story-copy dt {
+    color: var(--coy-color-accent);
     font-family: var(--coy-font-display);
-    font-size: 2rem;
-    font-weight: 400;
-    color: #fff;
-    line-height: 1;
-    margin-bottom: 0.3rem;
+    font-size: 1.35rem;
 }
-
-.lp-stat-label {
-    font-size: 0.9rem;
-    font-style: italic;
-    color: rgba(255, 255, 255, 0.75);
-    line-height: 1.4;
+.hero-notes dd,
+.story-copy dd {
+    margin: 0;
+    font-size: var(--coy-text-xs);
 }
-
-/* ── Features ── */
-.lp-features {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-}
-
-@media (max-width: 768px) {
-    .lp-features {
-        grid-template-columns: 1fr;
-    }
-}
-
-.lp-feature-card {
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    background: #fffafa;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
-    padding: 2rem 1.5rem;
+.hero-gallery {
     position: relative;
-    overflow: hidden;
-    transition:
-        box-shadow 0.25s,
-        transform 0.25s;
+    min-height: 43rem;
+    margin: clamp(1.5rem, 3vw, 3rem) clamp(1.5rem, 3vw, 3rem)
+        clamp(1.5rem, 3vw, 3rem) 0;
+    background: var(--coy-color-blush);
+    border-radius: 0 0 0 clamp(3rem, 8vw, 9rem);
 }
-
-.lp-feature-card:hover {
-    box-shadow: 0 8px 28px rgba(229, 201, 199, 0.5);
+.hero-main,
+.hero-detail {
+    position: absolute;
+    display: block;
+    overflow: hidden;
+    color: var(--coy-color-heading);
+    background: var(--coy-color-champagne);
+    text-decoration: none;
+}
+.hero-main {
+    inset: clamp(2rem, 5vw, 5rem) clamp(2rem, 5vw, 5rem) clamp(5rem, 8vw, 8rem)
+        clamp(2rem, 4vw, 4rem);
+    border-radius: var(--coy-radius-sm) var(--coy-radius-sm)
+        clamp(2rem, 4vw, 4rem);
+}
+.hero-detail {
+    width: clamp(8.5rem, 16vw, 14rem);
+    aspect-ratio: 4/5;
+    right: clamp(1rem, 2vw, 2rem);
+    bottom: clamp(1.5rem, 3vw, 3rem);
+    border: 0.5rem solid var(--coy-color-page);
+    box-shadow: var(--coy-shadow-md);
+}
+.hero-main img,
+.hero-detail img,
+.product-image img,
+.story-visual img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    transition: transform 700ms var(--coy-ease);
+}
+.hero-main:hover img,
+.product:hover img {
+    transform: scale(1.025);
+}
+.hero-caption {
+    position: absolute;
+    inset: auto 0 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem;
+    color: white;
+    background: linear-gradient(transparent, rgb(52 42 40/76%));
+}
+.handnote {
+    position: absolute;
+    left: -1.5rem;
+    bottom: 3rem;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    color: var(--coy-color-accent);
+    background: var(--coy-color-page);
+    font-family: var(--coy-font-display);
+    font-size: 1.25rem;
+    font-style: italic;
+    line-height: 1.15;
+    transform: rotate(-4deg);
+}
+.chapter,
+.manifesto-chapter {
+    position: absolute;
+    color: var(--coy-color-accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    writing-mode: vertical-rl;
+}
+.chapter {
+    top: 2rem;
+    right: 0.85rem;
+}
+.placeholder {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: 2rem;
+    font-family: var(--coy-font-display);
+    font-size: 1.5rem;
+    font-style: italic;
+    text-align: center;
+}
+.trust {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.75rem, 2vw, 2rem);
+    padding: 1rem var(--coy-gutter);
+    background: var(--coy-color-surface);
+    border-block: 1px solid var(--coy-color-border-soft);
+    font-size: var(--coy-text-xs);
+    text-align: center;
+}
+.trust p {
+    margin: 0;
+}
+.trust i {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--coy-color-rose-gold);
+}
+.split-heading,
+.collection-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(18rem, 0.65fr);
+    align-items: end;
+    gap: clamp(2rem, 7vw, 7rem);
+    margin-bottom: clamp(2.5rem, 5vw, 4.5rem);
+}
+.split-heading h2,
+.collection-heading h2,
+.story-copy h2,
+.reviews h2,
+.newsletter h2 {
+    margin: 0.75rem 0 0;
+    font-size: var(--coy-text-h2);
+    font-weight: 400;
+    letter-spacing: -0.025em;
+}
+.split-heading > p {
+    max-width: 34rem;
+    margin: 0;
+}
+.discovery-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1rem;
+}
+.discovery-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 13rem;
+    padding: clamp(1.5rem, 3vw, 2.5rem);
+    color: var(--coy-color-heading);
+    background: var(--coy-color-champagne);
+    border: 1px solid transparent;
+    border-radius: var(--coy-radius-sm);
+    text-decoration: none;
+    transition: transform 0.2s;
+}
+.discovery-card:hover {
     transform: translateY(-3px);
 }
-
-.lp-feature-card::before {
-    content: '✿';
+.discovery-card--main {
+    grid-row: 1/-1;
+    justify-content: flex-end;
+    min-height: 28rem;
+    padding-right: 25%;
+    color: white;
+    background: var(--coy-color-accent);
+    border-radius: var(--coy-radius-sm) var(--coy-radius-sm) 5rem;
+}
+.discovery-card--rose {
+    background: var(--coy-color-blush);
+}
+.discovery-card--light {
+    background: var(--coy-color-surface);
+    border-color: var(--coy-color-border);
+}
+.discovery-card > b {
     position: absolute;
-    bottom: -5px;
-    right: 7px;
-    font-size: 3rem;
-    color: #c9a4a4;
-    opacity: 0.12;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
+    top: 1.25rem;
+    right: 1.5rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
 }
-
-.lp-feature-icon {
-    font-size: 1rem;
-    color: #c9a4a4;
-    letter-spacing: 0.3em;
-    margin-bottom: 1rem;
-    display: block;
+.discovery-card small {
+    font-size: var(--coy-text-xs);
 }
-
-.lp-feature-title {
+.discovery-card h3 {
+    max-width: 13ch;
+    margin: 0.4rem 0 1rem;
     font-family: var(--coy-font-display);
-    font-size: 1.2rem;
-    font-style: italic;
+    font-size: var(--coy-text-h3);
     font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 0.75rem;
+    line-height: 1.1;
 }
-
-.lp-feature-body {
-    font-size: 1rem;
-    line-height: 1.75;
-    color: #6b4f4f;
+.discovery-card span {
+    font-weight: 600;
 }
-
-/* ── Hottest products ── */
-.lp-hot {
-    background: #fffafa;
-    border-top: 1px solid #e5c9c7;
-    border-bottom: 1px solid #e5c9c7;
-    padding: 5rem 1.5rem;
+.collection {
+    background: var(--coy-color-surface);
 }
-
-.lp-hot-inner {
-    max-width: 1100px;
-    margin: 0 auto;
+.collection-heading {
+    grid-template-columns: 1fr auto;
 }
-
-.lp-hot-header {
+.products {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr 0.8fr;
+    gap: clamp(1rem, 2vw, 1.5rem);
+    align-items: start;
+}
+.product {
+    color: var(--coy-color-heading);
+    text-decoration: none;
+}
+.product--1 {
+    grid-row: span 2;
+}
+.product--4 {
+    grid-column: 2/-1;
+    width: calc(50% - 0.75rem);
+    justify-self: end;
+}
+.product-image {
+    position: relative;
+    aspect-ratio: 4/5;
+    overflow: hidden;
+    background: var(--coy-color-page);
+    border-radius: var(--coy-radius-sm);
+}
+.product--1 .product-image {
+    aspect-ratio: 4/5.5;
+    border-radius: var(--coy-radius-sm) var(--coy-radius-sm) 4rem;
+}
+.product-label {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.4rem 0.75rem;
+    color: white;
+    background: var(--coy-color-accent);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+.product-info {
     display: flex;
-    align-items: flex-end;
+    align-items: start;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 2.5rem;
-    flex-wrap: wrap;
+    padding: 1rem 0 1.5rem;
 }
-
-.lp-hot-see-all {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.9rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #8c4a50;
-    text-decoration: none;
-    border-bottom: 1px solid #e5c9c7;
-    padding-bottom: 0.1rem;
-    transition:
-        border-color 0.2s,
-        color 0.2s;
-    white-space: nowrap;
-}
-
-.lp-hot-see-all:hover {
-    color: #6a3038;
-    border-color: #8c4a50;
-}
-
-.lp-hot-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.1rem;
-}
-
-@media (max-width: 1000px) {
-    .lp-hot-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 480px) {
-    .lp-hot-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-.lp-hot-card {
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    background: #fffafa;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    text-decoration: none;
-    position: relative;
-    transition:
-        box-shadow 0.25s,
-        transform 0.25s;
-}
-
-.lp-hot-card:hover {
-    box-shadow: 0 8px 32px rgba(201, 164, 164, 0.45);
-    transform: translateY(-4px);
-}
-
-.lp-hot-card::before {
-    content: '✿';
-    position: absolute;
-    bottom: -5px;
-    right: 7px;
-    font-size: 3rem;
-    color: #c9a4a4;
-    opacity: 0.12;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-    z-index: 0;
-}
-
-.lp-hot-card::after {
-    content: '✿';
-    position: absolute;
-    top: 5px;
-    left: 9px;
-    font-size: 0.9rem;
-    color: #c9a4a4;
-    opacity: 0.22;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-    z-index: 0;
-}
-
-.lp-hot-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 10;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    background: #8c4a50;
-    color: #fff;
-    border-radius: 999px;
-    padding: 0.18rem 0.6rem;
-}
-
-.lp-hot-img-wrap {
-    height: 185px;
-    overflow: hidden;
-    background: #fdf4f3;
-    border-bottom: 1px solid #f0dcd8;
-    flex-shrink: 0;
-}
-
-.lp-hot-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.45s ease;
-}
-
-.lp-hot-card:hover .lp-hot-img {
-    transform: scale(1.05);
-}
-
-.lp-hot-body {
-    padding: 0.85rem 1rem 0.95rem;
-    background: #fffafa;
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    flex: 1;
-}
-
-.lp-hot-name {
-    font-family: var(--coy-font-display);
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #2d1a1a;
-    line-height: 1.25;
-    margin-bottom: 0.35rem;
-}
-
-.lp-hot-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 0.6rem;
-    border-top: 1px solid #f0dcd8;
-    margin-top: auto;
-}
-
-.lp-hot-price {
+.product-info h3 {
+    margin: 0;
     font-family: var(--coy-font-display);
     font-size: 1.35rem;
     font-weight: 500;
-    color: #8c4a50;
+    line-height: 1.2;
 }
-
-.lp-hot-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    font-size: 0.875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #8c4a50;
-    transition: gap 0.2s;
-}
-
-.lp-hot-card:hover .lp-hot-cta {
-    gap: 0.45rem;
-}
-
-/* ── Scent Finder banner ── */
-.lp-sf-banner {
-    padding: 3rem 1.5rem;
-    text-align: center;
-    background: #fdf4f3;
-}
-
-.lp-sf-inner {
-    max-width: 560px;
-    margin: 0 auto;
-}
-
-.lp-sf-petal {
-    color: #c9a4a4;
-    font-size: 1.6rem;
-    margin-bottom: 0.5rem;
-}
-
-.lp-sf-title {
-    font-family: var(--coy-font-display);
-    font-size: 1.9rem;
-    font-weight: 400;
-    color: #2d1a1a;
-}
-
-.lp-sf-title em {
-    font-style: italic;
-    color: #a85058;
-}
-
-.lp-sf-body {
-    font-size: 0.95rem;
-    line-height: 1.7;
-    color: #6b4f4f;
-    margin: 0.75rem 0 1.5rem;
-}
-
-/* ── CTA section ── */
-.lp-cta-section {
-    padding: 4rem 1.5rem 6rem;
-}
-
-.lp-cta-card {
-    max-width: 760px;
-    margin: 0 auto;
-    border: 1px solid #e5c9c7;
-    border-radius: 28px;
-    background: #fffafa;
-    box-shadow: 0 4px 32px rgba(229, 201, 199, 0.45);
-    padding: 3.5rem 2.5rem;
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-
-.lp-cta-card::before {
-    content: '✿';
-    position: absolute;
-    bottom: -10px;
-    right: 12px;
-    font-size: 6rem;
-    color: #c9a4a4;
-    opacity: 0.1;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-}
-
-.lp-cta-petals {
-    display: flex;
-    justify-content: center;
-    gap: 1.25rem;
-    font-size: 1.25rem;
-    color: #e5c9c7;
-    margin-bottom: 1.5rem;
-    letter-spacing: 0.4rem;
-}
-
-.lp-cta-title {
-    font-family: var(--coy-font-display);
-    font-size: clamp(1.8rem, 4vw, 2.5rem);
-    font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 1rem;
-}
-
-.lp-cta-body {
-    font-size: 1rem;
-    line-height: 1.8;
-    color: #6b4f4f;
-    max-width: 520px;
-    margin: 0 auto 2rem;
-}
-
-/* ── Buttons ── */
-.btn-rose {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.72rem 1.5rem;
-    border-radius: 999px;
-    border: 1px solid var(--coy-color-accent);
-    background: var(--coy-color-accent);
-    color: var(--coy-color-on-accent);
-    font-family: var(--coy-font-body);
-    font-size: 1rem;
-    font-weight: 600;
-    text-decoration: none;
-    box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition:
-        transform 0.2s,
-        box-shadow 0.2s;
-    cursor: pointer;
-}
-
-.btn-rose:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 18px rgba(168, 80, 88, 0.28);
-}
-
-.btn-rose--lg {
-    padding: 0.85rem 2rem;
-    font-size: 1rem;
-}
-
-.btn-ghost {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.72rem 1.5rem;
-    border-radius: 999px;
-    border: 1px solid var(--coy-color-border);
-    background: var(--coy-color-surface);
+.product-info p {
+    margin: 0.2rem 0 0;
     color: var(--coy-color-text);
-    font-family: var(--coy-font-body);
-    font-size: 1rem;
+    font-size: var(--coy-text-xs);
+}
+.product-info strong {
+    color: var(--coy-color-accent);
     font-weight: 600;
-    text-decoration: none;
-    backdrop-filter: blur(4px);
-    transition:
-        background 0.2s,
-        border-color 0.2s,
-        color 0.2s;
+    white-space: nowrap;
 }
-
-.btn-ghost:hover {
-    background: #faeaea;
-    border-color: #c9a4a4;
-    color: #2d1a1a;
-}
-
-/* ── Testimonials ── */
-.lp-testimonials {
-    padding: 5rem 1.5rem;
-    background: #fdf4f3;
-}
-
-.lp-testimonials-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-}
-
-.lp-testimonials-grid {
+.manifesto {
+    position: relative;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 340px));
-    gap: 1.25rem;
-    justify-content: center;
+    place-items: center;
+    min-height: clamp(34rem, 60vw, 46rem);
+    padding: var(--coy-section-space) var(--coy-gutter);
+    color: white;
+    background: var(--coy-color-heading);
+    text-align: center;
 }
-
-@media (max-width: 600px) {
-    .lp-testimonials-grid {
-        grid-template-columns: 1fr;
-    }
+.manifesto > div {
+    max-width: 58rem;
 }
-
-.lp-testimonial-card {
-    background: #fffafa;
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    padding: 1.75rem 1.5rem;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.3);
+.manifesto .coy-eyebrow {
+    color: var(--coy-color-champagne);
+}
+.manifesto h2 {
+    margin: 1rem 0 2rem;
+    color: inherit;
+    font-size: clamp(2.5rem, 5vw, 4.8rem);
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+}
+.manifesto h2 em {
+    display: block;
+    color: var(--coy-color-blush);
+}
+.manifesto div > p:last-child {
+    max-width: 39rem;
+    margin: auto;
+    color: var(--coy-color-champagne);
+    font-size: var(--coy-text-lead);
+}
+.manifesto-chapter {
+    left: var(--coy-gutter);
+    top: 50%;
+    color: var(--coy-color-champagne);
+    transform: translateY(-50%);
+}
+.story-grid {
+    display: grid;
+    grid-template-columns: minmax(20rem, 0.9fr) minmax(25rem, 1.1fr);
+    gap: clamp(3rem, 9vw, 8rem);
+    align-items: center;
+}
+.story-visual {
+    position: relative;
+    padding: 0 0 3rem 3rem;
+}
+.story-visual > div {
+    aspect-ratio: 4/5;
+    overflow: hidden;
+    background: var(--coy-color-champagne);
+    border-radius: 45% 45% var(--coy-radius-sm) var(--coy-radius-sm);
+}
+.story-visual > p {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 1rem 1.25rem;
+    color: white;
+    background: var(--coy-color-accent);
+    font-family: var(--coy-font-display);
+    font-size: 1.2rem;
+    font-style: italic;
+    line-height: 1.2;
+}
+.story-copy > p:not(.coy-eyebrow) {
+    max-width: 35rem;
+    margin: 1.25rem 0 0;
+}
+.story-copy .text-link {
+    display: block;
+    margin-top: 2rem;
+}
+.story-copy dl {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 3rem 0 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--coy-color-border);
+}
+.reviews {
+    background: var(--coy-color-blush);
+}
+.reviews header {
+    max-width: 42rem;
+    margin-bottom: clamp(2.5rem, 5vw, 4rem);
+}
+.review-grid {
+    display: grid;
+    grid-template-columns: 1.25fr 0.75fr;
+    gap: 1rem;
+}
+.reviews blockquote {
+    margin: 0;
+    background: var(--coy-color-surface);
+    border-radius: var(--coy-radius-sm);
+}
+.review-main {
+    min-height: 23rem;
     display: flex;
     flex-direction: column;
-    gap: 0.85rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.lp-testimonial-card::before {
-    content: '"';
-    position: absolute;
-    top: -8px;
-    left: 12px;
-    font-family: var(--coy-font-display);
-    font-size: 5rem;
-    color: #e5c9c7;
-    line-height: 1;
-    pointer-events: none;
-    user-select: none;
-}
-
-.lp-testimonial-stars {
-    position: relative;
-    z-index: 1;
-    color: #c9747a; /* filled star colour - StarRating uses currentColor */
-}
-
-.lp-testimonial-body {
-    font-family: var(--coy-font-display);
-    font-size: 1.05rem;
-    font-style: italic;
-    color: #2d1a1a;
-    line-height: 1.7;
-    flex: 1;
-    position: relative;
-    z-index: 1;
-}
-
-.lp-testimonial-author {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #8c4a50;
-    letter-spacing: 0.03em;
-}
-
-/* ── CTA email form ── */
-.lp-cta-form {
-    display: flex;
-    gap: 0.65rem;
-    max-width: 480px;
-    margin: 0 auto 0.75rem;
-    flex-wrap: wrap;
     justify-content: center;
+    padding: clamp(2rem, 5vw, 4rem);
 }
-
-.lp-cta-input {
-    flex: 1;
-    min-width: 200px;
-    padding: 0.72rem 1.1rem;
-    border: 1px solid #e5c9c7;
-    border-radius: 999px;
-    background: #fdf4f3;
-    color: #2d1a1a;
-    font-family: var(--coy-font-body);
-    font-size: 1rem;
-    outline: none;
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
+.review-main > p {
+    max-width: 25ch;
+    margin: 1.5rem 0;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: clamp(1.7rem, 3vw, 2.7rem);
+    line-height: 1.25;
 }
-
-.lp-cta-input:focus {
-    border-color: #8c4a50;
-    box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1);
-}
-
-.lp-cta-input::placeholder {
-    color: #a08080;
-}
-
-.lp-cta-error {
-    font-size: 0.9rem;
-    color: #b54040;
-    margin-bottom: 0.5rem;
-}
-
-.lp-cta-disclaimer {
-    font-size: 0.875rem;
-    color: #a08080;
-    font-style: italic;
-    margin-bottom: 1.25rem;
-}
-
-.lp-cta-success {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #2d7a3a;
+.reviews footer {
+    color: var(--coy-color-accent);
     font-weight: 600;
-    font-size: 1rem;
-    background: #f0faf0;
-    border: 1px solid #a8d8b0;
-    border-radius: 999px;
-    padding: 0.6rem 1.2rem;
-    margin-bottom: 1.25rem;
 }
-
-.lp-cta-shop-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.9rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: #8c4a50;
-    text-decoration: none;
-    border-bottom: 1px solid #e5c9c7;
-    padding-bottom: 0.1rem;
-    transition:
-        border-color 0.2s,
-        color 0.2s;
-    margin-top: 1rem;
+.review-side {
+    display: grid;
+    gap: 1rem;
+}
+.review-side blockquote {
     display: flex;
+    flex-direction: column;
     justify-content: center;
+    padding: 2rem;
 }
-
-.lp-cta-shop-link:hover {
-    color: #6a3038;
-    border-color: #8c4a50;
+.review-side p {
+    margin: 1rem 0;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: 1.25rem;
+    line-height: 1.4;
+}
+.newsletter {
+    text-align: center;
+}
+.newsletter > div {
+    width: min(100% - 2 * var(--coy-gutter), 48rem);
+    margin: auto;
+}
+.newsletter h2 {
+    font-size: clamp(2.3rem, 4.5vw, 4rem);
+}
+.newsletter > div > p:not(.coy-eyebrow) {
+    margin: 1.5rem auto 2rem;
+    font-size: var(--coy-text-lead);
+}
+.newsletter form {
+    max-width: 39rem;
+    margin: auto;
+    text-align: left;
+}
+.newsletter label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--coy-color-heading);
+    font-weight: 600;
+}
+.newsletter form > div {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.65rem;
+}
+.newsletter small {
+    display: block;
+    margin-top: 0.65rem;
+    text-align: center;
+}
+.error {
+    color: var(--coy-color-error);
+    font-weight: 600;
+}
+.success {
+    width: fit-content;
+    padding: 0.75rem 1rem;
+    color: var(--coy-color-success);
+    background: var(--coy-color-success-soft);
+    border: 1px solid;
+    border-radius: var(--coy-radius-sm);
+}
+@media (max-width: 900px) {
+    .hero {
+        grid-template-columns: 1fr;
+    }
+    .hero-copy {
+        max-width: none;
+        padding-inline: var(--coy-gutter);
+    }
+    .hero-gallery {
+        min-height: min(42rem, 105vw);
+        margin: 0 var(--coy-gutter) var(--coy-gutter);
+        border-radius: var(--coy-radius-sm) var(--coy-radius-sm) 5rem;
+    }
+    .handnote {
+        left: 1rem;
+    }
+    .products {
+        grid-template-columns: 1fr 1fr;
+    }
+    .product--1 {
+        grid-row: auto;
+    }
+    .product--4 {
+        grid-column: auto;
+        width: auto;
+    }
+    .product--1 .product-image {
+        aspect-ratio: 4/5;
+        border-radius: var(--coy-radius-sm);
+    }
+}
+@media (max-width: 680px) {
+    .announcement {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.2rem;
+        text-align: left;
+    }
+    .hero-copy {
+        padding-block: 3.5rem 2.5rem;
+    }
+    .hero-copy h1 {
+        font-size: clamp(3.2rem, 16vw, 5rem);
+    }
+    .hero-actions {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+    .hero-gallery {
+        min-height: 31rem;
+    }
+    .hero-main {
+        inset: 1.25rem 1.25rem 4.5rem;
+    }
+    .hero-detail {
+        width: 7.5rem;
+        right: 0.75rem;
+        bottom: 1rem;
+        border-width: 0.35rem;
+    }
+    .handnote,
+    .chapter,
+    .manifesto-chapter {
+        display: none;
+    }
+    .trust {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.65rem 1rem;
+        text-align: left;
+    }
+    .trust i {
+        display: none;
+    }
+    .split-heading,
+    .collection-heading {
+        grid-template-columns: 1fr;
+        align-items: start;
+        gap: 1.25rem;
+    }
+    .discovery-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+    .discovery-card--main {
+        grid-row: auto;
+        min-height: 19rem;
+    }
+    .product-info {
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .product-info h3 {
+        font-size: 1.15rem;
+    }
+    .product-info p {
+        display: none;
+    }
+    .manifesto h2 {
+        font-size: clamp(2.4rem, 11vw, 3.6rem);
+    }
+    .story-grid,
+    .review-grid {
+        grid-template-columns: 1fr;
+    }
+    .story-visual {
+        padding-left: 1.5rem;
+    }
+    .story-copy dl {
+        gap: 0.5rem;
+    }
+    .review-main {
+        min-height: auto;
+        padding: 2rem;
+    }
+    .newsletter h2 br {
+        display: none;
+    }
+    .newsletter form > div {
+        grid-template-columns: 1fr;
+    }
+    .newsletter button {
+        width: 100%;
+    }
+}
+@media (max-width: 370px) {
+    .hero-notes,
+    .products,
+    .story-copy dl,
+    .trust {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
