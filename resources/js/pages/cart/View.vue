@@ -229,7 +229,6 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                             <div class="item-details">
                                 <div class="item-topline">
                                     <div>
-                                        <p class="item-label">Chapter of You</p>
                                         <h3>
                                             <Link
                                                 :href="`/product/${item.product_id}`"
@@ -1099,10 +1098,17 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
         grid-template-columns: 2.35rem 2.35rem 2.35rem;
     }
     .item-actions {
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
         flex-direction: row;
     }
     .remove-button {
+        max-width: 100%;
+        flex: 0 0 auto;
         align-self: center;
+        margin: 0;
+        padding-inline: 0.5rem;
     }
 }
 </style>
