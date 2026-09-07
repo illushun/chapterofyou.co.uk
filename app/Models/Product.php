@@ -13,6 +13,7 @@ use App\Models\Product\View as ProductView;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Product extends Model
 {
@@ -195,9 +196,10 @@ class Product extends Model
 
         // MPN and Name Search
         $query->when($filters['search'] ?? false, function ($query, $search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('mpn', 'like', '%'.$search.'%')
-                    ->orWhere('name', 'like', '%'.$search.'%');
+            $like = '%'.Str::lower($search).'%';
+            $query->where(function ($q) use ($like) {
+                $q->whereRaw('LOWER(mpn) LIKE ?', [$like])
+                    ->orWhereRaw('LOWER(name) LIKE ?', [$like]);
             });
         });
 

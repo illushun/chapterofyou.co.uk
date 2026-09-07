@@ -36,6 +36,7 @@ use App\Http\Controllers\MarketingOptInController;
 use App\Http\Controllers\Order\ConfirmationController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\ScentFinderController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\WaitlistController;
 use App\Http\Controllers\WishlistController;
@@ -56,6 +57,7 @@ Route::get('/privacy', fn () => inertia('Privacy'))->name('privacy');
 Route::get('/returns', fn () => inertia('Returns'))->name('returns');
 
 Route::get('/products', [ProductController::class, 'index'])->name('products');
+Route::get('/search/suggestions', [SearchController::class, 'suggestions'])->name('search.suggestions');
 Route::get('/product/{idOrSlug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/category/{slug}', [CategoryController::class, 'show'])->name('category.show');
 

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import CookieConsent from '@/components/CookieConsent.vue';
-import { Link, router, usePage } from '@inertiajs/vue3';
+import NavSearch from '@/components/NavSearch.vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 declare const route: (name: string) => string;
@@ -9,20 +10,11 @@ declare const route: (name: string) => string;
 const page = usePage();
 const isAccountOpen = ref(false);
 const isMobileMenuOpen = ref(false);
-const search = ref('');
 const cartCount = computed(() => Number((page.props as any).cartCount) || 0);
 const firstName = computed(() => {
     const name = (page.props as any).auth?.user?.name;
     return name ? name.split(' ')[0] : 'Account';
 });
-
-function submitSearch() {
-    const term = search.value.trim();
-    router.get('/products', term ? { search: term } : {}, {
-        preserveState: false,
-    });
-    isMobileMenuOpen.value = false;
-}
 </script>
 
 <template>
@@ -30,30 +22,9 @@ function submitSearch() {
         <div class="primary-row coy-container">
             <a href="/" class="brand" aria-label="Chapter of You home">
                 <AppLogoIcon class-name="brand-mark" aria-hidden="true" />
-                <span><strong>Chapter</strong><small>of You</small></span>
             </a>
 
-            <form
-                class="search search--desktop"
-                role="search"
-                @submit.prevent="submitSearch"
-            >
-                <label for="desktop-site-search" class="sr-only"
-                    >Search products</label
-                >
-                <svg aria-hidden="true" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="m20 20-4-4" />
-                </svg>
-                <input
-                    id="desktop-site-search"
-                    v-model="search"
-                    type="search"
-                    placeholder="Search scents, products and gifts"
-                    autocomplete="off"
-                />
-                <button type="submit">Search</button>
-            </form>
+            <NavSearch class="search--desktop" />
 
             <nav class="actions" aria-label="Account and basket">
                 <div class="account">
@@ -133,27 +104,11 @@ function submitSearch() {
             </nav>
         </div>
 
-        <form
-            class="search search--mobile"
-            role="search"
-            @submit.prevent="submitSearch"
-        >
-            <label for="mobile-site-search" class="sr-only"
-                >Search products</label
-            >
-            <svg aria-hidden="true" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="7" />
-                <path d="m20 20-4-4" />
-            </svg>
-            <input
-                id="mobile-site-search"
-                v-model="search"
-                type="search"
-                placeholder="Search products and scents"
-                autocomplete="off"
-            />
-            <button type="submit" aria-label="Submit search">Go</button>
-        </form>
+        <NavSearch
+            compact
+            class="search--mobile"
+            @submitted="isMobileMenuOpen = false"
+        />
 
         <nav class="category-row" aria-label="Main navigation">
             <div class="coy-container">
@@ -213,7 +168,6 @@ function submitSearch() {
 .brand {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
     color: var(--coy-color-heading);
     text-decoration: none;
     flex-shrink: 0;
@@ -222,75 +176,12 @@ function submitSearch() {
     width: 3.25rem;
     height: 3.25rem;
 }
-.brand > span {
-    display: flex;
-    flex-direction: column;
-    font-family: var(--coy-font-display);
-    line-height: 0.85;
-}
-.brand strong {
-    font-size: 1.45rem;
-    font-weight: 600;
-}
-.brand small {
-    font-size: 1.05rem;
-    font-style: italic;
-    text-align: right;
-}
-.search {
-    height: 2.875rem;
-    display: flex;
-    align-items: center;
-    color: var(--coy-color-text);
-    background: var(--coy-color-page);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-pill);
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
-}
-.search:focus-within {
-    border-color: var(--coy-color-focus);
-    box-shadow: var(--coy-shadow-focus);
-}
-.search > svg {
-    width: 1.25rem;
-    margin-left: 1rem;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-}
-.search input {
-    min-width: 0;
-    flex: 1;
-    padding: 0.65rem 0.75rem;
-    color: var(--coy-color-heading);
-    background: transparent;
-    border: 0;
-    outline: 0;
-    font: inherit;
-    font-size: 1rem;
-}
-.search input::placeholder {
-    color: var(--coy-color-text);
-    opacity: 0.8;
-}
-.search button {
-    height: 100%;
-    padding: 0 1.25rem;
-    color: var(--coy-color-on-accent);
-    background: var(--coy-color-accent);
-    border: 0;
-    border-radius: 0 var(--coy-radius-pill) var(--coy-radius-pill) 0;
-    font: inherit;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-}
 .actions {
     display: flex;
     align-items: center;
+    justify-self: end;
     gap: 0.5rem;
+    margin-left: auto;
 }
 .account {
     position: relative;
@@ -408,17 +299,6 @@ function submitSearch() {
 .mobile-menu {
     display: none;
 }
-.sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
 .dropdown-enter-active,
 .dropdown-leave-active,
 .mobile-menu-enter-active,
@@ -436,7 +316,8 @@ function submitSearch() {
 }
 @media (max-width: 900px) {
     .primary-row {
-        grid-template-columns: auto 1fr auto;
+        display: flex;
+        justify-content: space-between;
     }
     .search--desktop {
         display: none;
@@ -493,12 +374,6 @@ function submitSearch() {
         width: 2.75rem;
         height: 2.75rem;
     }
-    .brand strong {
-        font-size: 1.25rem;
-    }
-    .brand small {
-        font-size: 1rem;
-    }
     .action {
         padding: 0.4rem;
     }
@@ -510,9 +385,6 @@ function submitSearch() {
     }
     .search--mobile {
         height: 2.75rem;
-    }
-    .search--mobile button {
-        padding: 0 1rem;
     }
 }
 </style>
