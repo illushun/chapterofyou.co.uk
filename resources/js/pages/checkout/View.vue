@@ -191,16 +191,6 @@ const addressForm = useForm({
     country: 'United Kingdom',
 });
 
-const formatAddress = (address: Address): string[] =>
-    [
-        address.line_1,
-        address.line_2,
-        address.city,
-        address.county,
-        address.postcode,
-        address.country,
-    ].filter(Boolean);
-
 const hasItems = computed(
     () => props.cartItems.length > 0 || !!props.giftVoucher,
 );
@@ -472,10 +462,6 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                         <h1 class="co-title coy-heading">
                             Complete your order
                         </h1>
-                        <p class="co-intro">
-                            Just a few details, then your order will be on its
-                            way.
-                        </p>
                     </div>
                     <div class="co-header-actions">
                         <a :href="getRoute('cart.view')" class="co-back">
@@ -495,19 +481,6 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                         </a>
                     </div>
                 </header>
-                <ol
-                    v-if="hasItems"
-                    class="co-progress"
-                    aria-label="Checkout progress"
-                >
-                    <li class="co-progress-item co-progress-item--active">
-                        <span>1</span> Details
-                    </li>
-                    <li class="co-progress-item"><span>2</span> Payment</li>
-                    <li class="co-progress-item">
-                        <span>3</span> Confirmation
-                    </li>
-                </ol>
             </div>
         </div>
 
@@ -532,58 +505,6 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 
             <div v-else class="co-grid">
                 <div class="co-left">
-                    <section
-                        v-if="!isGuest && addresses.length > 0"
-                        class="co-card coy-card"
-                    >
-                        <div class="co-section-heading">
-                            <p class="coy-eyebrow">Quick selection</p>
-                            <h2 class="co-card-title coy-heading">
-                                Saved addresses
-                            </h2>
-                        </div>
-                        <div class="co-address-grid">
-                            <button
-                                v-for="address in addresses"
-                                :key="address.id"
-                                type="button"
-                                @click="selectAddress(address)"
-                                class="co-address-card"
-                                :aria-pressed="selectedAddressId === address.id"
-                                :class="{
-                                    'co-address-card--selected':
-                                        selectedAddressId === address.id,
-                                }"
-                            >
-                                <div class="co-address-card-head">
-                                    <span class="co-address-type">{{
-                                        address.type
-                                    }}</span>
-                                    <span
-                                        v-if="address.is_default"
-                                        class="co-address-default"
-                                        >Default</span
-                                    >
-                                </div>
-                                <div class="co-address-lines">
-                                    <span
-                                        v-for="line in formatAddress(address)"
-                                        :key="line"
-                                        >{{ line }}</span
-                                    >
-                                </div>
-                            </button>
-                        </div>
-                        <button
-                            v-if="selectedAddressId !== null"
-                            @click="clearAddressSelection"
-                            type="button"
-                            class="co-clear-btn"
-                        >
-                            Clear &amp; enter manually
-                        </button>
-                    </section>
-
                     <section class="co-card coy-card">
                         <div
                             class="co-section-heading co-section-heading--step"
@@ -608,6 +529,52 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                             >
                             to use your saved details.
                         </p>
+
+                        <div
+                            v-if="!isGuest && addresses.length > 0"
+                            class="co-saved-addresses"
+                        >
+                            <h3>Choose a saved address</h3>
+                            <div class="co-address-grid">
+                                <button
+                                    v-for="address in addresses"
+                                    :key="address.id"
+                                    type="button"
+                                    @click="selectAddress(address)"
+                                    class="co-address-card"
+                                    :aria-pressed="
+                                        selectedAddressId === address.id
+                                    "
+                                    :class="{
+                                        'co-address-card--selected':
+                                            selectedAddressId === address.id,
+                                    }"
+                                >
+                                    <div class="co-address-card-head">
+                                        <span class="co-address-type">{{
+                                            address.type
+                                        }}</span>
+                                        <span
+                                            v-if="address.is_default"
+                                            class="co-address-default"
+                                            >Default</span
+                                        >
+                                    </div>
+                                    <span class="co-address-preview">
+                                        {{ address.line_1 }},
+                                        {{ address.postcode }}
+                                    </span>
+                                </button>
+                            </div>
+                            <button
+                                v-if="selectedAddressId !== null"
+                                @click="clearAddressSelection"
+                                type="button"
+                                class="co-clear-btn"
+                            >
+                                Use a different address
+                            </button>
+                        </div>
 
                         <form
                             @submit.prevent="handleCardPayment"
@@ -906,33 +873,6 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                         autocomplete="country-name"
                                     />
                                 </div>
-                            </div>
-
-                            <div v-if="isGuest" class="co-guest-prompt">
-                                <svg
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
-                                    />
-                                    <circle cx="12" cy="7" r="4" />
-                                </svg>
-                                <span>
-                                    Want to track your orders and save your
-                                    details?
-                                    <a
-                                        :href="getRoute('register')"
-                                        class="co-guest-link"
-                                        >Create a free account</a
-                                    >
-                                </span>
                             </div>
                         </form>
                     </section>
@@ -1411,6 +1351,105 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 @media (max-width: 540px) {
     .co-address-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+.co-wrap--header {
+    padding-block: 1.35rem;
+}
+
+.co-header {
+    align-items: center;
+}
+
+.co-title {
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+}
+
+.co-wrap--content {
+    padding-block: clamp(1.5rem, 4vw, 3rem) clamp(4rem, 7vw, 6rem);
+}
+
+.co-section-heading {
+    margin-bottom: var(--coy-space-4);
+}
+
+.co-saved-addresses {
+    margin-bottom: var(--coy-space-5);
+    padding: var(--coy-space-4);
+    background: var(--coy-color-surface-soft);
+    border: 1px solid var(--coy-color-border-soft);
+    border-radius: var(--coy-radius-md);
+}
+
+.co-saved-addresses h3 {
+    margin: 0 0 var(--coy-space-3);
+    color: var(--coy-color-heading);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
+}
+
+.co-saved-addresses .co-address-grid {
+    margin-bottom: var(--coy-space-3);
+}
+
+.co-saved-addresses .co-address-card {
+    min-height: 0;
+    padding: 0.8rem 0.9rem;
+    background: var(--coy-color-surface);
+}
+
+.co-address-preview {
+    display: block;
+    overflow: hidden;
+    color: var(--coy-color-heading);
+    font-size: var(--coy-text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.co-clear-btn {
+    min-height: var(--coy-control-height);
+    padding-inline: 0.25rem;
+}
+
+@media (max-width: 860px) {
+    .co-summary {
+        order: -1;
+    }
+}
+
+@media (max-width: 620px) {
+    .co-wrap--header {
+        padding-block: 1.1rem;
+    }
+
+    .co-header {
+        align-items: center;
+        flex-direction: row;
+        gap: var(--coy-space-3);
+    }
+
+    .co-header .coy-eyebrow {
+        display: none;
+    }
+
+    .co-title {
+        font-size: 2.25rem;
+    }
+
+    .co-back {
+        min-height: var(--coy-control-height);
+        padding: 0.45rem 0;
+    }
+
+    .co-back svg {
+        display: none;
+    }
+
+    .co-card,
+    .co-summary-card {
+        border-radius: var(--coy-radius-md);
     }
 }
 
