@@ -72,123 +72,111 @@ function openImageModal() {
 </template>
 
 <style scoped>
-@media (min-width: 860px) {
-    .pd-images {
-        position: sticky;
-        top: 88px;
-    }
+.pd-images {
+    min-width: 0;
 }
-
 .pd-main-img-btn {
-    display: block;
     width: 100%;
-    border: none;
-    background: none;
+    display: block;
+    margin: 0 0 0.75rem;
     padding: 0;
-    cursor: zoom-in;
-    border-radius: 20px;
     overflow: hidden;
-    margin-bottom: 0.85rem;
+    background: transparent;
+    border: 0;
+    border-radius: var(--coy-radius-lg);
+    cursor: zoom-in;
 }
-
 .pd-main-img-wrap {
     position: relative;
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
+    aspect-ratio: 1;
     overflow: hidden;
-    background: #fdf4f3;
-    aspect-ratio: 1 / 1;
+    background: var(--coy-color-champagne);
+    border: 1px solid var(--coy-color-border-soft);
+    border-radius: var(--coy-radius-lg);
 }
-
-.pd-popular-badge {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    z-index: 10;
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    background: #8c4a50;
-    color: #fff;
-    border-radius: 999px;
-    padding: 0.2rem 0.65rem;
-}
-
 .pd-main-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    transition: transform 0.45s var(--coy-ease);
 }
-
 .pd-main-img-btn:hover .pd-main-img {
-    transform: scale(1.04);
+    transform: scale(1.025);
 }
-
+.pd-popular-badge {
+    position: absolute;
+    z-index: 1;
+    top: 1rem;
+    left: 1rem;
+    padding: 0.3rem 0.7rem;
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border-radius: var(--coy-radius-pill);
+    font-size: var(--coy-text-xs);
+    font-weight: var(--coy-font-weight-bold);
+}
 .pd-img-zoom-hint {
     position: absolute;
-    bottom: 12px;
-    right: 12px;
-    width: 36px;
-    height: 36px;
+    right: 1rem;
+    bottom: 1rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: grid;
+    place-items: center;
+    color: var(--coy-color-heading);
+    background: rgb(255 253 251 / 90%);
+    border: 1px solid var(--coy-color-border);
     border-radius: 50%;
-    background: rgba(255, 250, 250, 0.88);
-    border: 1px solid #e5c9c7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #8c4a50;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: opacity var(--coy-duration-base) var(--coy-ease);
 }
-
-.pd-main-img-btn:hover .pd-img-zoom-hint {
+.pd-main-img-btn:hover .pd-img-zoom-hint,
+.pd-main-img-btn:focus-visible .pd-img-zoom-hint {
     opacity: 1;
 }
-
 .pd-thumbs {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.6rem;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.65rem;
 }
-
-@media (max-width: 859px) {
-    .pd-thumbs {
-        display: flex;
-        overflow-x: auto;
-        padding-bottom: 0.25rem;
-        scroll-snap-type: x proximity;
-    }
-
-    .pd-thumb {
-        width: 72px;
-        flex: 0 0 72px;
-        scroll-snap-align: start;
-    }
-}
-
 .pd-thumb {
-    border-radius: 12px;
-    border: 1px solid #e5c9c7;
-    overflow: hidden;
-    background: #fdf4f3;
-    aspect-ratio: 1/1;
-    cursor: pointer;
+    aspect-ratio: 1;
     padding: 0;
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
+    overflow: hidden;
+    background: var(--coy-color-champagne);
+    border: 1px solid var(--coy-color-border-soft);
+    border-radius: var(--coy-radius-sm);
+    cursor: pointer;
 }
-
 .pd-thumb--active {
-    border-color: #8c4a50;
-    box-shadow: 0 0 0 2px rgba(140, 74, 80, 0.15);
+    border-color: var(--coy-color-accent);
+    box-shadow:
+        0 0 0 2px var(--coy-color-page),
+        0 0 0 4px var(--coy-color-accent);
 }
-
 .pd-thumb-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+@media (min-width: 761px) {
+    .pd-images {
+        position: sticky;
+        top: calc(var(--coy-nav-height) + 1.5rem);
+    }
+}
+@media (max-width: 760px) {
+    .pd-thumbs {
+        display: flex;
+        gap: 0.65rem;
+        padding: 0.2rem 0.15rem 0.35rem;
+        overflow-x: auto;
+        scroll-snap-type: x proximity;
+    }
+    .pd-thumb {
+        width: 4.5rem;
+        flex: 0 0 4.5rem;
+        scroll-snap-align: start;
+    }
 }
 </style>
