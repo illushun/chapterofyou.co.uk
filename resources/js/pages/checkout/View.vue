@@ -1363,7 +1363,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 }
 
 .co-title {
-    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    font-size: clamp(1.875rem, 3.5vw, 2.5rem);
 }
 
 .co-wrap--content {
@@ -1435,7 +1435,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     }
 
     .co-title {
-        font-size: 2.25rem;
+        font-size: 1.875rem;
     }
 
     .co-back {
