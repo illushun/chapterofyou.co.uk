@@ -52,9 +52,26 @@ class CheckoutController extends Controller
             [$summary] = $this->quote($cart);
         }
 
+        $cart->load('items.product.images');
+        $cartItems = $cart->items->map(function ($item) {
+            $image = $item->product->images->firstWhere('status', 'enabled')
+                ?? $item->product->images->first();
+
+            return [
+                'id' => $item->id,
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+                'product' => [
+                    'name' => $item->product->name,
+                    'cost' => $item->product->cost,
+                    'image_url' => $image?->image,
+                ],
+            ];
+        });
+
         return Inertia::render('checkout/View', [
             'summary' => $summary,
-            'cartItems' => $cart->items,
+            'cartItems' => $cartItems,
             'addresses' => Auth::user()?->addresses()->where('type', 'shipping')->orderByDesc('is_default')->get() ?? collect(),
             'appliedVoucher' => $this->vouchers->getFromSession(),
             'isGuest' => ! Auth::check(),

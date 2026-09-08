@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import AppLogoIcon from '@/components/AppLogoIcon.vue';
 import Footer from '@/components/Footer.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
@@ -51,7 +52,7 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 interface CartItem {
     id: number;
     product_id: number;
-    product: { name: string; cost: number; image_url: string };
+    product: { name: string; cost: number; image_url: string | null };
     quantity: number;
 }
 interface Summary {
@@ -480,7 +481,16 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
             <div class="co-wrap co-wrap--header">
                 <header class="co-header">
                     <div>
-                        <a href="/" class="co-brand">Chapter of You</a>
+                        <a
+                            href="/"
+                            class="co-brand"
+                            aria-label="Chapter of You home"
+                        >
+                            <AppLogoIcon
+                                class-name="co-brand-mark"
+                                aria-hidden="true"
+                            />
+                        </a>
                         <h1 class="co-title coy-heading">Checkout</h1>
                     </div>
                     <div class="co-header-actions">
@@ -1112,10 +1122,22 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     class="co-item-row"
                                 >
                                     <img
+                                        v-if="item.product.image_url"
                                         :src="item.product.image_url"
                                         :alt="item.product.name"
                                         class="co-item-image"
                                     />
+                                    <span
+                                        v-else
+                                        class="co-item-image co-item-image--empty"
+                                        aria-hidden="true"
+                                    >
+                                        <svg viewBox="0 0 24 24">
+                                            <path
+                                                d="M3 5h18v14H3zM3 15l5-5 4 4 3-3 6 6M16 9h.01"
+                                            />
+                                        </svg>
+                                    </span>
                                     <span class="co-item-name">
                                         {{ item.product.name }}
                                         <span class="co-item-qty"
@@ -1299,10 +1321,13 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     gap: 1rem;
 }
 .co-brand {
-    color: var(--coy-color-accent);
-    font-family: var(--coy-font-display);
+    display: inline-flex;
+    align-items: center;
     text-decoration: none;
-    font-size: 1.1rem;
+}
+.co-brand-mark {
+    width: 3rem;
+    height: 3rem;
 }
 .co-title {
     margin: 0.1rem 0 0;
@@ -1591,6 +1616,19 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     object-fit: cover;
     border-radius: var(--coy-radius-sm);
     background: var(--coy-color-surface-soft);
+}
+.co-item-image--empty {
+    display: grid;
+    place-items: center;
+    color: var(--coy-color-border);
+}
+.co-item-image--empty svg {
+    width: 1.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 .co-item-name {
     color: var(--coy-color-heading);

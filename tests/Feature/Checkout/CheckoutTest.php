@@ -14,6 +14,7 @@ use App\Services\Checkout\StripePayments;
 use App\Services\VoucherService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Inertia\Testing\AssertableInertia as Assert;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Stripe\PaymentIntent;
@@ -49,6 +50,16 @@ class CheckoutTest extends TestCase
         $this->assertDatabaseCount('cart_item', 0);
         Mail::assertQueued(Confirmation::class);
         Mail::assertQueued(NewOrderAlert::class);
+    }
+
+    public function test_checkout_includes_the_enabled_product_thumbnail(): void
+    {
+        $this->product->images()->create(['image' => '/storage/disabled.jpg', 'status' => 'disabled']);
+        $this->product->images()->create(['image' => '/storage/candle.jpg', 'status' => 'enabled']);
+
+        $this->get(route('checkout.index'))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('checkout/View')
+            ->where('cartItems.0.product.image_url', '/storage/candle.jpg'));
     }
 
     public function test_retry_returns_the_existing_order_without_sending_more_mail(): void

@@ -21,12 +21,10 @@ beforeEach(() => {
     );
     vi.stubGlobal(
         'fetch',
-        vi
-            .fn()
-            .mockResolvedValue({
-                ok: true,
-                json: async () => ({ clientSecret: 'test-secret' }),
-            }),
+        vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ clientSecret: 'test-secret' }),
+        }),
     );
 });
 
