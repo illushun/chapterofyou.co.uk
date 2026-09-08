@@ -282,9 +282,12 @@ const initializeStripe = async () => {
             appearance: {
                 theme: 'stripe',
                 variables: {
-                    colorPrimary: '#8c4a50',
-                    colorText: '#2d1a1a',
-                    colorBackground: '#fffafa',
+                    colorPrimary: '#794750',
+                    colorText: '#342a28',
+                    colorBackground: '#fffdfb',
+                    colorDanger: '#9b3030',
+                    fontFamily: 'Source Sans 3, Segoe UI, Arial, sans-serif',
+                    borderRadius: '14px',
                 },
             },
         });
@@ -434,7 +437,6 @@ const handleCardPayment = async () => {
 };
 
 onMounted(async () => {
-    // Guests always see the manual address form - no saved addresses
     if (props.isGuest) {
         isManualAddressVisible.value = true;
     } else {
@@ -461,67 +463,93 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 
     <SeoHead v-bind="seo" />
 
-    <component
-        :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
+    <main class="co coy-storefront">
+        <div class="co-header-band">
+            <div class="co-wrap co-wrap--header">
+                <header class="co-header">
+                    <div>
+                        <p class="coy-eyebrow">Secure checkout</p>
+                        <h1 class="co-title coy-heading">
+                            Complete your order
+                        </h1>
+                        <p class="co-intro">
+                            Just a few details, then your order will be on its
+                            way.
+                        </p>
+                    </div>
+                    <div class="co-header-actions">
+                        <a :href="getRoute('cart.view')" class="co-back">
+                            <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2.5"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <path d="m15 18-6-6 6-6" />
+                            </svg>
+                            Back to cart
+                        </a>
+                    </div>
+                </header>
+                <ol
+                    v-if="hasItems"
+                    class="co-progress"
+                    aria-label="Checkout progress"
+                >
+                    <li class="co-progress-item co-progress-item--active">
+                        <span>1</span> Details
+                    </li>
+                    <li class="co-progress-item"><span>2</span> Payment</li>
+                    <li class="co-progress-item">
+                        <span>3</span> Confirmation
+                    </li>
+                </ol>
+            </div>
+        </div>
 
-    <main class="co">
-        <div class="co-wrap">
-            <!-- Header -->
-            <header class="co-header">
-                <h1 class="co-title">Checkout</h1>
-                <div class="co-header-sub">
-                    <a :href="getRoute('cart.view')" class="co-back">
-                        <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        >
-                            <path d="m15 18-6-6 6-6" />
-                        </svg>
-                        Back to cart
-                    </a>
-                    <!-- Guest notice -->
-                    <p v-if="isGuest" class="co-guest-note">
-                        Checking out as a guest.
-                        <a :href="getRoute('login')" class="co-guest-link"
-                            >Sign in</a
-                        >
-                        to save your details for next time.
-                    </p>
-                </div>
-            </header>
-
-            <!-- Empty cart -->
+        <div class="co-wrap co-wrap--content">
             <div v-if="!hasItems" class="co-empty">
-                <p>No items in your cart.</p>
-                <a :href="getRoute('products')" class="btn-rose"
-                    >Browse Products</a
+                <div class="co-empty-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0"
+                        />
+                    </svg>
+                </div>
+                <p class="coy-eyebrow">Nothing to check out yet</p>
+                <h2 class="coy-heading">Your basket is waiting</h2>
+                <p>Choose something lovely and come back when you are ready.</p>
+                <a
+                    :href="getRoute('products')"
+                    class="coy-button coy-button--primary"
+                    >Browse products</a
                 >
             </div>
 
             <div v-else class="co-grid">
-                <!-- Left column -->
                 <div class="co-left">
-                    <!-- Saved addresses - logged-in users only -->
                     <section
                         v-if="!isGuest && addresses.length > 0"
-                        class="co-card"
+                        class="co-card coy-card"
                     >
-                        <h2 class="co-card-title">Saved Addresses</h2>
+                        <div class="co-section-heading">
+                            <p class="coy-eyebrow">Quick selection</p>
+                            <h2 class="co-card-title coy-heading">
+                                Saved addresses
+                            </h2>
+                        </div>
                         <div class="co-address-grid">
-                            <div
+                            <button
                                 v-for="address in addresses"
                                 :key="address.id"
+                                type="button"
                                 @click="selectAddress(address)"
                                 class="co-address-card"
+                                :aria-pressed="selectedAddressId === address.id"
                                 :class="{
                                     'co-address-card--selected':
                                         selectedAddressId === address.id,
@@ -544,7 +572,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                         >{{ line }}</span
                                     >
                                 </div>
-                            </div>
+                            </button>
                         </div>
                         <button
                             v-if="selectedAddressId !== null"
@@ -556,16 +584,30 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                         </button>
                     </section>
 
-                    <!-- Contact & shipping form -->
-                    <section class="co-card">
-                        <h2 class="co-card-title">
+                    <section class="co-card coy-card">
+                        <div
+                            class="co-section-heading co-section-heading--step"
+                        >
                             <span class="co-step">1</span>
-                            {{
-                                isDigitalOnly
-                                    ? 'Contact & Billing'
-                                    : 'Contact & Shipping'
-                            }}
-                        </h2>
+                            <div>
+                                <p class="coy-eyebrow">Your details</p>
+                                <h2 class="co-card-title coy-heading">
+                                    {{
+                                        isDigitalOnly
+                                            ? 'Contact and billing'
+                                            : 'Contact and delivery'
+                                    }}
+                                </h2>
+                            </div>
+                        </div>
+
+                        <p v-if="isGuest" class="co-guest-note">
+                            Checking out as a guest.
+                            <a :href="getRoute('login')" class="co-guest-link"
+                                >Sign in</a
+                            >
+                            to use your saved details.
+                        </p>
 
                         <form
                             @submit.prevent="handleCardPayment"
@@ -866,7 +908,6 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                 </div>
                             </div>
 
-                            <!-- Guest prompt -->
                             <div v-if="isGuest" class="co-guest-prompt">
                                 <svg
                                     width="13"
@@ -896,12 +937,18 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                         </form>
                     </section>
 
-                    <!-- Payment section -->
-                    <section class="co-card">
-                        <h2 class="co-card-title">
+                    <section class="co-card coy-card">
+                        <div
+                            class="co-section-heading co-section-heading--step"
+                        >
                             <span class="co-step">2</span>
-                            Payment
-                        </h2>
+                            <div>
+                                <p class="coy-eyebrow">Secure payment</p>
+                                <h2 class="co-card-title coy-heading">
+                                    Payment
+                                </h2>
+                            </div>
+                        </div>
 
                         <div
                             v-if="isLoadingInitialData"
@@ -961,7 +1008,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                         <button
                             v-if="!hasClientSecret && !isLoadingInitialData"
                             type="button"
-                            class="btn-rose btn-rose--full"
+                            class="coy-button coy-button--secondary co-full-button"
                             @click="initializeStripe"
                         >
                             Retry loading payment
@@ -969,9 +1016,9 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                         <button
                             @click.prevent="handleCardPayment"
                             :disabled="paymentDisabled"
-                            class="btn-rose btn-rose--full co-pay-btn"
+                            class="coy-button coy-button--primary co-pay-btn"
                             :class="{
-                                'btn-rose--disabled': paymentDisabled,
+                                'co-pay-btn--disabled': paymentDisabled,
                             }"
                         >
                             <svg
@@ -1026,10 +1073,12 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                     </section>
                 </div>
 
-                <!-- Right column: order summary -->
                 <aside class="co-summary">
-                    <div class="co-summary-card">
-                        <h2 class="co-summary-title">Order Summary</h2>
+                    <div class="co-summary-card coy-card">
+                        <p class="coy-eyebrow">Your selection</p>
+                        <h2 class="co-summary-title coy-heading">
+                            Order summary
+                        </h2>
 
                         <div class="co-summary-rows">
                             <div class="co-summary-row">
@@ -1103,7 +1152,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     :disabled="
                                         voucherLoading || !voucherCode.trim()
                                     "
-                                    class="btn-rose btn-rose--sm co-voucher-btn"
+                                    class="coy-button coy-button--secondary co-voucher-btn"
                                 >
                                     {{ voucherLoading ? '...' : 'Apply' }}
                                 </button>
@@ -1138,6 +1187,11 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                     :key="item.id"
                                     class="co-item-row"
                                 >
+                                    <img
+                                        :src="item.product.image_url"
+                                        :alt="item.product.name"
+                                        class="co-item-image"
+                                    />
                                     <span class="co-item-name">
                                         {{ item.product.name }}
                                         <span class="co-item-qty"
@@ -1973,5 +2027,632 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     color: #9a7070 !important;
     font-style: italic;
     font-size: 0.82rem;
+}
+
+.co {
+    min-height: 100vh;
+    padding-top: var(--coy-nav-height);
+    color: var(--coy-color-text);
+    background: var(--coy-color-page);
+    font-family: var(--coy-font-body);
+}
+
+.co-header-band {
+    background: var(--coy-color-blush);
+    border-bottom: 1px solid var(--coy-color-border);
+}
+
+.co-wrap {
+    width: min(100% - (2 * var(--coy-gutter)), var(--coy-container-lg));
+    max-width: none;
+    margin-inline: auto;
+    padding: 0;
+}
+
+.co-wrap--header {
+    padding-block: clamp(2rem, 5vw, 3.5rem) 1.5rem;
+}
+
+.co-wrap--content {
+    padding-block: clamp(2rem, 5vw, 4rem) clamp(4rem, 7vw, 7rem);
+}
+
+.co-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    margin: 0;
+}
+
+.co-title {
+    margin: 0.2rem 0 0;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: clamp(2.75rem, 6vw, 4.5rem);
+    font-style: normal;
+    font-weight: var(--coy-font-weight-medium);
+    line-height: 1;
+}
+
+.co-intro {
+    margin: 0.7rem 0 0;
+    font-size: var(--coy-text-lead);
+}
+
+.co-header-actions {
+    flex: 0 0 auto;
+}
+
+.co-back {
+    min-height: var(--coy-control-height);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--coy-space-2);
+    padding: 0.65rem 1rem;
+    color: var(--coy-color-heading);
+    background: rgb(255 253 251 / 62%);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-pill);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
+}
+
+.co-back:hover {
+    color: var(--coy-color-heading);
+    background: var(--coy-color-surface);
+}
+
+.co-progress {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 2rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.co-progress-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--coy-space-2);
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
+}
+
+.co-progress-item::after {
+    content: '';
+    height: 1px;
+    flex: 1;
+    margin-inline: var(--coy-space-4);
+    background: var(--coy-color-rose-gold);
+    opacity: 0.55;
+}
+
+.co-progress-item:last-child::after {
+    display: none;
+}
+
+.co-progress-item span {
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    color: var(--coy-color-heading);
+    background: rgb(255 253 251 / 55%);
+    border: 1px solid var(--coy-color-rose-gold);
+    border-radius: 50%;
+    font-size: 0.8rem;
+}
+
+.co-progress-item--active {
+    color: var(--coy-color-accent);
+}
+
+.co-progress-item--active span {
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border-color: var(--coy-color-accent);
+}
+
+.co-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(20rem, 23rem);
+    gap: clamp(2rem, 5vw, 4rem);
+}
+
+.co-left {
+    gap: var(--coy-space-5);
+}
+
+.co-card,
+.co-summary-card {
+    padding: clamp(1.35rem, 3vw, 2rem);
+    overflow: visible;
+    color: var(--coy-color-text);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-sm);
+}
+
+.co-card::before,
+.co-card::after,
+.co-summary-card::before {
+    display: none;
+}
+
+.co-section-heading {
+    margin-bottom: var(--coy-space-5);
+    padding-bottom: var(--coy-space-4);
+    border-bottom: 1px solid var(--coy-color-border-soft);
+}
+
+.co-section-heading--step {
+    display: flex;
+    align-items: center;
+    gap: var(--coy-space-4);
+}
+
+.co-card-title,
+.co-summary-title {
+    margin: 0.15rem 0 0;
+    padding: 0;
+    color: var(--coy-color-heading);
+    border: 0;
+    font-family: var(--coy-font-display);
+    font-size: clamp(1.75rem, 3vw, 2.1rem);
+    font-style: normal;
+    font-weight: var(--coy-font-weight-semibold);
+    line-height: var(--coy-leading-heading);
+}
+
+.co-step {
+    width: 2.5rem;
+    height: 2.5rem;
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    font-family: var(--coy-font-body);
+    font-size: 1rem;
+}
+
+.co-guest-note {
+    margin: calc(-1 * var(--coy-space-2)) 0 var(--coy-space-5);
+    padding: 0.85rem 1rem;
+    color: var(--coy-color-text);
+    background: var(--coy-color-surface-soft);
+    border-radius: var(--coy-radius-md);
+    font-size: var(--coy-text-sm);
+}
+
+.co-guest-link,
+.co-clear-btn {
+    color: var(--coy-color-accent);
+    font-family: var(--coy-font-body);
+    font-weight: var(--coy-font-weight-semibold);
+    text-underline-offset: 0.2rem;
+}
+
+.co-address-grid {
+    gap: var(--coy-space-3);
+    margin-bottom: var(--coy-space-4);
+}
+
+.co-address-card {
+    min-height: 8rem;
+    padding: 1rem;
+    color: var(--coy-color-heading);
+    background: var(--coy-color-page);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-md);
+    font-family: var(--coy-font-body);
+    text-align: left;
+}
+
+.co-address-card:hover {
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-rose-gold);
+}
+
+.co-address-card--selected {
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-accent);
+    box-shadow: var(--coy-shadow-focus);
+}
+
+.co-address-type,
+.co-address-fields-title,
+.co-voucher-label,
+.co-items-title {
+    color: var(--coy-color-accent);
+    font-size: var(--coy-text-xs);
+    font-weight: var(--coy-font-weight-bold);
+    letter-spacing: var(--coy-tracking-label);
+}
+
+.co-address-default {
+    color: var(--coy-color-accent);
+    background: var(--coy-color-surface);
+    border-color: var(--coy-color-border);
+}
+
+.co-address-lines {
+    color: var(--coy-color-heading);
+    font-size: var(--coy-text-sm);
+}
+
+.co-form {
+    gap: var(--coy-space-4);
+}
+
+.co-field-row {
+    gap: var(--coy-space-4);
+}
+
+.field {
+    gap: var(--coy-space-2);
+}
+
+.field-label {
+    color: var(--coy-color-heading);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.field-required {
+    color: var(--coy-color-error);
+}
+
+.field-optional {
+    color: var(--coy-color-text);
+    font-style: normal;
+}
+
+.field-input,
+.co-voucher-field {
+    min-height: var(--coy-control-height);
+    padding: 0.7rem 1rem;
+    color: var(--coy-color-heading);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-md);
+    font-family: var(--coy-font-body);
+    font-size: var(--coy-text-sm);
+}
+
+.field-input:focus,
+.co-voucher-field:focus {
+    border-color: var(--coy-color-focus);
+    box-shadow: var(--coy-shadow-focus);
+}
+
+.field-input--error {
+    border-color: var(--coy-color-error);
+}
+
+.field-input--readonly {
+    background: var(--coy-color-surface-soft);
+}
+
+.field-error,
+.co-voucher-msg--error {
+    color: var(--coy-color-error);
+}
+
+.co-add-address-btn {
+    min-height: var(--coy-control-height);
+    color: var(--coy-color-accent);
+    border-color: var(--coy-color-rose-gold);
+    font-family: var(--coy-font-body);
+    font-size: var(--coy-text-sm);
+}
+
+.co-add-address-btn:hover {
+    color: var(--coy-color-accent-hover);
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-accent);
+}
+
+.co-address-fields {
+    margin-top: var(--coy-space-2);
+    padding-top: var(--coy-space-5);
+    border-color: var(--coy-color-border-soft);
+}
+
+.co-address-fields > p {
+    margin: 0;
+}
+
+.co-guest-prompt {
+    padding: 1rem;
+    color: var(--coy-color-text);
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-border-soft);
+    border-radius: var(--coy-radius-md);
+    font-size: var(--coy-text-sm);
+}
+
+.co-guest-prompt svg {
+    color: var(--coy-color-accent);
+}
+
+.co-payment-loading {
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-sm);
+    font-style: normal;
+}
+
+.co-payment-loading p {
+    margin: 0;
+}
+
+.co-payment-error {
+    color: var(--coy-color-error);
+    background: var(--coy-color-error-soft);
+    border-color: var(--coy-color-error);
+    border-radius: var(--coy-radius-md);
+    font-size: var(--coy-text-sm);
+}
+
+.co-full-button,
+.co-pay-btn {
+    width: 100%;
+}
+
+.co-pay-btn {
+    min-height: 3.25rem;
+    margin-top: var(--coy-space-4);
+    font-size: 1.05rem;
+}
+
+.co-pay-btn--disabled,
+.co-pay-btn:disabled {
+    color: var(--coy-color-text);
+    background: var(--coy-color-border-soft);
+    border-color: var(--coy-color-border);
+    box-shadow: none;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.co-secure-note {
+    gap: var(--coy-space-2);
+    margin: var(--coy-space-4) 0 0;
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-xs);
+    font-style: normal;
+}
+
+.co-summary {
+    top: calc(var(--coy-nav-height) + 1.5rem);
+}
+
+.co-summary-card {
+    box-shadow: var(--coy-shadow-md);
+}
+
+.co-summary-title {
+    margin-bottom: var(--coy-space-5);
+    padding-bottom: var(--coy-space-4);
+    border-bottom: 1px solid var(--coy-color-border-soft);
+}
+
+.co-summary-row {
+    gap: var(--coy-space-4);
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-sm);
+}
+
+.co-summary-row span:last-child {
+    color: var(--coy-color-heading);
+}
+
+.co-summary-row--discount,
+.co-summary-row--discount span:last-child,
+.co-free-shipping,
+.co-voucher-code,
+.co-voucher-saved,
+.co-voucher-msg--success {
+    color: var(--coy-color-success);
+}
+
+.co-voucher-section {
+    border-color: var(--coy-color-border);
+}
+
+.co-voucher-active {
+    background: var(--coy-color-success-soft);
+    border-color: var(--coy-color-success);
+    border-radius: var(--coy-radius-md);
+}
+
+.co-voucher-remove {
+    min-height: var(--coy-control-height);
+    color: var(--coy-color-error);
+    font-family: var(--coy-font-body);
+}
+
+.co-voucher-input {
+    align-items: stretch;
+}
+
+.co-voucher-field {
+    min-width: 0;
+    font-family: var(--coy-font-body);
+}
+
+.co-voucher-btn {
+    padding-inline: 1rem;
+}
+
+.co-total-row {
+    border-color: var(--coy-color-border);
+}
+
+.co-total-label,
+.co-total-val {
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-style: normal;
+}
+
+.co-total-label {
+    font-size: 1.25rem;
+    font-weight: var(--coy-font-weight-semibold);
+}
+
+.co-total-val {
+    font-size: 2rem;
+}
+
+.co-items-list {
+    gap: var(--coy-space-3);
+}
+
+.co-item-row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--coy-space-3);
+    padding-bottom: var(--coy-space-3);
+    border-color: var(--coy-color-border-soft);
+    font-size: var(--coy-text-sm);
+}
+
+.co-item-image {
+    width: 3rem;
+    height: 3rem;
+    object-fit: cover;
+    background: var(--coy-color-champagne);
+    border-radius: var(--coy-radius-sm);
+}
+
+.co-item-name {
+    color: var(--coy-color-heading);
+}
+
+.co-item-qty {
+    color: var(--coy-color-text);
+}
+
+.co-item-price {
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-body);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
+}
+
+.co-item-row--gv {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: var(--coy-space-3);
+    background: var(--coy-color-surface-soft);
+    border-radius: var(--coy-radius-sm);
+}
+
+.co-empty {
+    max-width: 46rem;
+    margin-inline: auto;
+    padding: clamp(3rem, 8vw, 6rem) 1.5rem;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+}
+
+.co-empty p {
+    margin: 0;
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-body);
+    font-style: normal;
+}
+
+.co-empty h2 {
+    margin: 0.25rem 0 0;
+    color: var(--coy-color-heading);
+    font-size: clamp(2.4rem, 6vw, 3.75rem);
+}
+
+.co-empty-icon {
+    width: 5.5rem;
+    height: 5.5rem;
+    display: grid;
+    place-items: center;
+    color: var(--coy-color-accent);
+    background: var(--coy-color-blush);
+    border-radius: 50%;
+}
+
+.co-empty-icon svg {
+    width: 2.25rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+@media (max-width: 860px) {
+    .co-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .co-summary {
+        position: static;
+    }
+}
+
+@media (max-width: 620px) {
+    .co-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: var(--coy-space-5);
+    }
+
+    .co-title {
+        font-size: 3rem;
+    }
+
+    .co-back {
+        padding-left: 0;
+        background: transparent;
+        border: 0;
+    }
+
+    .co-progress-item {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: var(--coy-space-1);
+        font-size: var(--coy-text-xs);
+    }
+
+    .co-progress-item::after {
+        position: absolute;
+        top: 0.875rem;
+        right: var(--coy-space-3);
+        left: 2.25rem;
+        margin: 0;
+    }
+
+    .co-card,
+    .co-summary-card {
+        padding: 1.25rem;
+    }
+}
+
+@media (max-width: 540px) {
+    .co-field-row,
+    .co-field-row--3,
+    .co-address-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .co-voucher-input {
+        flex-direction: column;
+    }
+
+    .co-voucher-btn {
+        width: 100%;
+    }
 }
 </style>
