@@ -205,9 +205,6 @@ async function favourite(product: Product) {
                         Handmade fragrances for every room and mood.
                     </p>
                 </div>
-                <a href="/scent-finder" class="coy-page-header__action"
-                    >Find your scent <span aria-hidden="true">→</span></a
-                >
             </div>
         </header>
 
@@ -454,9 +451,6 @@ async function favourite(product: Product) {
 }
 .collection-hero {
     background: var(--coy-color-blush);
-}
-.collection-hero a {
-    text-underline-offset: 0.3rem;
 }
 .collection-layout {
     display: grid;
