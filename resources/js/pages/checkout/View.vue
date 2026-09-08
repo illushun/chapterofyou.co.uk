@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import Footer from '@/components/Footer.vue';
-import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import { router, useForm, usePage } from '@inertiajs/vue3';
@@ -103,7 +102,16 @@ const paymentError = ref<string | null>(null);
 const hasClientSecret = ref(false);
 const isLoadingInitialData = ref(true);
 const selectedAddressId = ref<number | null>(null);
-const isManualAddressVisible = ref(false);
+const isManualAddressVisible = ref(true);
+const summaryExpanded = ref(false);
+const choosingAddress = ref(false);
+const itemCount = computed(
+    () =>
+        props.cartItems.reduce(
+            (count, item) => count + Number(item.quantity),
+            0,
+        ) + (props.giftVoucher ? 1 : 0),
+);
 
 const voucherCode = ref('');
 const voucherLoading = ref(false);
@@ -119,7 +127,13 @@ const computedTotal = computed(
 );
 
 async function applyVoucher() {
-    if (!voucherCode.value.trim()) return;
+    if (
+        !voucherCode.value.trim() ||
+        voucherLoading.value ||
+        isProcessing.value ||
+        confirmedPaymentId.value
+    )
+        return;
     voucherLoading.value = true;
     voucherError.value = null;
     voucherSuccess.value = null;
@@ -144,11 +158,20 @@ async function applyVoucher() {
 }
 
 async function removeVoucher() {
-    await axios.post(route('checkout.voucher.remove'));
-    activeVoucher.value = null;
-    voucherSuccess.value = null;
+    if (voucherLoading.value || isProcessing.value || confirmedPaymentId.value)
+        return;
+    voucherLoading.value = true;
     voucherError.value = null;
-    await initializeStripe();
+    try {
+        await axios.post(route('checkout.voucher.remove'));
+        activeVoucher.value = null;
+        voucherSuccess.value = null;
+        await initializeStripe();
+    } catch {
+        voucherError.value = 'We could not remove this code. Please try again.';
+    } finally {
+        voucherLoading.value = false;
+    }
 }
 
 const paymentContainer = ref<HTMLElement | null>(null);
@@ -160,6 +183,7 @@ const confirmedPaymentId = ref('');
 const paymentDisabled = computed(
     () =>
         isProcessing.value ||
+        voucherLoading.value ||
         isLoadingInitialData.value ||
         !hasClientSecret.value,
 );
@@ -174,9 +198,9 @@ const isPhysicalGiftOnly = computed(
         props.giftVoucher?.delivery_type === 'physical',
 );
 const addressHeading = computed(() => {
-    if (isDigitalOnly.value) return 'Billing Address';
-    if (isPhysicalGiftOnly.value) return 'Recipient Delivery Address';
-    return 'Shipping Address';
+    if (isDigitalOnly.value) return 'Billing address';
+    if (isPhysicalGiftOnly.value) return 'Recipient delivery address';
+    return 'Delivery address';
 });
 
 const addressForm = useForm({
@@ -194,9 +218,7 @@ const addressForm = useForm({
 const hasItems = computed(
     () => props.cartItems.length > 0 || !!props.giftVoucher,
 );
-const isShippingAddressVisible = computed(
-    () => selectedAddressId.value !== null || isManualAddressVisible.value,
-);
+const isShippingAddressVisible = computed(() => isManualAddressVisible.value);
 
 const fmt = (amount: number | string): string => {
     const n = Number(amount);
@@ -211,7 +233,8 @@ const selectAddress = (address: Address) => {
     addressForm.county = address.county;
     addressForm.postcode = address.postcode;
     addressForm.country = address.country;
-    isManualAddressVisible.value = true;
+    isManualAddressVisible.value = false;
+    choosingAddress.value = false;
 };
 
 const clearAddressSelection = () => {
@@ -222,7 +245,8 @@ const clearAddressSelection = () => {
     addressForm.county = '';
     addressForm.postcode = '';
     addressForm.country = 'United Kingdom';
-    isManualAddressVisible.value = false;
+    isManualAddressVisible.value = true;
+    choosingAddress.value = false;
 };
 
 const fetchPaymentIntent = async () => {
@@ -449,8 +473,6 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 </script>
 
 <template>
-    <NavBar />
-
     <SeoHead v-bind="seo" />
 
     <main class="co coy-storefront">
@@ -458,10 +480,8 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
             <div class="co-wrap co-wrap--header">
                 <header class="co-header">
                     <div>
-                        <p class="coy-eyebrow">Secure checkout</p>
-                        <h1 class="co-title coy-heading">
-                            Complete your order
-                        </h1>
+                        <a href="/" class="co-brand">Chapter of You</a>
+                        <h1 class="co-title coy-heading">Checkout</h1>
                     </div>
                     <div class="co-header-actions">
                         <a :href="getRoute('cart.view')" class="co-back">
@@ -477,7 +497,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                             >
                                 <path d="m15 18-6-6 6-6" />
                             </svg>
-                            Back to cart
+                            Return to basket
                         </a>
                     </div>
                 </header>
@@ -504,620 +524,584 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
             </div>
 
             <div v-else class="co-grid">
-                <div class="co-left">
-                    <section class="co-card coy-card">
-                        <div
-                            class="co-section-heading co-section-heading--step"
-                        >
-                            <span class="co-step">1</span>
-                            <div>
-                                <p class="coy-eyebrow">Your details</p>
-                                <h2 class="co-card-title coy-heading">
-                                    {{
-                                        isDigitalOnly
-                                            ? 'Contact and billing'
-                                            : 'Contact and delivery'
-                                    }}
-                                </h2>
-                            </div>
-                        </div>
-
-                        <p v-if="isGuest" class="co-guest-note">
-                            Checking out as a guest.
-                            <a :href="getRoute('login')" class="co-guest-link"
-                                >Sign in</a
+                <form
+                    class="co-left"
+                    novalidate
+                    @submit.prevent="handleCardPayment"
+                >
+                    <fieldset
+                        :disabled="isProcessing"
+                        class="co-checkout-fields"
+                    >
+                        <section class="co-card coy-card">
+                            <div
+                                class="co-section-heading co-section-heading--step"
                             >
-                            to use your saved details.
-                        </p>
-
-                        <div
-                            v-if="!isGuest && addresses.length > 0"
-                            class="co-saved-addresses"
-                        >
-                            <h3>Choose a saved address</h3>
-                            <div class="co-address-grid">
-                                <button
-                                    v-for="address in addresses"
-                                    :key="address.id"
-                                    type="button"
-                                    @click="selectAddress(address)"
-                                    class="co-address-card"
-                                    :aria-pressed="
-                                        selectedAddressId === address.id
-                                    "
-                                    :class="{
-                                        'co-address-card--selected':
-                                            selectedAddressId === address.id,
-                                    }"
-                                >
-                                    <div class="co-address-card-head">
-                                        <span class="co-address-type">{{
-                                            address.type
-                                        }}</span>
-                                        <span
-                                            v-if="address.is_default"
-                                            class="co-address-default"
-                                            >Default</span
-                                        >
-                                    </div>
-                                    <span class="co-address-preview">
-                                        {{ address.line_1 }},
-                                        {{ address.postcode }}
-                                    </span>
-                                </button>
-                            </div>
-                            <button
-                                v-if="selectedAddressId !== null"
-                                @click="clearAddressSelection"
-                                type="button"
-                                class="co-clear-btn"
-                            >
-                                Use a different address
-                            </button>
-                        </div>
-
-                        <form
-                            @submit.prevent="handleCardPayment"
-                            class="co-form"
-                        >
-                            <div class="co-field-row">
-                                <div class="field">
-                                    <label for="email" class="field-label"
-                                        >Email
-                                        <span class="field-required"
-                                            >*</span
-                                        ></label
-                                    >
-                                    <input
-                                        id="email"
-                                        :aria-invalid="
-                                            !!addressForm.errors.email
-                                        "
-                                        :aria-describedby="
-                                            addressForm.errors.email
-                                                ? 'email-error'
-                                                : undefined
-                                        "
-                                        type="email"
-                                        v-model="addressForm.email"
-                                        required
-                                        class="field-input"
-                                        :class="{
-                                            'field-input--error':
-                                                addressForm.errors.email,
-                                        }"
-                                        placeholder="you@example.com"
-                                        autocomplete="email"
-                                    />
-                                    <p
-                                        v-if="addressForm.errors.email"
-                                        id="email-error"
-                                        class="field-error"
-                                    >
-                                        {{ addressForm.errors.email }}
-                                    </p>
-                                </div>
-                                <div class="field">
-                                    <label for="fullName" class="field-label"
-                                        >Full Name
-                                        <span class="field-required"
-                                            >*</span
-                                        ></label
-                                    >
-                                    <input
-                                        id="fullName"
-                                        :aria-invalid="
-                                            !!addressForm.errors.fullName
-                                        "
-                                        :aria-describedby="
-                                            addressForm.errors.fullName
-                                                ? 'fullName-error'
-                                                : undefined
-                                        "
-                                        type="text"
-                                        v-model="addressForm.fullName"
-                                        required
-                                        class="field-input"
-                                        :class="{
-                                            'field-input--error':
-                                                addressForm.errors.fullName,
-                                        }"
-                                        placeholder="Jane Smith"
-                                        autocomplete="name"
-                                    />
-                                    <p
-                                        v-if="addressForm.errors.fullName"
-                                        id="fullName-error"
-                                        class="field-error"
-                                    >
-                                        {{ addressForm.errors.fullName }}
-                                    </p>
+                                <div>
+                                    <h2 class="co-card-title coy-heading">
+                                        Contact
+                                    </h2>
                                 </div>
                             </div>
 
-                            <div class="field" style="max-width: 280px">
-                                <label for="telephone" class="field-label"
-                                    >Phone
-                                    <span class="field-optional"
-                                        >(optional)</span
-                                    ></label
+                            <p v-if="isGuest" class="co-guest-note">
+                                Checking out as a guest.
+                                <a
+                                    :href="getRoute('login')"
+                                    class="co-guest-link"
+                                    >Sign in</a
                                 >
-                                <input
-                                    id="telephone"
-                                    type="tel"
-                                    v-model="addressForm.telephone"
-                                    class="field-input"
-                                    placeholder="07700 900000"
-                                    autocomplete="tel"
-                                />
-                            </div>
+                                to use your saved details.
+                            </p>
 
-                            <div
-                                v-if="!isShippingAddressVisible"
-                                class="co-add-address-btn-wrap"
-                            >
-                                <button
-                                    type="button"
-                                    @click="isManualAddressVisible = true"
-                                    class="co-add-address-btn"
-                                >
-                                    <svg
-                                        width="14"
-                                        height="14"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="2.5"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                    >
-                                        <path d="M12 5v14M5 12h14" />
-                                    </svg>
-                                    Add {{ addressHeading }}
-                                </button>
-                            </div>
-
-                            <div
-                                v-if="isShippingAddressVisible"
-                                class="co-address-fields"
-                            >
-                                <h3 class="co-address-fields-title">
-                                    {{ addressHeading }}
-                                </h3>
-
-                                <p v-if="isDigitalOnly">
-                                    Your voucher is delivered by email. This
-                                    address is used for billing only.
+                            <div class="co-form">
+                                <p class="co-hint">
+                                    We will email your receipt and order updates
+                                    here. Fields marked * are required.
                                 </p>
-                                <div class="field">
-                                    <label
-                                        for="addressLine1"
-                                        class="field-label"
-                                        >Address Line 1
-                                        <span class="field-required"
-                                            >*</span
-                                        ></label
-                                    >
-                                    <input
-                                        id="addressLine1"
-                                        :aria-invalid="
-                                            !!addressForm.errors.addressLine1
-                                        "
-                                        :aria-describedby="
-                                            addressForm.errors.addressLine1
-                                                ? 'addressLine1-error'
-                                                : undefined
-                                        "
-                                        type="text"
-                                        v-model="addressForm.addressLine1"
-                                        required
-                                        class="field-input"
-                                        :class="{
-                                            'field-input--error':
-                                                addressForm.errors.addressLine1,
-                                        }"
-                                        placeholder="123 Example Street"
-                                        autocomplete="address-line1"
-                                    />
-                                    <p
-                                        v-if="addressForm.errors.addressLine1"
-                                        id="addressLine1-error"
-                                        class="field-error"
-                                    >
-                                        {{ addressForm.errors.addressLine1 }}
-                                    </p>
+                                <div class="co-field-row">
+                                    <div class="field">
+                                        <label for="email" class="field-label"
+                                            >Email
+                                            <span class="field-required"
+                                                >*</span
+                                            ></label
+                                        >
+                                        <input
+                                            id="email"
+                                            :aria-invalid="
+                                                !!addressForm.errors.email
+                                            "
+                                            :aria-describedby="
+                                                addressForm.errors.email
+                                                    ? 'email-error'
+                                                    : undefined
+                                            "
+                                            type="email"
+                                            v-model="addressForm.email"
+                                            required
+                                            class="field-input"
+                                            :class="{
+                                                'field-input--error':
+                                                    addressForm.errors.email,
+                                            }"
+                                            placeholder="you@example.com"
+                                            autocomplete="email"
+                                        />
+                                        <p
+                                            v-if="addressForm.errors.email"
+                                            id="email-error"
+                                            class="field-error"
+                                        >
+                                            {{ addressForm.errors.email }}
+                                        </p>
+                                    </div>
+                                    <div class="field">
+                                        <label
+                                            for="fullName"
+                                            class="field-label"
+                                            >Full Name
+                                            <span class="field-required"
+                                                >*</span
+                                            ></label
+                                        >
+                                        <input
+                                            id="fullName"
+                                            :aria-invalid="
+                                                !!addressForm.errors.fullName
+                                            "
+                                            :aria-describedby="
+                                                addressForm.errors.fullName
+                                                    ? 'fullName-error'
+                                                    : undefined
+                                            "
+                                            type="text"
+                                            v-model="addressForm.fullName"
+                                            required
+                                            class="field-input"
+                                            :class="{
+                                                'field-input--error':
+                                                    addressForm.errors.fullName,
+                                            }"
+                                            placeholder="Jane Smith"
+                                            autocomplete="name"
+                                        />
+                                        <p
+                                            v-if="addressForm.errors.fullName"
+                                            id="fullName-error"
+                                            class="field-error"
+                                        >
+                                            {{ addressForm.errors.fullName }}
+                                        </p>
+                                    </div>
                                 </div>
 
-                                <div class="field">
-                                    <label
-                                        for="addressLine2"
-                                        class="field-label"
-                                        >Address Line 2
+                                <div class="field" style="max-width: 280px">
+                                    <label for="telephone" class="field-label"
+                                        >Phone
                                         <span class="field-optional"
                                             >(optional)</span
                                         ></label
                                     >
                                     <input
-                                        id="addressLine2"
-                                        type="text"
-                                        v-model="addressForm.addressLine2"
+                                        id="telephone"
+                                        type="tel"
+                                        v-model="addressForm.telephone"
                                         class="field-input"
-                                        placeholder="Apartment, suite, etc."
-                                        autocomplete="address-line2"
+                                        placeholder="07700 900000"
+                                        autocomplete="tel"
                                     />
                                 </div>
 
-                                <div class="co-field-row co-field-row--3">
-                                    <div class="field">
-                                        <label for="city" class="field-label"
-                                            >City
-                                            <span class="field-required"
-                                                >*</span
-                                            ></label
-                                        >
-                                        <input
-                                            id="city"
-                                            :aria-invalid="
-                                                !!addressForm.errors.city
+                                <div class="co-delivery-heading">
+                                    <h2 class="co-card-title coy-heading">
+                                        {{ addressHeading }}
+                                    </h2>
+                                    <p class="co-hint">
+                                        {{
+                                            isDigitalOnly
+                                                ? 'Your voucher arrives by email. We only need this address for billing.'
+                                                : 'Check where you would like your order delivered.'
+                                        }}
+                                    </p>
+                                </div>
+                                <div
+                                    v-if="
+                                        !isGuest &&
+                                        addresses.length > 0 &&
+                                        (choosingAddress ||
+                                            selectedAddressId === null)
+                                    "
+                                    class="co-saved-addresses"
+                                >
+                                    <h3>Choose a saved address</h3>
+                                    <div class="co-address-grid">
+                                        <button
+                                            v-for="address in addresses"
+                                            :key="address.id"
+                                            type="button"
+                                            @click="selectAddress(address)"
+                                            class="co-address-card"
+                                            :aria-pressed="
+                                                selectedAddressId === address.id
                                             "
-                                            :aria-describedby="
-                                                addressForm.errors.city
-                                                    ? 'city-error'
-                                                    : undefined
-                                            "
-                                            type="text"
-                                            v-model="addressForm.city"
-                                            required
-                                            class="field-input"
                                             :class="{
-                                                'field-input--error':
-                                                    addressForm.errors.city,
+                                                'co-address-card--selected':
+                                                    selectedAddressId ===
+                                                    address.id,
                                             }"
-                                            placeholder="London"
-                                            autocomplete="address-level2"
-                                        />
-                                        <p
-                                            v-if="addressForm.errors.city"
-                                            id="city-error"
-                                            class="field-error"
                                         >
-                                            {{ addressForm.errors.city }}
-                                        </p>
+                                            <div class="co-address-card-head">
+                                                <span class="co-address-type">{{
+                                                    address.type
+                                                }}</span>
+                                                <span
+                                                    v-if="address.is_default"
+                                                    class="co-address-default"
+                                                    >Default</span
+                                                >
+                                            </div>
+                                            <span class="co-address-preview">
+                                                {{ address.line_1 }},
+                                                {{ address.postcode }}
+                                            </span>
+                                        </button>
                                     </div>
+                                    <button
+                                        @click="clearAddressSelection"
+                                        type="button"
+                                        class="co-clear-btn"
+                                    >
+                                        Use a different address
+                                    </button>
+                                </div>
+
+                                <div
+                                    v-if="
+                                        selectedAddressId !== null &&
+                                        !isManualAddressVisible &&
+                                        !choosingAddress
+                                    "
+                                    class="co-selected-address"
+                                >
+                                    <p>
+                                        {{ addressForm.addressLine1
+                                        }}<br
+                                            v-if="addressForm.addressLine2"
+                                        />{{ addressForm.addressLine2 }}<br />{{
+                                            addressForm.city
+                                        }}, {{ addressForm.postcode }}<br />{{
+                                            addressForm.country
+                                        }}
+                                    </p>
+                                    <div class="co-address-actions">
+                                        <button
+                                            type="button"
+                                            class="co-clear-btn"
+                                            @click="choosingAddress = true"
+                                        >
+                                            Change address
+                                        </button>
+                                        <button
+                                            type="button"
+                                            class="co-clear-btn"
+                                            @click="
+                                                isManualAddressVisible = true
+                                            "
+                                        >
+                                            Edit address
+                                        </button>
+                                    </div>
+                                </div>
+                                <div
+                                    v-if="isShippingAddressVisible"
+                                    class="co-address-fields"
+                                >
                                     <div class="field">
                                         <label
-                                            for="postcode"
+                                            for="addressLine1"
                                             class="field-label"
-                                            >Postcode
+                                            >Address Line 1
                                             <span class="field-required"
                                                 >*</span
                                             ></label
                                         >
                                         <input
-                                            id="postcode"
+                                            id="addressLine1"
                                             :aria-invalid="
-                                                !!addressForm.errors.postcode
+                                                !!addressForm.errors
+                                                    .addressLine1
                                             "
                                             :aria-describedby="
-                                                addressForm.errors.postcode
-                                                    ? 'postcode-error'
+                                                addressForm.errors.addressLine1
+                                                    ? 'addressLine1-error'
                                                     : undefined
                                             "
                                             type="text"
-                                            v-model="addressForm.postcode"
+                                            v-model="addressForm.addressLine1"
                                             required
                                             class="field-input"
                                             :class="{
                                                 'field-input--error':
-                                                    addressForm.errors.postcode,
+                                                    addressForm.errors
+                                                        .addressLine1,
                                             }"
-                                            placeholder="SW1A 0AA"
-                                            autocomplete="postal-code"
+                                            placeholder="123 Example Street"
+                                            autocomplete="address-line1"
                                         />
                                         <p
-                                            v-if="addressForm.errors.postcode"
-                                            id="postcode-error"
+                                            v-if="
+                                                addressForm.errors.addressLine1
+                                            "
+                                            id="addressLine1-error"
                                             class="field-error"
                                         >
-                                            {{ addressForm.errors.postcode }}
+                                            {{
+                                                addressForm.errors.addressLine1
+                                            }}
                                         </p>
                                     </div>
+
                                     <div class="field">
-                                        <label for="county" class="field-label"
-                                            >County
+                                        <label
+                                            for="addressLine2"
+                                            class="field-label"
+                                            >Address Line 2
                                             <span class="field-optional"
                                                 >(optional)</span
                                             ></label
                                         >
                                         <input
-                                            id="county"
+                                            id="addressLine2"
                                             type="text"
-                                            v-model="addressForm.county"
+                                            v-model="addressForm.addressLine2"
                                             class="field-input"
-                                            placeholder="Greater London"
-                                            autocomplete="address-level1"
+                                            placeholder="Apartment, suite, etc."
+                                            autocomplete="address-line2"
+                                        />
+                                    </div>
+
+                                    <div class="co-field-row co-field-row--3">
+                                        <div class="field">
+                                            <label
+                                                for="city"
+                                                class="field-label"
+                                                >City
+                                                <span class="field-required"
+                                                    >*</span
+                                                ></label
+                                            >
+                                            <input
+                                                id="city"
+                                                :aria-invalid="
+                                                    !!addressForm.errors.city
+                                                "
+                                                :aria-describedby="
+                                                    addressForm.errors.city
+                                                        ? 'city-error'
+                                                        : undefined
+                                                "
+                                                type="text"
+                                                v-model="addressForm.city"
+                                                required
+                                                class="field-input"
+                                                :class="{
+                                                    'field-input--error':
+                                                        addressForm.errors.city,
+                                                }"
+                                                placeholder="London"
+                                                autocomplete="address-level2"
+                                            />
+                                            <p
+                                                v-if="addressForm.errors.city"
+                                                id="city-error"
+                                                class="field-error"
+                                            >
+                                                {{ addressForm.errors.city }}
+                                            </p>
+                                        </div>
+                                        <div class="field">
+                                            <label
+                                                for="postcode"
+                                                class="field-label"
+                                                >Postcode
+                                                <span class="field-required"
+                                                    >*</span
+                                                ></label
+                                            >
+                                            <input
+                                                id="postcode"
+                                                :aria-invalid="
+                                                    !!addressForm.errors
+                                                        .postcode
+                                                "
+                                                :aria-describedby="
+                                                    addressForm.errors.postcode
+                                                        ? 'postcode-error'
+                                                        : undefined
+                                                "
+                                                type="text"
+                                                v-model="addressForm.postcode"
+                                                required
+                                                class="field-input"
+                                                :class="{
+                                                    'field-input--error':
+                                                        addressForm.errors
+                                                            .postcode,
+                                                }"
+                                                placeholder="SW1A 0AA"
+                                                autocomplete="postal-code"
+                                            />
+                                            <p
+                                                v-if="
+                                                    addressForm.errors.postcode
+                                                "
+                                                id="postcode-error"
+                                                class="field-error"
+                                            >
+                                                {{
+                                                    addressForm.errors.postcode
+                                                }}
+                                            </p>
+                                        </div>
+                                        <div class="field">
+                                            <label
+                                                for="county"
+                                                class="field-label"
+                                                >County
+                                                <span class="field-optional"
+                                                    >(optional)</span
+                                                ></label
+                                            >
+                                            <input
+                                                id="county"
+                                                type="text"
+                                                v-model="addressForm.county"
+                                                class="field-input"
+                                                placeholder="Greater London"
+                                                autocomplete="address-level1"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div class="field" style="max-width: 200px">
+                                        <label for="country" class="field-label"
+                                            >Country</label
+                                        >
+                                        <input
+                                            id="country"
+                                            type="text"
+                                            v-model="addressForm.country"
+                                            readonly
+                                            class="field-input field-input--readonly"
+                                            autocomplete="country-name"
                                         />
                                     </div>
                                 </div>
+                            </div>
+                        </section>
 
-                                <div class="field" style="max-width: 200px">
-                                    <label for="country" class="field-label"
-                                        >Country</label
-                                    >
-                                    <input
-                                        id="country"
-                                        type="text"
-                                        v-model="addressForm.country"
-                                        readonly
-                                        class="field-input field-input--readonly"
-                                        autocomplete="country-name"
-                                    />
+                        <section class="co-card coy-card">
+                            <div
+                                class="co-section-heading co-section-heading--step"
+                            >
+                                <div>
+                                    <h2 class="co-card-title coy-heading">
+                                        Payment
+                                    </h2>
                                 </div>
                             </div>
-                        </form>
-                    </section>
 
-                    <section class="co-card coy-card">
-                        <div
-                            class="co-section-heading co-section-heading--step"
-                        >
-                            <span class="co-step">2</span>
-                            <div>
-                                <p class="coy-eyebrow">Secure payment</p>
-                                <h2 class="co-card-title coy-heading">
-                                    Payment
-                                </h2>
+                            <div
+                                v-if="isLoadingInitialData"
+                                class="co-payment-loading"
+                            >
+                                <svg
+                                    class="co-spinner"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
+                                    <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="#e5c9c7"
+                                        stroke-width="3"
+                                    />
+                                    <path
+                                        d="M12 2a10 10 0 0 1 10 10"
+                                        stroke="#8c4a50"
+                                        stroke-width="3"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                                <p>Connecting to payment gateway...</p>
                             </div>
-                        </div>
 
-                        <div
-                            v-if="isLoadingInitialData"
-                            class="co-payment-loading"
-                        >
-                            <svg
-                                class="co-spinner"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                xmlns="http://www.w3.org/2000/svg"
+                            <div
+                                v-if="clientSecret"
+                                ref="paymentContainer"
+                                class="co-stripe-container"
+                            ></div>
+
+                            <div
+                                v-if="paymentError"
+                                class="co-payment-error"
+                                role="alert"
                             >
-                                <circle
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="#e5c9c7"
-                                    stroke-width="3"
-                                />
-                                <path
-                                    d="M12 2a10 10 0 0 1 10 10"
-                                    stroke="#8c4a50"
-                                    stroke-width="3"
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2.5"
                                     stroke-linecap="round"
-                                />
-                            </svg>
-                            <p>Connecting to payment gateway...</p>
-                        </div>
+                                    stroke-linejoin="round"
+                                    style="flex-shrink: 0"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 8v4M12 16h.01" />
+                                </svg>
+                                {{ paymentError }}
+                            </div>
 
-                        <div
-                            v-if="clientSecret"
-                            ref="paymentContainer"
-                            class="co-stripe-container"
-                        ></div>
-
-                        <div
-                            v-if="paymentError"
-                            class="co-payment-error"
-                            role="alert"
-                        >
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                style="flex-shrink: 0"
+                            <button
+                                v-if="!hasClientSecret && !isLoadingInitialData"
+                                type="button"
+                                class="coy-button coy-button--secondary co-full-button"
+                                @click="initializeStripe"
                             >
-                                <circle cx="12" cy="12" r="10" />
-                                <path d="M12 8v4M12 16h.01" />
-                            </svg>
-                            {{ paymentError }}
-                        </div>
-
-                        <button
-                            v-if="!hasClientSecret && !isLoadingInitialData"
-                            type="button"
-                            class="coy-button coy-button--secondary co-full-button"
-                            @click="initializeStripe"
-                        >
-                            Retry loading payment
-                        </button>
-                        <button
-                            @click.prevent="handleCardPayment"
-                            :disabled="paymentDisabled"
-                            class="coy-button coy-button--primary co-pay-btn"
-                            :class="{
-                                'co-pay-btn--disabled': paymentDisabled,
-                            }"
-                        >
-                            <svg
-                                v-if="isProcessing"
-                                class="co-spinner co-spinner--sm"
-                                viewBox="0 0 24 24"
-                                fill="none"
+                                Retry loading payment
+                            </button>
+                            <button
+                                type="submit"
+                                :disabled="paymentDisabled"
+                                class="coy-button coy-button--primary co-pay-btn"
+                                :class="{
+                                    'co-pay-btn--disabled': paymentDisabled,
+                                }"
                             >
-                                <circle
-                                    cx="12"
-                                    cy="12"
-                                    r="10"
-                                    stroke="rgba(255,255,255,0.3)"
-                                    stroke-width="3"
-                                />
-                                <path
-                                    d="M12 2a10 10 0 0 1 10 10"
-                                    stroke="#fff"
-                                    stroke-width="3"
-                                    stroke-linecap="round"
-                                />
-                            </svg>
-                            {{
-                                isProcessing
-                                    ? 'Processing...'
-                                    : `Pay ${fmt(computedTotal)}`
-                            }}
-                        </button>
+                                <svg
+                                    v-if="isProcessing"
+                                    class="co-spinner co-spinner--sm"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                >
+                                    <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="rgba(255,255,255,0.3)"
+                                        stroke-width="3"
+                                    />
+                                    <path
+                                        d="M12 2a10 10 0 0 1 10 10"
+                                        stroke="#fff"
+                                        stroke-width="3"
+                                        stroke-linecap="round"
+                                    />
+                                </svg>
+                                {{
+                                    isProcessing
+                                        ? 'Processing...'
+                                        : `Pay ${fmt(computedTotal)} securely`
+                                }}
+                            </button>
 
-                        <p class="co-secure-note">
-                            <svg
-                                width="11"
-                                height="11"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                            >
-                                <rect
-                                    x="3"
-                                    y="11"
-                                    width="18"
+                            <p class="co-secure-note">
+                                <svg
+                                    width="11"
                                     height="11"
-                                    rx="2"
-                                />
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                            All transactions are secured and encrypted via
-                            Stripe
-                        </p>
-                    </section>
-                </div>
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                >
+                                    <rect
+                                        x="3"
+                                        y="11"
+                                        width="18"
+                                        height="11"
+                                        rx="2"
+                                    />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                                All transactions are secured and encrypted via
+                                Stripe
+                            </p>
+                        </section>
+                    </fieldset>
+                </form>
 
-                <aside class="co-summary">
-                    <div class="co-summary-card coy-card">
+                <aside
+                    class="co-summary"
+                    :class="{ 'co-summary--expanded': summaryExpanded }"
+                >
+                    <button
+                        type="button"
+                        class="co-summary-toggle"
+                        :aria-expanded="summaryExpanded"
+                        aria-controls="checkout-summary"
+                        @click="summaryExpanded = !summaryExpanded"
+                    >
+                        <span
+                            >Order summary · {{ itemCount }}
+                            {{ itemCount === 1 ? 'item' : 'items'
+                            }}<small>{{
+                                summaryExpanded
+                                    ? 'Hide details'
+                                    : 'Show details'
+                            }}</small></span
+                        ><strong>{{ fmt(computedTotal) }}</strong>
+                    </button>
+                    <div id="checkout-summary" class="co-summary-card coy-card">
                         <p class="coy-eyebrow">Your selection</p>
                         <h2 class="co-summary-title coy-heading">
                             Order summary
                         </h2>
-
-                        <div class="co-summary-rows">
-                            <div class="co-summary-row">
-                                <span>Subtotal</span>
-                                <span>{{ fmt(summary.subtotal) }}</span>
-                            </div>
-                            <div
-                                v-if="vatRegistered"
-                                class="co-summary-row co-summary-row--vat-note"
-                            >
-                                <span>VAT</span>
-                                <span>Included in price</span>
-                            </div>
-                            <div class="co-summary-row">
-                                <span>Shipping (48 Tracked)</span>
-                                <span
-                                    :class="
-                                        summary.shipping === 0
-                                            ? 'co-free-shipping'
-                                            : ''
-                                    "
-                                >
-                                    {{
-                                        summary.shipping === 0
-                                            ? 'FREE'
-                                            : fmt(summary.shipping)
-                                    }}
-                                </span>
-                            </div>
-                            <div
-                                v-if="voucherDiscount > 0"
-                                class="co-summary-row co-summary-row--discount"
-                            >
-                                <span
-                                    >Discount ({{ activeVoucher?.code }})</span
-                                >
-                                <span>-{{ fmt(voucherDiscount) }}</span>
-                            </div>
-                        </div>
-
-                        <div class="co-voucher-section">
-                            <p class="co-voucher-label">Discount Code</p>
-
-                            <div v-if="activeVoucher" class="co-voucher-active">
-                                <div>
-                                    <p class="co-voucher-code">
-                                        {{ activeVoucher.code }}
-                                    </p>
-                                    <p class="co-voucher-saved">
-                                        Saving {{ fmt(activeVoucher.discount) }}
-                                    </p>
-                                </div>
-                                <button
-                                    @click="removeVoucher"
-                                    class="co-voucher-remove"
-                                >
-                                    Remove
-                                </button>
-                            </div>
-
-                            <div v-else class="co-voucher-input">
-                                <input
-                                    type="text"
-                                    v-model="voucherCode"
-                                    placeholder="Enter code..."
-                                    class="co-voucher-field"
-                                    @keyup.enter="applyVoucher"
-                                />
-                                <button
-                                    @click="applyVoucher"
-                                    :disabled="
-                                        voucherLoading || !voucherCode.trim()
-                                    "
-                                    class="coy-button coy-button--secondary co-voucher-btn"
-                                >
-                                    {{ voucherLoading ? '...' : 'Apply' }}
-                                </button>
-                            </div>
-
-                            <p
-                                v-if="voucherSuccess"
-                                class="co-voucher-msg co-voucher-msg--success"
-                            >
-                                {{ voucherSuccess }}
-                            </p>
-                            <p
-                                v-if="voucherError"
-                                class="co-voucher-msg co-voucher-msg--error"
-                            >
-                                {{ voucherError }}
-                            </p>
-                        </div>
-
-                        <div class="co-total-row">
-                            <span class="co-total-label">Total</span>
-                            <span class="co-total-val">{{
-                                fmt(computedTotal)
-                            }}</span>
-                        </div>
 
                         <div class="co-items-section">
                             <h3 class="co-items-title">Items in your order</h3>
@@ -1165,6 +1149,125 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                                 </div>
                             </div>
                         </div>
+                        <a :href="getRoute('cart.view')" class="co-edit-basket"
+                            >Edit basket</a
+                        >
+                        <div class="co-summary-rows">
+                            <div class="co-summary-row">
+                                <span>Subtotal</span>
+                                <span>{{ fmt(summary.subtotal) }}</span>
+                            </div>
+                            <div
+                                v-if="vatRegistered"
+                                class="co-summary-row co-summary-row--vat-note"
+                            >
+                                <span>VAT</span>
+                                <span>Included in price</span>
+                            </div>
+                            <div class="co-summary-row">
+                                <span>{{
+                                    isDigitalOnly
+                                        ? 'Email delivery'
+                                        : isPhysicalGiftOnly
+                                          ? 'Voucher postage'
+                                          : 'Delivery'
+                                }}</span>
+                                <span
+                                    :class="
+                                        Number(summary.shipping) === 0
+                                            ? 'co-free-shipping'
+                                            : ''
+                                    "
+                                >
+                                    {{
+                                        summary.shipping === 0
+                                            ? 'FREE'
+                                            : fmt(summary.shipping)
+                                    }}
+                                </span>
+                            </div>
+                            <div
+                                v-if="voucherDiscount > 0"
+                                class="co-summary-row co-summary-row--discount"
+                            >
+                                <span
+                                    >Discount ({{ activeVoucher?.code }})</span
+                                >
+                                <span>-{{ fmt(voucherDiscount) }}</span>
+                            </div>
+                        </div>
+
+                        <div class="co-voucher-section">
+                            <label for="voucher-code" class="co-voucher-label"
+                                >Discount or gift voucher code</label
+                            >
+
+                            <div v-if="activeVoucher" class="co-voucher-active">
+                                <div>
+                                    <p class="co-voucher-code">
+                                        {{ activeVoucher.code }}
+                                    </p>
+                                    <p class="co-voucher-saved">
+                                        Saving {{ fmt(activeVoucher.discount) }}
+                                    </p>
+                                </div>
+                                <button
+                                    @click="removeVoucher"
+                                    class="co-voucher-remove"
+                                >
+                                    Remove
+                                </button>
+                            </div>
+
+                            <div v-else class="co-voucher-input">
+                                <input
+                                    type="text"
+                                    id="voucher-code"
+                                    v-model="voucherCode"
+                                    :aria-invalid="!!voucherError"
+                                    aria-describedby="voucher-feedback"
+                                    placeholder="Enter code..."
+                                    class="co-voucher-field"
+                                    @keyup.enter="applyVoucher"
+                                />
+                                <button
+                                    @click="applyVoucher"
+                                    :disabled="
+                                        voucherLoading || !voucherCode.trim()
+                                    "
+                                    class="coy-button coy-button--secondary co-voucher-btn"
+                                >
+                                    {{ voucherLoading ? '...' : 'Apply' }}
+                                </button>
+                            </div>
+
+                            <p
+                                v-if="voucherSuccess"
+                                role="status"
+                                class="co-voucher-msg co-voucher-msg--success"
+                            >
+                                {{ voucherSuccess }}
+                            </p>
+                            <p
+                                v-if="voucherError"
+                                id="voucher-feedback"
+                                role="alert"
+                                class="co-voucher-msg co-voucher-msg--error"
+                            >
+                                {{ voucherError }}
+                            </p>
+                        </div>
+
+                        <div class="co-total-row" aria-live="polite">
+                            <span class="co-total-label">Total</span>
+                            <span class="co-total-val">{{
+                                fmt(computedTotal)
+                            }}</span>
+                        </div>
+
+                        <p class="co-hint">
+                            Need help? <a href="/contact">Contact us</a>
+                        </p>
                     </div>
                 </aside>
             </div>
@@ -1176,1522 +1279,504 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 
 <style scoped>
 .co {
-    font-family: 'Nunito', sans-serif;
     min-height: 100vh;
-    padding-top: 64px;
-    background: #fdf4f3;
-    color: #2d1a1a;
 }
-
 .co-wrap {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 3rem 1.25rem 5rem;
+    width: min(100% - 2 * var(--coy-gutter), var(--coy-container-lg));
+    margin-inline: auto;
 }
-
-.co-header {
-    margin-bottom: 2rem;
-}
-
-.co-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: clamp(2rem, 5vw, 2.8rem);
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 0.4rem;
-}
-
-.co-header-sub {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-}
-
-.co-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    font-size: 0.88rem;
-    color: #6b4f4f;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.co-back:hover {
-    color: #8c4a50;
-}
-
-.co-guest-note {
-    font-size: 0.85rem;
-    color: #6b4f4f;
-}
-
-.co-guest-link {
-    color: #8c4a50;
-    font-weight: 600;
-    text-decoration: none;
-}
-
-.co-guest-link:hover {
-    text-decoration: underline;
-}
-
-.co-empty {
-    text-align: center;
-    padding: 4rem 2rem;
-    border: 1.5px dashed #e5c9c7;
-    border-radius: 20px;
-    background: #fffafa;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-}
-
-.co-empty p {
-    font-size: 0.95rem;
-    color: #6b4f4f;
-    font-style: italic;
-}
-
-.co-grid {
-    display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 2rem;
-    align-items: start;
-}
-
-@media (max-width: 860px) {
-    .co-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.co-left {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-}
-
-.co-card {
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    background: #fffafa;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
-    padding: 1.5rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.co-card::before {
-    content: '✿';
-    position: absolute;
-    bottom: -6px;
-    right: 8px;
-    font-size: 3.5rem;
-    color: #c9a4a4;
-    opacity: 0.1;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-}
-
-.co-card::after {
-    content: '✿';
-    position: absolute;
-    top: 6px;
-    left: 10px;
-    font-size: 0.85rem;
-    color: #c9a4a4;
-    opacity: 0.22;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-}
-
-.co-card-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.2rem;
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 1.25rem;
-    padding-bottom: 0.85rem;
-    border-bottom: 1px solid #e5c9c7;
-}
-
-.co-step {
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
-    font-style: normal;
-    font-size: 0.78rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.co-address-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.85rem;
-    margin-bottom: 0.75rem;
-}
-
-@media (max-width: 540px) {
-    .co-address-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-.co-wrap--header {
-    padding-block: 1.35rem;
-}
-
-.co-header {
-    align-items: center;
-}
-
-.co-title {
-    font-size: clamp(1.875rem, 3.5vw, 2.5rem);
-}
-
-.co-wrap--content {
-    padding-block: clamp(1.5rem, 4vw, 3rem) clamp(4rem, 7vw, 6rem);
-}
-
-.co-section-heading {
-    margin-bottom: var(--coy-space-4);
-}
-
-.co-saved-addresses {
-    margin-bottom: var(--coy-space-5);
-    padding: var(--coy-space-4);
-    background: var(--coy-color-surface-soft);
-    border: 1px solid var(--coy-color-border-soft);
-    border-radius: var(--coy-radius-md);
-}
-
-.co-saved-addresses h3 {
-    margin: 0 0 var(--coy-space-3);
-    color: var(--coy-color-heading);
-    font-size: var(--coy-text-sm);
-    font-weight: var(--coy-font-weight-semibold);
-}
-
-.co-saved-addresses .co-address-grid {
-    margin-bottom: var(--coy-space-3);
-}
-
-.co-saved-addresses .co-address-card {
-    min-height: 0;
-    padding: 0.8rem 0.9rem;
+.co-header-band {
     background: var(--coy-color-surface);
+    border-bottom: 1px solid var(--coy-color-border-soft);
 }
-
-.co-address-preview {
-    display: block;
-    overflow: hidden;
-    color: var(--coy-color-heading);
-    font-size: var(--coy-text-sm);
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.co-wrap--header {
+    padding-block: 1.2rem;
 }
-
-.co-clear-btn {
-    min-height: var(--coy-control-height);
-    padding-inline: 0.25rem;
-}
-
-@media (max-width: 860px) {
-    .co-summary {
-        order: -1;
-    }
-}
-
-@media (max-width: 620px) {
-    .co-wrap--header {
-        padding-block: 1.1rem;
-    }
-
-    .co-header {
-        align-items: center;
-        flex-direction: row;
-        gap: var(--coy-space-3);
-    }
-
-    .co-header .coy-eyebrow {
-        display: none;
-    }
-
-    .co-title {
-        font-size: 1.875rem;
-    }
-
-    .co-back {
-        min-height: var(--coy-control-height);
-        padding: 0.45rem 0;
-    }
-
-    .co-back svg {
-        display: none;
-    }
-
-    .co-card,
-    .co-summary-card {
-        border-radius: var(--coy-radius-md);
-    }
-}
-
-.co-address-card {
-    border: 1px solid #e5c9c7;
-    border-radius: 14px;
-    padding: 0.9rem 1rem;
-    cursor: pointer;
-    transition:
-        border-color 0.2s,
-        background 0.2s,
-        box-shadow 0.2s;
-    background: #fdf4f3;
-    position: relative;
-    overflow: hidden;
-}
-
-.co-address-card:hover {
-    border-color: #c9a4a4;
-    background: #faeaea;
-}
-
-.co-address-card--selected {
-    border-color: #8c4a50;
-    background: #fff5f5;
-    box-shadow: 0 0 0 2px rgba(140, 74, 80, 0.12);
-}
-
-.co-address-card-head {
+.co-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.4rem;
-}
-
-.co-address-type {
-    font-size: 0.68rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #8c4a50;
-}
-
-.co-address-default {
-    font-size: 0.62rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    background: rgba(140, 74, 80, 0.1);
-    color: #8c4a50;
-    border: 1px solid rgba(140, 74, 80, 0.2);
-    border-radius: 999px;
-    padding: 0.1rem 0.45rem;
-}
-
-.co-address-lines {
-    display: flex;
-    flex-direction: column;
-    gap: 0.05rem;
-    font-size: 0.85rem;
-    color: #2d1a1a;
-    line-height: 1.45;
-}
-
-.co-clear-btn {
-    font-size: 0.8rem;
-    color: #8c4a50;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: 'Nunito', sans-serif;
-    transition: color 0.2s;
-    padding: 0;
-    text-decoration: underline;
-}
-
-.co-clear-btn:hover {
-    color: #6a3038;
-}
-
-.co-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-}
-
-.co-field-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 1rem;
 }
-
-.co-field-row--3 {
-    grid-template-columns: repeat(3, 1fr);
+.co-brand {
+    color: var(--coy-color-accent);
+    font-family: var(--coy-font-display);
+    text-decoration: none;
+    font-size: 1.1rem;
 }
-
-@media (max-width: 540px) {
-    .co-field-row,
-    .co-field-row--3 {
-        grid-template-columns: 1fr;
-    }
+.co-title {
+    margin: 0.1rem 0 0;
+    font-family: var(--coy-font-body);
+    font-size: 1.5rem;
+    font-weight: 600;
 }
-
-.field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-}
-
-.field-label {
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6b4f4f;
-}
-
-.field-required {
-    color: #8c4a50;
-}
-
-.field-optional {
-    font-weight: 400;
-    text-transform: none;
-    font-style: italic;
-    color: #9a7070;
-}
-
-.field-input {
-    padding: 0.65rem 0.9rem;
-    border: 1px solid #e5c9c7;
-    border-radius: 10px;
-    background: #fdf4f3;
-    color: #2d1a1a;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.92rem;
-    outline: none;
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
-}
-
-.field-input:focus {
-    border-color: #8c4a50;
-    box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1);
-}
-
-.field-input--error {
-    border-color: #c84040;
-}
-
-.field-input--readonly {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.field-error {
-    font-size: 0.78rem;
-    color: #b54040;
-}
-
-.co-add-address-btn-wrap {
-    padding-top: 0.25rem;
-}
-
-.co-add-address-btn {
+.co-back,
+.co-clear-btn,
+.co-edit-basket {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.6rem 1.1rem;
-    border-radius: 999px;
-    border: 1px dashed #c9a4a4;
+    min-height: var(--coy-control-height);
+    color: var(--coy-color-accent);
+    font: 600 1rem var(--coy-font-body);
+    text-underline-offset: 0.2rem;
+}
+.co-clear-btn {
     background: transparent;
-    color: #8c4a50;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 600;
+    border: 0;
     cursor: pointer;
-    transition:
-        background 0.2s,
-        border-color 0.2s;
+    text-decoration: underline;
 }
-
-.co-add-address-btn:hover {
-    background: #faeaea;
-    border-color: #8c4a50;
+.co-wrap--content {
+    padding-block: 2.5rem 5rem;
 }
-
+.co-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(19rem, 23rem);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+}
+.co-left,
+.co-checkout-fields {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+.co-card {
+    padding: 0 0 2rem;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+.co-card + .co-card {
+    padding-top: 2rem;
+    border-top: 1px solid var(--coy-color-border);
+}
+.co-section-heading {
+    margin-bottom: 1.25rem;
+}
+.co-card-title {
+    margin: 0;
+    font-size: 1.75rem;
+}
+.co-guest-note {
+    margin: 0 0 1.5rem;
+}
+.co-guest-link,
+.co-hint a {
+    color: var(--coy-color-accent);
+    text-underline-offset: 0.2rem;
+}
+.co-form,
 .co-address-fields {
-    border-top: 1px solid #e5c9c7;
-    padding-top: 1.1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
+    gap: 1rem;
 }
-
-.co-address-fields-title {
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: #8c4a50;
-    margin-bottom: 0.25rem;
+.co-hint {
+    margin: 0;
+    color: var(--coy-color-text);
+    font-size: 1rem;
 }
-
-.co-save-label {
+.co-field-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+.co-field-row--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.field {
+    min-width: 0;
     display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    font-size: 0.88rem;
-    color: #6b4f4f;
-    cursor: pointer;
-    padding-top: 0.25rem;
+    flex-direction: column;
+    gap: 0.4rem;
 }
-
-.co-save-check {
-    width: 15px;
-    height: 15px;
-    accent-color: #8c4a50;
+.field-label {
+    color: var(--coy-color-heading);
+    font-weight: 600;
+}
+.field-optional {
+    color: var(--coy-color-text);
+    font-weight: 400;
+}
+.field-required,
+.field-error {
+    color: var(--coy-color-error);
+}
+.field-error {
+    margin: 0;
+    font-size: var(--coy-text-xs);
+}
+.field-input,
+.co-voucher-field {
+    width: 100%;
+    min-width: 0;
+    min-height: var(--coy-control-height);
+    padding: 0.7rem 1rem;
+    font: inherit;
+    color: var(--coy-color-heading);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
+}
+.field-input--error {
+    border-color: var(--coy-color-error);
+}
+.field-input--readonly {
+    background: var(--coy-color-surface-soft);
+}
+.co-delivery-heading {
+    margin-top: 1rem;
+    padding-top: 1.75rem;
+    border-top: 1px solid var(--coy-color-border);
+}
+.co-delivery-heading .co-hint {
+    margin-top: 0.5rem;
+}
+.co-saved-addresses h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+.co-address-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.co-address-card {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-surface);
+    color: var(--coy-color-heading);
+    font: inherit;
+    text-align: left;
     cursor: pointer;
 }
-
-.co-guest-prompt {
+.co-address-card--selected {
+    border-color: var(--coy-color-accent);
+    background: var(--coy-color-surface-soft);
+}
+.co-address-card-head {
     display: flex;
-    align-items: flex-start;
+    justify-content: space-between;
     gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    border-radius: 10px;
-    background: rgba(140, 74, 80, 0.04);
-    border: 1px solid #e5c9c7;
-    font-size: 0.85rem;
-    color: #6b4f4f;
-    margin-top: 0.25rem;
 }
-
-.co-guest-prompt svg {
-    flex-shrink: 0;
-    color: #8c4a50;
-    margin-top: 2px;
+.co-address-type {
+    font-weight: 600;
 }
-
+.co-address-default {
+    color: var(--coy-color-accent);
+    font-size: var(--coy-text-xs);
+}
+.co-address-preview {
+    display: block;
+}
+.co-selected-address {
+    padding: 1rem 1.25rem;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
+}
+.co-selected-address p {
+    margin: 0;
+}
+.co-address-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
 .co-payment-loading {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    padding: 2.5rem 1rem;
-    color: #6b4f4f;
-    font-size: 0.9rem;
-    font-style: italic;
+    gap: 1rem;
+    padding-block: 1.5rem;
 }
-
 .co-spinner {
-    width: 36px;
-    height: 36px;
-    animation: co-spin 0.9s linear infinite;
+    width: 2rem;
+    height: 2rem;
+    flex-shrink: 0;
+    animation: co-spin 1s linear infinite;
 }
-
 .co-spinner--sm {
-    width: 16px;
-    height: 16px;
+    width: 1rem;
+    height: 1rem;
 }
-
 @keyframes co-spin {
-    from {
-        transform: rotate(0deg);
-    }
-
     to {
         transform: rotate(360deg);
     }
 }
-
 .co-stripe-container {
-    padding: 0.25rem 0;
-    min-height: 100px;
+    min-height: 6rem;
 }
-
 .co-payment-error {
     display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    border-radius: 10px;
-    background: #fff5f5;
-    border: 1px solid #e8a8a8;
-    color: #8c2a2a;
-    font-size: 0.88rem;
-    margin-top: 0.75rem;
+    align-items: center;
+    gap: 0.75rem;
+    margin-block: 1rem;
+    padding: 1rem;
+    color: var(--coy-color-error);
+    background: var(--coy-color-error-soft);
+    border: 1px solid var(--coy-color-error);
+    border-radius: var(--coy-radius-sm);
 }
-
-.co-pay-btn {
-    margin-top: 1rem;
+.co-pay-btn,
+.co-full-button {
+    width: 100%;
+    margin-top: 1.25rem;
+    min-height: 3.25rem;
 }
-
+.co-pay-btn:disabled,
+.co-voucher-btn:disabled {
+    background: var(--coy-color-border-soft);
+    border-color: var(--coy-color-border);
+    color: var(--coy-color-text);
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
 .co-secure-note {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    font-size: 0.78rem;
-    color: #9a7070;
-    font-style: italic;
-    margin-top: 0.75rem;
+    gap: 0.5rem;
+    margin: 1rem 0 0;
+    font-size: var(--coy-text-xs);
     text-align: center;
 }
-
 .co-summary {
     position: sticky;
-    top: 88px;
+    top: 1.5rem;
+    min-width: 0;
 }
-
 .co-summary-card {
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    background: #fffafa;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
     padding: 1.5rem;
-    position: relative;
-    overflow: hidden;
+    box-shadow: none;
+    border-color: var(--coy-color-border-soft);
 }
-
-.co-summary-card::before {
-    content: '✿';
-    position: absolute;
-    bottom: -6px;
-    right: 8px;
-    font-size: 3.5rem;
-    color: #c9a4a4;
-    opacity: 0.1;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-}
-
 .co-summary-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.2rem;
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 1.1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid #e5c9c7;
+    margin: 0.25rem 0 1.5rem;
+    font-size: 1.75rem;
 }
-
+.co-summary-toggle {
+    display: none;
+}
+.co-items-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+}
+.co-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.co-item-row {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+}
+.co-item-image {
+    width: 3.5rem;
+    height: 3.5rem;
+    object-fit: cover;
+    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-surface-soft);
+}
+.co-item-name {
+    color: var(--coy-color-heading);
+    overflow-wrap: anywhere;
+}
+.co-item-qty {
+    display: block;
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-xs);
+}
+.co-item-price {
+    color: var(--coy-color-heading);
+    font-weight: 600;
+    white-space: nowrap;
+}
+.co-item-row--gv {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 1rem;
+    background: var(--coy-color-surface-soft);
+    border-radius: var(--coy-radius-sm);
+}
+.co-edit-basket {
+    margin-block: 0.5rem;
+}
 .co-summary-rows {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    margin-bottom: 1rem;
+    gap: 0.65rem;
+    padding-block: 1.25rem;
+    border-top: 1px solid var(--coy-color-border-soft);
 }
-
 .co-summary-row {
     display: flex;
     justify-content: space-between;
-    font-size: 0.88rem;
-    color: #6b4f4f;
+    gap: 1rem;
 }
-
 .co-summary-row span:last-child {
-    font-weight: 600;
-    color: #2d1a1a;
-}
-
-.co-summary-row--discount {
-    color: #2d7a3a;
-}
-
-.co-summary-row--discount span:last-child {
-    color: #2d7a3a;
-}
-
-.co-free-shipping {
-    color: #2d7a3a;
-    font-weight: 600;
-}
-
-.co-voucher-section {
-    border-top: 1px dashed #e5c9c7;
-    padding-top: 1rem;
-    margin-bottom: 1rem;
-}
-
-.co-voucher-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: #8c4a50;
-    margin-bottom: 0.6rem;
-}
-
-.co-voucher-active {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.6rem 0.85rem;
-    border-radius: 10px;
-    background: #f0faf0;
-    border: 1px solid #a8d8b0;
-}
-
-.co-voucher-code {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: #2d7a3a;
-    font-family: monospace;
-    letter-spacing: 0.05em;
-}
-
-.co-voucher-saved {
-    font-size: 0.75rem;
-    color: #2d7a3a;
-    margin-top: 0.1rem;
-}
-
-.co-voucher-remove {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: #8c2a2a;
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-family: 'Nunito', sans-serif;
-    transition: color 0.2s;
-    text-decoration: underline;
-}
-
-.co-voucher-remove:hover {
-    color: #6a1a1a;
-}
-
-.co-voucher-input {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.co-voucher-field {
-    flex: 1;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid #e5c9c7;
-    border-radius: 10px;
-    background: #fdf4f3;
-    color: #2d1a1a;
-    font-family: monospace;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-.co-voucher-field:focus {
-    border-color: #8c4a50;
-}
-
-.co-voucher-btn {
-    flex-shrink: 0;
-}
-
-.co-voucher-msg {
-    font-size: 0.78rem;
-    margin-top: 0.4rem;
-    font-style: italic;
-}
-
-.co-voucher-msg--success {
-    color: #2d7a3a;
-}
-
-.co-voucher-msg--error {
-    color: #b54040;
-}
-
-.co-total-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    padding: 0.85rem 0;
-    border-top: 1px solid #e5c9c7;
-    border-bottom: 1px solid #e5c9c7;
-    margin-bottom: 1rem;
-}
-
-.co-total-label {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.1rem;
-    font-style: italic;
-    color: #2d1a1a;
-}
-
-.co-total-val {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.8rem;
-    font-weight: 500;
-    color: #8c4a50;
-}
-
-.co-items-title {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: #8c4a50;
-    margin-bottom: 0.65rem;
-}
-
-.co-items-list {
-    max-height: 200px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.co-items-list::-webkit-scrollbar {
-    width: 3px;
-}
-
-.co-items-list::-webkit-scrollbar-thumb {
-    background: #e5c9c7;
-    border-radius: 999px;
-}
-
-.co-item-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid #f0dcd8;
-}
-
-.co-item-row:last-child {
-    border-bottom: none;
-}
-
-.co-item-name {
-    color: #2d1a1a;
-    flex: 1;
-    min-width: 0;
-}
-
-.co-item-qty {
-    color: #6b4f4f;
-    font-size: 0.78rem;
-    margin-left: 0.3rem;
-}
-
-.co-item-price {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1rem;
-    font-weight: 500;
-    color: #8c4a50;
-    flex-shrink: 0;
-}
-
-.btn-rose {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.72rem 1.5rem;
-    border-radius: 999px;
-    border: 1px solid #a85058;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.92rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition:
-        transform 0.2s,
-        box-shadow 0.2s;
-    text-decoration: none;
-}
-
-.btn-rose:hover:not(:disabled):not(.btn-rose--disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 18px rgba(168, 80, 88, 0.28);
-}
-
-.btn-rose--disabled,
-.btn-rose:disabled {
-    background: #f0dcd8;
-    border-color: #e5c9c7;
-    color: #9a7070;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-.btn-rose--full {
-    width: 100%;
-}
-
-.btn-rose--sm {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-}
-
-.co-item-row--gv {
-    background: rgba(201, 168, 76, 0.04);
-    border-radius: 4px;
-    padding: 4px 4px;
-    margin-top: 2px;
-}
-
-.co-summary-row--vat-note span:last-child {
-    font-weight: 400 !important;
-    color: #9a7070 !important;
-    font-style: italic;
-    font-size: 0.82rem;
-}
-
-.co {
-    min-height: 100vh;
-    padding-top: var(--coy-nav-height);
-    color: var(--coy-color-text);
-    background: var(--coy-color-page);
-    font-family: var(--coy-font-body);
-}
-
-.co-header-band {
-    background: var(--coy-color-blush);
-    border-bottom: 1px solid var(--coy-color-border);
-}
-
-.co-wrap {
-    width: min(100% - (2 * var(--coy-gutter)), var(--coy-container-lg));
-    max-width: none;
-    margin-inline: auto;
-    padding: 0;
-}
-
-.co-wrap--header {
-    padding-block: clamp(2rem, 5vw, 3.5rem) 1.5rem;
-}
-
-.co-wrap--content {
-    padding-block: clamp(2rem, 5vw, 4rem) clamp(4rem, 7vw, 7rem);
-}
-
-.co-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 2rem;
-    margin: 0;
-}
-
-.co-title {
-    margin: 0.2rem 0 0;
-    color: var(--coy-color-heading);
-    font-family: var(--coy-font-display);
-    font-size: clamp(2.75rem, 6vw, 4.5rem);
-    font-style: normal;
-    font-weight: var(--coy-font-weight-medium);
-    line-height: 1;
-}
-
-.co-intro {
-    margin: 0.7rem 0 0;
-    font-size: var(--coy-text-lead);
-}
-
-.co-header-actions {
-    flex: 0 0 auto;
-}
-
-.co-back {
-    min-height: var(--coy-control-height);
-    display: inline-flex;
-    align-items: center;
-    gap: var(--coy-space-2);
-    padding: 0.65rem 1rem;
-    color: var(--coy-color-heading);
-    background: rgb(255 253 251 / 62%);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-pill);
-    font-size: var(--coy-text-sm);
-    font-weight: var(--coy-font-weight-semibold);
-}
-
-.co-back:hover {
-    color: var(--coy-color-heading);
-    background: var(--coy-color-surface);
-}
-
-.co-progress {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    margin: 2rem 0 0;
-    padding: 0;
-    list-style: none;
-}
-
-.co-progress-item {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: var(--coy-space-2);
-    color: var(--coy-color-text);
-    font-size: var(--coy-text-sm);
-    font-weight: var(--coy-font-weight-semibold);
-}
-
-.co-progress-item::after {
-    content: '';
-    height: 1px;
-    flex: 1;
-    margin-inline: var(--coy-space-4);
-    background: var(--coy-color-rose-gold);
-    opacity: 0.55;
-}
-
-.co-progress-item:last-child::after {
-    display: none;
-}
-
-.co-progress-item span {
-    width: 1.75rem;
-    height: 1.75rem;
-    display: grid;
-    place-items: center;
-    color: var(--coy-color-heading);
-    background: rgb(255 253 251 / 55%);
-    border: 1px solid var(--coy-color-rose-gold);
-    border-radius: 50%;
-    font-size: 0.8rem;
-}
-
-.co-progress-item--active {
-    color: var(--coy-color-accent);
-}
-
-.co-progress-item--active span {
-    color: var(--coy-color-on-accent);
-    background: var(--coy-color-accent);
-    border-color: var(--coy-color-accent);
-}
-
-.co-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(20rem, 23rem);
-    gap: clamp(2rem, 5vw, 4rem);
-}
-
-.co-left {
-    gap: var(--coy-space-5);
-}
-
-.co-card,
-.co-summary-card {
-    padding: clamp(1.35rem, 3vw, 2rem);
-    overflow: visible;
-    color: var(--coy-color-text);
-    background: var(--coy-color-surface);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-lg);
-    box-shadow: var(--coy-shadow-sm);
-}
-
-.co-card::before,
-.co-card::after,
-.co-summary-card::before {
-    display: none;
-}
-
-.co-section-heading {
-    margin-bottom: var(--coy-space-5);
-    padding-bottom: var(--coy-space-4);
-    border-bottom: 1px solid var(--coy-color-border-soft);
-}
-
-.co-section-heading--step {
-    display: flex;
-    align-items: center;
-    gap: var(--coy-space-4);
-}
-
-.co-card-title,
-.co-summary-title {
-    margin: 0.15rem 0 0;
-    padding: 0;
-    color: var(--coy-color-heading);
-    border: 0;
-    font-family: var(--coy-font-display);
-    font-size: clamp(1.75rem, 3vw, 2.1rem);
-    font-style: normal;
-    font-weight: var(--coy-font-weight-semibold);
-    line-height: var(--coy-leading-heading);
-}
-
-.co-step {
-    width: 2.5rem;
-    height: 2.5rem;
-    color: var(--coy-color-on-accent);
-    background: var(--coy-color-accent);
-    font-family: var(--coy-font-body);
-    font-size: 1rem;
-}
-
-.co-guest-note {
-    margin: calc(-1 * var(--coy-space-2)) 0 var(--coy-space-5);
-    padding: 0.85rem 1rem;
-    color: var(--coy-color-text);
-    background: var(--coy-color-surface-soft);
-    border-radius: var(--coy-radius-md);
-    font-size: var(--coy-text-sm);
-}
-
-.co-guest-link,
-.co-clear-btn {
-    color: var(--coy-color-accent);
-    font-family: var(--coy-font-body);
-    font-weight: var(--coy-font-weight-semibold);
-    text-underline-offset: 0.2rem;
-}
-
-.co-address-grid {
-    gap: var(--coy-space-3);
-    margin-bottom: var(--coy-space-4);
-}
-
-.co-address-card {
-    min-height: 8rem;
-    padding: 1rem;
-    color: var(--coy-color-heading);
-    background: var(--coy-color-page);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-md);
-    font-family: var(--coy-font-body);
-    text-align: left;
-}
-
-.co-address-card:hover {
-    background: var(--coy-color-surface-soft);
-    border-color: var(--coy-color-rose-gold);
-}
-
-.co-address-card--selected {
-    background: var(--coy-color-surface-soft);
-    border-color: var(--coy-color-accent);
-    box-shadow: var(--coy-shadow-focus);
-}
-
-.co-address-type,
-.co-address-fields-title,
-.co-voucher-label,
-.co-items-title {
-    color: var(--coy-color-accent);
-    font-size: var(--coy-text-xs);
-    font-weight: var(--coy-font-weight-bold);
-    letter-spacing: var(--coy-tracking-label);
-}
-
-.co-address-default {
-    color: var(--coy-color-accent);
-    background: var(--coy-color-surface);
-    border-color: var(--coy-color-border);
-}
-
-.co-address-lines {
-    color: var(--coy-color-heading);
-    font-size: var(--coy-text-sm);
-}
-
-.co-form {
-    gap: var(--coy-space-4);
-}
-
-.co-field-row {
-    gap: var(--coy-space-4);
-}
-
-.field {
-    gap: var(--coy-space-2);
-}
-
-.field-label {
-    color: var(--coy-color-heading);
-    font-size: var(--coy-text-sm);
-    font-weight: var(--coy-font-weight-semibold);
-    letter-spacing: 0;
-    text-transform: none;
-}
-
-.field-required {
-    color: var(--coy-color-error);
-}
-
-.field-optional {
-    color: var(--coy-color-text);
-    font-style: normal;
-}
-
-.field-input,
-.co-voucher-field {
-    min-height: var(--coy-control-height);
-    padding: 0.7rem 1rem;
-    color: var(--coy-color-heading);
-    background: var(--coy-color-surface);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-md);
-    font-family: var(--coy-font-body);
-    font-size: var(--coy-text-sm);
-}
-
-.field-input:focus,
-.co-voucher-field:focus {
-    border-color: var(--coy-color-focus);
-    box-shadow: var(--coy-shadow-focus);
-}
-
-.field-input--error {
-    border-color: var(--coy-color-error);
-}
-
-.field-input--readonly {
-    background: var(--coy-color-surface-soft);
-}
-
-.field-error,
-.co-voucher-msg--error {
-    color: var(--coy-color-error);
-}
-
-.co-add-address-btn {
-    min-height: var(--coy-control-height);
-    color: var(--coy-color-accent);
-    border-color: var(--coy-color-rose-gold);
-    font-family: var(--coy-font-body);
-    font-size: var(--coy-text-sm);
-}
-
-.co-add-address-btn:hover {
-    color: var(--coy-color-accent-hover);
-    background: var(--coy-color-surface-soft);
-    border-color: var(--coy-color-accent);
-}
-
-.co-address-fields {
-    margin-top: var(--coy-space-2);
-    padding-top: var(--coy-space-5);
-    border-color: var(--coy-color-border-soft);
-}
-
-.co-address-fields > p {
-    margin: 0;
-}
-
-.co-guest-prompt {
-    padding: 1rem;
-    color: var(--coy-color-text);
-    background: var(--coy-color-surface-soft);
-    border-color: var(--coy-color-border-soft);
-    border-radius: var(--coy-radius-md);
-    font-size: var(--coy-text-sm);
-}
-
-.co-guest-prompt svg {
-    color: var(--coy-color-accent);
-}
-
-.co-payment-loading {
-    color: var(--coy-color-text);
-    font-size: var(--coy-text-sm);
-    font-style: normal;
-}
-
-.co-payment-loading p {
-    margin: 0;
-}
-
-.co-payment-error {
-    color: var(--coy-color-error);
-    background: var(--coy-color-error-soft);
-    border-color: var(--coy-color-error);
-    border-radius: var(--coy-radius-md);
-    font-size: var(--coy-text-sm);
-}
-
-.co-full-button,
-.co-pay-btn {
-    width: 100%;
-}
-
-.co-pay-btn {
-    min-height: 3.25rem;
-    margin-top: var(--coy-space-4);
-    font-size: 1.05rem;
-}
-
-.co-pay-btn--disabled,
-.co-pay-btn:disabled {
-    color: var(--coy-color-text);
-    background: var(--coy-color-border-soft);
-    border-color: var(--coy-color-border);
-    box-shadow: none;
-    cursor: not-allowed;
-    transform: none;
-}
-
-.co-secure-note {
-    gap: var(--coy-space-2);
-    margin: var(--coy-space-4) 0 0;
-    color: var(--coy-color-text);
-    font-size: var(--coy-text-xs);
-    font-style: normal;
-}
-
-.co-summary {
-    top: calc(var(--coy-nav-height) + 1.5rem);
-}
-
-.co-summary-card {
-    box-shadow: var(--coy-shadow-md);
-}
-
-.co-summary-title {
-    margin-bottom: var(--coy-space-5);
-    padding-bottom: var(--coy-space-4);
-    border-bottom: 1px solid var(--coy-color-border-soft);
-}
-
-.co-summary-row {
-    gap: var(--coy-space-4);
-    color: var(--coy-color-text);
-    font-size: var(--coy-text-sm);
-}
-
-.co-summary-row span:last-child {
+    text-align: right;
     color: var(--coy-color-heading);
 }
-
-.co-summary-row--discount,
-.co-summary-row--discount span:last-child,
-.co-free-shipping,
-.co-voucher-code,
-.co-voucher-saved,
-.co-voucher-msg--success {
+.co-summary-row--discount span,
+.co-summary-row .co-free-shipping {
     color: var(--coy-color-success);
 }
-
 .co-voucher-section {
-    border-color: var(--coy-color-border);
+    padding-block: 1.25rem;
+    border-top: 1px solid var(--coy-color-border-soft);
 }
-
-.co-voucher-active {
-    background: var(--coy-color-success-soft);
-    border-color: var(--coy-color-success);
-    border-radius: var(--coy-radius-md);
+.co-voucher-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--coy-color-heading);
 }
-
-.co-voucher-remove {
-    min-height: var(--coy-control-height);
-    color: var(--coy-color-error);
-    font-family: var(--coy-font-body);
-}
-
 .co-voucher-input {
-    align-items: stretch;
+    display: flex;
+    gap: 0.5rem;
 }
-
-.co-voucher-field {
-    min-width: 0;
-    font-family: var(--coy-font-body);
-}
-
 .co-voucher-btn {
     padding-inline: 1rem;
 }
-
-.co-total-row {
-    border-color: var(--coy-color-border);
-}
-
-.co-total-label,
-.co-total-val {
-    color: var(--coy-color-heading);
-    font-family: var(--coy-font-display);
-    font-style: normal;
-}
-
-.co-total-label {
-    font-size: 1.25rem;
-    font-weight: var(--coy-font-weight-semibold);
-}
-
-.co-total-val {
-    font-size: 2rem;
-}
-
-.co-items-list {
-    gap: var(--coy-space-3);
-}
-
-.co-item-row {
-    display: grid;
-    grid-template-columns: 3rem minmax(0, 1fr) auto;
+.co-voucher-active {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: var(--coy-space-3);
-    padding-bottom: var(--coy-space-3);
-    border-color: var(--coy-color-border-soft);
-    font-size: var(--coy-text-sm);
-}
-
-.co-item-image {
-    width: 3rem;
-    height: 3rem;
-    object-fit: cover;
-    background: var(--coy-color-champagne);
+    gap: 1rem;
+    padding: 0.75rem;
+    background: var(--coy-color-success-soft);
     border-radius: var(--coy-radius-sm);
 }
-
-.co-item-name {
-    color: var(--coy-color-heading);
+.co-voucher-active p {
+    margin: 0;
+    color: var(--coy-color-success);
 }
-
-.co-item-qty {
-    color: var(--coy-color-text);
-}
-
-.co-item-price {
-    color: var(--coy-color-heading);
-    font-family: var(--coy-font-body);
-    font-size: var(--coy-text-sm);
-    font-weight: var(--coy-font-weight-semibold);
-}
-
-.co-item-row--gv {
-    grid-template-columns: minmax(0, 1fr) auto;
-    padding: var(--coy-space-3);
-    background: var(--coy-color-surface-soft);
-    border-radius: var(--coy-radius-sm);
-}
-
-.co-empty {
-    max-width: 46rem;
-    margin-inline: auto;
-    padding: clamp(3rem, 8vw, 6rem) 1.5rem;
+.co-voucher-remove {
+    min-height: var(--coy-control-height);
     background: transparent;
     border: 0;
-    border-radius: 0;
-}
-
-.co-empty p {
-    margin: 0;
-    color: var(--coy-color-text);
-    font-size: var(--coy-text-body);
-    font-style: normal;
-}
-
-.co-empty h2 {
-    margin: 0.25rem 0 0;
-    color: var(--coy-color-heading);
-    font-size: clamp(2.4rem, 6vw, 3.75rem);
-}
-
-.co-empty-icon {
-    width: 5.5rem;
-    height: 5.5rem;
-    display: grid;
-    place-items: center;
     color: var(--coy-color-accent);
-    background: var(--coy-color-blush);
-    border-radius: 50%;
+    cursor: pointer;
+    text-decoration: underline;
 }
-
+.co-voucher-msg {
+    margin: 0.5rem 0 0;
+}
+.co-voucher-msg--error {
+    color: var(--coy-color-error);
+}
+.co-voucher-msg--success {
+    color: var(--coy-color-success);
+}
+.co-total-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding-block: 1.25rem;
+    border-top: 1px solid var(--coy-color-border);
+    color: var(--coy-color-heading);
+    font-weight: 600;
+}
+.co-total-val {
+    font-size: 1.5rem;
+    font-variant-numeric: tabular-nums;
+}
+.co-empty {
+    max-width: 40rem;
+    margin: auto;
+    padding-block: 3rem;
+    text-align: center;
+}
+.co-empty h2 {
+    font-size: 2.5rem;
+}
+.co-empty-icon {
+    width: 5rem;
+    margin: 0 auto 1.5rem;
+}
 .co-empty-icon svg {
-    width: 2.25rem;
     fill: none;
-    stroke: currentColor;
-    stroke-width: 1.6;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    stroke: var(--coy-color-accent);
+    stroke-width: 1.5;
 }
-
 @media (max-width: 860px) {
     .co-grid {
-        grid-template-columns: 1fr;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
     }
-
+    .co-left,
     .co-summary {
+        width: 100%;
+    }
+    .co-summary {
+        order: -1;
         position: static;
     }
-}
-
-@media (max-width: 620px) {
-    .co-header {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: var(--coy-space-5);
+    .co-summary-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid var(--coy-color-border);
+        border-radius: var(--coy-radius-sm);
+        color: var(--coy-color-heading);
+        background: var(--coy-color-surface);
+        font: inherit;
+        text-align: left;
+        cursor: pointer;
     }
-
-    .co-title {
-        font-size: 3rem;
-    }
-
-    .co-back {
-        padding-left: 0;
-        background: transparent;
-        border: 0;
-    }
-
-    .co-progress-item {
-        align-items: flex-start;
-        flex-direction: column;
-        gap: var(--coy-space-1);
+    .co-summary-toggle small {
+        display: block;
+        color: var(--coy-color-accent);
         font-size: var(--coy-text-xs);
+        text-decoration: underline;
     }
-
-    .co-progress-item::after {
-        position: absolute;
-        top: 0.875rem;
-        right: var(--coy-space-3);
-        left: 2.25rem;
-        margin: 0;
+    .co-summary-toggle strong {
+        white-space: nowrap;
     }
-
-    .co-card,
     .co-summary-card {
-        padding: 1.25rem;
+        display: none;
+        margin-top: 0.75rem;
+    }
+    .co-summary--expanded .co-summary-card {
+        display: block;
+    }
+    .co-wrap--content {
+        padding-top: 1.5rem;
     }
 }
-
 @media (max-width: 540px) {
     .co-field-row,
     .co-field-row--3,
     .co-address-grid {
         grid-template-columns: 1fr;
     }
-
-    .co-voucher-input {
-        flex-direction: column;
+    .co-back {
+        font-size: var(--coy-text-xs);
     }
-
-    .co-voucher-btn {
-        width: 100%;
+    .co-back svg {
+        display: none;
+    }
+    .co-summary-card {
+        padding: 1rem;
     }
 }
 </style>
