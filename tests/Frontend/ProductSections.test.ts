@@ -72,15 +72,25 @@ describe('image viewer', () => {
                 images: [{ image: '/one.jpg' }, { image: '/two.jpg' }],
                 initialIndex: 1,
                 open: true,
+                label: 'Citrus Sunrise',
             },
             attachTo: document.body,
         });
         await nextTick();
         expect(document.activeElement).toBe(wrapper.get('.miv-close').element);
+        expect(wrapper.get('#image-viewer-title').text()).toBe(
+            'Citrus Sunrise photos',
+        );
+        expect(document.body.style.overflow).toBe('hidden');
+        expect(wrapper.get('.miv-img').attributes('src')).toBe('/two.jpg');
+        await wrapper.get('.miv-nav--next').trigger('click');
+        expect(wrapper.get('.miv-img').attributes('src')).toBe('/one.jpg');
+        await wrapper.findAll('.miv-thumb')[1].trigger('click');
         expect(wrapper.get('.miv-img').attributes('src')).toBe('/two.jpg');
         await wrapper.get('.miv-close').trigger('click');
         await wrapper.setProps({ open: false });
         await nextTick();
+        expect(document.body.style.overflow).toBe('');
         expect(document.activeElement).toBe(trigger);
         trigger.remove();
     });

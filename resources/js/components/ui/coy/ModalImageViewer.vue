@@ -1,47 +1,72 @@
 <script setup lang="ts">
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
 
-interface ProductImage { image: string; }
+interface ProductImage {
+    image: string;
+}
 
 const props = defineProps<{
     images: ProductImage[];
     initialIndex: number;
     open: boolean;
+    label?: string;
 }>();
 
-const emit = defineEmits(['update:open']);
-
+const emit = defineEmits<{ 'update:open': [value: boolean] }>();
 const currentModalIndex = ref(props.initialIndex);
 const modal = ref<HTMLElement | null>(null);
 const closeButton = ref<HTMLButtonElement | null>(null);
 let returnFocus: HTMLElement | null = null;
+let previousOverflow = '';
 
-watch(() => props.initialIndex, (newIndex) => {
-    currentModalIndex.value = newIndex;
-});
-
-const currentImageUrl = computed(() =>
-    props.images[currentModalIndex.value]?.image || '/images/placeholder.jpg'
-);
 const imageCount = computed(() => props.images.length);
+const currentImageUrl = computed(
+    () =>
+        props.images[currentModalIndex.value]?.image ||
+        '/images/placeholder.jpg',
+);
+const viewerTitle = computed(() =>
+    props.label ? `${props.label} photos` : 'Product photos',
+);
 
-const showPrevious = () => {
-    if (imageCount.value > 0)
-        currentModalIndex.value = (currentModalIndex.value - 1 + imageCount.value) % imageCount.value;
-};
-const showNext = () => {
-    if (imageCount.value > 0)
-        currentModalIndex.value = (currentModalIndex.value + 1) % imageCount.value;
-};
-const closeModal = () => emit('update:open', false);
+watch(
+    () => props.initialIndex,
+    (newIndex) => {
+        currentModalIndex.value = newIndex;
+    },
+);
 
-const handleKeydown = (event: KeyboardEvent) => {
+function selectImage(index: number) {
+    currentModalIndex.value = index;
+}
+
+function showPrevious() {
+    if (imageCount.value > 0) {
+        currentModalIndex.value =
+            (currentModalIndex.value - 1 + imageCount.value) % imageCount.value;
+    }
+}
+
+function showNext() {
+    if (imageCount.value > 0) {
+        currentModalIndex.value =
+            (currentModalIndex.value + 1) % imageCount.value;
+    }
+}
+
+function closeModal() {
+    emit('update:open', false);
+}
+
+function handleKeydown(event: KeyboardEvent) {
     if (!props.open) return;
     if (event.key === 'Escape') closeModal();
     if (event.key === 'ArrowLeft') showPrevious();
     if (event.key === 'ArrowRight') showNext();
     if (event.key !== 'Tab' || !modal.value) return;
-    const focusable = [...modal.value.querySelectorAll<HTMLElement>('button:not([disabled])')];
+    const focusable = [
+        ...modal.value.querySelectorAll<HTMLElement>('button:not([disabled])'),
+    ];
     if (!focusable.length) return;
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
@@ -52,280 +77,341 @@ const handleKeydown = (event: KeyboardEvent) => {
         event.preventDefault();
         first.focus();
     }
-};
+}
 
-watch(() => props.open, async (newOpen) => {
-    if (typeof window === 'undefined') return;
-    if (newOpen) {
-        currentModalIndex.value = props.initialIndex;
-        returnFocus = document.activeElement as HTMLElement;
-        window.addEventListener('keydown', handleKeydown);
-        await nextTick();
-        closeButton.value?.focus();
-    } else {
+watch(
+    () => props.open,
+    async (open) => {
+        if (typeof window === 'undefined') return;
+        if (open) {
+            currentModalIndex.value = props.initialIndex;
+            returnFocus = document.activeElement as HTMLElement;
+            previousOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            window.addEventListener('keydown', handleKeydown);
+            await nextTick();
+            closeButton.value?.focus();
+            return;
+        }
         window.removeEventListener('keydown', handleKeydown);
+        document.body.style.overflow = previousOverflow;
         returnFocus?.focus();
         returnFocus = null;
-    }
-}, { immediate: true });
+    },
+    { immediate: true },
+);
 
-onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeydown);
+    document.body.style.overflow = previousOverflow;
+});
 </script>
 
 <template>
     <Transition name="miv-fade">
-        <div v-if="open" ref="modal" class="miv-backdrop" @click.self="closeModal" role="dialog" aria-modal="true"
-            aria-label="Image viewer">
-
+        <div
+            v-if="open"
+            ref="modal"
+            class="miv-backdrop coy-storefront"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="image-viewer-title"
+            @click.self="closeModal"
+        >
             <div class="miv-box">
-
-                <!-- Close -->
-                <button ref="closeButton" @click="closeModal" class="miv-close" aria-label="Close image viewer">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 6 6 18M6 6l12 12" />
-                    </svg>
-                </button>
-
-                <!-- Image -->
-                <div class="miv-img-wrap">
-                    <img :src="currentImageUrl" alt="Product image" class="miv-img" />
-                </div>
-
-                <!-- Nav arrows -->
-                <template v-if="imageCount > 1">
-                    <button @click.stop="showPrevious" class="miv-nav miv-nav--prev" aria-label="Previous image">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m15 18-6-6 6-6" />
-                        </svg>
-                    </button>
-                    <button @click.stop="showNext" class="miv-nav miv-nav--next" aria-label="Next image">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="m9 18 6-6-6-6" />
-                        </svg>
-                    </button>
-                </template>
-
-                <!-- Counter + thumbnails -->
-                <div v-if="imageCount > 1" class="miv-footer">
-                    <div class="miv-thumbs">
-                        <button v-for="(img, i) in images" :key="i" @click="currentModalIndex = i" class="miv-thumb"
-                            :class="{ 'miv-thumb--active': currentModalIndex === i }"
-                            :aria-label="`View image ${i + 1}`">
-                            <img :src="img.image" :alt="`Thumbnail ${i + 1}`" class="miv-thumb-img" />
-                        </button>
+                <header class="miv-header">
+                    <div>
+                        <h2 id="image-viewer-title">{{ viewerTitle }}</h2>
+                        <p aria-live="polite">
+                            Image {{ currentModalIndex + 1 }} of
+                            {{ imageCount }}
+                        </p>
                     </div>
-                    <p class="miv-counter">{{ currentModalIndex + 1 }} / {{ imageCount }}</p>
-                </div>
+                    <button
+                        ref="closeButton"
+                        type="button"
+                        class="miv-close"
+                        aria-label="Close image viewer"
+                        @click="closeModal"
+                    >
+                        <span>Close</span>
+                        <svg aria-hidden="true" viewBox="0 0 24 24">
+                            <path d="M18 6 6 18M6 6l12 12" />
+                        </svg>
+                    </button>
+                </header>
 
+                <div class="miv-content">
+                    <nav
+                        v-if="imageCount > 1"
+                        class="miv-thumbs"
+                        aria-label="Product images"
+                    >
+                        <button
+                            v-for="(img, index) in images"
+                            :key="index"
+                            type="button"
+                            class="miv-thumb"
+                            :class="{
+                                'miv-thumb--active':
+                                    currentModalIndex === index,
+                            }"
+                            :aria-label="`View image ${index + 1}`"
+                            :aria-current="
+                                currentModalIndex === index ? 'true' : undefined
+                            "
+                            @click="selectImage(index)"
+                        >
+                            <img
+                                :src="img.image"
+                                :alt="`${label || 'Product'} thumbnail ${index + 1}`"
+                                class="miv-thumb-img"
+                            />
+                        </button>
+                    </nav>
+
+                    <div class="miv-stage">
+                        <img
+                            :src="currentImageUrl"
+                            :alt="`${label || 'Product'} image ${currentModalIndex + 1} of ${imageCount}`"
+                            class="miv-img"
+                        />
+                        <template v-if="imageCount > 1">
+                            <button
+                                type="button"
+                                class="miv-nav miv-nav--prev"
+                                aria-label="Previous image"
+                                @click="showPrevious"
+                            >
+                                <svg aria-hidden="true" viewBox="0 0 24 24">
+                                    <path d="m15 18-6-6 6-6" />
+                                </svg>
+                            </button>
+                            <button
+                                type="button"
+                                class="miv-nav miv-nav--next"
+                                aria-label="Next image"
+                                @click="showNext"
+                            >
+                                <svg aria-hidden="true" viewBox="0 0 24 24">
+                                    <path d="m9 18 6-6-6-6" />
+                                </svg>
+                            </button>
+                        </template>
+                    </div>
+                </div>
             </div>
         </div>
     </Transition>
 </template>
 
 <style scoped>
-/* ── Backdrop ── */
 .miv-backdrop {
     position: fixed;
+    z-index: 80;
     inset: 0;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 1rem;
-    background: rgba(45, 26, 26, 0.85);
-    backdrop-filter: blur(6px);
+    display: grid;
+    place-items: center;
+    padding: clamp(0.75rem, 2vw, 1.5rem);
+    background: rgb(52 42 40 / 76%);
+    backdrop-filter: blur(8px);
 }
-
-/* ── Modal box ── */
 .miv-box {
-    position: relative;
-    width: 100%;
-    max-width: 820px;
-    max-height: 90vh;
-    border-radius: 24px;
-    border: 1px solid #e5c9c7;
-    background: #fffafa;
-    box-shadow: 0 24px 64px rgba(45, 26, 26, 0.35);
+    width: min(100%, 78rem);
+    height: min(94vh, 58rem);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: 0 24px 70px rgb(0 0 0 / 28%);
 }
-
-/* ── Close button ── */
-.miv-close {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    z-index: 20;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px solid #e5c9c7;
-    background: rgba(255, 250, 250, 0.92);
-    color: #6b4f4f;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
-}
-
-.miv-close:hover {
-    background: #faeaea;
-    color: #8c4a50;
-    border-color: #c9a4a4;
-}
-
-/* ── Image area ── */
-.miv-img-wrap {
-    flex: 1;
-    min-height: 0; /* let flex child shrink so % heights resolve on the image */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fdf4f3;
-    padding: 1rem;
-}
-
-.miv-img {
-    display: block;
-    max-width: 100%;
-    max-height: 65vh;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    transition: opacity 0.25s ease;
-}
-
-/* ── Nav arrows ── */
-.miv-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 1px solid #e5c9c7;
-    background: rgba(255, 250, 250, 0.9);
-    color: #8c4a50;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
-    transition: background 0.2s, border-color 0.2s, transform 0.2s;
-}
-
-.miv-nav:hover {
-    background: #faeaea;
-    border-color: #c9a4a4;
-}
-
-.miv-nav--prev {
-    left: 12px;
-}
-
-.miv-nav--prev:hover {
-    transform: translateY(-50%) translateX(-2px);
-}
-
-.miv-nav--next {
-    right: 12px;
-}
-
-.miv-nav--next:hover {
-    transform: translateY(-50%) translateX(2px);
-}
-
-/* ── Footer: thumbs + counter ── */
-.miv-footer {
-    padding: 0.75rem 1rem;
-    border-top: 1px solid #e5c9c7;
-    background: #fffafa;
+.miv-header {
+    min-height: 4.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
+    padding: 0.75rem 1rem 0.75rem 1.5rem;
+    border-bottom: 1px solid var(--coy-color-border-soft);
 }
-
+.miv-header h2 {
+    margin: 0;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: 1.35rem;
+    font-weight: var(--coy-font-weight-semibold);
+    line-height: 1.2;
+}
+.miv-header p {
+    margin: 0.15rem 0 0;
+    font-size: var(--coy-text-xs);
+}
+.miv-close {
+    min-height: var(--coy-control-height);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.8rem;
+    color: var(--coy-color-heading);
+    background: var(--coy-color-page);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-pill);
+    font: 600 var(--coy-text-sm) var(--coy-font-body);
+    cursor: pointer;
+}
+.miv-close:hover {
+    background: var(--coy-color-surface-soft);
+}
+.miv-close svg,
+.miv-nav svg {
+    width: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+.miv-content {
+    min-height: 0;
+    flex: 1;
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+}
 .miv-thumbs {
     display: flex;
-    gap: 0.5rem;
-    overflow-x: auto;
-    flex: 1;
+    flex-direction: column;
+    gap: 0.65rem;
+    padding: 1rem;
+    overflow-y: auto;
+    background: var(--coy-color-page);
+    border-right: 1px solid var(--coy-color-border-soft);
 }
-
-.miv-thumbs::-webkit-scrollbar {
-    height: 3px;
-}
-
-.miv-thumbs::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.miv-thumbs::-webkit-scrollbar-thumb {
-    background: #e5c9c7;
-    border-radius: 999px;
-}
-
 .miv-thumb {
-    width: 48px;
-    height: 48px;
-    flex-shrink: 0;
-    border-radius: 8px;
-    border: 1px solid #e5c9c7;
-    overflow: hidden;
-    background: #fdf4f3;
+    width: 4rem;
+    height: 4rem;
+    flex: 0 0 auto;
     padding: 0;
+    overflow: hidden;
+    background: var(--coy-color-champagne);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
     cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
 }
-
 .miv-thumb--active {
-    border-color: #8c4a50;
-    box-shadow: 0 0 0 2px rgba(140, 74, 80, 0.15);
+    border-color: var(--coy-color-accent);
+    box-shadow:
+        0 0 0 2px var(--coy-color-page),
+        0 0 0 4px var(--coy-color-accent);
 }
-
 .miv-thumb-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-
-.miv-counter {
-    font-size: 0.78rem;
-    color: #6b4f4f;
-    font-style: italic;
-    white-space: nowrap;
-    flex-shrink: 0;
+.miv-stage {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    display: grid;
+    place-items: center;
+    padding: clamp(1rem, 3vw, 2.5rem) 4.5rem;
+    overflow: hidden;
+    background: var(--coy-color-surface-soft);
 }
-
-/* ── Transition ── */
+.miv-img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    object-fit: contain;
+}
+.miv-nav {
+    position: absolute;
+    top: 50%;
+    width: 3rem;
+    height: 3rem;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: var(--coy-color-heading);
+    background: rgb(255 253 251 / 92%);
+    border: 1px solid var(--coy-color-border);
+    border-radius: 50%;
+    box-shadow: var(--coy-shadow-sm);
+    cursor: pointer;
+    transform: translateY(-50%);
+}
+.miv-nav:hover {
+    background: var(--coy-color-surface);
+    border-color: var(--coy-color-rose-gold);
+}
+.miv-nav--prev {
+    left: 1rem;
+}
+.miv-nav--next {
+    right: 1rem;
+}
 .miv-fade-enter-active,
 .miv-fade-leave-active {
-    transition: opacity 0.25s ease;
+    transition: opacity var(--coy-duration-base) var(--coy-ease);
 }
-
+.miv-fade-enter-active .miv-box,
+.miv-fade-leave-active .miv-box {
+    transition: transform var(--coy-duration-base) var(--coy-ease);
+}
 .miv-fade-enter-from,
 .miv-fade-leave-to {
     opacity: 0;
 }
-
-.miv-fade-enter-active .miv-box,
-.miv-fade-leave-active .miv-box {
-    transition: transform 0.25s ease;
-}
-
-.miv-fade-enter-from .miv-box {
-    transform: scale(0.96);
-}
-
+.miv-fade-enter-from .miv-box,
 .miv-fade-leave-to .miv-box {
-    transform: scale(0.98);
+    transform: translateY(0.75rem) scale(0.985);
+}
+@media (max-width: 640px) {
+    .miv-backdrop {
+        padding: 0;
+    }
+    .miv-box {
+        height: 100dvh;
+        border: 0;
+        border-radius: 0;
+    }
+    .miv-header {
+        padding-inline: var(--coy-gutter);
+    }
+    .miv-close span {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+    }
+    .miv-content {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+    .miv-thumbs {
+        flex-direction: row;
+        padding: 0.85rem var(--coy-gutter)
+            calc(0.85rem + env(safe-area-inset-bottom));
+        overflow-x: auto;
+        border-top: 1px solid var(--coy-color-border-soft);
+        border-right: 0;
+    }
+    .miv-stage {
+        flex: 1;
+        padding: 1rem 3.75rem;
+    }
+    .miv-nav {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+    .miv-nav--prev {
+        left: 0.5rem;
+    }
+    .miv-nav--next {
+        right: 0.5rem;
+    }
 }
 </style>

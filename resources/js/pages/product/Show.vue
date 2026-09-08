@@ -101,11 +101,6 @@ const withDiffuserKeyword = (text: string) =>
     /\bdiffusers?\b/i.test(text) ? text : `${text} Reed Diffuser`;
 
 const displayTitle = computed(() => withDiffuserKeyword(props.product.name));
-const shortDescription = computed(() => {
-    const text =
-        props.product.description?.replace(/<[^>]*>/g, '').trim() ?? '';
-    return text.length > 150 ? `${text.slice(0, 147).trim()}...` : text;
-});
 
 const seo = useSeoHead({
     title: props.product.seo?.meta_title || displayTitle.value,
@@ -367,9 +362,6 @@ onUnmounted(() => {
                     </nav>
                     <h1 class="pd-title">{{ displayTitle }}</h1>
                     <p class="pd-price">{{ formattedCost }}</p>
-                    <p v-if="shortDescription" class="pd-mobile-summary">
-                        {{ shortDescription }}
-                    </p>
                 </div>
                 <ProductGallery
                     :images="product.images"
@@ -402,9 +394,6 @@ onUnmounted(() => {
                     </nav>
 
                     <h1 class="pd-title">{{ displayTitle }}</h1>
-                    <p v-if="shortDescription" class="pd-summary">
-                        {{ shortDescription }}
-                    </p>
 
                     <div
                         v-if="product.approved_reviews_count > 0"
@@ -525,63 +514,66 @@ onUnmounted(() => {
                     </div>
 
                     <div class="pd-actions">
-                        <div class="pd-qty">
-                            <button
-                                @click="decreaseQuantity"
-                                :disabled="quantity <= 1"
-                                class="pd-qty-btn"
-                                aria-label="Decrease quantity"
-                            >
-                                <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="3"
-                                    stroke-linecap="round"
+                        <div class="pd-qty-group">
+                            <span class="pd-action-label">Quantity</span>
+                            <div class="pd-qty">
+                                <button
+                                    @click="decreaseQuantity"
+                                    :disabled="quantity <= 1"
+                                    class="pd-qty-btn"
+                                    aria-label="Decrease quantity"
                                 >
-                                    <path d="M5 12h14" />
-                                </svg>
-                            </button>
-                            <input
-                                type="number"
-                                v-model.number="quantity"
-                                min="1"
-                                :max="currentVariation.stock_qty"
-                                @change="
-                                    quantity = Math.max(
-                                        1,
-                                        Math.min(
-                                            currentVariation.stock_qty,
-                                            Number(quantity) || 1,
-                                        ),
-                                    )
-                                "
-                                class="pd-qty-input"
-                                aria-label="Quantity"
-                            />
-                            <button
-                                @click="increaseQuantity"
-                                :disabled="
-                                    quantity >= currentVariation.stock_qty
-                                "
-                                class="pd-qty-btn"
-                                aria-label="Increase quantity"
-                            >
-                                <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="3"
-                                    stroke-linecap="round"
+                                    <svg
+                                        width="12"
+                                        height="12"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="3"
+                                        stroke-linecap="round"
+                                    >
+                                        <path d="M5 12h14" />
+                                    </svg>
+                                </button>
+                                <input
+                                    type="number"
+                                    v-model.number="quantity"
+                                    min="1"
+                                    :max="currentVariation.stock_qty"
+                                    @change="
+                                        quantity = Math.max(
+                                            1,
+                                            Math.min(
+                                                currentVariation.stock_qty,
+                                                Number(quantity) || 1,
+                                            ),
+                                        )
+                                    "
+                                    class="pd-qty-input"
+                                    aria-label="Quantity"
+                                />
+                                <button
+                                    @click="increaseQuantity"
+                                    :disabled="
+                                        quantity >= currentVariation.stock_qty
+                                    "
+                                    class="pd-qty-btn"
+                                    aria-label="Increase quantity"
                                 >
-                                    <path d="M5 12h14" />
-                                    <path d="M12 5v14" />
-                                </svg>
-                            </button>
+                                    <svg
+                                        width="12"
+                                        height="12"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="3"
+                                        stroke-linecap="round"
+                                    >
+                                        <path d="M5 12h14" />
+                                        <path d="M12 5v14" />
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                         <button
                             @click="handleAddToCart()"
@@ -1160,6 +1152,7 @@ onUnmounted(() => {
     <SuccessToast ref="successToastRef" />
     <ModalImageViewer
         :images="modalImages"
+        :label="product.name"
         :initial-index="modalImageIndex"
         :open="isModalOpen"
         @update:open="isModalOpen = $event"
@@ -1196,6 +1189,11 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-sm);
 }
 .pd-breadcrumb {
     display: flex;
@@ -1224,13 +1222,6 @@ a.pd-crumb:hover {
     font-weight: var(--coy-font-weight-medium);
     line-height: 1.03;
     text-wrap: balance;
-}
-.pd-summary,
-.pd-mobile-summary {
-    margin: 0;
-    color: var(--coy-color-text);
-    font-size: var(--coy-text-lead);
-    line-height: 1.55;
 }
 .pd-rating-row {
     display: flex;
@@ -1353,8 +1344,19 @@ a.pd-crumb:hover {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     gap: 0.75rem;
-    align-items: center;
-    padding-top: 0.25rem;
+    align-items: end;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--coy-color-border-soft);
+}
+.pd-qty-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.pd-action-label {
+    color: var(--coy-color-heading);
+    font-size: var(--coy-text-xs);
+    font-weight: var(--coy-font-weight-semibold);
 }
 .pd-qty {
     height: 3.25rem;
@@ -1853,8 +1855,7 @@ a.pd-crumb:hover {
     }
     .pd-info > .pd-breadcrumb,
     .pd-info > .pd-title,
-    .pd-info > .pd-price,
-    .pd-info > .pd-summary {
+    .pd-info > .pd-price {
         display: none;
     }
     .pd-product-copy,
