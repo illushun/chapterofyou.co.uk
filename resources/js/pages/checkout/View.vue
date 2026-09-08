@@ -480,7 +480,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
         <div class="co-header-band">
             <div class="co-wrap co-wrap--header">
                 <header class="co-header">
-                    <div>
+                    <div class="co-identity">
                         <a
                             href="/"
                             class="co-brand"
@@ -1320,6 +1320,11 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     justify-content: space-between;
     gap: 1rem;
 }
+.co-identity {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
 .co-brand {
     display: inline-flex;
     align-items: center;
@@ -1330,7 +1335,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     height: 3rem;
 }
 .co-title {
-    margin: 0.1rem 0 0;
+    margin: 0;
     font-family: var(--coy-font-body);
     font-size: 1.5rem;
     font-weight: 600;
