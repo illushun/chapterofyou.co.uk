@@ -137,19 +137,23 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     <SeoHead v-bind="seo" />
 
     <main class="basket coy-storefront">
-        <header class="basket-header">
-            <div class="coy-container header-inner">
+        <header class="basket-header coy-page-header">
+            <div class="coy-container coy-page-header__inner header-inner">
                 <div>
-                    <p class="coy-eyebrow">Your order</p>
-                    <h1 class="coy-heading">Your basket</h1>
-                    <p v-if="hasItems">
+                    <h1 class="coy-page-header__title">Your basket</h1>
+                    <p v-if="hasItems" class="coy-page-header__meta">
                         {{ itemCount }}
                         {{ itemCount === 1 ? 'item' : 'items' }}, ready when you
                         are.
                     </p>
-                    <p v-else>A thoughtful choice can start here.</p>
+                    <p v-else class="coy-page-header__meta">
+                        A thoughtful choice can start here.
+                    </p>
                 </div>
-                <Link :href="route('products')" class="continue-link">
+                <Link
+                    :href="route('products')"
+                    class="continue-link coy-page-header__action"
+                >
                     <svg aria-hidden="true" viewBox="0 0 24 24">
                         <path d="m15 18-6-6 6-6" />
                     </svg>
@@ -485,39 +489,12 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 }
 .basket-header {
     background: var(--coy-color-blush);
-    border-bottom: 1px solid var(--coy-color-border);
 }
 .header-inner {
-    min-height: 13rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-    padding-block: 2.5rem;
-}
-.header-inner h1 {
-    margin: 0.25rem 0 0;
-    font-size: clamp(2.6rem, 5vw, 4.25rem);
-    font-weight: 500;
-    line-height: 1;
-}
-.header-inner > div > p:last-child {
-    margin: 0.7rem 0 0;
-    font-size: 1.125rem;
+    min-height: 7rem;
 }
 .continue-link {
-    min-height: 2.75rem;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.65rem 1rem;
-    color: var(--coy-color-heading);
-    background: rgb(255 253 251/60%);
-    border: 1px solid var(--coy-color-border);
-    border-radius: 999px;
-    font-size: 1rem;
-    font-weight: 700;
-    text-decoration: none;
+    flex-shrink: 0;
 }
 .continue-link:hover {
     background: var(--coy-color-surface);
@@ -977,18 +954,10 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
         padding-bottom: 5rem;
     }
     .header-inner {
-        min-height: 0;
-        align-items: flex-start;
-        flex-direction: column;
-        padding-block: 2rem;
-    }
-    .header-inner h1 {
-        font-size: 3rem;
+        min-height: 5.75rem;
     }
     .continue-link {
-        padding-left: 0;
-        background: transparent;
-        border: 0;
+        padding-inline: 0.75rem;
     }
     .basket-item {
         grid-template-columns: 6.5rem minmax(0, 1fr);

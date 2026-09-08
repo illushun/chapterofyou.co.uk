@@ -197,17 +197,16 @@ async function favourite(product: Product) {
     <SeoHead v-bind="seo" />
     <JsonLdSchema :schema="productListSchema" />
     <main class="collection coy-storefront">
-        <header class="collection-hero">
-            <div class="coy-container">
-                <p class="coy-eyebrow">Handmade for your home</p>
-                <h1 class="coy-heading">Find your new favourite fragrance</h1>
-                <p>
-                    Explore long-lasting reed diffusers, blended and poured by
-                    hand to make your everyday spaces feel special.
-                </p>
-                <a href="/scent-finder"
-                    >Not sure where to start? Try the Scent Finder
-                    <span aria-hidden="true">→</span></a
+        <header class="collection-hero coy-page-header">
+            <div class="coy-container coy-page-header__inner">
+                <div>
+                    <h1 class="coy-page-header__title">Reed diffusers</h1>
+                    <p class="coy-page-header__meta">
+                        Handmade fragrances for every room and mood.
+                    </p>
+                </div>
+                <a href="/scent-finder" class="coy-page-header__action"
+                    >Find your scent <span aria-hidden="true">→</span></a
                 >
             </div>
         </header>
@@ -454,36 +453,16 @@ async function favourite(product: Product) {
     font-size: 1.0625rem;
 }
 .collection-hero {
-    padding: clamp(1.75rem, 3vw, 2.75rem) 0;
     background: var(--coy-color-blush);
 }
-.collection-hero > div {
-    max-width: var(--coy-container-lg);
-    text-align: left;
-}
-.collection-hero h1 {
-    margin: 0.45rem 0 0.65rem;
-    font-size: clamp(2.25rem, 3.5vw, 3.25rem);
-    font-weight: 500;
-    line-height: 1.04;
-}
-.collection-hero p:not(.coy-eyebrow) {
-    max-width: 48rem;
-    margin: 0;
-    line-height: 1.6;
-}
 .collection-hero a {
-    display: inline-block;
-    margin-top: 0.85rem;
-    color: var(--coy-color-heading);
-    font-weight: 700;
     text-underline-offset: 0.3rem;
 }
 .collection-layout {
     display: grid;
     grid-template-columns: 15.5rem minmax(0, 1fr);
     gap: clamp(2rem, 4vw, 4rem);
-    padding-block: clamp(3rem, 6vw, 5rem);
+    padding-block: clamp(1.5rem, 4vw, 3rem) clamp(3rem, 6vw, 5rem);
 }
 .filters {
     position: sticky;
@@ -814,15 +793,6 @@ async function favourite(product: Product) {
     .collection {
         padding-bottom: 5.5rem;
         font-size: 1rem;
-    }
-    .collection-hero {
-        text-align: left;
-    }
-    .collection-hero > div {
-        text-align: left;
-    }
-    .collection-hero h1 {
-        font-size: clamp(2.5rem, 11vw, 3.25rem);
     }
     .toolbar {
         align-items: start;
