@@ -14,7 +14,7 @@ import { useSeoHead } from '@/composables/useSeoHead';
 import type { ProductFaq, ProductImage } from '@/types/product';
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 import ModalImageViewer from '@/components/ui/coy/ModalImageViewer.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
@@ -40,7 +40,7 @@ interface ProductVariation {
     stock_qty: number;
     parent_product_id: number;
 }
-interface ProductRefill {
+interface ProductAddon {
     id: number;
     name: string;
     cost: number;
@@ -60,7 +60,7 @@ interface ProductDetailData {
     reviews: ProductReview[];
     categories: { id: number; name: string; slug: string | null }[];
     children: ProductVariation[];
-    refills?: ProductRefill[];
+    addons?: ProductAddon[];
     details: string;
     how_to_use?: string | null;
     faqs?: ProductFaq[] | null;
@@ -223,12 +223,14 @@ const fmt = (v: number | string) => {
 };
 const formattedCost = computed(() => fmt(currentVariation.value.cost));
 
-const addRefill = ref(false);
-const primaryRefill = computed(() => props.product.refills?.[0] ?? null);
-const otherRefills = computed(() => props.product.refills?.slice(1) ?? []);
-const refillOutOfStock = computed(
-    () => (primaryRefill.value?.stock_qty ?? 0) <= 0,
-);
+const selectedAddonIds = ref<number[]>([]);
+const availableAddons = computed(() => props.product.addons ?? []);
+watch(quantity, (value) => {
+    selectedAddonIds.value = selectedAddonIds.value.filter((id) => {
+        const addon = availableAddons.value.find((item) => item.id === id);
+        return addon && addon.stock_qty >= value;
+    });
+});
 
 const handleAddToCart = (
     quickAddProduct: ProductDetailData | null = null,
@@ -238,26 +240,22 @@ const handleAddToCart = (
     const qty = quickAddProduct ? quickAddQuantity : quantity.value;
     const name = quickAddProduct ? quickAddProduct.name : props.product.name;
     if (!itemToAdd?.id || qty < 1 || itemToAdd.stock_qty < qty) return;
-    const includeRefill =
-        !quickAddProduct &&
-        addRefill.value &&
-        primaryRefill.value &&
-        !refillOutOfStock.value;
+    const addonIds = quickAddProduct ? [] : selectedAddonIds.value;
     router.post(
         '/cart/add',
         {
             product_id: itemToAdd.id,
             quantity: qty,
-            refill_id: includeRefill ? primaryRefill.value!.id : undefined,
+            addon_ids: addonIds,
         },
         {
             preserveScroll: true,
             onSuccess: () => {
-                const refillSuffix = includeRefill
-                    ? ` + ${primaryRefill.value!.name}`
+                const addonSuffix = addonIds.length
+                    ? ` with ${addonIds.length} add-on${addonIds.length === 1 ? '' : 's'}`
                     : '';
                 successToastRef.value?.show(
-                    `${qty} × ${name}${refillSuffix} added to cart!`,
+                    `${qty} × ${name}${addonSuffix} added to cart!`,
                     'cart',
                 );
                 if (!quickAddProduct) quantity.value = 1;
@@ -473,45 +471,38 @@ onUnmounted(() => {
                         </div>
                     </div>
 
-                    <div v-if="primaryRefill" class="pd-refill">
+                    <fieldset v-if="availableAddons.length" class="pd-addons">
+                        <legend>Add something extra</legend>
+                        <p class="pd-addons-help">
+                            Optional. Select any add-ons you would like.
+                        </p>
                         <label
-                            class="pd-refill-label"
+                            v-for="addon in availableAddons"
+                            :key="addon.id"
+                            class="pd-addon"
                             :class="{
-                                'pd-refill-label--disabled': refillOutOfStock,
+                                'pd-addon--selected': selectedAddonIds.includes(
+                                    addon.id,
+                                ),
+                                'pd-addon--disabled':
+                                    addon.stock_qty < quantity,
                             }"
                         >
                             <input
+                                v-model="selectedAddonIds"
                                 type="checkbox"
-                                v-model="addRefill"
-                                :disabled="refillOutOfStock"
-                                class="pd-refill-checkbox"
+                                :value="addon.id"
+                                :disabled="addon.stock_qty < quantity"
                             />
-                            <span class="pd-refill-text">
-                                Add {{ primaryRefill.name }} refill
-                                <span class="pd-refill-price"
-                                    >(+{{ fmt(primaryRefill.cost) }})</span
-                                >
+                            <span>
+                                <strong>{{ addon.name }}</strong>
+                                <small v-if="addon.stock_qty >= quantity">{{
+                                    fmt(addon.cost)
+                                }}</small>
+                                <small v-else>Out of stock</small>
                             </span>
                         </label>
-                        <p v-if="refillOutOfStock" class="pd-refill-oos">
-                            Currently out of stock
-                        </p>
-                        <p v-if="otherRefills.length" class="pd-refill-other">
-                            Other refill scents available:
-                            <template
-                                v-for="(r, i) in otherRefills"
-                                :key="r.id"
-                            >
-                                <a
-                                    :href="`/product/${r.id}`"
-                                    class="pd-refill-other-link"
-                                    >{{ r.name }}</a
-                                ><span v-if="i < otherRefills.length - 1"
-                                    >,
-                                </span>
-                            </template>
-                        </p>
-                    </div>
+                    </fieldset>
 
                     <div class="pd-actions">
                         <div class="pd-qty-group">
@@ -1184,7 +1175,7 @@ a.pd-crumb:hover {
     font-weight: var(--coy-font-weight-semibold);
 }
 .pd-variations,
-.pd-refill {
+.pd-addons {
     padding-top: 1.25rem;
     border-top: 1px solid var(--coy-color-border-soft);
 }
@@ -1223,40 +1214,64 @@ a.pd-crumb:hover {
     cursor: not-allowed;
     text-decoration: line-through;
 }
-.pd-refill {
-    padding: 1rem;
-    background: var(--coy-color-surface-soft);
-    border: 1px solid var(--coy-color-border-soft);
-    border-radius: var(--coy-radius-sm);
+.pd-addons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 1.25rem 0 0;
+    border: 0;
+    border-top: 1px solid var(--coy-color-border-soft);
 }
-.pd-refill-label {
+.pd-addons legend {
+    padding: 0;
+    color: var(--coy-color-heading);
+    font-weight: var(--coy-font-weight-semibold);
+}
+.pd-addons-help {
+    margin: 0 0 0.25rem;
+    font-size: var(--coy-text-xs);
+}
+.pd-addon {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
+    gap: 0.75rem;
+    min-height: var(--coy-control-height);
+    padding: 0.75rem;
     color: var(--coy-color-heading);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
     cursor: pointer;
 }
-.pd-refill-label--disabled {
+.pd-addon--selected {
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-accent);
+}
+.pd-addon--disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
-.pd-refill-checkbox {
+.pd-addon input {
     width: 1.15rem;
     height: 1.15rem;
     flex: 0 0 auto;
     accent-color: var(--coy-color-accent);
 }
-.pd-refill-text {
+.pd-addon > span {
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+}
+.pd-addon strong {
     font-weight: var(--coy-font-weight-semibold);
 }
-.pd-refill-price,
-.pd-refill-other-link {
+.pd-addon small {
     color: var(--coy-color-accent);
-}
-.pd-refill-oos,
-.pd-refill-other {
-    margin: 0.45rem 0 0 1.85rem;
     font-size: var(--coy-text-xs);
+    white-space: nowrap;
 }
 .pd-actions {
     display: grid;

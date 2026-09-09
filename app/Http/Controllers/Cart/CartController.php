@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Cart;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Services\CartManager;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -54,15 +55,29 @@ class CartController extends Controller
             'product_id' => 'required|exists:product,id',
             'quantity' => 'nullable|integer|min:1',
             'refill_id' => 'nullable|exists:product,id',
+            'addon_ids' => 'nullable|array',
+            'addon_ids.*' => 'integer|distinct|exists:product,id',
         ]);
 
-        $cart = $this->cartManager->getCurrentCart();
         $quantity = $request->quantity ?? 1;
-        $this->cartManager->addItem($cart, $request->product_id, $quantity);
+        $addonIds = collect($request->input('addon_ids', []))
+            ->when($request->filled('refill_id'), fn ($ids) => $ids->push($request->integer('refill_id')))
+            ->map(fn ($id) => (int) $id)
+            ->unique();
+        if ($addonIds->isNotEmpty()) {
+            $validAddonIds = Product::findOrFail($request->product_id)
+                ->addons()
+                ->whereIn('product.id', $addonIds)
+                ->where('status', 'enabled')
+                ->where('stock_qty', '>=', $quantity)
+                ->pluck('product.id');
 
-        if ($request->refill_id) {
-            $this->cartManager->addItem($cart, $request->refill_id, $quantity);
+            abort_unless($validAddonIds->count() === $addonIds->count(), 422, 'One or more selected add-ons are unavailable.');
         }
+
+        $cart = $this->cartManager->getCurrentCart();
+        $this->cartManager->addItem($cart, $request->product_id, $quantity);
+        $addonIds->each(fn ($addonId) => $this->cartManager->addItem($cart, $addonId, $quantity));
 
         return redirect()->back()->with('success', 'Product added to cart!');
     }

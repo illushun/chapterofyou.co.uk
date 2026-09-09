@@ -376,10 +376,10 @@ const submit = () => {
 
                     <div class="adm-field">
                         <label class="adm-label">
-                            Refill Products
+                            Add-on products
                             <span class="adm-label-note"
-                                >(optional, shown as an add-on on this product's
-                                page; the first selected is featured)</span
+                                >(optional, customers can select more than one
+                                on the product page)</span
                             >
                         </label>
                         <div class="adm-check-list">

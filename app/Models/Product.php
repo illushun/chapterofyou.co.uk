@@ -103,7 +103,17 @@ class Product extends Model
         return $this->belongsToMany(Product::class, 'product_refill', 'product_id', 'refill_product_id');
     }
 
+    public function addons()
+    {
+        return $this->belongsToMany(Product::class, 'product_refill', 'product_id', 'refill_product_id');
+    }
+
     public function refillFor()
+    {
+        return $this->belongsToMany(Product::class, 'product_refill', 'refill_product_id', 'product_id');
+    }
+
+    public function addonFor()
     {
         return $this->belongsToMany(Product::class, 'product_refill', 'refill_product_id', 'product_id');
     }
