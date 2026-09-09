@@ -106,17 +106,21 @@ const submit = () => {
     <NavBar />
     <SeoHead v-bind="seo" />
 
-    <main class="sf">
+    <main class="sf coy-storefront">
         <div class="sf-wrap">
             <header class="sf-header">
-                <p class="sf-eyebrow">Chapter of You</p>
-                <h1 class="sf-title">Scent <em>Finder</em></h1>
-                <div class="sf-rule">
-                    <span></span><span class="sf-petal">✿</span><span></span>
-                </div>
+                <p class="coy-eyebrow">Scent finder</p>
+                <h1 class="sf-title">Find your scent</h1>
+                <p class="sf-intro">
+                    Tell us what you enjoy, the mood you want, and where your
+                    diffuser will live. We will suggest the closest matches.
+                </p>
             </header>
 
             <div class="sf-progress">
+                <p class="sf-progress-label">
+                    Question {{ currentStep + 1 }} of {{ totalSteps }}
+                </p>
                 <div class="sf-progress-bar">
                     <div
                         class="sf-progress-fill"
@@ -125,16 +129,12 @@ const submit = () => {
                         }"
                     />
                 </div>
-                <p class="sf-progress-label">
-                    Step {{ currentStep + 1 }} of {{ totalSteps }}
-                </p>
             </div>
 
             <div class="sf-card">
                 <h2 class="sf-question">{{ steps[currentStep].title }}</h2>
                 <p class="sf-subtitle">{{ steps[currentStep].subtitle }}</p>
 
-                <!-- Step 1: Scent families -->
                 <div v-if="currentStep === 0" class="sf-chip-grid">
                     <button
                         v-for="family in SCENT_FAMILIES"
@@ -150,13 +150,15 @@ const submit = () => {
                             !answers.scent_families.includes(family.value) &&
                             answers.scent_families.length >= 2
                         "
+                        :aria-pressed="
+                            answers.scent_families.includes(family.value)
+                        "
                         @click="toggleFamily(family.value)"
                     >
                         {{ family.label }}
                     </button>
                 </div>
 
-                <!-- Step 2: Mood tags -->
                 <div v-else-if="currentStep === 1" class="sf-chip-grid">
                     <button
                         v-for="mood in MOOD_TAGS"
@@ -172,13 +174,13 @@ const submit = () => {
                             !answers.mood_tags.includes(mood.value) &&
                             answers.mood_tags.length >= 3
                         "
+                        :aria-pressed="answers.mood_tags.includes(mood.value)"
                         @click="toggleMood(mood.value)"
                     >
                         {{ mood.label }}
                     </button>
                 </div>
 
-                <!-- Step 3: Rooms -->
                 <div v-else class="sf-chip-grid">
                     <button
                         v-for="room in ROOMS"
@@ -194,6 +196,7 @@ const submit = () => {
                             !answers.room_tags.includes(room.value) &&
                             answers.room_tags.length >= 2
                         "
+                        :aria-pressed="answers.room_tags.includes(room.value)"
                         @click="toggleRoom(room.value)"
                     >
                         {{ room.label }}
@@ -431,5 +434,198 @@ const submit = () => {
 .sf-btn--ghost:hover {
     background: #faeaea;
     border-color: #c9a4a4;
+}
+
+.sf {
+    min-height: 70vh;
+    padding: var(--coy-nav-height) 0 0;
+    background: var(--coy-color-page);
+}
+
+.sf-wrap {
+    width: min(calc(100% - (var(--coy-gutter) * 2)), var(--coy-container-md));
+    max-width: none;
+    margin-inline: auto;
+    padding: clamp(2.5rem, 6vw, 5rem) 0 clamp(4rem, 8vw, 7rem);
+}
+
+.sf-header {
+    max-width: 42rem;
+    margin-bottom: clamp(2rem, 5vw, 3.25rem);
+    text-align: left;
+}
+
+.sf-title {
+    margin: 0.45rem 0 0.8rem;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: clamp(2.75rem, 7vw, 4.75rem);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+}
+
+.sf-intro {
+    max-width: 39rem;
+    color: var(--coy-color-text);
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.sf-progress {
+    max-width: none;
+    margin: 0 0 1rem;
+}
+
+.sf-progress-label {
+    margin: 0 0 0.55rem;
+    color: var(--coy-color-text);
+    font-family: var(--coy-font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: left;
+}
+
+.sf-progress-bar {
+    height: 0.25rem;
+    border-radius: 0;
+    background: var(--coy-color-border-soft);
+}
+
+.sf-progress-fill {
+    background: var(--coy-color-accent);
+    transition: width var(--coy-duration-base) var(--coy-ease);
+}
+
+.sf-card {
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    background: var(--coy-color-surface);
+    box-shadow: none;
+}
+
+.sf-question {
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: clamp(1.75rem, 4vw, 2.35rem);
+    font-weight: 500;
+    line-height: 1.15;
+    text-align: left;
+}
+
+.sf-subtitle {
+    margin: 0.35rem 0 1.75rem;
+    color: var(--coy-color-text);
+    font-family: var(--coy-font-body);
+    font-size: 1rem;
+    text-align: left;
+}
+
+.sf-chip-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.sf-chip {
+    min-height: 3.5rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-page);
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: left;
+    transition:
+        border-color var(--coy-duration-fast) var(--coy-ease),
+        background-color var(--coy-duration-fast) var(--coy-ease),
+        color var(--coy-duration-fast) var(--coy-ease);
+}
+
+.sf-chip:hover:not(:disabled) {
+    border-color: var(--coy-color-accent);
+    background: var(--coy-color-surface-soft);
+    transform: none;
+}
+
+.sf-chip--active,
+.sf-chip--active:hover:not(:disabled) {
+    border-color: var(--coy-color-heading);
+    background: var(--coy-color-heading);
+    color: var(--coy-color-on-accent);
+}
+
+.sf-chip:disabled {
+    opacity: 0.45;
+}
+
+.sf-actions {
+    justify-content: flex-end;
+    margin-top: 2rem;
+}
+
+.sf-btn {
+    min-height: var(--coy-control-height);
+    padding: 0.75rem 1.4rem;
+    border-radius: var(--coy-radius-sm);
+    font-family: var(--coy-font-body);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: opacity var(--coy-duration-fast) var(--coy-ease);
+}
+
+.sf-btn--primary {
+    border-color: var(--coy-color-heading);
+    background: var(--coy-color-heading);
+    box-shadow: none;
+    color: var(--coy-color-on-accent);
+}
+
+.sf-btn--primary:hover:not(:disabled) {
+    box-shadow: none;
+    opacity: 0.86;
+    transform: none;
+}
+
+.sf-btn--ghost {
+    border-color: var(--coy-color-border);
+    background: transparent;
+    color: var(--coy-color-heading);
+}
+
+.sf-btn--ghost:hover {
+    border-color: var(--coy-color-heading);
+    background: var(--coy-color-surface-soft);
+}
+
+@media (max-width: 560px) {
+    .sf-wrap {
+        padding-top: 2rem;
+    }
+
+    .sf-chip-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .sf-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .sf-actions .sf-btn:only-child {
+        grid-column: 2;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sf-progress-fill,
+    .sf-chip,
+    .sf-btn {
+        transition: none;
+    }
 }
 </style>

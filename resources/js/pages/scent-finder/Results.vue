@@ -88,13 +88,13 @@ const handleFavourite = async (product: ProductCardData) => {
     <NavBar />
     <SeoHead v-bind="seo" />
 
-    <main class="sfr">
+    <main class="sfr coy-storefront">
         <div class="sfr-wrap">
             <header class="sfr-header">
-                <p class="sfr-eyebrow">Chapter of You</p>
-                <h1 class="sfr-title">Your <em>Matches</em></h1>
+                <p class="coy-eyebrow">Scent finder</p>
+                <h1 class="sfr-title">Your scent matches</h1>
                 <p class="sfr-summary">
-                    Based on your love of
+                    Based on your choices:
                     <strong>{{
                         answers.scent_families.map(scentFamilyLabel).join(' & ')
                     }}</strong>
@@ -102,7 +102,7 @@ const handleFavourite = async (product: ProductCardData) => {
                     <strong>{{
                         answers.mood_tags.map(moodTagLabel).join(', ')
                     }}</strong>
-                    moments in the
+                    moments in your
                     <strong>{{
                         answers.room_tags.map(roomLabel).join(' & ')
                     }}</strong
@@ -111,11 +111,8 @@ const handleFavourite = async (product: ProductCardData) => {
             </header>
 
             <div v-if="products.length === 0" class="sfr-empty">
-                <p class="sfr-petal">✿</p>
-                <p>
-                    We couldn't find a perfect match this time - try broadening
-                    your choices.
-                </p>
+                <h2>No close matches yet</h2>
+                <p>Try the finder again with a different combination.</p>
                 <Link
                     :href="route('scent-finder.index')"
                     class="sfr-btn sfr-btn--primary"
@@ -263,5 +260,129 @@ const handleFavourite = async (product: ProductCardData) => {
 .sfr-btn--ghost:hover {
     background: #faeaea;
     border-color: #c9a4a4;
+}
+
+.sfr {
+    min-height: 70vh;
+    padding: var(--coy-nav-height) 0 0;
+    background: var(--coy-color-page);
+}
+
+.sfr-wrap {
+    width: min(calc(100% - (var(--coy-gutter) * 2)), var(--coy-container-lg));
+    max-width: none;
+    margin-inline: auto;
+    padding: clamp(2.5rem, 6vw, 5rem) 0 clamp(4rem, 8vw, 7rem);
+}
+
+.sfr-header {
+    max-width: 48rem;
+    margin-bottom: clamp(2rem, 5vw, 3.5rem);
+    text-align: left;
+}
+
+.sfr-title {
+    margin: 0.45rem 0 0.8rem;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: clamp(2.75rem, 7vw, 4.75rem);
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+}
+
+.sfr-summary {
+    max-width: 44rem;
+    margin: 0;
+    color: var(--coy-color-text);
+    font-family: var(--coy-font-body);
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.sfr-summary strong {
+    color: var(--coy-color-heading);
+    font-weight: 600;
+}
+
+.sfr-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+.sfr-empty {
+    max-width: 40rem;
+    padding: clamp(2rem, 5vw, 3rem);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    background: var(--coy-color-surface);
+    color: var(--coy-color-text);
+    font-family: var(--coy-font-body);
+    text-align: left;
+}
+
+.sfr-empty h2 {
+    margin-bottom: 0.5rem;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: 2rem;
+    font-weight: 500;
+}
+
+.sfr-empty p {
+    margin-bottom: 1.5rem;
+}
+
+.sfr-retake {
+    justify-content: flex-start;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--coy-color-border);
+}
+
+.sfr-btn {
+    min-height: var(--coy-control-height);
+    padding: 0.75rem 1.4rem;
+    border-radius: var(--coy-radius-sm);
+    font-family: var(--coy-font-body);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: opacity var(--coy-duration-fast) var(--coy-ease);
+}
+
+.sfr-btn--primary {
+    border-color: var(--coy-color-heading);
+    background: var(--coy-color-heading);
+    box-shadow: none;
+    color: var(--coy-color-on-accent);
+}
+
+.sfr-btn--ghost {
+    border-color: var(--coy-color-border);
+    background: var(--coy-color-surface);
+    color: var(--coy-color-heading);
+}
+
+.sfr-btn--ghost:hover {
+    border-color: var(--coy-color-heading);
+    background: var(--coy-color-surface-soft);
+}
+
+@media (max-width: 900px) {
+    .sfr-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .sfr-wrap {
+        padding-top: 2rem;
+    }
+
+    .sfr-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>
