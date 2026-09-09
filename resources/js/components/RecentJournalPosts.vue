@@ -17,9 +17,12 @@ defineProps<{
 <template>
     <section v-if="posts.length" class="rjp">
         <div class="rjp-header">
-            <h2 class="rjp-title">{{ heading ?? 'From the Journal' }}</h2>
+            <div>
+                <p class="rjp-eyebrow">Ideas for your home</p>
+                <h2 class="rjp-title">{{ heading ?? 'From the Journal' }}</h2>
+            </div>
             <Link href="/journal" class="rjp-all-link">
-                View all
+                View all articles
                 <svg
                     width="12"
                     height="12"
@@ -33,10 +36,6 @@ defineProps<{
                     <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
             </Link>
-        </div>
-
-        <div class="rjp-divider" aria-hidden="true">
-            <span></span><span class="rjp-petal">✿</span><span></span>
         </div>
 
         <div class="rjp-list">
@@ -66,6 +65,10 @@ defineProps<{
                     <p v-if="post.excerpt" class="rjp-excerpt">
                         {{ post.excerpt }}
                     </p>
+                    <Link :href="`/journal/${post.slug}`" class="rjp-read-link">
+                        Read article
+                        <span aria-hidden="true">→</span>
+                    </Link>
                 </div>
             </article>
         </div>
@@ -74,88 +77,75 @@ defineProps<{
 
 <style scoped>
 .rjp {
-    font-family: 'Nunito', sans-serif;
-    padding: 2.5rem 0;
-    border-top: 1px solid #e5c9c7;
+    padding: clamp(3rem, 6vw, 4.5rem) 0 0;
+    border-top: 1px solid var(--coy-color-border);
 }
 
 .rjp-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    gap: var(--coy-space-5);
+    margin-bottom: var(--coy-space-6);
+}
+
+.rjp-eyebrow {
+    margin: 0 0 var(--coy-space-1);
+    color: var(--coy-color-accent);
+    font-size: var(--coy-text-xs);
+    font-weight: var(--coy-font-weight-bold);
+    letter-spacing: var(--coy-tracking-label);
+    text-transform: uppercase;
 }
 
 .rjp-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 1.4rem;
-    font-weight: 400;
-    font-style: italic;
-    color: #2d1a1a;
+    margin: 0;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: var(--coy-font-weight-medium);
+    line-height: var(--coy-leading-heading);
 }
 
 .rjp-all-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #8c4a50;
+    gap: var(--coy-space-2);
+    color: var(--coy-color-accent);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-bold);
     text-decoration: none;
-    transition: gap 0.2s;
+    transition: gap var(--coy-duration-fast) var(--coy-ease);
 }
 
 .rjp-all-link:hover {
-    gap: 0.5rem;
-}
-
-.rjp-divider {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin-bottom: 1.25rem;
-}
-
-.rjp-divider span:not(.rjp-petal) {
-    flex: 1;
-    height: 1px;
-    background: #e5c9c7;
-}
-
-.rjp-petal {
-    font-size: 0.75rem;
-    color: #c9a4a4;
+    gap: var(--coy-space-3);
 }
 
 .rjp-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--coy-space-5);
 }
 
-/* Horizontal card layout */
 .rjp-item {
-    display: flex;
-    gap: 0.85rem;
-    align-items: flex-start;
+    min-width: 0;
 }
 
 .rjp-img-wrap {
-    flex-shrink: 0;
-    width: 72px;
-    height: 72px;
-    border-radius: 10px;
-    overflow: hidden;
-    border: 1px solid #e5c9c7;
-    background: #fdf4f3;
+    aspect-ratio: 4 / 3;
     display: block;
+    overflow: hidden;
+    background: var(--coy-color-champagne);
+    border: 1px solid var(--coy-color-border-soft);
+    border-radius: var(--coy-radius-md);
 }
 
 .rjp-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s;
+    transition: transform var(--coy-duration-base) var(--coy-ease);
 }
 
 .rjp-img-wrap:hover .rjp-img {
@@ -163,41 +153,83 @@ defineProps<{
 }
 
 .rjp-body {
-    flex: 1;
     min-width: 0;
+    padding-top: var(--coy-space-4);
 }
 
 .rjp-meta {
-    font-size: 0.72rem;
-    color: #9a7070;
-    margin-bottom: 0.2rem;
+    margin: 0 0 var(--coy-space-2);
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-xs);
 }
 
 .rjp-item-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 0.98rem;
-    font-weight: 500;
-    line-height: 1.3;
-    margin-bottom: 0.25rem;
+    margin: 0;
+    font-family: var(--coy-font-display);
+    font-size: clamp(1.4rem, 2.5vw, 1.75rem);
+    font-weight: var(--coy-font-weight-semibold);
+    line-height: 1.2;
 }
 
 .rjp-item-title a {
+    color: var(--coy-color-heading);
     text-decoration: none;
-    color: #2d1a1a;
-    transition: color 0.15s;
+    transition: color var(--coy-duration-fast) var(--coy-ease);
 }
 
 .rjp-item-title a:hover {
-    color: #8c4a50;
+    color: var(--coy-color-accent);
 }
 
 .rjp-excerpt {
-    font-size: 0.8rem;
-    color: #6b4f4f;
-    line-height: 1.55;
     display: -webkit-box;
+    margin: var(--coy-space-3) 0 0;
+    overflow: hidden;
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-sm);
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
-    overflow: hidden;
+    line-height: var(--coy-leading-body);
+}
+
+.rjp-read-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--coy-space-2);
+    margin-top: var(--coy-space-4);
+    color: var(--coy-color-accent);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-bold);
+    text-decoration: underline;
+    text-underline-offset: 0.2rem;
+}
+
+.rjp-read-link span {
+    transition: transform var(--coy-duration-fast) var(--coy-ease);
+}
+
+.rjp-read-link:hover span {
+    transform: translateX(0.2rem);
+}
+
+@media (max-width: 760px) {
+    .rjp-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: var(--coy-space-3);
+    }
+
+    .rjp-list {
+        grid-template-columns: 1fr;
+        gap: var(--coy-space-7);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rjp-img,
+    .rjp-all-link,
+    .rjp-read-link span {
+        transition: none;
+    }
 }
 </style>
