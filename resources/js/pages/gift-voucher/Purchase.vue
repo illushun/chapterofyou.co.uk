@@ -1396,6 +1396,7 @@ async function focusFirstError() {
 
 .gv-preview-label {
     color: var(--coy-color-text);
+    font-size: 0.8rem;
     letter-spacing: 0.13em;
 }
 
@@ -1424,6 +1425,7 @@ async function focusFirstError() {
 
 .gv-preview-gift-label {
     color: var(--coy-color-surface-soft);
+    font-size: 0.75rem;
 }
 
 .gv-preview-code-box {
@@ -1435,6 +1437,32 @@ async function focusFirstError() {
 .gv-preview-code-hint,
 .gv-preview-terms {
     color: var(--coy-color-champagne);
+}
+
+.gv-preview-code-hint {
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.gv-preview-terms {
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+.gv-preview-to,
+.gv-preview-msg-text {
+    font-size: 0.9rem;
+}
+
+.gv-preview-info-row {
+    gap: 0.65rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+}
+
+.gv-preview-info-row svg {
+    width: 1rem;
+    height: 1rem;
 }
 
 @media (min-width: 861px) {
