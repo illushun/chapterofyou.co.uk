@@ -663,87 +663,9 @@ onUnmounted(() => {
                         days
                     </p>
 
-                    <div class="pd-trust">
-                        <div class="pd-trust-item">
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true"
-                            >
-                                <path
-                                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                                />
-                            </svg>
-                            Handmade in the UK
-                        </div>
-                        <div class="pd-trust-item">
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true"
-                            >
-                                <rect x="1" y="3" width="15" height="13" />
-                                <polygon
-                                    points="16 8 20 8 23 11 23 16 16 16 16 8"
-                                />
-                                <circle cx="5.5" cy="18.5" r="2.5" />
-                                <circle cx="18.5" cy="18.5" r="2.5" />
-                            </svg>
-                            Free UK delivery on orders of £50 or more
-                        </div>
-                        <div class="pd-trust-item">
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true"
-                            >
-                                <polyline points="1 4 1 10 7 10" />
-                                <path d="M3.51 15a9 9 0 1 0 .49-4.95" />
-                            </svg>
-                            30-day returns
-                        </div>
-                        <div class="pd-trust-item">
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true"
-                            >
-                                <rect
-                                    x="3"
-                                    y="11"
-                                    width="18"
-                                    height="11"
-                                    rx="2"
-                                    ry="2"
-                                />
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                            </svg>
-                            Secure checkout
-                        </div>
+                    <div class="pd-service-links">
+                        <a href="/delivery">Free UK delivery over £50</a>
+                        <a href="/returns">30-day returns</a>
                     </div>
 
                     <p class="pd-mpn">
@@ -1173,12 +1095,12 @@ onUnmounted(() => {
     margin-inline: auto;
 }
 .pd-wrap {
-    padding-block: clamp(1.5rem, 4vw, 3rem) var(--coy-section-space);
+    padding-block: clamp(1.25rem, 3vw, 2.5rem) var(--coy-section-space);
 }
 .pd-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.08fr) minmax(21rem, 0.92fr);
-    gap: clamp(2rem, 5vw, 4.5rem);
+    grid-template-columns: minmax(0, 1.12fr) minmax(21rem, 0.88fr);
+    gap: clamp(2rem, 5vw, 4rem);
     align-items: start;
 }
 .pd-mobile-intro {
@@ -1188,12 +1110,8 @@ onUnmounted(() => {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: clamp(1.25rem, 3vw, 2rem);
-    background: var(--coy-color-surface);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-lg);
-    box-shadow: var(--coy-shadow-sm);
+    gap: 0.9rem;
+    padding: 0;
 }
 .pd-breadcrumb {
     display: flex;
@@ -1218,7 +1136,7 @@ a.pd-crumb:hover {
     margin: 0;
     color: var(--coy-color-heading);
     font-family: var(--coy-font-display);
-    font-size: clamp(2.25rem, 4.5vw, 3.75rem);
+    font-size: clamp(2.25rem, 4vw, 3.25rem);
     font-weight: var(--coy-font-weight-medium);
     line-height: 1.03;
     text-wrap: balance;
@@ -1241,7 +1159,7 @@ a.pd-crumb:hover {
     gap: 0.35rem;
     padding: 0.25rem 0.65rem;
     border: 1px solid;
-    border-radius: var(--coy-radius-pill);
+    border-radius: var(--coy-radius-sm);
     font-size: var(--coy-text-xs);
     font-weight: var(--coy-font-weight-semibold);
 }
@@ -1262,7 +1180,7 @@ a.pd-crumb:hover {
     margin: 0;
     color: var(--coy-color-heading);
     font-family: var(--coy-font-display);
-    font-size: 2rem;
+    font-size: 1.75rem;
     font-weight: var(--coy-font-weight-semibold);
 }
 .pd-variations,
@@ -1287,7 +1205,7 @@ a.pd-crumb:hover {
     color: var(--coy-color-heading);
     background: var(--coy-color-surface);
     border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-pill);
+    border-radius: var(--coy-radius-sm);
     font: inherit;
     cursor: pointer;
 }
@@ -1309,7 +1227,7 @@ a.pd-crumb:hover {
     padding: 1rem;
     background: var(--coy-color-surface-soft);
     border: 1px solid var(--coy-color-border-soft);
-    border-radius: var(--coy-radius-md);
+    border-radius: var(--coy-radius-sm);
 }
 .pd-refill-label {
     display: flex;
@@ -1365,7 +1283,7 @@ a.pd-crumb:hover {
     overflow: hidden;
     background: var(--coy-color-surface);
     border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-pill);
+    border-radius: var(--coy-radius-sm);
 }
 .pd-qty-btn {
     display: grid;
@@ -1411,7 +1329,7 @@ a.pd-crumb:hover {
     color: var(--coy-color-on-accent);
     background: var(--coy-color-accent);
     border: 1px solid var(--coy-color-accent);
-    border-radius: var(--coy-radius-pill);
+    border-radius: var(--coy-radius-sm);
     font: 700 1rem var(--coy-font-body);
     cursor: pointer;
     transition:
@@ -1440,7 +1358,7 @@ a.pd-crumb:hover {
     color: var(--coy-color-accent);
     background: var(--coy-color-surface);
     border: 1px solid var(--coy-color-border);
-    border-radius: 50%;
+    border-radius: var(--coy-radius-sm);
     cursor: pointer;
 }
 .pd-wish-btn:hover,
@@ -1455,24 +1373,18 @@ a.pd-crumb:hover {
     margin: 0;
     font-size: var(--coy-text-sm);
 }
-.pd-trust {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
-    padding: 1rem;
-    background: var(--coy-color-surface);
-    border: 1px solid var(--coy-color-border-soft);
-    border-radius: var(--coy-radius-md);
-}
-.pd-trust-item {
+.pd-service-links {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: var(--coy-text-xs);
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    padding-block: 0.9rem;
+    border-block: 1px solid var(--coy-color-border-soft);
 }
-.pd-trust-item svg {
-    flex: 0 0 auto;
+.pd-service-links a {
     color: var(--coy-color-accent);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
+    text-underline-offset: 0.2rem;
 }
 .pd-mpn {
     margin: 0;
@@ -1483,7 +1395,7 @@ a.pd-crumb:hover {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: clamp(2rem, 6vw, 5rem);
-    margin-top: var(--coy-section-space);
+    margin-top: clamp(3rem, 6vw, 5rem);
     padding-block: clamp(2.5rem, 5vw, 4rem);
     border-block: 1px solid var(--coy-color-border);
 }
@@ -1887,9 +1799,6 @@ a.pd-crumb:hover {
     }
     .pd-cart-btn svg {
         display: none;
-    }
-    .pd-trust {
-        grid-template-columns: 1fr;
     }
 }
 </style>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ProductImage } from '@/types/product';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps<{
     images: ProductImage[];
@@ -16,6 +16,34 @@ const mainImageUrl = computed(
         props.images[selectedImageIndex.value]?.image ||
         '/images/placeholder.jpg',
 );
+const touchStartX = ref<number | null>(null);
+let lastWheelChange = 0;
+
+function selectOffset(offset: number) {
+    if (props.images.length < 2) return;
+    selectedImageIndex.value =
+        (selectedImageIndex.value + offset + props.images.length) %
+        props.images.length;
+}
+
+function handleWheel(event: WheelEvent) {
+    if (Math.abs(event.deltaY) < 8 || Date.now() - lastWheelChange < 350)
+        return;
+    lastWheelChange = Date.now();
+    selectOffset(event.deltaY > 0 ? 1 : -1);
+}
+
+function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'ArrowRight') selectOffset(1);
+    if (event.key === 'ArrowLeft') selectOffset(-1);
+}
+
+function handleTouchEnd(event: TouchEvent) {
+    if (touchStartX.value === null) return;
+    const distance = event.changedTouches[0].clientX - touchStartX.value;
+    if (Math.abs(distance) > 45) selectOffset(distance < 0 ? 1 : -1);
+    touchStartX.value = null;
+}
 
 function openImageModal() {
     if (props.images.length) emit('open');
@@ -23,32 +51,60 @@ function openImageModal() {
 </script>
 
 <template>
-    <div class="pd-images">
-        <button
-            @click="openImageModal"
-            class="pd-main-img-btn"
-            aria-label="View full image"
-        >
-            <div class="pd-main-img-wrap">
-                <span v-if="popular" class="pd-popular-badge">Popular</span>
-                <img :src="mainImageUrl" :alt="name" class="pd-main-img" />
-                <div class="pd-img-zoom-hint" aria-hidden="true">
-                    <svg
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.3-4.3M11 8v6M8 11h6" />
-                    </svg>
+    <div
+        class="pd-images"
+        tabindex="0"
+        aria-label="Product image gallery"
+        @keydown="handleKeydown"
+        @wheel.prevent="handleWheel"
+        @touchstart="touchStartX = $event.touches[0].clientX"
+        @touchend="handleTouchEnd"
+    >
+        <div class="pd-stage">
+            <button
+                @click="openImageModal"
+                class="pd-main-img-btn"
+                aria-label="View full image"
+            >
+                <div class="pd-main-img-wrap">
+                    <span v-if="popular" class="pd-popular-badge">Popular</span>
+                    <img :src="mainImageUrl" :alt="name" class="pd-main-img" />
+                    <div class="pd-img-zoom-hint" aria-hidden="true">
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3M11 8v6M8 11h6" />
+                        </svg>
+                    </div>
                 </div>
-            </div>
-        </button>
+            </button>
+            <button
+                v-if="images.length > 1"
+                type="button"
+                class="pd-gallery-arrow pd-gallery-arrow--previous"
+                aria-label="Previous product image"
+                @click="selectOffset(-1)"
+            >
+                ‹
+            </button>
+            <button
+                v-if="images.length > 1"
+                type="button"
+                class="pd-gallery-arrow pd-gallery-arrow--next"
+                aria-label="Next product image"
+                @click="selectOffset(1)"
+            >
+                ›
+            </button>
+        </div>
         <div v-if="images.length > 1" class="pd-thumbs">
             <button
                 v-for="(img, i) in images"
@@ -74,6 +130,13 @@ function openImageModal() {
 <style scoped>
 .pd-images {
     min-width: 0;
+}
+.pd-images:focus-visible {
+    outline: 2px solid var(--coy-color-focus);
+    outline-offset: 0.25rem;
+}
+.pd-stage {
+    position: relative;
 }
 .pd-main-img-btn {
     width: 100%;
@@ -134,6 +197,34 @@ function openImageModal() {
 .pd-main-img-btn:focus-visible .pd-img-zoom-hint {
     opacity: 1;
 }
+.pd-gallery-arrow {
+    position: absolute;
+    top: 50%;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: var(--coy-color-heading);
+    background: rgb(255 253 251 / 90%);
+    border: 1px solid var(--coy-color-border);
+    border-radius: 50%;
+    font: 2rem/1 var(--coy-font-display);
+    opacity: 0;
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition: opacity var(--coy-duration-base) var(--coy-ease);
+}
+.pd-gallery-arrow--previous {
+    left: 1rem;
+}
+.pd-gallery-arrow--next {
+    right: 1rem;
+}
+.pd-main-img-wrap:hover .pd-gallery-arrow,
+.pd-gallery-arrow:focus-visible {
+    opacity: 1;
+}
 .pd-thumbs {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -166,6 +257,9 @@ function openImageModal() {
     }
 }
 @media (max-width: 760px) {
+    .pd-gallery-arrow {
+        opacity: 1;
+    }
     .pd-thumbs {
         display: flex;
         gap: 0.65rem;
