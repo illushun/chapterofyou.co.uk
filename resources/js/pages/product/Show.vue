@@ -473,9 +473,6 @@ onUnmounted(() => {
 
                     <fieldset v-if="availableAddons.length" class="pd-addons">
                         <legend>Add something extra</legend>
-                        <p class="pd-addons-help">
-                            Optional. Select any add-ons you would like.
-                        </p>
                         <label
                             v-for="addon in availableAddons"
                             :key="addon.id"
@@ -1228,10 +1225,6 @@ a.pd-crumb:hover {
     color: var(--coy-color-heading);
     font-weight: var(--coy-font-weight-semibold);
 }
-.pd-addons-help {
-    margin: 0 0 0.25rem;
-    font-size: var(--coy-text-xs);
-}
 .pd-addon {
     display: flex;
     align-items: center;
@@ -1269,8 +1262,11 @@ a.pd-crumb:hover {
     font-weight: var(--coy-font-weight-semibold);
 }
 .pd-addon small {
+    align-self: center;
     color: var(--coy-color-accent);
-    font-size: var(--coy-text-xs);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
+    line-height: 1;
     white-space: nowrap;
 }
 .pd-actions {
