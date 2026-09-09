@@ -18,7 +18,6 @@ const seo = useSeoHead({
     canonical: '/gift-vouchers',
 });
 
-// ── Form state ─────────────────────────────────────────────────────────────
 const selectedAmount = ref<number | null>(null);
 const customAmount = ref('');
 const deliveryType = ref<'email' | 'physical'>('email');
@@ -125,30 +124,18 @@ async function focusFirstError() {
     <NavBar />
     <SeoHead v-bind="seo" />
 
-    <component
-        :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-
-    <main class="gv">
+    <main class="gv coy-storefront">
         <div class="gv-wrap">
-            <!-- Header -->
             <header class="gv-header">
-                <p class="gv-eyebrow">Chapter of You</p>
-                <h1 class="gv-title">Gift <em>Vouchers</em></h1>
-                <div class="gv-rule">
-                    <span></span><span class="gv-petal">✿</span><span></span>
-                </div>
+                <p class="coy-eyebrow">A thoughtful gift</p>
+                <h1 class="gv-title">Gift vouchers</h1>
                 <p class="gv-intro">
-                    Give the gift of self-care. My gift vouchers can be used on
-                    any product in the collection and are valid for one year
-                    from purchase.
+                    Choose an amount and send it by email or post. Gift vouchers
+                    can be used on any product and are valid for one year.
                 </p>
             </header>
 
             <div class="gv-grid">
-                <!-- ── Left: form ── -->
                 <div class="gv-form-col">
                     <p
                         v-if="firstError"
@@ -159,7 +146,6 @@ async function focusFirstError() {
                     >
                         Please check the form: {{ firstError }}
                     </p>
-                    <!-- Step 1: Amount -->
                     <div class="gv-card">
                         <h2 class="gv-card-title">
                             <span class="gv-step">1</span>
@@ -175,6 +161,7 @@ async function focusFirstError() {
                                     'gv-amount-btn--active':
                                         selectedAmount === a,
                                 }"
+                                :aria-pressed="selectedAmount === a"
                                 @click="selectAmount(a)"
                             >
                                 {{ fmt(a) }}
@@ -203,7 +190,6 @@ async function focusFirstError() {
                         </p>
                     </div>
 
-                    <!-- Step 2: Delivery type -->
                     <div class="gv-card">
                         <h2 class="gv-card-title">
                             <span class="gv-step">2</span>
@@ -217,6 +203,7 @@ async function focusFirstError() {
                                     'gv-delivery-opt--active':
                                         deliveryType === 'email',
                                 }"
+                                :aria-pressed="deliveryType === 'email'"
                                 @click="deliveryType = 'email'"
                             >
                                 <div class="gv-delivery-icon">
@@ -255,6 +242,7 @@ async function focusFirstError() {
                                     'gv-delivery-opt--active':
                                         deliveryType === 'physical',
                                 }"
+                                :aria-pressed="deliveryType === 'physical'"
                                 @click="deliveryType = 'physical'"
                             >
                                 <div class="gv-delivery-icon">
@@ -292,7 +280,6 @@ async function focusFirstError() {
                         </div>
                     </div>
 
-                    <!-- Step 3: Recipient details -->
                     <div class="gv-card">
                         <h2 class="gv-card-title">
                             <span class="gv-step">3</span>
@@ -384,7 +371,6 @@ async function focusFirstError() {
                         </div>
                     </div>
 
-                    <!-- Step 4: Your details -->
                     <div class="gv-card">
                         <h2 class="gv-card-title">
                             <span class="gv-step">4</span>
@@ -471,7 +457,6 @@ async function focusFirstError() {
                     </button>
                 </div>
 
-                <!-- ── Right: preview ── -->
                 <aside class="gv-preview-col">
                     <div class="gv-preview-card">
                         <p class="gv-preview-label">Preview</p>
@@ -1139,5 +1124,352 @@ async function focusFirstError() {
     font-size: 0.76rem;
     color: #9a7070;
     font-style: italic;
+}
+
+.gv {
+    min-height: 100vh;
+    padding-top: var(--coy-nav-height);
+    background: var(--coy-color-page);
+    color: var(--coy-color-text);
+    font-family: var(--coy-font-body);
+}
+
+.gv-wrap {
+    width: min(calc(100% - (var(--coy-gutter) * 2)), var(--coy-container-lg));
+    max-width: none;
+    margin-inline: auto;
+    padding: clamp(2.5rem, 6vw, 5rem) 0 clamp(4rem, 8vw, 7rem);
+}
+
+.gv-header {
+    max-width: 44rem;
+    margin-bottom: clamp(2rem, 5vw, 3.75rem);
+    text-align: left;
+}
+
+.gv-title {
+    margin: 0.45rem 0 0.8rem;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: clamp(2.75rem, 6vw, 4.5rem);
+    font-style: normal;
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+}
+
+.gv-intro {
+    max-width: 39rem;
+    margin: 0;
+    color: var(--coy-color-text);
+    font-size: 1rem;
+    line-height: 1.7;
+}
+
+.gv-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+    gap: clamp(1.5rem, 4vw, 4rem);
+}
+
+.gv-form-col {
+    gap: 1rem;
+}
+
+.gv-card,
+.gv-preview-card {
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    background: var(--coy-color-surface);
+    box-shadow: none;
+}
+
+.gv-card {
+    gap: 1.25rem;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    overflow: visible;
+}
+
+.gv-card::after {
+    content: none;
+}
+
+.gv-card-title {
+    gap: 0.75rem;
+    padding-bottom: 1rem;
+    border-color: var(--coy-color-border);
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: 1.45rem;
+    font-weight: 500;
+    line-height: 1.15;
+}
+
+.gv-step {
+    width: 1.7rem;
+    height: 1.7rem;
+    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-heading);
+    color: var(--coy-color-surface);
+    font-family: var(--coy-font-body);
+    font-size: 0.72rem;
+}
+
+.gv-amounts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.6rem;
+}
+
+.gv-amount-btn {
+    min-height: 3rem;
+    padding: 0.65rem;
+    border-color: var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-page);
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-body);
+    font-size: 0.9rem;
+    transition:
+        border-color 160ms ease,
+        background-color 160ms ease;
+}
+
+.gv-amount-btn:hover,
+.gv-amount-btn--active {
+    border-color: var(--coy-color-heading);
+    background: var(--coy-color-heading);
+    color: var(--coy-color-surface);
+}
+
+.gv-prefix-wrap {
+    max-width: 12rem;
+    border-color: var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-page);
+}
+
+.gv-prefix {
+    border-color: var(--coy-color-border);
+    background: var(--coy-color-surface-soft);
+    color: var(--coy-color-heading);
+}
+
+.gv-delivery-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.gv-delivery-opt {
+    align-items: flex-start;
+    min-height: 7rem;
+    padding: 1rem;
+    border-color: var(--coy-color-border);
+    border-radius: var(--coy-radius-md);
+    background: var(--coy-color-page);
+    color: var(--coy-color-text);
+    font-family: var(--coy-font-body);
+    transition:
+        border-color 160ms ease,
+        background-color 160ms ease;
+}
+
+.gv-delivery-opt:hover,
+.gv-delivery-opt--active {
+    border-color: var(--coy-color-heading);
+    background: var(--coy-color-surface-soft);
+    box-shadow: none;
+}
+
+.gv-delivery-icon {
+    width: 2rem;
+    height: 2rem;
+    border: 0;
+    border-radius: var(--coy-radius-sm);
+    background: transparent;
+    color: var(--coy-color-accent);
+}
+
+.gv-delivery-name {
+    color: var(--coy-color-heading);
+    font-size: 0.88rem;
+}
+
+.gv-delivery-desc,
+.gv-preview-info-row,
+.gv-preview-to {
+    color: var(--coy-color-text);
+}
+
+.gv-delivery-check {
+    color: var(--coy-color-heading);
+}
+
+.gv-label {
+    color: var(--coy-color-text);
+    font-size: 0.7rem;
+    letter-spacing: 0.09em;
+}
+
+.gv-req,
+.gv-preview-info-row svg,
+.gv-message-hint svg {
+    color: var(--coy-color-accent);
+}
+
+.gv-opt,
+.gv-char-count,
+.gv-message-hint-note {
+    color: var(--coy-color-text);
+    opacity: 0.72;
+}
+
+.gv-input {
+    min-height: 2.9rem;
+    padding: 0.72rem 0.85rem;
+    border-color: var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-page);
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-body);
+    font-size: 0.9rem;
+}
+
+.gv-input:focus {
+    border-color: var(--coy-color-focus);
+    box-shadow: var(--coy-shadow-focus);
+}
+
+.gv-input--err {
+    border-color: var(--coy-color-error);
+}
+
+.gv-err {
+    color: var(--coy-color-error);
+}
+
+.gv-err--general {
+    border-color: var(--coy-color-error);
+    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-error-soft);
+}
+
+.gv-message-hint,
+.gv-preview-message {
+    border-color: var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-surface-soft);
+    color: var(--coy-color-text);
+}
+
+.gv-message-hint em,
+.gv-preview-msg-text {
+    color: var(--coy-color-heading);
+}
+
+.gv-submit-btn {
+    min-height: 3.25rem;
+    padding: 0.8rem 1.25rem;
+    border-color: var(--coy-color-heading);
+    border-radius: var(--coy-radius-sm);
+    background: var(--coy-color-heading);
+    box-shadow: none;
+    color: var(--coy-color-surface);
+    font-family: var(--coy-font-body);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    transition: opacity 160ms ease;
+}
+
+.gv-submit-btn:hover:not(:disabled) {
+    transform: none;
+    box-shadow: none;
+    opacity: 0.86;
+}
+
+.gv-preview-card {
+    gap: 1.25rem;
+    padding: 1.25rem;
+}
+
+.gv-preview-label {
+    color: var(--coy-color-text);
+    letter-spacing: 0.13em;
+}
+
+.gv-voucher-preview {
+    padding: 2rem 1.25rem;
+    border-radius: var(--coy-radius-md);
+    background: var(--coy-color-heading);
+}
+
+.gv-preview-brand {
+    color: var(--coy-color-surface-soft);
+    font-family: var(--coy-font-display);
+    font-size: 1.1rem;
+}
+
+.gv-preview-petal {
+    display: none;
+}
+
+.gv-preview-amount {
+    margin: 1.1rem 0 0.45rem;
+    color: var(--coy-color-surface);
+    font-family: var(--coy-font-display);
+    font-size: 3rem;
+}
+
+.gv-preview-gift-label {
+    color: var(--coy-color-surface-soft);
+}
+
+.gv-preview-code-box {
+    border-color: var(--coy-color-rose-gold);
+    border-radius: var(--coy-radius-sm);
+    background: transparent;
+}
+
+.gv-preview-code-hint,
+.gv-preview-terms {
+    color: var(--coy-color-champagne);
+}
+
+@media (min-width: 861px) {
+    .gv-preview-col {
+        position: sticky;
+        top: calc(var(--coy-nav-height) + 1.5rem);
+    }
+}
+
+@media (max-width: 860px) {
+    .gv-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .gv-preview-col {
+        max-width: 34rem;
+    }
+}
+
+@media (max-width: 620px) {
+    .gv-wrap {
+        padding-top: 2rem;
+    }
+
+    .gv-amounts {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .gv-delivery-options,
+    .gv-field-row {
+        grid-template-columns: 1fr;
+    }
+
+    .gv-delivery-opt {
+        min-height: auto;
+    }
 }
 </style>
