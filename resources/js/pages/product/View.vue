@@ -810,13 +810,17 @@ async function favourite(product: Product) {
 .drawer-body {
     flex: 1;
     overflow: auto;
-    background: var(--coy-color-page);
+    background: var(--coy-color-surface);
 }
 .drawer-body .filter-group {
     background: var(--coy-color-surface);
 }
 .drawer-body .filter-group label {
-    background: var(--coy-color-page);
+    background: transparent;
+}
+.drawer-body .filter-group label:hover,
+.drawer-body .filter-group label:has(input[type='checkbox']:checked) {
+    background: var(--coy-color-surface-soft);
 }
 .drawer-body .price-inputs label,
 .drawer-body .price-inputs span,
