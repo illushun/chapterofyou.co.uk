@@ -2,6 +2,7 @@
 import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import { Link } from '@inertiajs/vue3';
 
@@ -18,8 +19,8 @@ defineProps<{
             reading_time: number;
             views: number;
         }>;
-        links: any[];
-        meta: any;
+        links: Array<{ url: string | null; label: string; active: boolean }>;
+        meta: { total?: number };
     };
 }>();
 
@@ -35,140 +36,118 @@ const seo = useSeoHead({
 <template>
     <NavBar />
     <SeoHead v-bind="seo" />
-
-    <component
-        :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-
-    <main class="jl">
-        <div class="jl-wrap">
-            <!-- Header -->
-            <header class="jl-header">
-                <p class="jl-eyebrow">Chapter of You</p>
-                <h1 class="jl-title">My <em>Journal</em></h1>
-                <div class="jl-rule">
-                    <span></span><span class="jl-petal">✿</span><span></span>
+    <main class="jl coy-storefront">
+        <header class="coy-page-header">
+            <div class="coy-container coy-page-header__inner">
+                <div>
+                    <CoyBreadcrumbs
+                        :items="[
+                            { label: 'Home', href: '/' },
+                            { label: 'Journal' },
+                        ]"
+                    />
+                    <h1 class="coy-page-header__title">Journal</h1>
+                    <p class="coy-page-header__meta">
+                        Notes on fragrance, wellbeing and creating a thoughtful
+                        home.
+                    </p>
                 </div>
-                <p class="jl-intro">
-                    Tips, guides and inspiration for creating a home that feels
-                    like sanctuary.
-                </p>
-            </header>
+            </div>
+        </header>
 
-            <!-- Empty state -->
-            <div v-if="!posts.data.length" class="jl-empty">
-                <p class="jl-petal" style="font-size: 2rem">✿</p>
-                <p>No articles yet, check back soon.</p>
+        <div class="coy-container jl-content">
+            <div class="jl-heading">
+                <div>
+                    <p class="coy-eyebrow">Ideas for your space</p>
+                    <h2>Latest from the journal</h2>
+                </div>
+                <p v-if="posts.meta?.total" class="jl-count">
+                    {{ posts.meta.total }}
+                    {{ posts.meta.total === 1 ? 'article' : 'articles' }}
+                </p>
             </div>
 
-            <!-- Grid -->
+            <section v-if="!posts.data.length" class="jl-empty">
+                <span aria-hidden="true">✦</span>
+                <h2>New stories are on their way</h2>
+                <p>
+                    Check back soon for fragrance guides and thoughtful ideas.
+                </p>
+                <Link href="/products" class="jl-empty-link"
+                    >Explore fragrances</Link
+                >
+            </section>
+
             <div v-else class="jl-grid">
                 <article
-                    v-for="post in posts.data"
+                    v-for="(post, index) in posts.data"
                     :key="post.id"
                     class="jl-card"
+                    :class="{ 'jl-card--featured': index === 0 }"
                 >
-                    <!-- Cover image -->
                     <Link
                         :href="`/journal/${post.slug}`"
-                        class="jl-card-img-wrap"
+                        class="jl-card-image"
+                        :aria-label="`Read ${post.title}`"
                     >
                         <img
                             v-if="post.cover_image"
                             :src="post.cover_image"
                             :alt="post.title"
-                            class="jl-card-img"
+                            class="jl-card-image-content"
                             loading="lazy"
                         />
                         <div
                             v-else
-                            class="jl-card-img-placeholder"
+                            class="jl-card-placeholder"
                             aria-hidden="true"
                         >
-                            ✿
+                            ✦
                         </div>
                     </Link>
-
                     <div class="jl-card-body">
-                        <!-- Tags -->
-                        <div v-if="post.tags.length" class="jl-tags">
-                            <span
-                                v-for="tag in post.tags.slice(0, 3)"
-                                :key="tag"
-                                class="jl-tag"
-                                >{{ tag }}</span
+                        <div class="jl-card-topline">
+                            <span v-if="index === 0" class="jl-featured-label"
+                                >Featured</span
                             >
+                            <div v-if="post.tags.length" class="jl-tags">
+                                <span
+                                    v-for="tag in post.tags.slice(0, 2)"
+                                    :key="tag"
+                                    class="jl-tag"
+                                    >{{ tag }}</span
+                                >
+                            </div>
                         </div>
-
                         <h2 class="jl-card-title">
                             <Link :href="`/journal/${post.slug}`">{{
                                 post.title
                             }}</Link>
                         </h2>
-
                         <p v-if="post.excerpt" class="jl-card-excerpt">
                             {{ post.excerpt }}
                         </p>
-
                         <div class="jl-card-meta">
-                            <span>{{ post.published_at }}</span>
-                            <span class="jl-meta-sep" aria-hidden="true"
-                                >·</span
-                            >
-                            <span>{{ post.reading_time }} min read</span>
-                            <span class="jl-meta-sep" aria-hidden="true"
-                                >·</span
-                            >
-                            <span>
-                                <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    style="
-                                        display: inline;
-                                        vertical-align: -1px;
-                                    "
-                                >
-                                    <path
-                                        d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
-                                    />
-                                    <circle cx="12" cy="12" r="3" />
-                                </svg>
-                                {{ post.views.toLocaleString() }}
-                            </span>
+                            <span>{{ post.published_at }}</span
+                            ><span aria-hidden="true">•</span
+                            ><span>{{ post.reading_time }} min read</span>
                         </div>
-
                         <Link
                             :href="`/journal/${post.slug}`"
                             class="jl-read-more"
-                        >
-                            Read article
-                            <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="M5 12h14M12 5l7 7-7 7" />
-                            </svg>
-                        </Link>
+                            >Read article
+                            <svg aria-hidden="true" viewBox="0 0 24 24">
+                                <path d="M5 12h14M12 5l7 7-7 7" /></svg
+                        ></Link>
                     </div>
                 </article>
             </div>
 
-            <!-- Pagination -->
-            <div v-if="posts.links?.length > 3" class="jl-pagination">
+            <nav
+                v-if="posts.links?.length > 3"
+                class="jl-pagination"
+                aria-label="Journal pagination"
+            >
                 <template v-for="link in posts.links" :key="link.label">
                     <Link
                         v-if="link.url"
@@ -183,277 +162,279 @@ const seo = useSeoHead({
                         v-html="link.label"
                     />
                 </template>
-            </div>
+            </nav>
         </div>
     </main>
-
     <Footer />
 </template>
 
 <style scoped>
 .jl {
-    font-family: 'Nunito', sans-serif;
     min-height: 100vh;
     padding-top: var(--coy-nav-height);
-    background: #fdf4f3;
-    color: #2d1a1a;
+    background: var(--coy-color-page);
 }
-
-.jl-wrap {
-    max-width: 1060px;
-    margin: 0 auto;
-    padding: 4rem 1.25rem 6rem;
+.jl-content {
+    padding-block: clamp(2.5rem, 5vw, 4rem) clamp(4rem, 7vw, 6rem);
 }
-
-/* Header */
-.jl-header {
-    text-align: center;
-    margin-bottom: 3.5rem;
-}
-
-.jl-eyebrow {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: #c9a4a4;
-    margin-bottom: 0.75rem;
-}
-
-.jl-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: clamp(2.2rem, 6vw, 3.5rem);
-    font-weight: 300;
-    color: #2d1a1a;
-    margin-bottom: 1.25rem;
-    line-height: 1.1;
-}
-
-.jl-title em {
-    font-style: italic;
-    color: #8c4a50;
-}
-
-.jl-rule {
+.jl-heading {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    margin-bottom: 1.25rem;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--coy-space-5);
+    margin-bottom: var(--coy-space-6);
+    padding-bottom: var(--coy-space-4);
+    border-bottom: 1px solid var(--coy-color-border);
 }
-
-.jl-rule span:not(.jl-petal) {
-    display: block;
-    width: 60px;
-    height: 1px;
-    background: #e5c9c7;
+.jl-heading h2 {
+    margin: var(--coy-space-1) 0 0;
+    color: var(--coy-color-heading);
+    font: 500 clamp(2rem, 4vw, 3rem) / 1.08 var(--coy-font-display);
 }
-
-.jl-petal {
-    font-size: 0.85rem;
-    color: #c9a4a4;
+.jl-count {
+    margin: 0 0 var(--coy-space-1);
+    font-size: var(--coy-text-sm);
 }
-
-.jl-intro {
-    font-size: 0.97rem;
-    color: #6b4f4f;
-    line-height: 1.7;
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-/* Empty */
 .jl-empty {
+    display: grid;
+    justify-items: center;
+    padding: clamp(3rem, 8vw, 6rem) var(--coy-space-5);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border-soft);
+    border-radius: var(--coy-radius-lg);
     text-align: center;
-    padding: 4rem 1rem;
-    color: #9a7070;
-    font-style: italic;
 }
-
-/* Grid */
+.jl-empty > span {
+    color: var(--coy-color-rose-gold);
+    font-size: 2rem;
+}
+.jl-empty h2 {
+    margin: var(--coy-space-3) 0 var(--coy-space-2);
+    color: var(--coy-color-heading);
+    font: 500 clamp(1.75rem, 4vw, 2.5rem) / 1.1 var(--coy-font-display);
+}
+.jl-empty p {
+    margin: 0;
+}
+.jl-empty-link {
+    margin-top: var(--coy-space-5);
+    padding: 0.7rem 1.2rem;
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border-radius: var(--coy-radius-pill);
+    font-weight: 600;
+    text-decoration: none;
+}
 .jl-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1.5rem, 3vw, 2.25rem);
 }
-
-@media (max-width: 860px) {
-    .jl-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 540px) {
-    .jl-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Card */
 .jl-card {
-    background: #fffafa;
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    overflow: hidden;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    transition:
-        box-shadow 0.2s,
-        transform 0.2s;
 }
-
-.jl-card:hover {
-    box-shadow: 0 8px 28px rgba(229, 201, 199, 0.5);
-    transform: translateY(-3px);
-}
-
-.jl-card-img-wrap {
-    display: block;
-    aspect-ratio: 16/9;
+.jl-card--featured {
+    grid-column: 1/-1;
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(20rem, 0.85fr);
     overflow: hidden;
-    background: #fdf4f3;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
 }
-
-.jl-card-img {
+.jl-card-image {
+    display: block;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    background: var(--coy-color-champagne);
+    border-radius: var(--coy-radius-md);
+}
+.jl-card--featured .jl-card-image {
+    min-height: 24rem;
+    aspect-ratio: auto;
+    border-radius: 0;
+}
+.jl-card-image-content {
     width: 100%;
     height: 100%;
+    display: block;
     object-fit: cover;
-    transition: transform 0.4s;
+    transition: transform 0.45s var(--coy-ease);
 }
-
-.jl-card:hover .jl-card-img {
-    transform: scale(1.04);
+.jl-card:hover .jl-card-image-content {
+    transform: scale(1.035);
 }
-
-.jl-card-img-placeholder {
+.jl-card-placeholder {
     width: 100%;
     height: 100%;
+    display: grid;
+    place-items: center;
+    color: var(--coy-color-rose-gold);
+    font-size: 2.75rem;
+}
+.jl-card-body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: var(--coy-space-4);
+}
+.jl-card--featured .jl-card-body {
+    justify-content: center;
+    padding: clamp(2rem, 5vw, 4rem);
+}
+.jl-card-topline {
+    min-height: 1.6rem;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    color: #e5c9c7;
+    flex-wrap: wrap;
+    gap: var(--coy-space-2);
 }
-
-.jl-card-body {
-    padding: 1.25rem;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
+.jl-featured-label {
+    padding: 0.25rem 0.65rem;
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border-radius: var(--coy-radius-pill);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
+    text-transform: uppercase;
 }
-
 .jl-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    gap: var(--coy-space-2);
 }
-
 .jl-tag {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #8c4a50;
-    background: rgba(140, 74, 80, 0.07);
-    border: 1px solid rgba(140, 74, 80, 0.15);
-    border-radius: 999px;
-    padding: 0.15rem 0.55rem;
-}
-
-.jl-card-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.15rem;
-    font-weight: 500;
-    color: #2d1a1a;
-    line-height: 1.3;
-}
-
-.jl-card-title a {
-    text-decoration: none;
-    color: inherit;
-    transition: color 0.15s;
-}
-
-.jl-card-title a:hover {
-    color: #8c4a50;
-}
-
-.jl-card-excerpt {
-    font-size: 0.85rem;
-    color: #6b4f4f;
-    line-height: 1.65;
-    flex: 1;
-}
-
-.jl-card-meta {
+    color: var(--coy-color-accent);
     font-size: 0.75rem;
-    color: #9a7070;
+    font-weight: 600;
+    letter-spacing: var(--coy-tracking-label);
+    text-transform: uppercase;
+}
+.jl-card-title {
+    margin: var(--coy-space-3) 0 0;
+    color: var(--coy-color-heading);
+    font: 500 clamp(1.5rem, 2.5vw, 2rem) / 1.15 var(--coy-font-display);
+}
+.jl-card--featured .jl-card-title {
+    font-size: clamp(2.25rem, 4vw, 3.5rem);
+    line-height: 1.05;
+}
+.jl-card-title a {
+    color: inherit;
+    text-decoration: none;
+}
+.jl-card-title a:hover {
+    color: var(--coy-color-accent);
+}
+.jl-card-excerpt {
+    display: -webkit-box;
+    overflow: hidden;
+    margin: var(--coy-space-3) 0 0;
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-sm);
+    line-height: 1.6;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+.jl-card-meta {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: var(--coy-space-2);
+    margin-top: var(--coy-space-4);
+    color: var(--coy-color-text);
+    font-size: 0.875rem;
 }
-
-.jl-meta-sep {
-    color: #e5c9c7;
-}
-
 .jl-read-more {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #8c4a50;
+    gap: var(--coy-space-2);
+    margin-top: var(--coy-space-4);
+    color: var(--coy-color-accent);
+    font-size: var(--coy-text-sm);
+    font-weight: 600;
     text-decoration: none;
-    transition: gap 0.2s;
-    margin-top: auto;
+    transition: gap var(--coy-duration-base) var(--coy-ease);
 }
-
 .jl-read-more:hover {
-    gap: 0.55rem;
+    gap: var(--coy-space-3);
 }
-
-/* Pagination */
+.jl-read-more svg {
+    width: 0.875rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2.5;
+}
 .jl-pagination {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    margin-top: 3rem;
     flex-wrap: wrap;
+    gap: var(--coy-space-2);
+    margin-top: var(--coy-space-7);
 }
-
 .jl-page-btn {
+    min-width: 2.5rem;
+    height: 2.5rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 36px;
-    height: 36px;
-    padding: 0 0.65rem;
-    border-radius: 8px;
-    border: 1px solid #e5c9c7;
-    background: #fffafa;
-    font-size: 0.82rem;
-    color: #6b4f4f;
+    padding: 0 var(--coy-space-3);
+    color: var(--coy-color-text);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-pill);
+    font-size: 0.875rem;
     text-decoration: none;
-    transition: all 0.15s;
-    cursor: pointer;
+    transition: all var(--coy-duration-fast) var(--coy-ease);
 }
-
 .jl-page-btn:hover {
-    border-color: #8c4a50;
-    color: #8c4a50;
+    color: var(--coy-color-accent);
+    border-color: var(--coy-color-accent);
 }
-
 .jl-page-btn--active {
-    border-color: #8c4a50;
-    background: #8c4a50;
-    color: #fff;
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border-color: var(--coy-color-accent);
 }
-
 .jl-page-btn--disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
+    opacity: 0.4;
+}
+@media (max-width: 860px) {
+    .jl-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .jl-card--featured {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media (max-width: 640px) {
+    .jl-heading {
+        align-items: start;
+        flex-direction: column;
+    }
+    .jl-grid,
+    .jl-card--featured {
+        grid-template-columns: 1fr;
+    }
+    .jl-card--featured .jl-card-image {
+        min-height: 0;
+        aspect-ratio: 4/3;
+    }
+    .jl-card--featured .jl-card-body {
+        padding: var(--coy-space-5);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .jl-card-image-content,
+    .jl-read-more {
+        transition: none;
+    }
 }
 </style>
