@@ -373,6 +373,9 @@ defineProps<{ status?: string; canResetPassword: boolean }>();
         align-items: start;
         padding-top: calc(var(--coy-nav-height) + var(--coy-space-5));
     }
+    .lp-shell {
+        width: calc(100% - 1rem);
+    }
     .lp-card {
         border-radius: var(--coy-radius-lg);
     }
@@ -380,6 +383,10 @@ defineProps<{ status?: string; canResetPassword: boolean }>();
     .lp-form {
         padding-right: var(--coy-space-5);
         padding-left: var(--coy-space-5);
+    }
+    .lp-status {
+        margin-right: var(--coy-space-5);
+        margin-left: var(--coy-space-5);
     }
 }
 @media (prefers-reduced-motion: reduce) {
