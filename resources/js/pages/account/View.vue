@@ -503,33 +503,38 @@ const formatAddress = (a: Address): string[] =>
 
                 <!-- ── Marketing preferences ── -->
                 <section class="as-card">
-                    <h2 class="as-card-title">
-                        <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                    <div class="as-card-head">
+                        <h2 class="as-card-title">
+                            <span class="as-card-icon">
+                                <svg aria-hidden="true" viewBox="0 0 24 24">
+                                    <path d="M4 5h16v14H4z" />
+                                    <path d="m4 7 8 6 8-6" />
+                                </svg>
+                            </span>
+                            Marketing preferences
+                        </h2>
+                        <span
+                            class="as-status"
+                            :class="{
+                                'as-status--active':
+                                    marketingForm.marketing_opt_in,
+                            }"
                         >
-                            <path
-                                d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-                            />
-                            <polyline points="22,6 12,13 2,6" />
-                        </svg>
-                        Marketing Preferences
-                    </h2>
+                            {{
+                                marketingForm.marketing_opt_in
+                                    ? 'Subscribed'
+                                    : 'Not subscribed'
+                            }}
+                        </span>
+                    </div>
                     <div class="as-marketing">
                         <div class="as-marketing-info">
-                            <p class="as-marketing-label">Marketing emails</p>
+                            <p class="as-marketing-label">
+                                Inspiration and offers
+                            </p>
                             <p class="as-marketing-sub">
-                                {{
-                                    marketingForm.marketing_opt_in
-                                        ? 'You are opted in - you will receive updates and exclusive offers.'
-                                        : 'You are opted out - you will not receive marketing emails.'
-                                }}
+                                Receive occasional product news, fragrance
+                                inspiration and subscriber-only offers.
                             </p>
                         </div>
                         <label
@@ -543,22 +548,25 @@ const formatAddress = (a: Address): string[] =>
                                 v-model="marketingForm.marketing_opt_in"
                                 @change="updateMarketing"
                                 class="as-toggle-input"
+                                :disabled="marketingForm.processing"
                             />
                             <span class="as-toggle-track">
                                 <span class="as-toggle-thumb"></span>
                             </span>
                             <span class="as-toggle-label">
                                 {{
-                                    marketingForm.marketing_opt_in
-                                        ? 'Opted in'
-                                        : 'Opted out'
+                                    marketingForm.processing
+                                        ? 'Saving...'
+                                        : marketingForm.marketing_opt_in
+                                          ? 'Opted in'
+                                          : 'Opted out'
                                 }}
                             </span>
                         </label>
                     </div>
                     <p class="as-marketing-note">
-                        You will always receive order confirmations and dispatch
-                        notifications regardless of this setting.
+                        Essential order confirmations and dispatch updates are
+                        always sent.
                     </p>
                 </section>
             </div>
@@ -1897,10 +1905,94 @@ const formatAddress = (a: Address): string[] =>
     font-size: var(--coy-text-sm);
 }
 
+.as-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--coy-space-4);
+    margin-bottom: var(--coy-space-5);
+    padding-bottom: var(--coy-space-4);
+    border-bottom: 1px solid var(--coy-color-border-soft);
+}
+
+.as-card-title {
+    display: flex;
+    align-items: center;
+    gap: var(--coy-space-3);
+    margin: 0;
+}
+
+.as-card-icon {
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    flex: none;
+    place-items: center;
+    color: var(--coy-color-accent);
+    background: var(--coy-color-surface-soft);
+    border-radius: 50%;
+}
+
+.as-card-icon svg {
+    width: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+}
+
+.as-status {
+    padding: 0.3rem 0.65rem;
+    color: var(--coy-color-text);
+    background: var(--coy-color-page);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-pill);
+    font-size: 0.8rem;
+    font-weight: var(--coy-font-weight-semibold);
+    white-space: nowrap;
+}
+
+.as-status--active {
+    color: var(--coy-color-success);
+    background: var(--coy-color-success-soft);
+    border-color: rgb(39 100 55 / 25%);
+}
+
+.as-marketing {
+    margin: 0;
+    padding: var(--coy-space-5);
+    background: var(--coy-color-page);
+    border: 1px solid var(--coy-color-border-soft);
+    border-radius: var(--coy-radius-md);
+}
+
 .as-marketing-sub,
 .as-marketing-note {
     color: var(--coy-color-text);
     font-style: normal;
+}
+
+.as-marketing-sub {
+    max-width: 42rem;
+    margin: var(--coy-space-1) 0 0;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.as-marketing-note {
+    margin: var(--coy-space-4) 0 0;
+    font-size: 0.875rem;
+}
+
+.as-toggle-input:focus-visible + .as-toggle-track {
+    outline: 2px solid var(--coy-color-focus);
+    outline-offset: 3px;
+    box-shadow: var(--coy-shadow-focus);
+}
+
+.as-toggle-input:disabled + .as-toggle-track {
+    opacity: 0.6;
 }
 
 .as-toggle--on .as-toggle-track {
@@ -1940,6 +2032,15 @@ const formatAddress = (a: Address): string[] =>
     .ap-card-head {
         align-items: flex-start;
         gap: var(--coy-space-3);
+    }
+
+    .as-card-head,
+    .as-marketing {
+        align-items: flex-start;
+    }
+
+    .as-marketing {
+        flex-direction: column;
     }
 }
 
