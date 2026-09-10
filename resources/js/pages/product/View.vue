@@ -222,13 +222,6 @@ async function favourite(product: Product) {
                         <h2>Filter products</h2>
                         <p>Refine your selection</p>
                     </div>
-                    <button
-                        v-if="hasFilters"
-                        type="button"
-                        @click="clearFilters"
-                    >
-                        Clear all
-                    </button>
                 </div>
                 <div class="filter-group">
                     <h3>Availability</h3>
@@ -237,8 +230,12 @@ async function favourite(product: Product) {
                         stock only</label
                     >
                 </div>
-                <fieldset class="filter-group">
-                    <legend>Product type</legend>
+                <div
+                    class="filter-group"
+                    role="group"
+                    aria-labelledby="desktop-product-type"
+                >
+                    <h3 id="desktop-product-type">Product type</h3>
                     <label v-for="category in categories" :key="category.id"
                         ><input
                             v-model="form.categories"
@@ -247,7 +244,7 @@ async function favourite(product: Product) {
                         />
                         {{ category.name }}</label
                     >
-                </fieldset>
+                </div>
                 <div class="filter-group">
                     <h3>Price</h3>
                     <div class="price-inputs">
@@ -269,6 +266,15 @@ async function favourite(product: Product) {
                                     max="500" /></span
                         ></label>
                     </div>
+                </div>
+                <div v-if="hasFilters" class="filters-footer">
+                    <button
+                        type="button"
+                        class="coy-button coy-button--secondary"
+                        @click="clearFilters"
+                    >
+                        Clear all filters
+                    </button>
                 </div>
             </aside>
 
@@ -407,8 +413,12 @@ async function favourite(product: Product) {
                             In stock only</label
                         >
                     </div>
-                    <fieldset class="filter-group">
-                        <legend>Product type</legend>
+                    <div
+                        class="filter-group"
+                        role="group"
+                        aria-labelledby="mobile-product-type"
+                    >
+                        <h3 id="mobile-product-type">Product type</h3>
                         <label v-for="category in categories" :key="category.id"
                             ><input
                                 v-model="form.categories"
@@ -417,7 +427,7 @@ async function favourite(product: Product) {
                             />
                             {{ category.name }}</label
                         >
-                    </fieldset>
+                    </div>
                     <div class="filter-group">
                         <h3>Price</h3>
                         <div class="price-inputs">
@@ -514,7 +524,6 @@ async function favourite(product: Product) {
     color: var(--coy-color-text);
     font-size: var(--coy-text-xs);
 }
-.filters-heading button,
 .search-summary button {
     padding: 0;
     color: var(--coy-color-accent);
@@ -526,6 +535,13 @@ async function favourite(product: Product) {
     text-decoration: underline;
     text-underline-offset: 0.2rem;
     cursor: pointer;
+}
+.filters-footer {
+    padding: var(--coy-space-5);
+    background: var(--coy-color-surface-soft);
+}
+.filters-footer .coy-button {
+    width: 100%;
 }
 .filter-group {
     display: flex;
@@ -669,13 +685,18 @@ async function favourite(product: Product) {
 }
 .filter-trigger b {
     min-width: 1.3rem;
+    width: 1.3rem;
     height: 1.3rem;
-    display: grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    padding: 0;
     color: white;
     background: var(--coy-color-accent);
     border-radius: 50%;
     font-size: 0.875rem;
+    line-height: 1;
 }
 .search-summary {
     display: flex;
@@ -796,6 +817,11 @@ async function favourite(product: Product) {
 }
 .drawer-body .filter-group label {
     background: var(--coy-color-page);
+}
+.drawer-body .price-inputs label,
+.drawer-body .price-inputs span,
+.drawer-body .price-inputs input {
+    background: transparent;
 }
 .drawer-panel > footer {
     display: flex;
