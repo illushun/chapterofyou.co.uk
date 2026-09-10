@@ -431,9 +431,10 @@ async function focusFirstError() {
                     </p>
 
                     <button
+                        type="button"
                         @click="submit"
                         :disabled="submitting || !finalAmount"
-                        class="gv-submit-btn"
+                        class="coy-button coy-button--primary gv-submit-btn"
                     >
                         <svg
                             v-if="submitting"
@@ -1213,10 +1214,10 @@ async function focusFirstError() {
 }
 
 .gv-step {
-    width: 1.7rem;
-    height: 1.7rem;
-    border-radius: var(--coy-radius-sm);
-    background: var(--coy-color-heading);
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 50%;
+    background: var(--coy-color-accent);
     color: var(--coy-color-surface);
     font-family: var(--coy-font-body);
     font-size: 0.72rem;
@@ -1244,8 +1245,8 @@ async function focusFirstError() {
 
 .gv-amount-btn:hover,
 .gv-amount-btn--active {
-    border-color: var(--coy-color-heading);
-    background: var(--coy-color-heading);
+    border-color: var(--coy-color-accent);
+    background: var(--coy-color-accent);
     color: var(--coy-color-surface);
 }
 
@@ -1314,9 +1315,11 @@ async function focusFirstError() {
 }
 
 .gv-label {
-    color: var(--coy-color-text);
-    font-size: 0.7rem;
-    letter-spacing: 0.09em;
+    color: var(--coy-color-heading);
+    font-size: 0.875rem;
+    font-weight: var(--coy-font-weight-semibold);
+    letter-spacing: 0;
+    text-transform: none;
 }
 
 .gv-req,
@@ -1376,25 +1379,13 @@ async function focusFirstError() {
 }
 
 .gv-submit-btn {
+    width: 100%;
     min-height: 3.25rem;
-    padding: 0.8rem 1.25rem;
-    border-color: var(--coy-color-heading);
-    border-radius: var(--coy-radius-sm);
-    background: var(--coy-color-heading);
-    box-shadow: none;
-    color: var(--coy-color-surface);
-    font-family: var(--coy-font-body);
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.11em;
-    text-transform: uppercase;
-    transition: opacity 160ms ease;
+    font-size: var(--coy-text-sm);
 }
 
 .gv-submit-btn:hover:not(:disabled) {
-    transform: none;
-    box-shadow: none;
-    opacity: 0.86;
+    transform: translateY(-1px);
 }
 
 .gv-preview-card {
