@@ -173,6 +173,13 @@ function addToCart(productId: number, quantity: number) {
 
 .wl-item {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.wl-item :deep(.product-card) {
+    height: auto;
+    flex: 1;
 }
 
 .wl-saved {
