@@ -2,8 +2,10 @@
 import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
+import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
-import { router } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 
 interface WishlistItem {
     wishlist_id: number;
@@ -22,190 +24,94 @@ interface WishlistItem {
 
 defineProps<{ items: WishlistItem[] }>();
 
-const fmt = (v: number | string) => {
-    const n = Number(v);
-    return isNaN(n) ? '£0.00' : `£${n.toFixed(2)}`;
-};
+const seo = useSeoHead({ noIndex: true });
 
-const productLink = (item: WishlistItem) =>
-    item.product.seo?.slug
-        ? `/product/${item.product.seo.slug}`
-        : `/product/${item.product.id}`;
+function cardProduct(item: WishlistItem) {
+    return {
+        ...item.product,
+        seo: item.product.seo ?? undefined,
+    };
+}
 
-const removeItem = (wishlistId: number) => {
+function removeItem(wishlistId: number) {
     router.delete(route('wishlist.remove', { id: wishlistId }), {
         preserveScroll: true,
     });
-};
+}
 
-const addToCart = (productId: number) => {
+function addToCart(productId: number, quantity: number) {
     router.post(
         '/cart/add',
-        { product_id: productId, quantity: 1 },
+        { product_id: productId, quantity },
         { preserveScroll: true },
     );
-};
-
-const seo = useSeoHead({ noIndex: true });
+}
 </script>
 
 <template>
     <NavBar />
-
     <SeoHead v-bind="seo" />
 
-    <component
-        :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-
-    <main class="wl">
-        <div class="wl-wrap">
-            <!-- Header -->
-            <header class="wl-header">
-                <a href="/account" class="wl-back">
-                    <svg
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
-                    Back to Account
-                </a>
-                <h1 class="wl-title">My Wishlist</h1>
-                <p class="wl-sub">
-                    {{ items.length }} saved item{{
-                        items.length !== 1 ? 's' : ''
-                    }}
-                </p>
-            </header>
-
-            <!-- Empty state -->
-            <div v-if="items.length === 0" class="wl-empty">
-                <svg
-                    class="wl-empty-icon"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    stroke-width="1.2"
-                >
-                    <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+    <main class="wl coy-storefront">
+        <header class="coy-page-header">
+            <div class="coy-container coy-page-header__inner">
+                <div>
+                    <CoyBreadcrumbs
+                        :items="[
+                            { label: 'Home', href: '/' },
+                            { label: 'My account', href: '/account' },
+                            { label: 'Wishlist' },
+                        ]"
                     />
-                </svg>
-                <h2>Your wishlist is empty</h2>
-                <p>Save items you love and come back to them anytime.</p>
-                <a href="/products" class="btn-rose">Browse the collection</a>
+                    <h1 class="coy-page-header__title">My wishlist</h1>
+                    <p class="coy-page-header__meta">
+                        {{ items.length }} saved
+                        {{ items.length === 1 ? 'fragrance' : 'fragrances' }}
+                    </p>
+                </div>
+                <Link href="/account" class="coy-page-header__action">
+                    Back to account
+                </Link>
+            </div>
+        </header>
+
+        <div class="coy-container wl-content">
+            <div class="wl-heading">
+                <div>
+                    <p class="coy-eyebrow">Saved for later</p>
+                    <h2>Your fragrances</h2>
+                </div>
+                <Link href="/products" class="wl-shop-link">
+                    Continue shopping <span aria-hidden="true">→</span>
+                </Link>
             </div>
 
-            <!-- Wishlist grid -->
+            <section v-if="items.length === 0" class="wl-empty">
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                    <path
+                        d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1 7.8 7.7 7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8Z"
+                    />
+                </svg>
+                <h2>Your wishlist is ready for a first favourite</h2>
+                <p>Save fragrances as you browse and find them waiting here.</p>
+                <Link href="/products" class="coy-button coy-button--primary">
+                    Browse fragrances
+                </Link>
+            </section>
+
             <div v-else class="wl-grid">
                 <div
                     v-for="item in items"
                     :key="item.wishlist_id"
-                    class="wl-card"
+                    class="wl-item"
                 >
-                    <!-- Image -->
-                    <a :href="productLink(item)" class="wl-img-wrap">
-                        <img
-                            :src="
-                                item.product.images?.[0]?.image ??
-                                '/images/placeholder.jpg'
-                            "
-                            :alt="item.product.name"
-                            class="wl-img"
-                        />
-                        <div
-                            v-if="item.product.stock_qty <= 0"
-                            class="wl-oos-overlay"
-                        >
-                            <span>Out of Stock</span>
-                        </div>
-                    </a>
-
-                    <!-- Body -->
-                    <div class="wl-body">
-                        <p class="wl-mpn">{{ item.product.mpn }}</p>
-                        <a :href="productLink(item)" class="wl-name">{{
-                            item.product.name
-                        }}</a>
-
-                        <div class="wl-meta">
-                            <span class="wl-price">{{
-                                fmt(item.product.cost)
-                            }}</span>
-                            <span
-                                class="wl-stock"
-                                :class="
-                                    item.product.stock_qty > 0
-                                        ? 'wl-stock--in'
-                                        : 'wl-stock--out'
-                                "
-                            >
-                                {{
-                                    item.product.stock_qty > 0
-                                        ? 'In Stock'
-                                        : 'Out of Stock'
-                                }}
-                            </span>
-                        </div>
-
-                        <p class="wl-saved">Saved {{ item.added_at }}</p>
-
-                        <div class="wl-actions">
-                            <button
-                                @click="addToCart(item.product.id)"
-                                :disabled="item.product.stock_qty <= 0"
-                                class="btn-rose btn-rose--sm wl-add"
-                            >
-                                <svg
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
-                                    />
-                                    <line x1="3" y1="6" x2="21" y2="6" />
-                                    <path d="M16 10a4 4 0 0 1-8 0" />
-                                </svg>
-                                Add to Cart
-                            </button>
-                            <button
-                                @click="removeItem(item.wishlist_id)"
-                                class="wl-remove"
-                                title="Remove from wishlist"
-                                aria-label="Remove from wishlist"
-                            >
-                                <svg
-                                    width="13"
-                                    height="13"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2.5"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path d="M18 6 6 18M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
+                    <ProductSpringCard
+                        :product="cardProduct(item)"
+                        wishlisted
+                        @add-to-cart="addToCart(item.product.id, $event)"
+                        @favourite="removeItem(item.wishlist_id)"
+                    />
+                    <p class="wl-saved">Saved {{ item.added_at }}</p>
                 </div>
             </div>
         </div>
@@ -216,344 +122,117 @@ const seo = useSeoHead({ noIndex: true });
 
 <style scoped>
 .wl {
-    font-family: 'Nunito', sans-serif;
     min-height: 100vh;
-    padding-top: 64px;
-    background: #fdf4f3;
-    color: #2d1a1a;
+    padding-top: var(--coy-nav-height);
+    background: var(--coy-color-page);
 }
 
-.wl-wrap {
-    max-width: 1040px;
-    margin: 0 auto;
-    padding: 3rem 1.25rem 6rem;
+.wl-content {
+    padding-block: clamp(2.5rem, 5vw, 4rem) clamp(4rem, 7vw, 6rem);
 }
 
-/* ── Header ── */
-.wl-header {
-    margin-bottom: 2.5rem;
+.wl-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--coy-space-5);
+    margin-bottom: var(--coy-space-6);
+    padding-bottom: var(--coy-space-4);
+    border-bottom: 1px solid var(--coy-color-border);
 }
 
-.wl-back {
+.wl-heading h2 {
+    margin: var(--coy-space-1) 0 0;
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: var(--coy-font-weight-medium);
+    line-height: 1.08;
+}
+
+.wl-shop-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    font-size: 0.88rem;
-    color: #6b4f4f;
+    gap: var(--coy-space-2);
+    color: var(--coy-color-accent);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
     text-decoration: none;
-    margin-bottom: 1rem;
-    transition: color 0.2s;
 }
 
-.wl-back:hover {
-    color: #8c4a50;
+.wl-shop-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2rem;
 }
 
-.wl-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: clamp(2rem, 5vw, 2.8rem);
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 0.25rem;
+.wl-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(1.5rem, 3vw, 2.25rem);
 }
 
-.wl-sub {
-    font-size: 0.92rem;
-    color: #6b4f4f;
-    font-style: italic;
+.wl-item {
+    min-width: 0;
 }
 
-/* ── Empty ── */
+.wl-saved {
+    margin: var(--coy-space-3) 0 0;
+    padding-top: var(--coy-space-3);
+    color: var(--coy-color-text);
+    border-top: 1px solid var(--coy-color-border-soft);
+    font-size: 0.875rem;
+}
+
 .wl-empty {
-    text-align: center;
-    padding: 4rem 2rem;
-    border: 1.5px dashed #e5c9c7;
-    border-radius: 20px;
-    background: #fffafa;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 0.9rem;
+    flex-direction: column;
+    padding: clamp(3rem, 8vw, 6rem) var(--coy-space-5);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border-soft);
+    border-radius: var(--coy-radius-lg);
+    text-align: center;
 }
 
-.wl-empty-icon {
-    width: 48px;
-    height: 48px;
-    color: #c9a4a4;
-    margin-bottom: 0.25rem;
+.wl-empty svg {
+    width: 3rem;
+    fill: none;
+    stroke: var(--coy-color-rose-gold);
+    stroke-width: 1.4;
 }
 
 .wl-empty h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.5rem;
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
+    max-width: 22ch;
+    margin: var(--coy-space-4) 0 var(--coy-space-2);
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: var(--coy-font-weight-medium);
+    line-height: 1.1;
 }
 
 .wl-empty p {
-    font-size: 0.92rem;
-    color: #6b4f4f;
-    line-height: 1.6;
-}
-
-/* ── Grid ── */
-.wl-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
+    margin: 0 0 var(--coy-space-5);
 }
 
 @media (max-width: 860px) {
     .wl-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 560px) {
+    .wl-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
     .wl-grid {
         grid-template-columns: 1fr;
     }
-}
 
-/* ── Card ── */
-.wl-card {
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    background: #fffafa;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    transition:
-        box-shadow 0.25s,
-        transform 0.25s;
-}
-
-.wl-card::before {
-    content: '✿';
-    position: absolute;
-    bottom: -6px;
-    right: 8px;
-    font-size: 3.2rem;
-    color: #c9a4a4;
-    opacity: 0.12;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-    z-index: 0;
-}
-
-.wl-card::after {
-    content: '✿';
-    position: absolute;
-    top: 6px;
-    left: 10px;
-    font-size: 0.85rem;
-    color: #c9a4a4;
-    opacity: 0.22;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-    z-index: 0;
-}
-
-.wl-card:hover {
-    box-shadow: 0 6px 24px rgba(229, 201, 199, 0.55);
-    transform: translateY(-2px);
-}
-
-/* ── Image ── */
-.wl-img-wrap {
-    display: block;
-    position: relative;
-    height: 200px;
-    overflow: hidden;
-    background: #fdf4f3;
-    border-bottom: 1px solid #e5c9c7;
-}
-
-.wl-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-
-.wl-card:hover .wl-img {
-    transform: scale(1.04);
-}
-
-.wl-oos-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(253, 244, 243, 0.75);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.wl-oos-overlay span {
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: #8c4a50;
-    background: #fffafa;
-    border: 1px solid #e5c9c7;
-    border-radius: 999px;
-    padding: 0.3rem 0.85rem;
-}
-
-/* ── Body ── */
-.wl-body {
-    padding: 1rem 1.1rem 1.1rem;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    position: relative;
-    z-index: 1;
-}
-
-.wl-mpn {
-    font-size: 0.72rem;
-    font-family: monospace;
-    color: #6b4f4f;
-    margin-bottom: 0.25rem;
-    letter-spacing: 0.04em;
-}
-
-.wl-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.05rem;
-    font-weight: 500;
-    color: #2d1a1a;
-    text-decoration: none;
-    line-height: 1.3;
-    margin-bottom: 0.75rem;
-    transition: color 0.2s;
-    display: block;
-}
-
-.wl-name:hover {
-    color: #8c4a50;
-}
-
-.wl-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 0.65rem;
-    border-top: 1px solid #e5c9c7;
-    margin-bottom: 0.4rem;
-}
-
-.wl-price {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.3rem;
-    font-weight: 500;
-    color: #8c4a50;
-}
-
-.wl-stock {
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    padding: 0.2rem 0.65rem;
-    border-radius: 999px;
-    border: 1px solid transparent;
-}
-
-.wl-stock--in {
-    background: #f0faf0;
-    color: #2d7a3a;
-    border-color: #a8d8b0;
-}
-
-.wl-stock--out {
-    background: #fff5f5;
-    color: #8c2a2a;
-    border-color: #e8a8a8;
-}
-
-.wl-saved {
-    font-size: 0.75rem;
-    color: #6b4f4f;
-    font-style: italic;
-    margin-bottom: 0.85rem;
-}
-
-/* ── Actions ── */
-.wl-actions {
-    display: flex;
-    gap: 0.6rem;
-    margin-top: auto;
-}
-
-.wl-add {
-    flex: 1;
-    justify-content: center;
-}
-
-.wl-remove {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
-    border: 1px solid #e5c9c7;
-    background: transparent;
-    color: #c9a4a4;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition:
-        background 0.2s,
-        color 0.2s,
-        border-color 0.2s;
-}
-
-.wl-remove:hover {
-    background: #faeaea;
-    color: #8c4a50;
-    border-color: #c9a4a4;
-}
-
-/* ── Buttons ── */
-.btn-rose {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.65rem 1.4rem;
-    border-radius: 999px;
-    border: 1px solid #a85058;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-decoration: none;
-    box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition:
-        transform 0.2s,
-        box-shadow 0.2s;
-    cursor: pointer;
-}
-
-.btn-rose:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 18px rgba(168, 80, 88, 0.28);
-}
-
-.btn-rose:disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-}
-
-.btn-rose--sm {
-    padding: 0.55rem 1rem;
-    font-size: 0.85rem;
+    .coy-page-header__action {
+        display: none;
+    }
 }
 </style>
