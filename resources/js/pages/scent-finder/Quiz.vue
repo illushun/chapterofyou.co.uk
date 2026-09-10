@@ -164,7 +164,13 @@ const submit = () => {
                         "
                         @click="toggleFamily(family.value)"
                     >
-                        {{ family.label }}
+                        <span>{{ family.label }}</span>
+                        <span
+                            v-if="answers.scent_families.includes(family.value)"
+                            class="sf-chip-check"
+                            aria-hidden="true"
+                            >✓</span
+                        >
                     </button>
                 </div>
 
@@ -186,7 +192,13 @@ const submit = () => {
                         :aria-pressed="answers.mood_tags.includes(mood.value)"
                         @click="toggleMood(mood.value)"
                     >
-                        {{ mood.label }}
+                        <span>{{ mood.label }}</span>
+                        <span
+                            v-if="answers.mood_tags.includes(mood.value)"
+                            class="sf-chip-check"
+                            aria-hidden="true"
+                            >✓</span
+                        >
                     </button>
                 </div>
 
@@ -208,7 +220,13 @@ const submit = () => {
                         :aria-pressed="answers.room_tags.includes(room.value)"
                         @click="toggleRoom(room.value)"
                     >
-                        {{ room.label }}
+                        <span>{{ room.label }}</span>
+                        <span
+                            v-if="answers.room_tags.includes(room.value)"
+                            class="sf-chip-check"
+                            aria-hidden="true"
+                            >✓</span
+                        >
                     </button>
                 </div>
 
@@ -216,14 +234,14 @@ const submit = () => {
                     <button
                         v-if="currentStep > 0"
                         type="button"
-                        class="sf-btn sf-btn--ghost"
+                        class="coy-button coy-button--secondary sf-btn"
                         @click="back"
                     >
                         Back
                     </button>
                     <button
                         type="button"
-                        class="sf-btn sf-btn--primary"
+                        class="coy-button coy-button--primary sf-btn"
                         :disabled="!canProceed || submitting"
                         @click="next"
                     >
@@ -538,9 +556,13 @@ const submit = () => {
 
 .sf-chip {
     min-height: 3.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--coy-space-3);
     padding: 0.85rem 1rem;
     border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-sm);
+    border-radius: var(--coy-radius-md);
     background: var(--coy-color-page);
     color: var(--coy-color-heading);
     font-family: var(--coy-font-body);
@@ -561,9 +583,22 @@ const submit = () => {
 
 .sf-chip--active,
 .sf-chip--active:hover:not(:disabled) {
-    border-color: var(--coy-color-heading);
-    background: var(--coy-color-heading);
+    border-color: var(--coy-color-accent);
+    background: var(--coy-color-accent);
     color: var(--coy-color-on-accent);
+}
+
+.sf-chip-check {
+    width: 1.35rem;
+    height: 1.35rem;
+    display: grid;
+    flex: none;
+    place-items: center;
+    color: var(--coy-color-accent);
+    background: var(--coy-color-on-accent);
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
 }
 
 .sf-chip:disabled {
@@ -576,39 +611,7 @@ const submit = () => {
 }
 
 .sf-btn {
-    min-height: var(--coy-control-height);
-    padding: 0.75rem 1.4rem;
-    border-radius: var(--coy-radius-sm);
-    font-family: var(--coy-font-body);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    transition: opacity var(--coy-duration-fast) var(--coy-ease);
-}
-
-.sf-btn--primary {
-    border-color: var(--coy-color-heading);
-    background: var(--coy-color-heading);
-    box-shadow: none;
-    color: var(--coy-color-on-accent);
-}
-
-.sf-btn--primary:hover:not(:disabled) {
-    box-shadow: none;
-    opacity: 0.86;
-    transform: none;
-}
-
-.sf-btn--ghost {
-    border-color: var(--coy-color-border);
-    background: transparent;
-    color: var(--coy-color-heading);
-}
-
-.sf-btn--ghost:hover {
-    border-color: var(--coy-color-heading);
-    background: var(--coy-color-surface-soft);
+    min-width: 7rem;
 }
 
 @media (max-width: 560px) {
