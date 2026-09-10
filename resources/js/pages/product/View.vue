@@ -218,7 +218,10 @@ async function favourite(product: Product) {
         <div class="coy-container collection-layout">
             <aside class="filters" aria-label="Product filters">
                 <div class="filters-heading">
-                    <h2>Filter products</h2>
+                    <div>
+                        <h2>Filter products</h2>
+                        <p>Refine your selection</p>
+                    </div>
                     <button
                         v-if="hasFilters"
                         type="button"
@@ -281,7 +284,7 @@ async function favourite(product: Product) {
                     <div class="toolbar-actions">
                         <button
                             type="button"
-                            class="filter-trigger"
+                            class="coy-button coy-button--secondary filter-trigger"
                             @click="filterOpen = true"
                         >
                             <svg aria-hidden="true" viewBox="0 0 24 24">
@@ -373,9 +376,21 @@ async function favourite(product: Product) {
             class="drawer-backdrop"
             @click.self="filterOpen = false"
         >
-            <aside class="drawer-panel" aria-label="Mobile product filters">
+            <aside
+                class="drawer-panel"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="mobile-filter-title"
+            >
                 <header>
-                    <h2>Filter products</h2>
+                    <div>
+                        <h2 id="mobile-filter-title">Filter products</h2>
+                        <p>
+                            {{ activeFilterCount }}
+                            {{ activeFilterCount === 1 ? 'filter' : 'filters' }}
+                            selected
+                        </p>
+                    </div>
                     <button
                         type="button"
                         aria-label="Close filters"
@@ -436,7 +451,7 @@ async function favourite(product: Product) {
                     ><button
                         v-if="hasFilters"
                         type="button"
-                        class="clear-button"
+                        class="coy-button coy-button--secondary clear-button"
                         @click="clearFilters"
                     >
                         Clear all filters
@@ -461,7 +476,7 @@ async function favourite(product: Product) {
 }
 .collection-layout {
     display: grid;
-    grid-template-columns: 15.5rem minmax(0, 1fr);
+    grid-template-columns: 17rem minmax(0, 1fr);
     gap: clamp(2rem, 4vw, 4rem);
     padding-block: clamp(1.5rem, 4vw, 3rem) clamp(3rem, 6vw, 5rem);
 }
@@ -469,15 +484,19 @@ async function favourite(product: Product) {
     position: sticky;
     top: calc(var(--coy-nav-height) + 1.5rem);
     align-self: start;
-    padding: 0;
-    background: transparent;
-    border-top: 2px solid var(--coy-color-heading);
+    overflow: hidden;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-sm);
 }
 .filters-heading {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    padding: 1rem 0;
+    gap: var(--coy-space-3);
+    padding: var(--coy-space-5);
+    background: var(--coy-color-surface-soft);
     border-bottom: 1px solid var(--coy-color-border-soft);
 }
 .filters-heading h2,
@@ -489,16 +508,21 @@ async function favourite(product: Product) {
     font-size: 1.45rem;
     font-weight: 600;
 }
+.filters-heading p,
+.drawer-panel > header p {
+    margin: var(--coy-space-1) 0 0;
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-xs);
+}
 .filters-heading button,
-.search-summary button,
-.clear-button {
+.search-summary button {
     padding: 0;
     color: var(--coy-color-accent);
     background: none;
     border: 0;
     font: inherit;
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
     text-decoration: underline;
     text-underline-offset: 0.2rem;
     cursor: pointer;
@@ -506,9 +530,9 @@ async function favourite(product: Product) {
 .filter-group {
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: var(--coy-space-2);
     margin: 0;
-    padding: 1.25rem 0;
+    padding: var(--coy-space-5);
     border: 0;
     border-bottom: 1px solid var(--coy-color-border-soft);
 }
@@ -517,24 +541,36 @@ async function favourite(product: Product) {
 }
 .filter-group h3,
 .filter-group legend {
-    margin: 0 0 0.15rem;
+    margin: 0 0 var(--coy-space-1);
     padding: 0;
     color: var(--coy-color-heading);
-    font-size: 1rem;
-    font-weight: 700;
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
 }
 .filter-group label {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
-    min-height: 2.5rem;
-    padding: 0.35rem 0.5rem;
-    border-radius: var(--coy-radius-sm);
-    font-size: 1rem;
+    gap: var(--coy-space-3);
+    min-height: var(--coy-control-height);
+    padding: 0.55rem var(--coy-space-3);
+    background: var(--coy-color-page);
+    border: 1px solid transparent;
+    border-radius: var(--coy-radius-md);
+    font-size: var(--coy-text-sm);
     cursor: pointer;
+    transition:
+        background-color var(--coy-duration-fast) var(--coy-ease),
+        border-color var(--coy-duration-fast) var(--coy-ease);
 }
 .filter-group label:hover {
-    background: var(--coy-color-surface);
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-border);
+}
+.filter-group label:has(input[type='checkbox']:checked) {
+    color: var(--coy-color-heading);
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-rose-gold);
+    font-weight: var(--coy-font-weight-semibold);
 }
 .filter-group input[type='checkbox'] {
     width: 1.15rem;
@@ -544,12 +580,17 @@ async function favourite(product: Product) {
 .price-inputs {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
+    gap: var(--coy-space-2);
 }
 .price-inputs label {
     display: block;
     min-height: auto;
     padding: 0;
+    color: var(--coy-color-text);
+    background: transparent;
+    border: 0;
+    font-size: var(--coy-text-xs);
+    font-weight: var(--coy-font-weight-semibold);
 }
 .price-inputs label:hover {
     background: transparent;
@@ -559,10 +600,15 @@ async function favourite(product: Product) {
     display: flex;
     align-items: center;
     margin-top: 0.35rem;
-    padding: 0 0.6rem;
-    background: var(--coy-color-page);
+    padding: 0 var(--coy-space-3);
+    color: var(--coy-color-heading);
+    background: var(--coy-color-surface);
     border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-sm);
+    border-radius: var(--coy-radius-pill);
+}
+.price-inputs span:focus-within {
+    border-color: var(--coy-color-focus);
+    box-shadow: var(--coy-shadow-focus);
 }
 .price-inputs input {
     min-width: 0;
@@ -613,14 +659,7 @@ async function favourite(product: Product) {
     display: none;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.5rem 0.8rem;
-    color: var(--coy-color-heading);
-    background: var(--coy-color-surface);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-sm);
-    font: inherit;
-    font-size: 1rem;
-    font-weight: 700;
+    padding: 0.5rem 1rem;
 }
 .filter-trigger svg {
     width: 1.2rem;
@@ -733,7 +772,8 @@ async function favourite(product: Product) {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 1.25rem;
+    padding: var(--coy-space-5);
+    background: var(--coy-color-surface-soft);
     border-bottom: 1px solid var(--coy-color-border);
 }
 .drawer-panel > header button {
@@ -749,7 +789,13 @@ async function favourite(product: Product) {
 .drawer-body {
     flex: 1;
     overflow: auto;
-    padding: 0 1.25rem;
+    background: var(--coy-color-page);
+}
+.drawer-body .filter-group {
+    background: var(--coy-color-surface);
+}
+.drawer-body .filter-group label {
+    background: var(--coy-color-page);
 }
 .drawer-panel > footer {
     display: flex;
@@ -757,6 +803,9 @@ async function favourite(product: Product) {
     gap: 1rem;
     padding: 1.25rem;
     border-top: 1px solid var(--coy-color-border);
+}
+.drawer-panel > footer .coy-button {
+    width: 100%;
 }
 .drawer-enter-active,
 .drawer-leave-active {
