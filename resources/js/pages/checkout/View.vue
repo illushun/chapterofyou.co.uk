@@ -492,9 +492,25 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                             />
                         </a>
                         <h1 class="co-title coy-heading">Checkout</h1>
+                        <span class="co-secure-label">
+                            <svg aria-hidden="true" viewBox="0 0 24 24">
+                                <rect
+                                    x="4"
+                                    y="10"
+                                    width="16"
+                                    height="11"
+                                    rx="2"
+                                />
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                            </svg>
+                            Secure checkout
+                        </span>
                     </div>
                     <div class="co-header-actions">
-                        <a :href="getRoute('cart.view')" class="co-back">
+                        <a
+                            :href="getRoute('cart.view')"
+                            class="co-back coy-button coy-button--secondary"
+                        >
                             <svg
                                 width="14"
                                 height="14"
@@ -547,9 +563,12 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                             <div
                                 class="co-section-heading co-section-heading--step"
                             >
+                                <span class="co-step" aria-hidden="true"
+                                    >1</span
+                                >
                                 <div>
                                     <h2 class="co-card-title coy-heading">
-                                        Contact
+                                        Contact and delivery
                                     </h2>
                                 </div>
                             </div>
@@ -955,6 +974,9 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
                             <div
                                 class="co-section-heading co-section-heading--step"
                             >
+                                <span class="co-step" aria-hidden="true"
+                                    >2</span
+                                >
                                 <div>
                                     <h2 class="co-card-title coy-heading">
                                         Payment
@@ -1308,8 +1330,8 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     margin-inline: auto;
 }
 .co-header-band {
-    background: var(--coy-color-surface);
-    border-bottom: 1px solid var(--coy-color-border-soft);
+    background: var(--coy-color-blush);
+    border-bottom: 1px solid var(--coy-color-border);
 }
 .co-wrap--header {
     padding-block: 1.2rem;
@@ -1336,9 +1358,22 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
 }
 .co-title {
     margin: 0;
-    font-family: var(--coy-font-body);
-    font-size: 1.5rem;
-    font-weight: 600;
+    font-family: var(--coy-font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+}
+.co-secure-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--coy-color-text);
+    font-size: var(--coy-text-xs);
+}
+.co-secure-label svg {
+    width: 0.9rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
 }
 .co-back,
 .co-clear-btn,
@@ -1350,6 +1385,9 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     color: var(--coy-color-accent);
     font: 600 1rem var(--coy-font-body);
     text-underline-offset: 0.2rem;
+}
+.co-back {
+    text-decoration: none;
 }
 .co-clear-btn {
     background: transparent;
@@ -1373,19 +1411,40 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     padding: 0;
     border: 0;
 }
+.co-checkout-fields {
+    display: flex;
+    flex-direction: column;
+    gap: var(--coy-space-5);
+}
 .co-card {
-    padding: 0 0 2rem;
-    background: transparent;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
+    padding: clamp(1.5rem, 4vw, 2.25rem);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-sm);
 }
 .co-card + .co-card {
-    padding-top: 2rem;
-    border-top: 1px solid var(--coy-color-border);
+    padding-top: clamp(1.5rem, 4vw, 2.25rem);
 }
 .co-section-heading {
     margin-bottom: 1.25rem;
+}
+.co-section-heading--step {
+    display: flex;
+    align-items: center;
+    gap: var(--coy-space-3);
+}
+.co-step {
+    width: 1.9rem;
+    height: 1.9rem;
+    display: grid;
+    flex: none;
+    place-items: center;
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 700;
 }
 .co-card-title {
     margin: 0;
@@ -1450,7 +1509,7 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     color: var(--coy-color-heading);
     background: var(--coy-color-surface);
     border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-sm);
+    border-radius: var(--coy-radius-md);
 }
 .field-input--error {
     border-color: var(--coy-color-error);
@@ -1586,9 +1645,9 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     min-width: 0;
 }
 .co-summary-card {
-    padding: 1.5rem;
-    box-shadow: none;
-    border-color: var(--coy-color-border-soft);
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+    box-shadow: var(--coy-shadow-sm);
+    border-color: var(--coy-color-border);
 }
 .co-summary-title {
     margin: 0.25rem 0 1.5rem;
@@ -1807,6 +1866,9 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
     }
 }
 @media (max-width: 540px) {
+    .co-secure-label {
+        display: none;
+    }
     .co-field-row,
     .co-field-row--3,
     .co-address-grid {
