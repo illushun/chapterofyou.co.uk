@@ -76,19 +76,6 @@ const principles = [
                         >
                     </div>
                 </div>
-                <aside
-                    class="credential"
-                    aria-label="Professional qualification"
-                >
-                    <p class="label">Professional training</p>
-                    <h2>VTCT Level 3 Diploma</h2>
-                    <p>Complementary therapies</p>
-                    <ul>
-                        <li>Aromatherapy</li>
-                        <li>Reflexology</li>
-                        <li>Swedish massage</li>
-                    </ul>
-                </aside>
             </div>
         </section>
 
@@ -202,10 +189,7 @@ const principles = [
     border-bottom: 1px solid var(--coy-color-border);
 }
 .hero-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(17rem, 0.65fr);
-    gap: clamp(2rem, 7vw, 7rem);
-    align-items: end;
+    display: block;
 }
 .hero-grid > div {
     max-width: 47rem;
@@ -241,50 +225,6 @@ const principles = [
     align-items: center;
     gap: var(--coy-space-3);
     margin-top: 2rem;
-}
-.credential {
-    padding: clamp(1.5rem, 3vw, 2rem);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-lg);
-    background: var(--coy-color-surface);
-}
-.credential .label {
-    margin-bottom: 1rem;
-    color: var(--coy-color-accent);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: var(--coy-tracking-label);
-    text-transform: uppercase;
-}
-.credential h2 {
-    max-width: none;
-    margin: 0;
-    font-size: 1.65rem;
-    letter-spacing: 0;
-}
-.credential > p:not(.label) {
-    margin-top: 0.25rem;
-}
-.credential ul {
-    display: grid;
-    gap: 0.6rem;
-    margin-top: 1.5rem;
-    padding: 1.25rem 0 0;
-    border-top: 1px solid var(--coy-color-border);
-    list-style: none;
-}
-.credential li {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    font-size: 1rem;
-}
-.credential li:before {
-    width: 0.45rem;
-    height: 0.45rem;
-    border-radius: 50%;
-    background: var(--coy-color-accent);
-    content: '';
 }
 .section {
     padding-block: var(--coy-section-space);
@@ -395,9 +335,6 @@ const principles = [
     .hero-grid,
     .split {
         grid-template-columns: 1fr;
-    }
-    .credential {
-        max-width: 30rem;
     }
     .principles {
         grid-template-columns: 1fr;
