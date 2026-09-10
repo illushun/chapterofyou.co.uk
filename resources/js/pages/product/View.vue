@@ -10,7 +10,7 @@ import { useSeoHead } from '@/composables/useSeoHead';
 import { router } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
 import axios from 'axios';
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, nextTick, reactive, ref, watch } from 'vue';
 
 interface Category {
     id: number;
@@ -66,6 +66,7 @@ const form = reactive({
 });
 const filterOpen = ref(false);
 const isLoading = ref(false);
+const resultsSection = ref<HTMLElement | null>(null);
 const toast = ref<InstanceType<typeof SuccessToast> | null>(null);
 const wishlistedIds = ref(props.wishlistedIds ?? []);
 const activeFilterCount = computed(
@@ -150,6 +151,11 @@ function paginate(url: string) {
         {},
         {
             preserveScroll: true,
+            onSuccess: () => {
+                nextTick(() =>
+                    resultsSection.value?.scrollIntoView({ block: 'start' }),
+                );
+            },
             onFinish: () => {
                 isLoading.value = false;
             },
@@ -278,7 +284,11 @@ async function favourite(product: Product) {
                 </div>
             </aside>
 
-            <section class="results" aria-labelledby="results-heading">
+            <section
+                ref="resultsSection"
+                class="results"
+                aria-labelledby="results-heading"
+            >
                 <div class="toolbar">
                     <div>
                         <h2 id="results-heading">All products</h2>
@@ -542,6 +552,10 @@ async function favourite(product: Product) {
 }
 .filters-footer .coy-button {
     width: 100%;
+}
+.results {
+    min-width: 0;
+    scroll-margin-top: calc(var(--coy-nav-height) + var(--coy-space-5));
 }
 .filter-group {
     display: flex;
