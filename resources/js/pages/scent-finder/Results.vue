@@ -6,7 +6,6 @@ import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
-import { moodTagLabel, roomLabel, scentFamilyLabel } from '@/lib/scentTaxonomy';
 import { Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref } from 'vue';
@@ -90,34 +89,24 @@ const handleFavourite = async (product: ProductCardData) => {
     <SeoHead v-bind="seo" />
 
     <main class="sfr coy-storefront">
+        <header class="coy-page-header">
+            <div class="coy-container coy-page-header__inner">
+                <div>
+                    <CoyBreadcrumbs
+                        :items="[
+                            { label: 'Home', href: '/' },
+                            { label: 'Scent finder', href: '/scent-finder' },
+                            { label: 'Results' },
+                        ]"
+                    />
+                    <h1 class="coy-page-header__title">Your scent matches</h1>
+                    <p class="coy-page-header__meta">
+                        Personalised recommendations based on your choices.
+                    </p>
+                </div>
+            </div>
+        </header>
         <div class="sfr-wrap">
-            <header class="sfr-header">
-                <CoyBreadcrumbs
-                    :items="[
-                        { label: 'Home', href: '/' },
-                        { label: 'Scent finder', href: '/scent-finder' },
-                        { label: 'Results' },
-                    ]"
-                />
-                <p class="coy-eyebrow">Scent finder</p>
-                <h1 class="sfr-title">Your scent matches</h1>
-                <p class="sfr-summary">
-                    Based on your choices:
-                    <strong>{{
-                        answers.scent_families.map(scentFamilyLabel).join(' & ')
-                    }}</strong>
-                    scents for
-                    <strong>{{
-                        answers.mood_tags.map(moodTagLabel).join(', ')
-                    }}</strong>
-                    moments in your
-                    <strong>{{
-                        answers.room_tags.map(roomLabel).join(' & ')
-                    }}</strong
-                    >.
-                </p>
-            </header>
-
             <div v-if="products.length === 0" class="sfr-empty">
                 <h2>No close matches yet</h2>
                 <p>Try the finder again with a different combination.</p>

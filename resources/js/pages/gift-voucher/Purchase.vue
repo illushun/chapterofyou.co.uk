@@ -126,22 +126,23 @@ async function focusFirstError() {
     <SeoHead v-bind="seo" />
 
     <main class="gv coy-storefront">
+        <header class="coy-page-header">
+            <div class="coy-container coy-page-header__inner">
+                <div>
+                    <CoyBreadcrumbs
+                        :items="[
+                            { label: 'Home', href: '/' },
+                            { label: 'Gift vouchers' },
+                        ]"
+                    />
+                    <h1 class="coy-page-header__title">Gift vouchers</h1>
+                    <p class="coy-page-header__meta">
+                        Choose an amount and send it by email or post.
+                    </p>
+                </div>
+            </div>
+        </header>
         <div class="gv-wrap">
-            <header class="gv-header">
-                <CoyBreadcrumbs
-                    :items="[
-                        { label: 'Home', href: '/' },
-                        { label: 'Gift vouchers' },
-                    ]"
-                />
-                <p class="coy-eyebrow">A thoughtful gift</p>
-                <h1 class="gv-title">Gift vouchers</h1>
-                <p class="gv-intro">
-                    Choose an amount and send it by email or post. Gift vouchers
-                    can be used on any product and are valid for one year.
-                </p>
-            </header>
-
             <div class="gv-grid">
                 <div class="gv-form-col">
                     <p

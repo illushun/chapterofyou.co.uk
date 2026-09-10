@@ -108,22 +108,24 @@ const submit = () => {
     <SeoHead v-bind="seo" />
 
     <main class="sf coy-storefront">
+        <header class="coy-page-header">
+            <div class="coy-container coy-page-header__inner">
+                <div>
+                    <CoyBreadcrumbs
+                        :items="[
+                            { label: 'Home', href: '/' },
+                            { label: 'Scent finder' },
+                        ]"
+                    />
+                    <h1 class="coy-page-header__title">Find your scent</h1>
+                    <p class="coy-page-header__meta">
+                        Tell us what you enjoy and we will suggest the closest
+                        matches.
+                    </p>
+                </div>
+            </div>
+        </header>
         <div class="sf-wrap">
-            <header class="sf-header">
-                <CoyBreadcrumbs
-                    :items="[
-                        { label: 'Home', href: '/' },
-                        { label: 'Scent finder' },
-                    ]"
-                />
-                <p class="coy-eyebrow">Scent finder</p>
-                <h1 class="sf-title">Find your scent</h1>
-                <p class="sf-intro">
-                    Tell us what you enjoy, the mood you want, and where your
-                    diffuser will live. We will suggest the closest matches.
-                </p>
-            </header>
-
             <div class="sf-progress">
                 <p class="sf-progress-label">
                     Question {{ currentStep + 1 }} of {{ totalSteps }}

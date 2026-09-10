@@ -33,8 +33,8 @@ const principles = [
     <NavBar />
     <SeoHead v-bind="seo" />
     <main class="about coy-storefront">
-        <header class="hero">
-            <div class="hero-grid container">
+        <header class="coy-page-header">
+            <div class="coy-container coy-page-header__inner">
                 <div>
                     <CoyBreadcrumbs
                         :items="[
@@ -42,8 +42,21 @@ const principles = [
                             { label: 'About' },
                         ]"
                     />
-                    <p class="coy-eyebrow">About Chapter of You</p>
-                    <h1>Home fragrance, made with care and knowledge</h1>
+                    <h1 class="coy-page-header__title">About Chapter of You</h1>
+                    <p class="coy-page-header__meta">
+                        Independent home fragrance, made with care and
+                        knowledge.
+                    </p>
+                </div>
+            </div>
+        </header>
+        <section class="hero">
+            <div class="hero-grid container">
+                <div>
+                    <p class="coy-eyebrow">The brand</p>
+                    <h2 class="hero-heading">
+                        Home fragrance, made with care and knowledge
+                    </h2>
                     <p class="lead">
                         Chapter of You is an independent home-fragrance brand
                         founded by Kacey, a qualified complementary therapist
@@ -76,7 +89,7 @@ const principles = [
                     </ul>
                 </aside>
             </div>
-        </header>
+        </section>
 
         <section class="section">
             <div class="split container">
@@ -193,20 +206,20 @@ const principles = [
 .hero-grid > div {
     max-width: 47rem;
 }
-.about h1,
 .about h2,
 .about h3 {
     color: var(--coy-color-heading);
     font-family: var(--coy-font-display);
     font-weight: 500;
 }
-.about h1 {
+.hero-heading {
+    max-width: 14ch;
     margin: 0.5rem 0 1.25rem;
     font-size: clamp(2.5rem, 5vw, 4.25rem);
     line-height: 0.98;
     letter-spacing: -0.04em;
 }
-.about h2 {
+.about h2:not(.hero-heading) {
     max-width: 12ch;
     margin-top: 0.55rem;
     font-size: clamp(2.25rem, 4.5vw, 3.75rem);
