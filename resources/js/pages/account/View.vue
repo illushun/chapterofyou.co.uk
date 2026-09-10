@@ -2,8 +2,9 @@
 import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
-import { router, useForm } from '@inertiajs/vue3';
+import { Link, router, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const IconEdit = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>`;
@@ -199,21 +200,40 @@ const formatAddress = (a: Address): string[] =>
 
     <SeoHead v-bind="seo" />
 
-    <component
-        :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-
-    <main class="ap">
+    <main class="ap coy-storefront">
+        <header class="coy-page-header">
+            <div class="coy-container coy-page-header__inner">
+                <div>
+                    <CoyBreadcrumbs
+                        :items="[
+                            { label: 'Home', href: '/' },
+                            { label: 'My account' },
+                        ]"
+                    />
+                    <h1 class="coy-page-header__title">My account</h1>
+                    <p class="coy-page-header__meta">
+                        Manage your details, preferences and saved addresses.
+                    </p>
+                </div>
+            </div>
+        </header>
         <div class="ap-wrap">
-            <!-- Header -->
-            <header class="ap-header">
-                <h1 class="ap-title">My Account</h1>
-                <p class="ap-sub">
-                    Manage your details, password and saved addresses.
-                </p>
-            </header>
+            <nav class="ap-shortcuts" aria-label="Account pages">
+                <Link href="/account/orders" class="ap-shortcut">
+                    <span>
+                        <strong>My orders</strong>
+                        <small>Track and review your purchases</small>
+                    </span>
+                    <span aria-hidden="true">→</span>
+                </Link>
+                <Link href="/account/wishlist" class="ap-shortcut">
+                    <span>
+                        <strong>My wishlist</strong>
+                        <small>Return to your saved fragrances</small>
+                    </span>
+                    <span aria-hidden="true">→</span>
+                </Link>
+            </nav>
 
             <div class="ap-sections">
                 <!-- ── General Details ── -->
@@ -1684,5 +1704,248 @@ const formatAddress = (a: Address): string[] =>
 
 .as-toggle--on .as-toggle-label {
     color: #8c4a50;
+}
+
+.ap {
+    min-height: 100vh;
+    padding-top: var(--coy-nav-height);
+    background: var(--coy-color-page);
+    color: var(--coy-color-text);
+    font-family: var(--coy-font-body);
+}
+
+.ap-wrap {
+    width: min(calc(100% - var(--coy-gutter) * 2), var(--coy-container-lg));
+    max-width: none;
+    padding: clamp(2.5rem, 5vw, 4rem) 0 clamp(4rem, 7vw, 6rem);
+}
+
+.ap-shortcuts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--coy-space-4);
+    margin-bottom: var(--coy-space-6);
+}
+
+.ap-shortcut {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--coy-space-4);
+    padding: var(--coy-space-5);
+    color: var(--coy-color-heading);
+    background: var(--coy-color-surface-soft);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    text-decoration: none;
+    transition:
+        background-color var(--coy-duration-base) var(--coy-ease),
+        transform var(--coy-duration-base) var(--coy-ease);
+}
+
+.ap-shortcut:hover {
+    background: var(--coy-color-blush);
+    transform: translateY(-1px);
+}
+
+.ap-shortcut strong,
+.ap-shortcut small {
+    display: block;
+}
+
+.ap-shortcut strong {
+    font-family: var(--coy-font-display);
+    font-size: 1.5rem;
+    font-weight: var(--coy-font-weight-medium);
+}
+
+.ap-shortcut small {
+    margin-top: var(--coy-space-1);
+    color: var(--coy-color-text);
+    font-size: 0.9rem;
+}
+
+.ap-shortcut > span:last-child {
+    color: var(--coy-color-accent);
+    font-size: 1.25rem;
+}
+
+.ap-sections {
+    gap: var(--coy-space-5);
+}
+
+.ap-card,
+.as-card {
+    padding: clamp(1.5rem, 4vw, 2.25rem);
+    overflow: visible;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-sm);
+}
+
+.ap-card::before,
+.ap-card::after,
+.as-card::before,
+.as-card::after,
+.address-card::before,
+.address-card::after {
+    content: none;
+}
+
+.ap-card-head {
+    margin-bottom: var(--coy-space-5);
+    padding-bottom: var(--coy-space-4);
+    border-color: var(--coy-color-border-soft);
+}
+
+.ap-card-title,
+.as-card-title {
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: 1.65rem;
+    font-style: normal;
+    font-weight: var(--coy-font-weight-medium);
+}
+
+.ap-icon,
+.as-card-title svg {
+    color: var(--coy-color-accent);
+}
+
+.field-label {
+    color: var(--coy-color-heading);
+    font-size: 0.9rem;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+.field-input {
+    min-height: var(--coy-control-height);
+    color: var(--coy-color-heading);
+    background: var(--coy-color-page);
+    border-color: var(--coy-color-border);
+    border-radius: var(--coy-radius-md);
+    font-family: var(--coy-font-body);
+}
+
+.field-input:focus {
+    border-color: var(--coy-color-focus);
+    box-shadow: var(--coy-shadow-focus);
+}
+
+.btn-rose,
+.btn-ghost,
+.btn-outline {
+    min-height: var(--coy-control-height);
+    border-radius: var(--coy-radius-pill);
+    font-family: var(--coy-font-body);
+    font-size: var(--coy-text-sm);
+    font-weight: var(--coy-font-weight-semibold);
+    letter-spacing: 0;
+}
+
+.btn-rose {
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border-color: var(--coy-color-accent);
+    box-shadow: var(--coy-shadow-sm);
+}
+
+.btn-rose:hover:not(:disabled) {
+    background: var(--coy-color-accent-hover);
+    border-color: var(--coy-color-accent-hover);
+    box-shadow: var(--coy-shadow-sm);
+}
+
+.btn-ghost,
+.btn-outline {
+    color: var(--coy-color-heading);
+    background: var(--coy-color-surface);
+    border-color: var(--coy-color-border);
+}
+
+.btn-ghost:hover,
+.btn-outline:hover {
+    color: var(--coy-color-heading);
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-rose-gold);
+}
+
+.address-card {
+    padding: var(--coy-space-5);
+    background: var(--coy-color-page);
+    border-color: var(--coy-color-border);
+    border-radius: var(--coy-radius-md);
+    box-shadow: none;
+}
+
+.address-card--default {
+    background: var(--coy-color-surface-soft);
+    border-color: var(--coy-color-accent);
+    box-shadow: none;
+}
+
+.address-default-badge {
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border-color: var(--coy-color-accent);
+}
+
+.as-marketing-label {
+    color: var(--coy-color-heading);
+    font-size: var(--coy-text-sm);
+}
+
+.as-marketing-sub,
+.as-marketing-note {
+    color: var(--coy-color-text);
+    font-style: normal;
+}
+
+.as-toggle--on .as-toggle-track {
+    background: var(--coy-color-accent);
+    border-color: var(--coy-color-accent);
+}
+
+.modal-backdrop {
+    background: rgb(52 42 40 / 55%);
+}
+
+.modal-box {
+    background: var(--coy-color-surface);
+    border-color: var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-md);
+}
+
+.modal-head {
+    background: var(--coy-color-surface);
+    border-color: var(--coy-color-border-soft);
+}
+
+.modal-title {
+    color: var(--coy-color-heading);
+    font-family: var(--coy-font-display);
+    font-size: 1.65rem;
+    font-style: normal;
+    font-weight: var(--coy-font-weight-medium);
+}
+
+@media (max-width: 640px) {
+    .ap-shortcuts {
+        grid-template-columns: 1fr;
+    }
+
+    .ap-card-head {
+        align-items: flex-start;
+        gap: var(--coy-space-3);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ap-shortcut {
+        transition: none;
+    }
 }
 </style>
