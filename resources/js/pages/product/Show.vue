@@ -468,8 +468,10 @@ onUnmounted(() => {
                             <button
                                 v-for="v in product.children"
                                 :key="v.id"
+                                type="button"
                                 @click="selectedVariationId = v.id"
                                 :disabled="v.stock_qty <= 0"
+                                :aria-pressed="v.id === selectedVariationId"
                                 class="pd-variation-btn"
                                 :class="{
                                     'pd-variation-btn--active':
@@ -518,6 +520,7 @@ onUnmounted(() => {
                             <span class="pd-action-label">Quantity</span>
                             <div class="pd-qty">
                                 <button
+                                    type="button"
                                     @click="decreaseQuantity"
                                     :disabled="quantity <= 1"
                                     class="pd-qty-btn"
@@ -553,6 +556,7 @@ onUnmounted(() => {
                                     aria-label="Quantity"
                                 />
                                 <button
+                                    type="button"
                                     @click="increaseQuantity"
                                     :disabled="
                                         quantity >= currentVariation.stock_qty
@@ -576,13 +580,14 @@ onUnmounted(() => {
                             </div>
                         </div>
                         <button
+                            type="button"
                             @click="handleAddToCart()"
                             :disabled="
                                 isOutOfStock ||
                                 quantity > currentVariation.stock_qty ||
                                 quantity < 1
                             "
-                            class="pd-cart-btn"
+                            class="coy-button coy-button--primary pd-cart-btn"
                             :class="{ 'pd-cart-btn--disabled': isOutOfStock }"
                         >
                             <svg
@@ -606,14 +611,16 @@ onUnmounted(() => {
                             }}
                         </button>
                         <button
+                            type="button"
                             @click="handleFavourite()"
-                            class="pd-wish-btn"
+                            class="coy-button coy-button--secondary pd-wish-btn"
                             :class="{ 'pd-wish-btn--active': isWishlisted }"
                             :aria-label="
                                 isWishlisted
                                     ? 'Remove from wishlist'
                                     : 'Add to wishlist'
                             "
+                            :aria-pressed="isWishlisted"
                         >
                             <svg
                                 v-if="isWishlisted"
@@ -832,7 +839,10 @@ onUnmounted(() => {
                                     >(optional, up to 3)</span
                                 ></label
                             >
-                            <label for="review_images" class="pd-file-label">
+                            <label
+                                for="review_images"
+                                class="coy-button coy-button--secondary pd-file-label"
+                            >
                                 <svg
                                     width="14"
                                     height="14"
@@ -886,7 +896,7 @@ onUnmounted(() => {
                                     reviewForm.processing ||
                                     reviewForm.rating === 0
                                 "
-                                class="btn-rose"
+                                class="coy-button coy-button--primary btn-rose"
                                 :class="{
                                     'btn-rose--disabled':
                                         reviewForm.rating === 0,
@@ -961,6 +971,7 @@ onUnmounted(() => {
                                     auth.user && auth.user.id === review.user_id
                                 "
                                 @click="deleteReview(review.id)"
+                                type="button"
                                 class="pd-review-delete"
                                 aria-label="Delete review"
                             >
@@ -994,6 +1005,7 @@ onUnmounted(() => {
                                 :key="idx"
                                 class="pd-review-img"
                                 :aria-label="`View photo ${idx + 1} from ${review.user.name}'s review`"
+                                type="button"
                                 @click="
                                     openReviewImage(review.review_images, idx)
                                 "
@@ -1064,7 +1076,11 @@ onUnmounted(() => {
                     <span class="pd-sticky-name">{{ product.name }}</span>
                     <span class="pd-sticky-price">{{ formattedCost }}</span>
                 </div>
-                <button @click="handleAddToCart()" class="pd-sticky-btn">
+                <button
+                    type="button"
+                    class="coy-button coy-button--primary pd-sticky-btn"
+                    @click="handleAddToCart()"
+                >
                     Add to basket
                 </button>
             </div>
@@ -1201,13 +1217,17 @@ a.pd-crumb:hover {
 }
 .pd-variation-btn {
     min-height: var(--coy-control-height);
-    padding: 0.55rem 1rem;
+    padding: 0.65rem 1.15rem;
     color: var(--coy-color-heading);
     background: var(--coy-color-surface);
     border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-sm);
-    font: inherit;
+    border-radius: var(--coy-radius-pill);
+    font: 600 var(--coy-text-sm) var(--coy-font-body);
     cursor: pointer;
+    transition:
+        color var(--coy-duration-base) var(--coy-ease),
+        background-color var(--coy-duration-base) var(--coy-ease),
+        border-color var(--coy-duration-base) var(--coy-ease);
 }
 .pd-variation-btn:hover:not(:disabled) {
     background: var(--coy-color-surface-soft);
@@ -1246,7 +1266,7 @@ a.pd-crumb:hover {
     color: var(--coy-color-heading);
     background: var(--coy-color-surface);
     border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-sm);
+    border-radius: var(--coy-radius-md);
     cursor: pointer;
 }
 .pd-addon--selected {
@@ -1300,13 +1320,13 @@ a.pd-crumb:hover {
     font-weight: var(--coy-font-weight-semibold);
 }
 .pd-qty {
-    height: 3.25rem;
+    height: var(--coy-control-height);
     display: grid;
     grid-template-columns: 2.75rem 2.75rem 2.75rem;
     overflow: hidden;
     background: var(--coy-color-surface);
     border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-sm);
+    border-radius: var(--coy-radius-pill);
 }
 .pd-qty-btn {
     display: grid;
@@ -1343,27 +1363,7 @@ a.pd-crumb:hover {
 .pd-cart-btn,
 .pd-sticky-btn,
 .btn-rose {
-    min-height: 3.25rem;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.7rem 1.25rem;
-    color: var(--coy-color-on-accent);
-    background: var(--coy-color-accent);
-    border: 1px solid var(--coy-color-accent);
-    border-radius: var(--coy-radius-sm);
-    font: 700 1rem var(--coy-font-body);
-    cursor: pointer;
-    transition:
-        background var(--coy-duration-base) var(--coy-ease),
-        transform var(--coy-duration-base) var(--coy-ease);
-}
-.pd-cart-btn:hover:not(:disabled),
-.pd-sticky-btn:hover,
-.btn-rose:hover:not(:disabled) {
-    background: var(--coy-color-accent-hover);
-    transform: translateY(-1px);
+    min-height: var(--coy-control-height);
 }
 .pd-cart-btn:disabled,
 .btn-rose:disabled {
@@ -1373,16 +1373,11 @@ a.pd-crumb:hover {
     cursor: not-allowed;
 }
 .pd-wish-btn {
-    width: 3.25rem;
-    height: 3.25rem;
-    display: grid;
-    place-items: center;
+    width: var(--coy-control-height);
+    height: var(--coy-control-height);
+    min-height: var(--coy-control-height);
     padding: 0;
     color: var(--coy-color-accent);
-    background: var(--coy-color-surface);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-sm);
-    cursor: pointer;
 }
 .pd-wish-btn:hover,
 .pd-wish-btn--active {
@@ -1559,7 +1554,7 @@ a.pd-crumb:hover {
     color: var(--coy-color-heading);
     background: var(--coy-color-page);
     border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-sm);
+    border-radius: var(--coy-radius-md);
     font: inherit;
 }
 .field-textarea {
@@ -1576,17 +1571,7 @@ a.pd-crumb:hover {
 }
 .pd-file-label {
     width: fit-content;
-    min-height: var(--coy-control-height);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.55rem 1rem;
     color: var(--coy-color-accent);
-    background: var(--coy-color-surface);
-    border: 1px solid var(--coy-color-border);
-    border-radius: var(--coy-radius-pill);
-    font-weight: var(--coy-font-weight-semibold);
-    cursor: pointer;
 }
 .pd-file-hidden {
     position: absolute;
