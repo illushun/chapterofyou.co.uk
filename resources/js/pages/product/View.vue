@@ -10,7 +10,7 @@ import { useSeoHead } from '@/composables/useSeoHead';
 import { router } from '@inertiajs/vue3';
 import { useDebounceFn } from '@vueuse/core';
 import axios from 'axios';
-import { computed, nextTick, reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 
 interface Category {
     id: number;
@@ -66,7 +66,6 @@ const form = reactive({
 });
 const filterOpen = ref(false);
 const isLoading = ref(false);
-const resultsSection = ref<HTMLElement | null>(null);
 const toast = ref<InstanceType<typeof SuccessToast> | null>(null);
 const wishlistedIds = ref(props.wishlistedIds ?? []);
 const activeFilterCount = computed(
@@ -151,13 +150,15 @@ function paginate(url: string) {
         {},
         {
             preserveScroll: true,
-            onSuccess: () => {
-                nextTick(() =>
-                    resultsSection.value?.scrollIntoView({ block: 'start' }),
-                );
-            },
             onFinish: () => {
                 isLoading.value = false;
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        document
+                            .getElementById('product-results')
+                            ?.scrollIntoView({ block: 'start' });
+                    });
+                });
             },
         },
     );
@@ -285,7 +286,7 @@ async function favourite(product: Product) {
             </aside>
 
             <section
-                ref="resultsSection"
+                id="product-results"
                 class="results"
                 aria-labelledby="results-heading"
             >
