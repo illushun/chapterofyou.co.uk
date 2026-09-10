@@ -13,495 +13,378 @@ import { request } from '@/routes/password';
 import { Form, Head } from '@inertiajs/vue3';
 import { LoaderCircle } from 'lucide-vue-next';
 
-defineProps<{
-    status?: string;
-    canResetPassword: boolean;
-}>();
+defineProps<{ status?: string; canResetPassword: boolean }>();
 </script>
 
 <template>
     <NavBar />
-
     <Head title="Log in" />
 
-    <component
-        :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-
-    <AuthBase
-        title="Log in to your account"
-        description="Enter your email and password below to log in"
-        class="!p-0"
-    >
-        <main class="lp">
-            <div class="lp-card">
-                <!-- Header -->
-                <div class="lp-header">
-                    <h1 class="lp-title">Welcome back</h1>
-                    <p class="lp-sub">Sign in to your Chapter of You account</p>
-                </div>
-
-                <!-- Status message -->
-                <div v-if="status" class="lp-status">
-                    {{ status }}
-                </div>
-
-                <Form
-                    v-bind="AuthenticatedSessionController.store.form()"
-                    :reset-on-success="['password']"
-                    v-slot="{ errors, processing }"
-                    class="lp-form"
-                >
-                    <!-- Email -->
-                    <div class="field">
-                        <Label for="email" class="field-label"
-                            >Email Address</Label
-                        >
-                        <Input
-                            id="email"
-                            type="email"
-                            name="email"
-                            required
-                            autofocus
-                            :tabindex="1"
-                            autocomplete="email"
-                            placeholder="you@example.com"
-                            class="field-input"
-                        />
-                        <InputError
-                            :message="errors.email"
-                            class="field-error"
-                        />
-                    </div>
-
-                    <!-- Password -->
-                    <div class="field">
-                        <div class="lp-pw-row">
-                            <Label for="password" class="field-label"
-                                >Password</Label
-                            >
-                            <TextLink
-                                v-if="canResetPassword"
-                                :href="request()"
-                                :tabindex="5"
-                                class="lp-forgot"
-                            >
-                                Forgot password?
-                            </TextLink>
-                        </div>
-                        <Input
-                            id="password"
-                            type="password"
-                            name="password"
-                            required
-                            :tabindex="2"
-                            autocomplete="current-password"
-                            placeholder="••••••••"
-                            class="field-input"
-                        />
-                        <InputError
-                            :message="errors.password"
-                            class="field-error"
-                        />
-                    </div>
-
-                    <!-- Remember me -->
-                    <Label for="remember" class="lp-remember">
-                        <Checkbox
-                            id="remember"
-                            name="remember"
-                            :tabindex="3"
-                            class="data-[state=checked]:text-primary-content border-copy data-[state=checked]:bg-[var(--primary)]"
-                        />
-                        <span>Remember me</span>
-                    </Label>
-
-                    <!-- Submit -->
-                    <Button
-                        type="submit"
-                        :tabindex="4"
-                        :disabled="processing"
-                        class="btn-rose btn-rose--full"
-                        data-test="login-button"
-                    >
-                        <LoaderCircle v-if="processing" class="lp-spinner" />
-                        {{ processing ? 'Signing in...' : 'Sign in' }}
-                    </Button>
-
-                    <!-- Divider -->
-                    <div class="lp-divider" aria-hidden="true">
-                        <span></span>
-                        <span class="lp-divider-text">or</span>
-                        <span></span>
-                    </div>
-
-                    <!-- Google login -->
-                    <a
-                        :href="route('socialite.redirect', 'google')"
-                        class="lp-google"
-                        data-test="google-login-button"
-                    >
-                        <svg
-                            class="lp-google-icon"
-                            xmlns="http://www.w3.org/2000/svg"
-                            xmlns:xlink="http://www.w3.org/1999/xlink"
-                            viewBox="0 0 32 32"
-                            width="20"
-                            height="20"
-                        >
-                            <defs>
-                                <path
-                                    id="A"
-                                    d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"
-                                />
-                            </defs>
-                            <clipPath id="B">
-                                <use xlink:href="#A" />
-                            </clipPath>
-                            <g
-                                transform="matrix(.727273 0 0 .727273 -.954545 -1.45455)"
-                            >
-                                <path
-                                    d="M0 37V11l17 13z"
-                                    clip-path="url(#B)"
-                                    fill="#fbbc05"
-                                />
-                                <path
-                                    d="M0 11l17 13 7-6.1L48 14V0H0z"
-                                    clip-path="url(#B)"
-                                    fill="#ea4335"
-                                />
-                                <path
-                                    d="M0 37l30-23 7.9 1L48 0v48H0z"
-                                    clip-path="url(#B)"
-                                    fill="#34a853"
-                                />
-                                <path
-                                    d="M48 48L17 24l-4-3 35-10z"
-                                    clip-path="url(#B)"
-                                    fill="#4285f4"
-                                />
-                            </g>
-                        </svg>
-                        Continue with Google
-                    </a>
-
-                    <!-- Register link -->
-                    <p class="lp-register">
-                        Don't have an account?
-                        <TextLink
-                            :href="register()"
-                            :tabindex="5"
-                            class="lp-register-link"
-                        >
-                            Create one
-                        </TextLink>
+    <AuthBase class="!p-0">
+        <main class="lp coy-storefront">
+            <div class="lp-shell coy-container">
+                <section class="lp-welcome" aria-labelledby="login-welcome">
+                    <p class="coy-eyebrow">Welcome back</p>
+                    <h1 id="login-welcome">Your account, all in one place</h1>
+                    <p>
+                        Sign in to revisit saved fragrances, follow your orders
+                        and keep checkout details ready for next time.
                     </p>
-                </Form>
+                    <ul>
+                        <li>
+                            <span aria-hidden="true">✓</span> View order history
+                        </li>
+                        <li>
+                            <span aria-hidden="true">✓</span> Return to your
+                            wishlist
+                        </li>
+                        <li>
+                            <span aria-hidden="true">✓</span> Manage saved
+                            addresses
+                        </li>
+                    </ul>
+                </section>
+
+                <section class="lp-card" aria-labelledby="login-title">
+                    <div class="lp-header">
+                        <p class="coy-eyebrow">Chapter of You</p>
+                        <h2 id="login-title">Sign in</h2>
+                        <p>Enter your account details below.</p>
+                    </div>
+
+                    <div v-if="status" class="lp-status" role="status">
+                        {{ status }}
+                    </div>
+
+                    <Form
+                        v-bind="AuthenticatedSessionController.store.form()"
+                        :reset-on-success="['password']"
+                        v-slot="{ errors, processing }"
+                        class="lp-form"
+                    >
+                        <div class="field">
+                            <Label for="email" class="field-label"
+                                >Email address</Label
+                            >
+                            <Input
+                                id="email"
+                                type="email"
+                                name="email"
+                                required
+                                autofocus
+                                :tabindex="1"
+                                autocomplete="email"
+                                placeholder="you@example.com"
+                                class="field-input"
+                            />
+                            <InputError
+                                :message="errors.email"
+                                class="field-error"
+                            />
+                        </div>
+
+                        <div class="field">
+                            <div class="lp-password-row">
+                                <Label for="password" class="field-label"
+                                    >Password</Label
+                                >
+                                <TextLink
+                                    v-if="canResetPassword"
+                                    :href="request()"
+                                    :tabindex="5"
+                                    class="lp-forgot"
+                                    >Forgot password?</TextLink
+                                >
+                            </div>
+                            <Input
+                                id="password"
+                                type="password"
+                                name="password"
+                                required
+                                :tabindex="2"
+                                autocomplete="current-password"
+                                placeholder="Enter your password"
+                                class="field-input"
+                            />
+                            <InputError
+                                :message="errors.password"
+                                class="field-error"
+                            />
+                        </div>
+
+                        <Label for="remember" class="lp-remember">
+                            <Checkbox
+                                id="remember"
+                                name="remember"
+                                :tabindex="3"
+                            />
+                            <span>Remember me on this device</span>
+                        </Label>
+
+                        <Button
+                            type="submit"
+                            :tabindex="4"
+                            :disabled="processing"
+                            class="coy-button coy-button--primary lp-submit"
+                            data-test="login-button"
+                        >
+                            <LoaderCircle
+                                v-if="processing"
+                                class="lp-spinner"
+                            />
+                            {{ processing ? 'Signing in...' : 'Sign in' }}
+                        </Button>
+
+                        <div class="lp-divider" aria-hidden="true">
+                            <span></span><b>or</b><span></span>
+                        </div>
+
+                        <a
+                            :href="route('socialite.redirect', 'google')"
+                            class="coy-button coy-button--secondary lp-google"
+                            data-test="google-login-button"
+                        >
+                            <svg aria-hidden="true" viewBox="0 0 32 32">
+                                <path
+                                    fill="#4285f4"
+                                    d="M29.6 16.3c0-1-.1-2-.3-2.9H16v5.5h7.6a6.5 6.5 0 0 1-2.8 4.2v3.6h4.6c2.7-2.5 4.2-6.1 4.2-10.4Z"
+                                />
+                                <path
+                                    fill="#34a853"
+                                    d="M16 30c3.8 0 7.1-1.3 9.4-3.4L20.8 23c-1.3.9-2.9 1.4-4.8 1.4-3.7 0-6.8-2.5-7.9-5.8H3.4v3.7A14.2 14.2 0 0 0 16 30Z"
+                                />
+                                <path
+                                    fill="#fbbc05"
+                                    d="M8.1 18.6a8.5 8.5 0 0 1 0-5.2V9.7H3.4a14.2 14.2 0 0 0 0 12.6l4.7-3.7Z"
+                                />
+                                <path
+                                    fill="#ea4335"
+                                    d="M16 7.6c2.1 0 4 .7 5.5 2.1l4.1-4.1A13.8 13.8 0 0 0 16 2 14.2 14.2 0 0 0 3.4 9.7l4.7 3.7c1.1-3.3 4.2-5.8 7.9-5.8Z"
+                                />
+                            </svg>
+                            Continue with Google
+                        </a>
+
+                        <p class="lp-register">
+                            New to Chapter of You?
+                            <TextLink :href="register()" :tabindex="5"
+                                >Create an account</TextLink
+                            >
+                        </p>
+                    </Form>
+                </section>
             </div>
         </main>
     </AuthBase>
 </template>
 
 <style scoped>
-/* ── Page ── */
 .lp {
-    font-family: 'Nunito', sans-serif;
-    min-height: 100vh;
-    padding-top: 64px;
-    background: #fdf4f3;
+    min-height: 100svh;
+    padding: calc(var(--coy-nav-height) + clamp(2rem, 6vw, 5rem)) 0
+        clamp(3rem, 7vw, 6rem);
+    display: grid;
+    align-items: center;
+    background: var(--coy-color-page);
+}
+.lp-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 28rem);
+    gap: clamp(3rem, 8vw, 8rem);
+    align-items: center;
+}
+.lp-welcome {
+    max-width: 40rem;
+}
+.lp-welcome h1 {
+    max-width: 12ch;
+    margin: var(--coy-space-2) 0 var(--coy-space-5);
+    color: var(--coy-color-heading);
+    font: 500 clamp(3rem, 6vw, 5rem) / 0.98 var(--coy-font-display);
+    letter-spacing: -0.035em;
+}
+.lp-welcome > p:last-of-type {
+    max-width: 36rem;
+    margin: 0;
+    font-size: var(--coy-text-lead);
+    line-height: 1.6;
+}
+.lp-welcome ul {
+    display: grid;
+    gap: var(--coy-space-3);
+    margin: var(--coy-space-6) 0 0;
+    padding: 0;
+    list-style: none;
+}
+.lp-welcome li {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    padding-bottom: 3rem;
+    gap: var(--coy-space-3);
+    color: var(--coy-color-heading);
+    font-weight: 600;
 }
-
-/* ── Card ── */
+.lp-welcome li span {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: grid;
+    place-items: center;
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border-radius: 50%;
+    font-size: 0.75rem;
+}
 .lp-card {
-    width: 100%;
-    max-width: 420px;
-    border: 1px solid #e5c9c7;
-    border-radius: 24px;
-    background: #fffafa;
-    box-shadow: 0 4px 32px rgba(229, 201, 199, 0.45);
     overflow: hidden;
-    position: relative;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-xl);
+    box-shadow: var(--coy-shadow-md);
 }
-
-/* Petal watermarks */
-.lp-card::before {
-    content: '✿';
-    position: absolute;
-    bottom: -8px;
-    right: 10px;
-    font-size: 4rem;
-    color: #c9a4a4;
-    opacity: 0.1;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-    z-index: 0;
-}
-
-.lp-card::after {
-    content: '✿';
-    position: absolute;
-    top: 8px;
-    left: 12px;
-    font-size: 0.9rem;
-    color: #c9a4a4;
-    opacity: 0.22;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-    z-index: 0;
-}
-
-/* ── Header band ── */
 .lp-header {
-    padding: 2rem 2rem 1.5rem;
-    text-align: center;
-    background: linear-gradient(135deg, #fdf4f3, #fff8f7);
-    border-bottom: 1px solid #e5c9c7;
+    padding: clamp(1.5rem, 4vw, 2.25rem) clamp(1.5rem, 4vw, 2.25rem)
+        var(--coy-space-5);
+    background: var(--coy-color-surface-soft);
+    border-bottom: 1px solid var(--coy-color-border-soft);
 }
-
-.lp-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 1.9rem;
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 0.25rem;
+.lp-header h2 {
+    margin: var(--coy-space-1) 0 var(--coy-space-2);
+    color: var(--coy-color-heading);
+    font: 500 2.25rem/1.05 var(--coy-font-display);
 }
-
-.lp-sub {
-    font-size: 0.88rem;
-    color: #6b4f4f;
+.lp-header > p:last-child {
+    margin: 0;
 }
-
-/* ── Status ── */
 .lp-status {
-    margin: 1rem 2rem 0;
-    padding: 0.65rem 1rem;
-    border-radius: 10px;
-    background: #f0faf0;
-    border: 1px solid #a8d8b0;
-    color: #2d7a3a;
-    font-size: 0.88rem;
-    text-align: center;
+    margin: var(--coy-space-5) clamp(1.5rem, 4vw, 2.25rem) 0;
+    padding: var(--coy-space-3) var(--coy-space-4);
+    color: var(--coy-color-success);
+    background: var(--coy-color-success-soft);
+    border: 1px solid rgb(39 100 55/25%);
+    border-radius: var(--coy-radius-md);
+    font-size: 0.9rem;
 }
-
-/* ── Form ── */
 .lp-form {
-    padding: 1.5rem 2rem 2rem;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    position: relative;
-    z-index: 1;
+    gap: var(--coy-space-4);
+    padding: clamp(1.5rem, 4vw, 2.25rem);
 }
-
-/* ── Fields ── */
 .field {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: var(--coy-space-2);
 }
-
 .field-label {
-    font-size: 0.78rem !important;
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6b4f4f !important;
+    color: var(--coy-color-heading);
+    font: 600 var(--coy-text-sm) var(--coy-font-body);
 }
-
-/* Override Input component styling */
-:deep(.field-input),
-:deep(input[type='email']),
-:deep(input[type='password']) {
-    padding: 0.65rem 0.9rem !important;
-    border: 1px solid #e5c9c7 !important;
-    border-radius: 10px !important;
-    background: #fdf4f3 !important;
-    color: #2d1a1a !important;
-    font-family: 'Nunito', sans-serif !important;
-    font-size: 0.92rem !important;
-    outline: none !important;
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s !important;
-    box-shadow: none !important;
+:deep(.field-input) {
+    width: 100%;
+    min-height: var(--coy-control-height);
+    padding: 0.7rem 1rem;
+    color: var(--coy-color-heading);
+    background: var(--coy-color-page);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-md);
+    font: inherit;
+    box-shadow: none;
 }
-
-:deep(input[type='email']:focus),
-:deep(input[type='password']:focus) {
-    border-color: #8c4a50 !important;
-    box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1) !important;
+:deep(.field-input:focus) {
+    border-color: var(--coy-color-focus);
+    box-shadow: var(--coy-shadow-focus);
 }
-
 .field-error {
-    font-size: 0.78rem;
-    color: #b54040;
+    font-size: 0.875rem;
 }
-
-/* Password row */
-.lp-pw-row {
+.lp-password-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: var(--coy-space-3);
 }
-
-.lp-forgot {
-    font-size: 0.8rem !important;
-    color: #8c4a50 !important;
-    text-decoration: none !important;
-    transition: color 0.2s !important;
-}
-
-.lp-forgot:hover {
-    color: #6a3038 !important;
-    text-decoration: underline !important;
-}
-
-/* Remember me */
-.lp-remember {
-    display: flex !important;
-    align-items: center;
-    gap: 0.6rem;
-    font-size: 0.88rem !important;
-    color: #6b4f4f !important;
-    cursor: pointer;
-    font-weight: 400 !important;
-}
-
-/* ── Buttons ── */
-.btn-rose {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.72rem 1.5rem;
-    border-radius: 999px;
-    border: 1px solid #a85058 !important;
-    background: linear-gradient(135deg, #c47078, #a85058) !important;
-    color: #fff !important;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.92rem;
+.lp-forgot,
+.lp-register a {
+    color: var(--coy-color-accent);
+    font-size: 0.9rem;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    text-underline-offset: 0.2rem;
+}
+.lp-remember {
+    display: flex;
+    align-items: center;
+    gap: var(--coy-space-2);
+    color: var(--coy-color-text);
+    font: 400 0.95rem var(--coy-font-body);
     cursor: pointer;
-    box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition:
-        transform 0.2s,
-        box-shadow 0.2s !important;
-    height: auto !important;
 }
-
-.btn-rose:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 18px rgba(168, 80, 88, 0.28) !important;
-}
-
-.btn-rose:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
-
-.btn-rose--full {
+.lp-submit,
+.lp-google {
     width: 100%;
 }
-
 .lp-spinner {
-    width: 15px;
-    height: 15px;
-    animation: spin 0.8s linear infinite;
+    width: 1rem;
+    animation: spin 0.75s linear infinite;
 }
-
 @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
     to {
         transform: rotate(360deg);
     }
 }
-
-/* ── Divider ── */
 .lp-divider {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: var(--coy-space-3);
+    color: var(--coy-color-text);
+    font-size: 0.8rem;
 }
-
-.lp-divider span:not(.lp-divider-text) {
-    flex: 1;
+.lp-divider span {
     height: 1px;
-    background: #e5c9c7;
+    flex: 1;
+    background: var(--coy-color-border-soft);
 }
-
-.lp-divider-text {
-    font-size: 0.78rem;
-    color: #9a7070;
-    font-style: italic;
+.lp-divider b {
+    font-weight: 400;
+}
+.lp-google svg {
+    width: 1.25rem;
     flex: none;
 }
-
-/* ── Google button ── */
-.lp-google {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.65rem;
-    padding: 0.68rem 1.25rem;
-    border-radius: 999px;
-    border: 1px solid #e5c9c7;
-    background: #fffafa;
-    color: #2d1a1a;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.88rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition:
-        background 0.2s,
-        border-color 0.2s,
-        transform 0.2s;
-    width: 100%;
-}
-
-.lp-google:hover {
-    background: #f5e4e4;
-    border-color: #c9a4a4;
-    transform: translateY(-1px);
-}
-
-.lp-google-icon {
-    flex-shrink: 0;
-}
-
-/* ── Register link ── */
 .lp-register {
+    margin: var(--coy-space-1) 0 0;
+    padding-top: var(--coy-space-4);
+    border-top: 1px solid var(--coy-color-border-soft);
+    font-size: 0.9rem;
     text-align: center;
-    font-size: 0.88rem;
-    color: #6b4f4f;
-    padding-top: 0.25rem;
-    border-top: 1px solid #f0dcd8;
 }
-
-.lp-register-link {
-    color: #8c4a50 !important;
-    font-weight: 600;
-    text-decoration: none;
-    transition: color 0.2s;
+@media (max-width: 820px) {
+    .lp-shell {
+        grid-template-columns: 1fr;
+    }
+    .lp-welcome {
+        display: none;
+    }
+    .lp-card {
+        width: min(100%, 28rem);
+        margin-inline: auto;
+    }
 }
-
-.lp-register-link:hover {
-    color: #6a3038 !important;
-    text-decoration: underline;
+@media (max-width: 520px) {
+    .lp {
+        align-items: start;
+        padding-top: calc(var(--coy-nav-height) + var(--coy-space-5));
+    }
+    .lp-card {
+        border-radius: var(--coy-radius-lg);
+    }
+    .lp-header,
+    .lp-form {
+        padding-right: var(--coy-space-5);
+        padding-left: var(--coy-space-5);
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .lp-spinner {
+        animation: none;
+    }
 }
 </style>
