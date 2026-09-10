@@ -115,8 +115,7 @@ const firstName = computed(() => {
                 <a href="/products">Products</a
                 ><a href="/scent-finder">Scent Finder</a
                 ><a href="/gift-vouchers">Gifts</a><a href="/about">Our Story</a
-                ><a href="/journal">Journal</a>
-                <a href="/contact" class="contact-link">Contact</a>
+                ><a href="/journal">Journal</a><a href="/contact">Contact</a>
             </div>
         </nav>
 
@@ -291,9 +290,6 @@ const firstName = computed(() => {
 }
 .category-row a:hover {
     color: var(--coy-color-accent);
-}
-.category-row .contact-link {
-    margin-left: auto;
 }
 .search--mobile,
 .mobile-menu {

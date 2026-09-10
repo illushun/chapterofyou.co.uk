@@ -2,593 +2,425 @@
 import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 const successToastRef = ref<InstanceType<typeof SuccessToast> | null>(null);
+const form = useForm({ name: '', email: '', subject: '', message: '' });
 
-const form = useForm({
-    name: '',
-    email: '',
-    subject: '',
-    message: '',
-});
-
-const submit = () => {
+function submit() {
     form.post(route('contact.store'), {
         onSuccess: () => {
-            successToastRef.value?.show('Message Sent!', 'check');
-            form.reset('name', 'email', 'subject', 'message');
+            successToastRef.value?.show('Message sent', 'check');
+            form.reset();
         },
-        onError: (errors) => console.error('Submission failed:', errors),
         preserveScroll: true,
     });
-};
+}
 
 const seo = useSeoHead({
     title: 'Contact Me',
     description:
-        "Get in touch with Chapter of You. I'd love to hear from you and will respond within 1–2 working days.",
+        "Get in touch with Chapter of You. I'd love to hear from you and will respond within 1 to 2 working days.",
     canonical: '/contact',
 });
 </script>
 
 <template>
     <NavBar />
-
     <SeoHead v-bind="seo" />
-
-    <component
-        :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-
-    <main class="cp">
-        <div class="cp-wrap">
-            <!-- Header -->
-            <header class="cp-header">
-                <h1 class="cp-title">Get in Touch</h1>
-                <p class="cp-sub">
-                    I'd love to hear from you. Fill out the form below and I'll
-                    get back to you as soon as possible.
+    <main class="cp coy-storefront">
+        <header class="coy-page-header">
+            <div class="coy-container coy-page-header__inner">
+                <div>
+                    <CoyBreadcrumbs
+                        :items="[
+                            { label: 'Home', href: '/' },
+                            { label: 'Contact' },
+                        ]"
+                    />
+                    <h1 class="coy-page-header__title">Get in touch</h1>
+                    <p class="coy-page-header__meta">
+                        Questions about a fragrance or an order are always
+                        welcome.
+                    </p>
+                </div>
+            </div>
+        </header>
+        <div class="coy-container cp-content">
+            <section class="cp-intro">
+                <p class="coy-eyebrow">Send a message</p>
+                <h2>How can I help?</h2>
+                <p>
+                    Fill in the form and I will get back to you as soon as I
+                    can. For an existing order, include your order number in the
+                    message.
                 </p>
-            </header>
-
-            <!-- Two-column layout: form + info -->
+            </section>
             <div class="cp-grid">
-                <!-- Contact form -->
-                <form @submit.prevent="submit" class="cp-card">
+                <form class="cp-form" @submit.prevent="submit">
                     <div class="field-row">
                         <div class="field">
-                            <label for="name" class="field-label">
-                                Your Name
-                                <span class="field-required" aria-hidden="true"
-                                    >*</span
-                                >
-                            </label>
-                            <input
+                            <label for="name"
+                                >Your name
+                                <span aria-hidden="true">*</span></label
+                            ><input
                                 id="name"
-                                type="text"
                                 v-model="form.name"
+                                type="text"
+                                autocomplete="name"
                                 required
-                                class="field-input"
-                                :class="{
-                                    'field-input--error': form.errors.name,
-                                }"
+                                :aria-invalid="Boolean(form.errors.name)"
+                                :aria-describedby="
+                                    form.errors.name ? 'name-error' : undefined
+                                "
                             />
-                            <p v-if="form.errors.name" class="field-error">
+                            <p
+                                v-if="form.errors.name"
+                                id="name-error"
+                                class="field-error"
+                            >
                                 {{ form.errors.name }}
                             </p>
                         </div>
                         <div class="field">
-                            <label for="email" class="field-label">
-                                Email Address
-                                <span class="field-required" aria-hidden="true"
-                                    >*</span
-                                >
-                            </label>
-                            <input
+                            <label for="email"
+                                >Email address
+                                <span aria-hidden="true">*</span></label
+                            ><input
                                 id="email"
-                                type="email"
                                 v-model="form.email"
+                                type="email"
+                                autocomplete="email"
                                 required
-                                class="field-input"
-                                :class="{
-                                    'field-input--error': form.errors.email,
-                                }"
+                                :aria-invalid="Boolean(form.errors.email)"
+                                :aria-describedby="
+                                    form.errors.email
+                                        ? 'email-error'
+                                        : undefined
+                                "
                             />
-                            <p v-if="form.errors.email" class="field-error">
+                            <p
+                                v-if="form.errors.email"
+                                id="email-error"
+                                class="field-error"
+                            >
                                 {{ form.errors.email }}
                             </p>
                         </div>
                     </div>
-
                     <div class="field">
-                        <label for="subject" class="field-label">
-                            Subject
-                            <span class="field-optional">(optional)</span>
-                        </label>
-                        <input
+                        <label for="subject"
+                            >Subject <small>Optional</small></label
+                        ><input
                             id="subject"
-                            type="text"
                             v-model="form.subject"
-                            class="field-input"
-                            :class="{
-                                'field-input--error': form.errors.subject,
-                            }"
+                            type="text"
+                            :aria-invalid="Boolean(form.errors.subject)"
+                            :aria-describedby="
+                                form.errors.subject
+                                    ? 'subject-error'
+                                    : undefined
+                            "
                         />
-                        <p v-if="form.errors.subject" class="field-error">
+                        <p
+                            v-if="form.errors.subject"
+                            id="subject-error"
+                            class="field-error"
+                        >
                             {{ form.errors.subject }}
                         </p>
                     </div>
-
                     <div class="field">
-                        <label for="message" class="field-label">
-                            Message
-                            <span class="field-required" aria-hidden="true"
-                                >*</span
-                            >
-                        </label>
-                        <textarea
+                        <label for="message"
+                            >Message <span aria-hidden="true">*</span></label
+                        ><textarea
                             id="message"
                             v-model="form.message"
-                            rows="6"
+                            rows="7"
                             required
-                            class="field-input field-textarea"
-                            :class="{
-                                'field-input--error': form.errors.message,
-                            }"
-                        ></textarea>
-                        <p v-if="form.errors.message" class="field-error">
+                            :aria-invalid="Boolean(form.errors.message)"
+                            :aria-describedby="
+                                form.errors.message
+                                    ? 'message-error'
+                                    : undefined
+                            "
+                        />
+                        <p
+                            v-if="form.errors.message"
+                            id="message-error"
+                            class="field-error"
+                        >
                             {{ form.errors.message }}
                         </p>
                     </div>
-
-                    <div class="cp-form-footer">
-                        <button
-                            type="submit"
-                            :disabled="form.processing"
-                            class="btn-rose"
+                    <button
+                        type="submit"
+                        class="cp-submit"
+                        :disabled="form.processing"
+                    >
+                        <svg
+                            v-if="form.processing"
+                            class="cp-spinner"
+                            aria-hidden="true"
+                            viewBox="0 0 24 24"
                         >
-                            <svg
-                                v-if="!form.processing"
-                                width="15"
-                                height="15"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <path d="M22 2 11 13" />
-                                <path d="M22 2 15 22 11 13 2 9l20-7z" />
-                            </svg>
-                            <svg
-                                v-else
-                                width="15"
-                                height="15"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="spin"
-                            >
-                                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                            </svg>
-                            {{
-                                form.processing ? 'Sending...' : 'Send Message'
-                            }}
-                        </button>
-                    </div>
+                            <path d="M21 12a9 9 0 1 1-6.2-8.6" /></svg
+                        ><svg v-else aria-hidden="true" viewBox="0 0 24 24">
+                            <path d="m22 2-7 20-4-9-9-4Z" />
+                            <path d="M22 2 11 13" /></svg
+                        >{{ form.processing ? 'Sending...' : 'Send message' }}
+                    </button>
                 </form>
-
-                <!-- Contact info sidebar -->
-                <aside class="cp-info">
-                    <div class="cp-info-card">
-                        <div class="info-block">
-                            <div class="info-icon">
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
+                <aside class="cp-details" aria-label="Contact details">
+                    <p class="coy-eyebrow">Contact details</p>
+                    <h2>A personal reply</h2>
+                    <p>
+                        Every message comes directly to me. I usually reply
+                        within 1 to 2 working days.
+                    </p>
+                    <dl>
+                        <div>
+                            <dt>Email</dt>
+                            <dd>
+                                <a href="mailto:contact@chapterofyou.co.uk"
+                                    >contact@chapterofyou.co.uk</a
                                 >
-                                    <path
-                                        d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="info-label">Email</p>
-                                <a
-                                    href="mailto:contact@chapterofyou.co.uk"
-                                    class="info-value info-link"
-                                >
-                                    contact@chapterofyou.co.uk
-                                </a>
-                            </div>
+                            </dd>
                         </div>
-
-                        <div class="info-divider"></div>
-
-                        <div class="info-block">
-                            <div class="info-icon">
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="M12 6v6l4 2" />
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="info-label">Response Time</p>
-                                <p class="info-value">
-                                    Within 1–2 working days
-                                </p>
-                            </div>
+                        <div>
+                            <dt>Response time</dt>
+                            <dd>Within 1 to 2 working days</dd>
                         </div>
-
-                        <div class="info-divider"></div>
-
-                        <div class="info-block">
-                            <div class="info-icon">
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                >
-                                    <path
-                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                                    />
-                                </svg>
-                            </div>
-                            <div>
-                                <p class="info-label">Made with love</p>
-                                <p class="info-value">
-                                    Every message is read personally by me.
-                                </p>
-                            </div>
-                        </div>
+                    </dl>
+                    <div class="cp-note">
+                        <svg aria-hidden="true" viewBox="0 0 24 24">
+                            <path
+                                d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8l1.1 1.1 7.8 7.7 7.8-7.7 1-1.1a5.5 5.5 0 0 0 0-7.8Z"
+                            />
+                        </svg>
+                        <p>Every message is read personally.</p>
                     </div>
                 </aside>
             </div>
         </div>
     </main>
-
     <SuccessToast ref="successToastRef" />
-
     <Footer />
 </template>
 
 <style scoped>
 .cp {
-    font-family: 'Nunito', sans-serif;
     min-height: 100vh;
     padding-top: var(--coy-nav-height);
-    background: #fdf4f3;
-    color: #2d1a1a;
+    background: var(--coy-color-page);
 }
-
-.cp-wrap {
-    max-width: 960px;
-    margin: 0 auto;
-    padding: 3rem 1.25rem 6rem;
+.cp-content {
+    padding-block: clamp(2.5rem, 5vw, 4rem) clamp(4rem, 7vw, 6rem);
 }
-
-/* ── Header ── */
-.cp-header {
-    margin-bottom: 2.5rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid #e5c9c7;
+.cp-intro {
+    max-width: 43rem;
+    margin-bottom: var(--coy-space-6);
 }
-
-.cp-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: clamp(2rem, 5vw, 2.8rem);
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 0.4rem;
+.cp-intro h2,
+.cp-details h2 {
+    margin: var(--coy-space-1) 0 var(--coy-space-3);
+    color: var(--coy-color-heading);
+    font: 500 clamp(2rem, 4vw, 3rem) / 1.08 var(--coy-font-display);
 }
-
-.cp-sub {
-    font-size: 0.97rem;
-    color: #6b4f4f;
-    line-height: 1.6;
-    max-width: 520px;
+.cp-intro > p:last-child,
+.cp-details > p {
+    margin: 0;
+    line-height: 1.65;
 }
-
-/* ── Layout grid ── */
 .cp-grid {
     display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: 2rem;
+    grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 0.75fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
     align-items: start;
 }
-
+.cp-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--coy-space-5);
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-lg);
+    box-shadow: var(--coy-shadow-sm);
+}
+.field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--coy-space-4);
+}
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--coy-space-2);
+}
+.field label {
+    color: var(--coy-color-heading);
+    font-size: var(--coy-text-sm);
+    font-weight: 600;
+}
+.field label span {
+    color: var(--coy-color-accent);
+}
+.field label small {
+    margin-left: var(--coy-space-1);
+    color: var(--coy-color-text);
+    font-size: 0.8rem;
+    font-weight: 400;
+}
+.field input,
+.field textarea {
+    width: 100%;
+    padding: 0.75rem 0.9rem;
+    color: var(--coy-color-heading);
+    background: var(--coy-color-page);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-sm);
+    font: inherit;
+    outline: none;
+    transition:
+        border-color var(--coy-duration-fast),
+        box-shadow var(--coy-duration-fast);
+}
+.field input {
+    min-height: var(--coy-control-height);
+}
+.field textarea {
+    min-height: 10rem;
+    resize: vertical;
+}
+.field input:focus,
+.field textarea:focus {
+    border-color: var(--coy-color-focus);
+    box-shadow: var(--coy-shadow-focus);
+}
+.field input[aria-invalid='true'],
+.field textarea[aria-invalid='true'] {
+    border-color: var(--coy-color-error);
+}
+.field-error {
+    margin: 0;
+    color: var(--coy-color-error);
+    font-size: 0.875rem;
+}
+.cp-submit {
+    align-self: flex-start;
+    min-height: var(--coy-control-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--coy-space-2);
+    padding: 0.7rem 1.25rem;
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border: 1px solid var(--coy-color-accent);
+    border-radius: var(--coy-radius-pill);
+    font: 600 var(--coy-text-sm) var(--coy-font-body);
+    cursor: pointer;
+}
+.cp-submit:hover:not(:disabled) {
+    background: var(--coy-color-accent-hover);
+}
+.cp-submit:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+.cp-submit svg {
+    width: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+.cp-details {
+    position: sticky;
+    top: calc(var(--coy-nav-height) + 1.5rem);
+    padding-top: var(--coy-space-4);
+    border-top: 2px solid var(--coy-color-heading);
+}
+.cp-details h2 {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+}
+.cp-details dl {
+    margin: var(--coy-space-6) 0 0;
+}
+.cp-details dl > div {
+    padding: var(--coy-space-4) 0;
+    border-top: 1px solid var(--coy-color-border-soft);
+}
+.cp-details dt {
+    color: var(--coy-color-accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: var(--coy-tracking-label);
+    text-transform: uppercase;
+}
+.cp-details dd {
+    margin: var(--coy-space-1) 0 0;
+    color: var(--coy-color-heading);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+.cp-details a {
+    color: inherit;
+    text-underline-offset: 0.2rem;
+}
+.cp-note {
+    display: flex;
+    align-items: center;
+    gap: var(--coy-space-3);
+    margin-top: var(--coy-space-5);
+    padding: var(--coy-space-4);
+    background: var(--coy-color-surface-soft);
+    border-radius: var(--coy-radius-md);
+}
+.cp-note svg {
+    width: 1.25rem;
+    flex: none;
+    fill: none;
+    stroke: var(--coy-color-accent);
+    stroke-width: 1.8;
+}
+.cp-note p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+.cp-spinner {
+    animation: spin 0.75s linear infinite;
+}
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
 @media (max-width: 760px) {
     .cp-grid {
         grid-template-columns: 1fr;
     }
-}
-
-/* ── Form card ── */
-.cp-card {
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    background: #fffafa;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
-    padding: 1.75rem;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 1.1rem;
-}
-
-.cp-card::before {
-    content: '✿';
-    position: absolute;
-    bottom: -6px;
-    right: 8px;
-    font-size: 3.5rem;
-    color: #c9a4a4;
-    opacity: 0.12;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-}
-
-.cp-card::after {
-    content: '✿';
-    position: absolute;
-    top: 6px;
-    left: 10px;
-    font-size: 0.9rem;
-    color: #c9a4a4;
-    opacity: 0.22;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-}
-
-/* ── Fields ── */
-.field-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-@media (max-width: 540px) {
+    .cp-details {
+        position: static;
+    }
     .field-row {
         grid-template-columns: 1fr;
     }
 }
-
-.field {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-}
-
-.field-label {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #6b4f4f;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-}
-
-.field-required {
-    color: #8c4a50;
-}
-
-.field-optional {
-    font-weight: 400;
-    text-transform: none;
-    font-style: italic;
-    color: #9a7070;
-}
-
-.field-input {
-    padding: 0.7rem 0.9rem;
-    border: 1px solid #e5c9c7;
-    border-radius: 10px;
-    background: #fdf4f3;
-    color: #2d1a1a;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.95rem;
-    outline: none;
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
-    resize: none;
-    width: 100%;
-}
-
-.field-input:focus {
-    border-color: #8c4a50;
-    box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1);
-}
-
-.field-input--error {
-    border-color: #c84040;
-}
-
-.field-textarea {
-    resize: vertical;
-    min-height: 140px;
-}
-
-.field-error {
-    font-size: 0.8rem;
-    color: #b54040;
-}
-
-.cp-form-footer {
-    padding-top: 0.25rem;
-    border-top: 1px solid #e5c9c7;
-    margin-top: 0.25rem;
-}
-
-/* ── Info sidebar ── */
-.cp-info {
-    position: sticky;
-    top: 88px;
-}
-
-.cp-info-card {
-    border: 1px solid #e5c9c7;
-    border-radius: 20px;
-    background: #fffafa;
-    box-shadow: 0 2px 16px rgba(229, 201, 199, 0.35);
-    padding: 1.5rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.cp-info-card::before {
-    content: '✿';
-    position: absolute;
-    bottom: -6px;
-    right: 8px;
-    font-size: 3rem;
-    color: #c9a4a4;
-    opacity: 0.12;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-}
-
-.cp-info-card::after {
-    content: '✿';
-    position: absolute;
-    top: 6px;
-    left: 10px;
-    font-size: 0.85rem;
-    color: #c9a4a4;
-    opacity: 0.22;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-}
-
-.info-block {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.85rem;
-}
-
-.info-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(140, 74, 80, 0.08);
-    border: 1px solid #e5c9c7;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #8c4a50;
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-}
-
-.info-label {
-    font-size: 0.72rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: #8c4a50;
-    margin-bottom: 0.2rem;
-}
-
-.info-value {
-    font-size: 0.9rem;
-    color: #2d1a1a;
-    line-height: 1.45;
-}
-
-.info-link {
-    text-decoration: none;
-    color: #2d1a1a;
-    transition: color 0.2s;
-    word-break: break-all;
-}
-
-.info-link:hover {
-    color: #8c4a50;
-}
-
-.info-divider {
-    border-top: 1px solid #e5c9c7;
-    margin: 1rem 0;
-}
-
-/* ── Button ── */
-.btn-rose {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.7rem 1.6rem;
-    border-radius: 999px;
-    border: 1px solid #a85058;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.92rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    cursor: pointer;
-    box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition:
-        transform 0.2s,
-        box-shadow 0.2s;
-}
-
-.btn-rose:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 18px rgba(168, 80, 88, 0.28);
-}
-
-.btn-rose:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Spinner animation */
-.spin {
-    animation: spin 0.9s linear infinite;
-}
-
-@keyframes spin {
-    from {
-        transform: rotate(0deg);
+@media (max-width: 520px) {
+    .cp-submit {
+        width: 100%;
     }
-
-    to {
-        transform: rotate(360deg);
+}
+@media (prefers-reduced-motion: reduce) {
+    .cp-spinner {
+        animation: none;
     }
 }
 </style>
