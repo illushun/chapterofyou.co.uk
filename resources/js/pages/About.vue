@@ -64,14 +64,15 @@ const principles = [
                         wellbeing.
                     </p>
                     <div class="actions">
-                        <Link :href="route('products')" class="button"
+                        <Link
+                            :href="route('products')"
+                            class="coy-button coy-button--primary"
                             >Shop fragrances</Link
                         >
                         <Link
                             :href="route('scent-finder.index')"
-                            class="text-link"
-                            >Find your scent
-                            <span aria-hidden="true">→</span></Link
+                            class="coy-button coy-button--secondary"
+                            >Find your scent</Link
                         >
                     </div>
                 </div>
@@ -171,11 +172,14 @@ const principles = [
                     </p>
                 </div>
                 <div class="actions">
-                    <Link :href="route('products')" class="button"
+                    <Link
+                        :href="route('products')"
+                        class="coy-button cta-button--light"
                         >Shop all products</Link
-                    ><Link :href="route('scent-finder.index')" class="text-link"
-                        >Use the scent finder
-                        <span aria-hidden="true">→</span></Link
+                    ><Link
+                        :href="route('scent-finder.index')"
+                        class="coy-button cta-button--outline"
+                        >Use the scent finder</Link
                     >
                 </div>
             </div>
@@ -235,38 +239,8 @@ const principles = [
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1.25rem;
+    gap: var(--coy-space-3);
     margin-top: 2rem;
-}
-.button,
-.text-link {
-    min-height: var(--coy-control-height);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.55rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    text-decoration: none;
-}
-.button {
-    padding: 0.75rem 1.4rem;
-    border: 1px solid var(--coy-color-heading);
-    border-radius: var(--coy-radius-sm);
-    background: var(--coy-color-heading);
-    color: var(--coy-color-on-accent);
-}
-.text-link {
-    border-bottom: 1px solid currentColor;
-    color: var(--coy-color-heading);
-}
-.text-link span {
-    transition: transform var(--coy-duration-fast) var(--coy-ease);
-}
-.text-link:hover span {
-    transform: translateX(0.2rem);
 }
 .credential {
     padding: clamp(1.5rem, 3vw, 2rem);
@@ -385,8 +359,7 @@ const principles = [
 }
 .cta p,
 .cta h2,
-.cta .coy-eyebrow,
-.cta .text-link {
+.cta .coy-eyebrow {
     color: var(--coy-color-on-accent);
 }
 .cta p {
@@ -399,10 +372,24 @@ const principles = [
     flex-shrink: 0;
     margin: 0;
 }
-.cta .button {
+.cta-button--light {
     border-color: var(--coy-color-on-accent);
     background: var(--coy-color-on-accent);
     color: var(--coy-color-heading);
+}
+.cta-button--light:hover {
+    border-color: var(--coy-color-blush);
+    background: var(--coy-color-blush);
+    transform: translateY(-1px);
+}
+.cta-button--outline {
+    color: var(--coy-color-on-accent);
+    background: transparent;
+    border-color: rgb(255 253 251 / 55%);
+}
+.cta-button--outline:hover {
+    background: rgb(255 253 251 / 10%);
+    border-color: var(--coy-color-on-accent);
 }
 @media (max-width: 800px) {
     .hero-grid,
@@ -431,17 +418,9 @@ const principles = [
         align-items: stretch;
         flex-direction: column;
     }
-    .text-link {
-        align-self: flex-start;
-    }
     .cta .actions,
-    .cta .button {
+    .actions .coy-button {
         width: 100%;
-    }
-}
-@media (prefers-reduced-motion: reduce) {
-    .text-link span {
-        transition: none;
     }
 }
 </style>
