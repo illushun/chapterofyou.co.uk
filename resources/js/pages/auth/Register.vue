@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import NavBar from '@/components/NavBar.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import AuthBase from '@/layouts/AuthLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
-import { LoaderCircle } from 'lucide-vue-next';
+import { Check, LoaderCircle } from 'lucide-vue-next';
 
 const form = useForm({
     name: '',
@@ -20,379 +24,426 @@ const submit = () => {
 
 <template>
     <NavBar />
+    <Head title="Create account" />
 
-    <Head title="Create Account" />
-
-    <component
-        :is="'link'"
-        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Nunito:wght@300;400;500;600&display=swap"
-        rel="stylesheet"
-    />
-
-    <main class="rp">
-        <div class="rp-card">
-            <!-- Header -->
-            <div class="rp-header">
-                <h1 class="rp-title">Create an account</h1>
-                <p class="rp-sub">
-                    Join Chapter of You and start your self-care journey
-                </p>
-            </div>
-
-            <form @submit.prevent="submit" class="rp-form">
-                <!-- Name -->
-                <div class="field">
-                    <label for="name" class="field-label">Full Name</label>
-                    <input
-                        id="name"
-                        v-model="form.name"
-                        type="text"
-                        required
-                        autofocus
-                        autocomplete="name"
-                        placeholder="Your name"
-                        class="field-input"
-                        :class="{ 'field-input--error': form.errors.name }"
-                    />
-                    <p v-if="form.errors.name" class="field-error">
-                        {{ form.errors.name }}
+    <AuthBase class="!p-0">
+        <main class="rp coy-storefront">
+            <div class="rp-shell coy-container">
+                <section class="rp-welcome" aria-labelledby="register-welcome">
+                    <p class="coy-eyebrow">Your next chapter</p>
+                    <h1 id="register-welcome">A more personal way to shop</h1>
+                    <p>
+                        Create an account to keep the fragrances you love close
+                        and make every return visit a little easier.
                     </p>
-                </div>
+                    <ul>
+                        <li>
+                            <span aria-hidden="true"><Check /></span> Save
+                            favourites to your wishlist
+                        </li>
+                        <li>
+                            <span aria-hidden="true"><Check /></span> Keep track
+                            of every order
+                        </li>
+                        <li>
+                            <span aria-hidden="true"><Check /></span> Checkout
+                            more quickly next time
+                        </li>
+                    </ul>
+                </section>
 
-                <!-- Email -->
-                <div class="field">
-                    <label for="email" class="field-label">Email Address</label>
-                    <input
-                        id="email"
-                        v-model="form.email"
-                        type="email"
-                        required
-                        autocomplete="email"
-                        placeholder="you@example.com"
-                        class="field-input"
-                        :class="{ 'field-input--error': form.errors.email }"
-                    />
-                    <p v-if="form.errors.email" class="field-error">
-                        {{ form.errors.email }}
-                    </p>
-                </div>
+                <section class="rp-card" aria-labelledby="register-title">
+                    <header class="rp-header">
+                        <p class="coy-eyebrow">Chapter of You</p>
+                        <h2 id="register-title">Create your account</h2>
+                        <p>Just a few details to get started.</p>
+                    </header>
 
-                <!-- Password -->
-                <div class="field">
-                    <label for="password" class="field-label">Password</label>
-                    <input
-                        id="password"
-                        v-model="form.password"
-                        type="password"
-                        required
-                        autocomplete="new-password"
-                        placeholder="••••••••"
-                        class="field-input"
-                        :class="{ 'field-input--error': form.errors.password }"
-                    />
-                    <p v-if="form.errors.password" class="field-error">
-                        {{ form.errors.password }}
-                    </p>
-                </div>
+                    <form class="rp-form" @submit.prevent="submit">
+                        <div class="rp-fields">
+                            <div class="field">
+                                <Label for="name" class="field-label"
+                                    >Full name</Label
+                                >
+                                <Input
+                                    id="name"
+                                    v-model="form.name"
+                                    type="text"
+                                    required
+                                    autofocus
+                                    autocomplete="name"
+                                    placeholder="Your name"
+                                    class="field-input"
+                                    :aria-invalid="Boolean(form.errors.name)"
+                                    :aria-describedby="
+                                        form.errors.name
+                                            ? 'name-error'
+                                            : undefined
+                                    "
+                                />
+                                <p
+                                    v-if="form.errors.name"
+                                    id="name-error"
+                                    class="field-error"
+                                >
+                                    {{ form.errors.name }}
+                                </p>
+                            </div>
 
-                <!-- Confirm password -->
-                <div class="field">
-                    <label for="password_confirmation" class="field-label"
-                        >Confirm Password</label
-                    >
-                    <input
-                        id="password_confirmation"
-                        v-model="form.password_confirmation"
-                        type="password"
-                        required
-                        autocomplete="new-password"
-                        placeholder="••••••••"
-                        class="field-input"
-                        :class="{
-                            'field-input--error':
-                                form.errors.password_confirmation,
-                        }"
-                    />
-                    <p
-                        v-if="form.errors.password_confirmation"
-                        class="field-error"
-                    >
-                        {{ form.errors.password_confirmation }}
-                    </p>
-                </div>
+                            <div class="field">
+                                <Label for="email" class="field-label"
+                                    >Email address</Label
+                                >
+                                <Input
+                                    id="email"
+                                    v-model="form.email"
+                                    type="email"
+                                    required
+                                    autocomplete="email"
+                                    placeholder="you@example.com"
+                                    class="field-input"
+                                    :aria-invalid="Boolean(form.errors.email)"
+                                    :aria-describedby="
+                                        form.errors.email
+                                            ? 'email-error'
+                                            : undefined
+                                    "
+                                />
+                                <p
+                                    v-if="form.errors.email"
+                                    id="email-error"
+                                    class="field-error"
+                                >
+                                    {{ form.errors.email }}
+                                </p>
+                            </div>
 
-                <!-- Marketing opt-in -->
-                <label class="rp-optin">
-                    <input
-                        type="checkbox"
-                        v-model="form.marketing_opt_in"
-                        class="rp-optin-check"
-                    />
-                    <span>
-                        I'd like to receive updates, news and exclusive offers
-                        from Chapter of You.
-                        <span class="rp-optin-note"
-                            >(Optional, you can change this in your account at
-                            any time)</span
+                            <div class="field">
+                                <Label for="password" class="field-label"
+                                    >Password</Label
+                                >
+                                <Input
+                                    id="password"
+                                    v-model="form.password"
+                                    type="password"
+                                    required
+                                    autocomplete="new-password"
+                                    placeholder="Create a password"
+                                    class="field-input"
+                                    :aria-invalid="
+                                        Boolean(form.errors.password)
+                                    "
+                                    :aria-describedby="
+                                        form.errors.password
+                                            ? 'password-error'
+                                            : 'password-hint'
+                                    "
+                                />
+                                <p
+                                    v-if="form.errors.password"
+                                    id="password-error"
+                                    class="field-error"
+                                >
+                                    {{ form.errors.password }}
+                                </p>
+                                <p v-else id="password-hint" class="field-hint">
+                                    Use at least 8 characters.
+                                </p>
+                            </div>
+
+                            <div class="field">
+                                <Label
+                                    for="password_confirmation"
+                                    class="field-label"
+                                    >Confirm password</Label
+                                >
+                                <Input
+                                    id="password_confirmation"
+                                    v-model="form.password_confirmation"
+                                    type="password"
+                                    required
+                                    autocomplete="new-password"
+                                    placeholder="Repeat your password"
+                                    class="field-input"
+                                    :aria-invalid="
+                                        Boolean(
+                                            form.errors.password_confirmation,
+                                        )
+                                    "
+                                    :aria-describedby="
+                                        form.errors.password_confirmation
+                                            ? 'password-confirmation-error'
+                                            : undefined
+                                    "
+                                />
+                                <p
+                                    v-if="form.errors.password_confirmation"
+                                    id="password-confirmation-error"
+                                    class="field-error"
+                                >
+                                    {{ form.errors.password_confirmation }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <label class="rp-optin">
+                            <input
+                                v-model="form.marketing_opt_in"
+                                type="checkbox"
+                            />
+                            <span
+                                ><strong>Keep me in the know</strong>Receive
+                                occasional news, inspiration and exclusive
+                                offers. You can change this at any time.</span
+                            >
+                        </label>
+
+                        <Button
+                            type="submit"
+                            :disabled="form.processing"
+                            class="coy-button coy-button--primary rp-submit"
+                            data-test="register-button"
                         >
-                    </span>
-                </label>
+                            <LoaderCircle
+                                v-if="form.processing"
+                                class="rp-spinner"
+                            />
+                            {{
+                                form.processing
+                                    ? 'Creating account...'
+                                    : 'Create account'
+                            }}
+                        </Button>
 
-                <!-- Submit -->
-                <button
-                    type="submit"
-                    :disabled="form.processing"
-                    class="btn-rose btn-rose--full"
-                >
-                    <LoaderCircle v-if="form.processing" class="rp-spinner" />
-                    {{
-                        form.processing ? 'Creating account…' : 'Create account'
-                    }}
-                </button>
-
-                <!-- Login link -->
-                <p class="rp-login">
-                    Already have an account?
-                    <Link :href="route('login')" class="rp-login-link"
-                        >Sign in</Link
-                    >
-                </p>
-            </form>
-        </div>
-    </main>
+                        <p class="rp-login">
+                            Already have an account?
+                            <Link :href="route('login')">Sign in</Link>
+                        </p>
+                    </form>
+                </section>
+            </div>
+        </main>
+    </AuthBase>
 </template>
 
 <style scoped>
 .rp {
-    font-family: 'Nunito', sans-serif;
-    min-height: 100vh;
-    padding-top: 64px;
-    background: #fdf4f3;
+    min-height: 100svh;
+    display: grid;
+    align-items: center;
+    padding: calc(var(--coy-nav-height) + clamp(2rem, 5vw, 4rem)) 0
+        clamp(3rem, 7vw, 6rem);
+    background: var(--coy-color-page);
+}
+.rp-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(28rem, 34rem);
+    gap: clamp(3rem, 8vw, 8rem);
+    align-items: center;
+}
+.rp-welcome {
+    max-width: 40rem;
+}
+.rp-welcome h1 {
+    max-width: 11ch;
+    margin: var(--coy-space-2) 0 var(--coy-space-5);
+    color: var(--coy-color-heading);
+    font: 500 clamp(3rem, 6vw, 5rem) / 0.98 var(--coy-font-display);
+    letter-spacing: -0.035em;
+}
+.rp-welcome > p:last-of-type {
+    max-width: 35rem;
+    margin: 0;
+    font-size: var(--coy-text-lead);
+    line-height: 1.6;
+}
+.rp-welcome ul {
+    display: grid;
+    gap: var(--coy-space-3);
+    margin: var(--coy-space-6) 0 0;
+    padding: 0;
+    list-style: none;
+}
+.rp-welcome li {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    padding-bottom: 3rem;
+    gap: var(--coy-space-3);
+    color: var(--coy-color-heading);
+    font-weight: 600;
 }
-
+.rp-welcome li span {
+    width: 1.5rem;
+    height: 1.5rem;
+    display: grid;
+    flex: none;
+    place-items: center;
+    color: var(--coy-color-on-accent);
+    background: var(--coy-color-accent);
+    border-radius: 50%;
+}
+.rp-welcome li svg {
+    width: 0.85rem;
+}
 .rp-card {
-    width: 100%;
-    max-width: 420px;
-    border: 1px solid #e5c9c7;
-    border-radius: 24px;
-    background: #fffafa;
-    box-shadow: 0 4px 32px rgba(229, 201, 199, 0.45);
     overflow: hidden;
-    position: relative;
+    background: var(--coy-color-surface);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-xl);
+    box-shadow: var(--coy-shadow-md);
 }
-
-.rp-card::before {
-    content: '✿';
-    position: absolute;
-    bottom: -8px;
-    right: 10px;
-    font-size: 4rem;
-    color: #c9a4a4;
-    opacity: 0.1;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-    z-index: 0;
-}
-
-.rp-card::after {
-    content: '✿';
-    position: absolute;
-    top: 8px;
-    left: 12px;
-    font-size: 0.9rem;
-    color: #c9a4a4;
-    opacity: 0.22;
-    pointer-events: none;
-    user-select: none;
-    line-height: 1;
-    z-index: 0;
-}
-
 .rp-header {
-    padding: 2rem 2rem 1.5rem;
-    text-align: center;
-    background: linear-gradient(135deg, #fdf4f3, #fff8f7);
-    border-bottom: 1px solid #e5c9c7;
+    padding: clamp(1.5rem, 4vw, 2.25rem) clamp(1.5rem, 4vw, 2.25rem)
+        var(--coy-space-5);
+    background: var(--coy-color-surface-soft);
+    border-bottom: 1px solid var(--coy-color-border-soft);
 }
-
-.rp-title {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-    font-size: 1.9rem;
-    font-style: italic;
-    font-weight: 400;
-    color: #2d1a1a;
-    margin-bottom: 0.25rem;
+.rp-header h2 {
+    margin: var(--coy-space-1) 0 var(--coy-space-2);
+    color: var(--coy-color-heading);
+    font: 500 2.25rem/1.05 var(--coy-font-display);
 }
-
-.rp-sub {
-    font-size: 0.88rem;
-    color: #6b4f4f;
+.rp-header > p:last-child {
+    margin: 0;
 }
-
 .rp-form {
-    padding: 1.5rem 2rem 2rem;
     display: flex;
     flex-direction: column;
-    gap: 0.9rem;
-    position: relative;
-    z-index: 1;
+    gap: var(--coy-space-5);
+    padding: clamp(1.5rem, 4vw, 2.25rem);
 }
-
+.rp-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--coy-space-4);
+}
 .field {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: var(--coy-space-2);
 }
-
 .field-label {
-    font-size: 0.78rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #6b4f4f;
+    color: var(--coy-color-heading);
+    font: 600 var(--coy-text-sm) var(--coy-font-body);
 }
-
-.field-input {
-    padding: 0.65rem 0.9rem;
-    border: 1px solid #e5c9c7;
-    border-radius: 10px;
-    background: #fdf4f3;
-    color: #2d1a1a;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.92rem;
-    outline: none;
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
+:deep(.field-input) {
     width: 100%;
+    min-height: var(--coy-control-height);
+    padding: 0.7rem 1rem;
+    color: var(--coy-color-heading);
+    background: var(--coy-color-page);
+    border: 1px solid var(--coy-color-border);
+    border-radius: var(--coy-radius-md);
+    font: inherit;
+    box-shadow: none;
 }
-
-.field-input:focus {
-    border-color: #8c4a50;
-    box-shadow: 0 0 0 3px rgba(140, 74, 80, 0.1);
+:deep(.field-input:focus) {
+    border-color: var(--coy-color-focus);
+    box-shadow: var(--coy-shadow-focus);
 }
-
-.field-input--error {
-    border-color: #c84040;
+:deep(.field-input[aria-invalid='true']) {
+    border-color: var(--coy-color-error);
 }
-
+.field-error,
+.field-hint {
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
 .field-error {
-    font-size: 0.78rem;
-    color: #b54040;
+    color: var(--coy-color-error);
 }
-
+.field-hint {
+    color: var(--coy-color-text);
+}
 .rp-optin {
     display: flex;
     align-items: flex-start;
-    gap: 0.6rem;
+    gap: var(--coy-space-3);
+    padding: var(--coy-space-4);
+    color: var(--coy-color-text);
+    background: var(--coy-color-page);
+    border: 1px solid var(--coy-color-border-soft);
+    border-radius: var(--coy-radius-md);
     font-size: 0.85rem;
-    color: #6b4f4f;
-    cursor: pointer;
     line-height: 1.5;
-    padding: 0.75rem 0.85rem;
-    border: 1px solid #e5c9c7;
-    border-radius: 10px;
-    background: #fdf4f3;
-    transition: background 0.15s;
+    cursor: pointer;
+    transition: border-color var(--coy-duration-fast) var(--coy-ease);
 }
-
 .rp-optin:hover {
-    background: #faeaea;
+    border-color: var(--coy-color-border);
 }
-
-.rp-optin-check {
-    width: 15px;
-    height: 15px;
-    accent-color: #8c4a50;
-    cursor: pointer;
-    flex-shrink: 0;
-    margin-top: 2px;
+.rp-optin input {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    margin-top: 0.2rem;
+    accent-color: var(--coy-color-accent);
 }
-
-.rp-optin-note {
+.rp-optin strong {
     display: block;
-    font-size: 0.75rem;
-    color: #9a7070;
-    font-style: italic;
-    margin-top: 0.15rem;
+    margin-bottom: var(--coy-space-1);
+    color: var(--coy-color-heading);
+    font-size: 0.9rem;
 }
-
-.btn-rose {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.72rem 1.5rem;
-    border-radius: 999px;
-    border: 1px solid #a85058;
-    background: linear-gradient(135deg, #c47078, #a85058);
-    color: #fff;
-    font-family: 'Nunito', sans-serif;
-    font-size: 0.92rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    cursor: pointer;
-    box-shadow: 0 3px 12px rgba(168, 80, 88, 0.2);
-    transition:
-        transform 0.2s,
-        box-shadow 0.2s;
-    margin-top: 0.5rem;
-}
-
-.btn-rose:hover:not(:disabled) {
-    transform: translateY(-1px);
-    box-shadow: 0 5px 18px rgba(168, 80, 88, 0.28);
-}
-
-.btn-rose:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-}
-
-.btn-rose--full {
+.rp-submit {
     width: 100%;
 }
-
 .rp-spinner {
-    width: 15px;
-    height: 15px;
-    animation: spin 0.8s linear infinite;
+    width: 1rem;
+    animation: spin 0.75s linear infinite;
 }
-
 @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
     to {
         transform: rotate(360deg);
     }
 }
-
 .rp-login {
+    margin: 0;
+    padding-top: var(--coy-space-4);
+    border-top: 1px solid var(--coy-color-border-soft);
+    font-size: 0.9rem;
     text-align: center;
-    font-size: 0.88rem;
-    color: #6b4f4f;
-    padding-top: 0.75rem;
-    border-top: 1px solid #f0dcd8;
 }
-
-.rp-login-link {
-    color: #8c4a50;
+.rp-login a {
+    color: var(--coy-color-accent);
     font-weight: 600;
-    text-decoration: none;
-    transition: color 0.2s;
+    text-underline-offset: 0.2rem;
 }
-
-.rp-login-link:hover {
-    color: #6a3038;
-    text-decoration: underline;
+@media (max-width: 960px) {
+    .rp-shell {
+        grid-template-columns: 1fr;
+    }
+    .rp-welcome {
+        display: none;
+    }
+    .rp-card {
+        width: min(100%, 34rem);
+        margin-inline: auto;
+    }
+}
+@media (max-width: 620px) {
+    .rp {
+        align-items: start;
+        padding-top: calc(var(--coy-nav-height) + var(--coy-space-5));
+    }
+    .rp-shell {
+        width: calc(100% - 1rem);
+    }
+    .rp-card {
+        border-radius: var(--coy-radius-lg);
+    }
+    .rp-header,
+    .rp-form {
+        padding-right: var(--coy-space-5);
+        padding-left: var(--coy-space-5);
+    }
+    .rp-fields {
+        grid-template-columns: 1fr;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .rp-spinner {
+        animation: none;
+    }
 }
 </style>
