@@ -2,6 +2,7 @@
 import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import { computed, nextTick, ref } from 'vue';
 
@@ -127,6 +128,12 @@ async function focusFirstError() {
     <main class="gv coy-storefront">
         <div class="gv-wrap">
             <header class="gv-header">
+                <CoyBreadcrumbs
+                    :items="[
+                        { label: 'Home', href: '/' },
+                        { label: 'Gift vouchers' },
+                    ]"
+                />
                 <p class="coy-eyebrow">A thoughtful gift</p>
                 <h1 class="gv-title">Gift vouchers</h1>
                 <p class="gv-intro">
@@ -1143,7 +1150,7 @@ async function focusFirstError() {
 
 .gv-header {
     max-width: 44rem;
-    margin-bottom: clamp(2rem, 5vw, 3.75rem);
+    margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
     text-align: left;
 }
 
@@ -1151,7 +1158,7 @@ async function focusFirstError() {
     margin: 0.45rem 0 0.8rem;
     color: var(--coy-color-heading);
     font-family: var(--coy-font-display);
-    font-size: clamp(2.75rem, 6vw, 4.5rem);
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
     font-style: normal;
     font-weight: 500;
     line-height: 0.98;

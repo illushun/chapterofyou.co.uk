@@ -346,6 +346,8 @@ onUnmounted(() => {
             <div class="pd-grid">
                 <div class="pd-mobile-intro">
                     <nav class="pd-breadcrumb" aria-label="Breadcrumb">
+                        <a href="/" class="pd-crumb">Home</a>
+                        <span class="pd-crumb-sep" aria-hidden="true">/</span>
                         <a href="/products" class="pd-crumb">Products</a>
                         <span
                             v-if="product.categories.length"
@@ -357,6 +359,10 @@ onUnmounted(() => {
                             class="pd-crumb"
                             >{{ product.categories[0].name }}</span
                         >
+                        <span class="pd-crumb-sep" aria-hidden="true">/</span>
+                        <span class="pd-crumb" aria-current="page">{{
+                            displayTitle
+                        }}</span>
                     </nav>
                     <h1 class="pd-title">{{ displayTitle }}</h1>
                     <p class="pd-price">{{ formattedCost }}</p>
@@ -371,6 +377,8 @@ onUnmounted(() => {
 
                 <div class="pd-info">
                     <nav class="pd-breadcrumb" aria-label="Breadcrumb">
+                        <a href="/" class="pd-crumb">Home</a>
+                        <span class="pd-crumb-sep" aria-hidden="true">/</span>
                         <a href="/products" class="pd-crumb">Products</a>
                         <template
                             v-for="cat in product.categories"
@@ -389,6 +397,10 @@ onUnmounted(() => {
                                 >{{ cat.name }}</a
                             >
                         </template>
+                        <span class="pd-crumb-sep" aria-hidden="true">/</span>
+                        <span class="pd-crumb" aria-current="page">{{
+                            displayTitle
+                        }}</span>
                     </nav>
 
                     <h1 class="pd-title">{{ displayTitle }}</h1>

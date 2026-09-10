@@ -2,6 +2,7 @@
 import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
@@ -140,6 +141,12 @@ const vatRegistered = computed(() => !!usePage().props.vatRegistered);
         <header class="basket-header coy-page-header">
             <div class="coy-container coy-page-header__inner header-inner">
                 <div>
+                    <CoyBreadcrumbs
+                        :items="[
+                            { label: 'Home', href: '/' },
+                            { label: 'Basket' },
+                        ]"
+                    />
                     <h1 class="coy-page-header__title">Your basket</h1>
                     <p v-if="hasItems" class="coy-page-header__meta">
                         {{ itemCount }}

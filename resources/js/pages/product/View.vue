@@ -3,6 +3,7 @@ import Footer from '@/components/Footer.vue';
 import JsonLdSchema from '@/components/JsonLdSchema.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
@@ -200,6 +201,12 @@ async function favourite(product: Product) {
         <header class="collection-hero coy-page-header">
             <div class="coy-container coy-page-header__inner">
                 <div>
+                    <CoyBreadcrumbs
+                        :items="[
+                            { label: 'Home', href: '/' },
+                            { label: 'Reed diffusers' },
+                        ]"
+                    />
                     <h1 class="coy-page-header__title">Reed diffusers</h1>
                     <p class="coy-page-header__meta">
                         Handmade fragrances for every room and mood.

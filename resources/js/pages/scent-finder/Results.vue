@@ -2,6 +2,7 @@
 import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
 import ProductSpringCard from '@/components/ui/coy/ProductSpringCard.vue';
 import SuccessToast from '@/components/ui/coy/toast/SuccessToast.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
@@ -91,6 +92,13 @@ const handleFavourite = async (product: ProductCardData) => {
     <main class="sfr coy-storefront">
         <div class="sfr-wrap">
             <header class="sfr-header">
+                <CoyBreadcrumbs
+                    :items="[
+                        { label: 'Home', href: '/' },
+                        { label: 'Scent finder', href: '/scent-finder' },
+                        { label: 'Results' },
+                    ]"
+                />
                 <p class="coy-eyebrow">Scent finder</p>
                 <h1 class="sfr-title">Your scent matches</h1>
                 <p class="sfr-summary">
@@ -277,7 +285,7 @@ const handleFavourite = async (product: ProductCardData) => {
 
 .sfr-header {
     max-width: 48rem;
-    margin-bottom: clamp(2rem, 5vw, 3.5rem);
+    margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
     text-align: left;
 }
 
@@ -285,7 +293,7 @@ const handleFavourite = async (product: ProductCardData) => {
     margin: 0.45rem 0 0.8rem;
     color: var(--coy-color-heading);
     font-family: var(--coy-font-display);
-    font-size: clamp(2.75rem, 7vw, 4.75rem);
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
     font-weight: 500;
     line-height: 0.98;
     letter-spacing: -0.035em;

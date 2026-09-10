@@ -2,6 +2,7 @@
 import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import { MOOD_TAGS, ROOMS, SCENT_FAMILIES } from '@/lib/scentTaxonomy';
 import { router } from '@inertiajs/vue3';
@@ -109,6 +110,12 @@ const submit = () => {
     <main class="sf coy-storefront">
         <div class="sf-wrap">
             <header class="sf-header">
+                <CoyBreadcrumbs
+                    :items="[
+                        { label: 'Home', href: '/' },
+                        { label: 'Scent finder' },
+                    ]"
+                />
                 <p class="coy-eyebrow">Scent finder</p>
                 <h1 class="sf-title">Find your scent</h1>
                 <p class="sf-intro">
@@ -451,7 +458,7 @@ const submit = () => {
 
 .sf-header {
     max-width: 42rem;
-    margin-bottom: clamp(2rem, 5vw, 3.25rem);
+    margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
     text-align: left;
 }
 
@@ -459,7 +466,7 @@ const submit = () => {
     margin: 0.45rem 0 0.8rem;
     color: var(--coy-color-heading);
     font-family: var(--coy-font-display);
-    font-size: clamp(2.75rem, 7vw, 4.75rem);
+    font-size: clamp(2.25rem, 5vw, 3.5rem);
     font-weight: 500;
     line-height: 0.98;
     letter-spacing: -0.035em;

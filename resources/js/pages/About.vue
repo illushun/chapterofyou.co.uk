@@ -2,6 +2,7 @@
 import Footer from '@/components/Footer.vue';
 import NavBar from '@/components/NavBar.vue';
 import SeoHead from '@/components/SeoHead.vue';
+import CoyBreadcrumbs from '@/components/ui/coy/CoyBreadcrumbs.vue';
 import { useSeoHead } from '@/composables/useSeoHead';
 import { Link } from '@inertiajs/vue3';
 
@@ -35,6 +36,12 @@ const principles = [
         <header class="hero">
             <div class="hero-grid container">
                 <div>
+                    <CoyBreadcrumbs
+                        :items="[
+                            { label: 'Home', href: '/' },
+                            { label: 'About' },
+                        ]"
+                    />
                     <p class="coy-eyebrow">About Chapter of You</p>
                     <h1>Home fragrance, made with care and knowledge</h1>
                     <p class="lead">
@@ -174,7 +181,7 @@ const principles = [
     margin-inline: auto;
 }
 .hero {
-    padding: clamp(3rem, 7vw, 6rem) 0;
+    padding: clamp(2rem, 5vw, 4rem) 0;
     border-bottom: 1px solid var(--coy-color-border);
 }
 .hero-grid {
@@ -195,7 +202,7 @@ const principles = [
 }
 .about h1 {
     margin: 0.5rem 0 1.25rem;
-    font-size: clamp(3rem, 7vw, 5.5rem);
+    font-size: clamp(2.5rem, 5vw, 4.25rem);
     line-height: 0.98;
     letter-spacing: -0.04em;
 }
